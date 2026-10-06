@@ -24,6 +24,7 @@ namespace CurrencyMod.Diplomacia
     ///   ia espionagem             espiões, pesos, chance de interceptar em cada ponta e interceptações recentes
     ///   ia interceptar &lt;id&gt; E#   força a interceptação de uma carta privada (testes)
     ///   ia acoes [turnos]         ações das nações nos últimos turnos (padrão 3) e o que o jogo fez com elas
+    ///   ia licenca status|ativar CHAVE|validar|liberar|versao|baixar|dev on|off|envelhecer N   licença (Licenca\License.cs)
     /// </summary>
     internal static class IaCommands
     {
@@ -32,6 +33,10 @@ namespace CurrencyMod.Diplomacia
             string[] parts = (args ?? string.Empty).Split(new[] { ' ' }, 2, StringSplitOptions.RemoveEmptyEntries);
             string command = parts.Length > 0 ? parts[0].ToLowerInvariant() : "status";
             string rest = parts.Length > 1 ? parts[1].Trim() : string.Empty;
+            if (command == "licenca")
+            {
+                return Licenca.License.DevCommand(rest);
+            }
             IaModule module = IaModule.Instance;
             if (module == null)
             {

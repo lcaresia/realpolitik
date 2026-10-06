@@ -1,5 +1,9 @@
 # Integrar a chave de licença no mod (loja própria: Stripe + Cloudflare Worker)
 
+> **Feito em 2026-10-06.** Como ficou: `docs\diplomacia-ia.md` §16. Mudança combinada com o usuário: a seção ficou
+> mínima (campo + Ativar; com licença, só o estado + Liberar este PC). Não há botão "Verificar", porque a conferência é
+> automática. Este briefing fica como histórico.
+
 Briefing para uma sessão nova. **Substitui `integracao-licenca-lemon.md`** (a Lemon Squeezy foi descartada: não ativa
 loja de vendedor no Brasil). Leia antes: `_Modding\README.md`, `docs\loja.md` (como a loja funciona) e
 `docs\guia-telas-nativas.md` (telas nativas e hot-reload).
