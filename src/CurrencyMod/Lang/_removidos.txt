@@ -1,0 +1,40 @@
+[en] A xAI não informou os endereços do login por código.
+[en] Abre o site da xAI e mostra um código curto para digitar lá. Depois disso, o jogo conecta sozinho.
+[en] Aguardando aprovação: o identificador do app ainda não foi liberado pelo provedor.
+[en] Conectado ao ChatGPT.
+[en] Conectado ao Grok.
+[en] Digite o código <c={0}>{1}</c> no site que abriu
+[en] Digite o código {0} no site da xAI.
+[en] Entre com a sua conta da xAI: o uso sai da cota do SuperGrok ou X Premium+.
+[en] Entre com a sua conta do ChatGPT: o uso sai da cota do seu plano Plus ou Pro, sem chave.
+[en] entre de novo
+[es] A xAI não informou os endereços do login por código.
+[es] Abre o site da xAI e mostra um código curto para digitar lá. Depois disso, o jogo conecta sozinho.
+[es] Aguardando aprovação: o identificador do app ainda não foi liberado pelo provedor.
+[es] Conectado ao ChatGPT.
+[es] Conectado ao Grok.
+[es] Digite o código <c={0}>{1}</c> no site que abriu
+[es] Digite o código {0} no site da xAI.
+[es] Entre com a sua conta da xAI: o uso sai da cota do SuperGrok ou X Premium+.
+[es] Entre com a sua conta do ChatGPT: o uso sai da cota do seu plano Plus ou Pro, sem chave.
+[es] entre de novo
+[fr] A xAI não informou os endereços do login por código.
+[fr] Abre o site da xAI e mostra um código curto para digitar lá. Depois disso, o jogo conecta sozinho.
+[fr] Aguardando aprovação: o identificador do app ainda não foi liberado pelo provedor.
+[fr] Conectado ao ChatGPT.
+[fr] Conectado ao Grok.
+[fr] Digite o código <c={0}>{1}</c> no site que abriu
+[fr] Digite o código {0} no site da xAI.
+[fr] Entre com a sua conta da xAI: o uso sai da cota do SuperGrok ou X Premium+.
+[fr] Entre com a sua conta do ChatGPT: o uso sai da cota do seu plano Plus ou Pro, sem chave.
+[fr] entre de novo
+[de] A xAI não informou os endereços do login por código.
+[de] Abre o site da xAI e mostra um código curto para digitar lá. Depois disso, o jogo conecta sozinho.
+[de] Aguardando aprovação: o identificador do app ainda não foi liberado pelo provedor.
+[de] Conectado ao ChatGPT.
+[de] Conectado ao Grok.
+[de] Digite o código <c={0}>{1}</c> no site que abriu
+[de] Digite o código {0} no site da xAI.
+[de] Entre com a sua conta da xAI: o uso sai da cota do SuperGrok ou X Premium+.
+[de] Entre com a sua conta do ChatGPT: o uso sai da cota do seu plano Plus ou Pro, sem chave.
+[de] entre de novo

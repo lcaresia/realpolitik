@@ -1,0 +1,28 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Bancada de custo × qualidade da IA (fora do jogo). Não vai no pacote de venda. Ver README.md. -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net472</TargetFramework>
+    <AssemblyName>IaBench</AssemblyName>
+    <LangVersion>latest</LangVersion>
+    <Nullable>disable</Nullable>
+    <GameDir>$(MSBuildThisFileDirectory)..\..\..\</GameDir>
+    <ModSrc>$(MSBuildThisFileDirectory)..\..\src\CurrencyMod\</ModSrc>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3" PrivateAssets="all" />
+    <Reference Include="Newtonsoft.Json"><HintPath>$(GameDir)Humankind_Data\Managed\Newtonsoft.Json.dll</HintPath></Reference>
+    <Reference Include="System.Net.Http" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="src\**\*.cs" />
+    <!-- A credencial é lida pelo mesmo código do mod (DPAPI): a bancada nunca vê o arquivo nem mostra a chave. -->
+    <Compile Include="$(ModSrc)Diplomacia\Llm\Providers\Credentials.cs" Link="mod\Credentials.cs" />
+    <Compile Include="$(ModSrc)Diplomacia\Llm\ApiKey.cs" Link="mod\ApiKey.cs" />
+  </ItemGroup>
+
+</Project>

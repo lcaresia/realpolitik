@@ -1,0 +1,13 @@
+# Cenários dos 16 impérios no formato novo (Teste16, versão nova, T83–T92). Os 5 primeiros são os que mais pensaram.
+b57b0e07_novo\T088_E8.json · guerra perdendo + Congresso + exército inimigo no território (8.242 de raciocínio)
+b57b0e07_novo\T091_E3.json · guerra + exigências contra você (8.115)
+b57b0e07_novo\T087_E15.json · guerra + rendição + 5 cartas (6.865)
+b57b0e07_novo\T089_E4.json · guerra + Congresso (5.859)
+b57b0e07_novo\T085_E2.json · guerra + 3 cartas (5.978)
+b57b0e07_novo\T084_E6.json · rotina
+b57b0e07_novo\T086_E13.json · rotina
+b57b0e07_novo\T090_E9.json · rotina
+b57b0e07_novo\T092_E5.json · rotina
+b57b0e07_novo\T083_E11.json · rotina
+b57b0e07_novo\T088_E14.json · rotina
+b57b0e07_novo\T091_E7.json · rotina

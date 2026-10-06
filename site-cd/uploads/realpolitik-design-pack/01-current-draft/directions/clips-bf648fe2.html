@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Realpolitik — clips</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;1,9..144,400&family=IM+Fell+English:ital@0;1&family=Mulish:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="clips/clips.css">
+<style>
+  body { margin: 0; background: #0c1522; color: #f1ead9; font: 17px/1.6 Mulish, system-ui, sans-serif; }
+  main { max-width: 1180px; margin: 0 auto; padding: 48px 16px 120px; display: grid; gap: 72px; }
+  h1 { font: 600 clamp(30px, 4vw, 44px)/1.1 Fraunces, serif; margin: 0 0 6px; }
+  h2 { font: 700 20px Cinzel, serif; color: #e2c172; margin: 0 0 14px; letter-spacing: .06em; }
+  p.l { color: #aab5c8; margin: 0; }
+  .lang a, .lang b { margin-right: 8px; color: #aab5c8; } .lang b { color: #e2c172; }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>3 clips · ~30 s each</h1>
+    <p class="l">Real letters, diaries and actions from the mod's AI nations. Plays when on screen; hover for controls. <span class="lang" id="lang"></span></p>
+  </header>
+  <section><h2>1 · Two faces</h2><div class="clip" data-clip="two-faces"></div></section>
+  <section><h2>2 · Words become war</h2><div class="clip" data-clip="war"></div></section>
+  <section><h2>3 · Intercepted</h2><div class="clip" data-clip="intercepted"></div></section>
+</main>
+<script>
+  (function () { let l = new URLSearchParams(location.search).get('lang'); try { if (l) localStorage.setItem('rp-lang', l); else l = localStorage.getItem('rp-lang'); } catch (e) {}
+    l = l === 'pt' ? 'pt' : 'en'; document.documentElement.lang = l;
+    document.getElementById('lang').innerHTML = ['en', 'pt'].map(x => x === l ? `<b>${x.toUpperCase()}</b>` : `<a href="?lang=${x}">${x.toUpperCase()}</a>`).join(''); })();
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.13.0/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.13.0/MotionPathPlugin.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.13.0/DrawSVGPlugin.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.13.0/CustomEase.min.js"></script>
+<script src="clips/sound.js"></script>
+<script src="clips/clips.js"></script>
+</body>
+</html>

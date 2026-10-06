@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Realpolitik: Living Nations for HUMANKIND</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;1,9..144,400&family=IM+Fell+English:ital@0;1&family=Mulish:wght@400;600;700;800&display=swap" rel="stylesheet">
+<script src="https://assets.lemonsqueezy.com/lemon.js" defer></script>
+<style>html{scroll-behavior:smooth}body{margin:0;background:#0c1522;color:#f1ead9;font-family:Mulish,system-ui,sans-serif;overflow-x:hidden}a{color:#e2c172}a:hover{color:#f1ead9}*{box-sizing:border-box}img{max-width:100%}button{font-family:inherit}input[type=range]{accent-color:#c4245e;width:100%}@keyframes rpL{0%{transform:none;opacity:1}18%{transform:translate(-1px,0) rotate(-1deg)}32%{transform:translate(-3px,1px) rotate(-3deg)}100%{transform:translate(-34px,46px) rotate(-32deg);opacity:0}}@keyframes rpR{0%{transform:none;opacity:1}18%{transform:translate(1px,0) rotate(1deg)}32%{transform:translate(3px,1px) rotate(3deg)}100%{transform:translate(34px,46px) rotate(32deg);opacity:0}}@keyframes rpDiary{0%{opacity:0;transform:translateY(-28px) scale(.97);filter:blur(4px)}60%{opacity:1;filter:blur(0)}100%{opacity:1;transform:none}}@keyframes rpShake{0%,100%{transform:none}20%{transform:translateX(-4px) rotate(-.4deg)}40%{transform:translateX(4px) rotate(.4deg)}60%{transform:translateX(-2px)}}@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}*{transition:none!important;animation:none!important}}</style>
+</helmet>
+
+<div style="position:sticky;top:0;z-index:50;background:rgba(12,21,34,.94);backdrop-filter:blur(8px);border-bottom:1px solid rgba(226,193,114,.18)">
+  <div style="max-width:1180px;margin:0 auto;padding:10px 20px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
+    <a href="#top" style="text-decoration:none;font:700 15px Cinzel,serif;letter-spacing:.14em;color:#e2c172">REALPOLITIK</a>
+    <div style="display:flex;gap:14px;align-items:center;flex-wrap:wrap">
+      <a href="#how" style="text-decoration:none;font-size:13px;color:#cfd6e2;font-weight:700">{{ t.nHow }}</a>
+      <a href="#cost" style="text-decoration:none;font-size:13px;color:#cfd6e2;font-weight:700">{{ t.nCost }}</a>
+      <a href="#faq" style="text-decoration:none;font-size:13px;color:#cfd6e2;font-weight:700">FAQ</a>
+      <div style="display:flex;border:1px solid rgba(226,193,114,.3)" role="group" aria-label="Language">
+        <sc-for list="{{ langBtns }}" as="b" hint-placeholder-count="5"><button onClick="{{ b.on }}" aria-pressed="{{ b.sel }}" style="border:0;cursor:pointer;padding:7px 9px;font:800 11px Mulish;letter-spacing:.08em;background:{{ b.bg }};color:{{ b.fg }}">{{ b.l }}</button></sc-for>
+      </div>
+      <button onClick="{{ buy }}" style="background:#c4245e;color:#fff;border:0;font:800 12px Mulish;letter-spacing:.12em;text-transform:uppercase;padding:11px 16px;border-radius:3px;cursor:pointer" style-hover="filter:brightness(1.15)">{{ t.buy }}</button>
+    </div>
+  </div>
+</div>
+
+<div id="top" style="background:radial-gradient(ellipse at 50% 0,#1b2c4a,#0e1a30 60%,#0c1522)">
+  <div style="text-align:center;padding:72px 24px 40px;max-width:1000px;margin:0 auto">
+    <div style="font:800 12px Mulish;letter-spacing:.24em;color:#e2c172;text-transform:uppercase">{{ t.eyebrow }}</div>
+    <h1 style="font:600 clamp(46px,9vw,104px)/.95 Fraunces,serif;letter-spacing:-.03em;margin:18px 0">{{ t.h1a }} <em style="font-weight:400;color:#e2c172">{{ t.h1b }}</em></h1>
+    <p style="font-size:clamp(17px,2.2vw,21px);line-height:1.5;color:#cfd6e2;max-width:42ch;margin:0 auto">{{ t.sub }}</p>
+    <div style="display:flex;gap:12px;justify-content:center;margin-top:30px;flex-wrap:wrap">
+      <button onClick="{{ buy }}" style="background:linear-gradient(180deg,#d93c72,#c4245e);color:#fff;border:0;font:800 14px Mulish;letter-spacing:.12em;text-transform:uppercase;padding:17px 28px;border-radius:3px;cursor:pointer;box-shadow:0 14px 34px -14px #c4245e" style-hover="filter:brightness(1.12);transform:translateY(-1px)">{{ t.buy }}</button>
+      <a href="#clips" style="color:#f1ead9;text-decoration:none;border:1px solid rgba(226,193,114,.55);font:800 14px Mulish;letter-spacing:.12em;text-transform:uppercase;padding:17px 24px;border-radius:3px" style-hover="border-color:#e2c172">▶ {{ t.watch }}</a>
+    </div>
+    <div style="margin-top:20px;font-size:13px;letter-spacing:.05em;color:#aab5c8">{{ t.meta }}</div>
+  </div>
+  <div style="max-width:1180px;margin:0 auto;padding:0 20px 56px">
+    <div style="border:1px solid rgba(226,193,114,.35);box-shadow:0 40px 80px -30px #000"><img src="assets/site_mail.jpg" width="1920" height="1080" alt="{{ t.heroAlt }}" style="display:block;width:100%;height:auto"></div>
+    <div style="font-size:13px;color:#aab5c8;margin-top:12px">{{ t.heroCap }}</div>
+  </div>
+</div>
+
+<div id="how" style="background:#0f1a2e;border-top:1px solid rgba(226,193,114,.15);border-bottom:1px solid rgba(226,193,114,.15)">
+<div style="max-width:1180px;margin:0 auto;padding:88px 20px">
+  <div style="font:800 12px Mulish;letter-spacing:.24em;color:#e2c172;text-transform:uppercase">{{ t.lEy }}</div>
+  <h2 style="font:600 clamp(32px,5vw,56px)/1.05 Fraunces,serif;margin:14px 0 14px;max-width:20ch">{{ t.lH }}</h2>
+  <p style="font-size:18px;line-height:1.6;color:#cfd6e2;max-width:62ch;margin:0 0 40px">{{ t.lP }}</p>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr));gap:28px;align-items:start">
+    <div style="position:relative;padding-top:34px">
+      <sc-if value="{{ sealClosed }}" hint-placeholder-val="{{ true }}">
+        <button onClick="{{ breakSeal }}" aria-label="{{ t.sealCta }}" style="position:absolute;left:50%;top:0;margin-left:-38px;z-index:2;width:76px;height:76px;border-radius:50%;border:0;cursor:pointer;background:radial-gradient(circle at 38% 34%,#c13a48,#8e1b2a 62%,#5c0f1b);box-shadow:0 8px 16px rgba(0,0,0,.5);color:#d0505c;font:600 30px Fraunces,serif" style-hover="transform:scale(1.07)">R</button>
+      </sc-if>
+      <sc-if value="{{ sealOpen }}" hint-placeholder-val="{{ false }}">
+        <div style="position:absolute;left:50%;top:0;margin-left:-38px;z-index:2;width:76px;height:76px;pointer-events:none;filter:drop-shadow(0 6px 8px rgba(0,0,0,.5))">
+          <div style="position:absolute;left:0;top:0;width:76px;height:76px;border-radius:50%;background:radial-gradient(circle at 38% 34%,#c13a48,#8e1b2a 62%,#5c0f1b);color:#d0505c;font:600 30px Fraunces,serif;display:flex;align-items:center;justify-content:center;clip-path:polygon(0 0,50% 0,46% 18%,54% 36%,45% 55%,53% 74%,48% 100%,0 100%);transform-origin:20% 90%;animation:rpL 1s cubic-bezier(.5,0,.6,1) forwards">R</div>
+          <div style="position:absolute;left:0;top:0;width:76px;height:76px;border-radius:50%;background:radial-gradient(circle at 38% 34%,#c13a48,#8e1b2a 62%,#5c0f1b);color:#d0505c;font:600 30px Fraunces,serif;display:flex;align-items:center;justify-content:center;clip-path:polygon(50% 0,100% 0,100% 100%,48% 100%,53% 74%,45% 55%,54% 36%,46% 18%);transform-origin:80% 90%;animation:rpR 1s cubic-bezier(.5,0,.6,1) forwards">R</div>
+        </div>
+      </sc-if>
+      <div style="background:linear-gradient(170deg,#efe3c8,#e0cfab);color:#2a1d12;padding:48px 30px 24px;border-radius:3px;box-shadow:0 40px 90px -25px #000;font-family:'IM Fell English',Georgia,serif;animation:{{ shake }}">
+        <div style="display:flex;justify-content:space-between;font:800 11px Mulish;letter-spacing:.14em;text-transform:uppercase;color:#6d5435"><span>{{ t.lPub }}</span><span>{{ t.turn }} 82</span></div>
+        <p style="font-size:21px;line-height:1.42;margin:16px 0 12px">“Kings and peoples, hear Alexandre. The Celt speaks of a draw where the field reads thirty to nothing, her sails still sleeping at Kuma and San Lorenzo. I sell no false peace: loose the ground you took and the gold you owe, and we sit. <b style="font-weight:400;background:rgba(142,27,42,.18)">My feet quit Polis as my word promised — my honor keeps my ledger.</b> To merchants, my fairs stay open.”</p>
+        <p style="font-style:italic;font-size:17px;text-align:right;margin:0">— Alexandre, King of the Mongols</p>
+      </div>
+    </div>
+    <div>
+      <sc-if value="{{ sealOpen }}" hint-placeholder-val="{{ false }}">
+        <div style="animation:rpDiary .9s .35s cubic-bezier(.2,.8,.2,1) both;background:#14100d;color:#eadcc2;border-left:3px solid #c13a48;padding:24px 26px;font-family:'IM Fell English',Georgia,serif;box-shadow:0 20px 50px -20px #000">
+          <div style="display:flex;justify-content:space-between;gap:8px;font:800 11px Mulish;letter-spacing:.14em;text-transform:uppercase;color:#d0505c"><span>{{ t.diary }}</span><span>{{ t.never }}</span></div>
+          <p style="font-style:italic;font-size:20px;line-height:1.5;margin:12px 0 0">“Leonardo counts steel at his door — I tell him plainly it is Gilgamés’ galley, not my hand. Wang Zhenyi wants Polis empty; <b style="font-weight:400;color:#f2b8bf">my hull is penned by a blocked road, so it takes the long water home.</b> The Celt offers a draw while squatting my ground: the account still reads thirty to nothing. Victor’s eight hundred stays unpaid; let him weigh iron if he dares.”</p>
+        </div>
+      </sc-if>
+      <sc-if value="{{ sealClosed }}" hint-placeholder-val="{{ true }}">
+        <button onClick="{{ breakSeal }}" style="width:100%;min-height:220px;background:transparent;border:1px dashed rgba(226,193,114,.6);color:#e2c172;font:800 13px Mulish;letter-spacing:.16em;text-transform:uppercase;padding:20px;cursor:pointer" style-hover="background:rgba(226,193,114,.08)">{{ t.sealCta }}<span style="font:400 15px Mulish;letter-spacing:0;text-transform:none;color:#cfd6e2;display:block;margin-top:8px">{{ t.sealSub }}</span></button>
+      </sc-if>
+      <div style="margin-top:14px;font-size:13px;line-height:1.55;color:#aab5c8">{{ t.lNote }}</div>
+    </div>
+  </div>
+</div>
+</div>
+
+<div id="clips" style="max-width:1180px;margin:0 auto;padding:88px 20px 0">
+  <div style="font:800 12px Mulish;letter-spacing:.24em;color:#e2c172;text-transform:uppercase">{{ t.cEy }}</div>
+  <h2 style="font:600 clamp(32px,5vw,56px)/1.05 Fraunces,serif;margin:14px 0 14px;max-width:20ch">{{ t.cH }}</h2>
+  <p style="font-size:16px;color:#aab5c8;margin:0 0 24px;max-width:62ch">{{ t.cP }}</p>
+  <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">
+    <sc-for list="{{ clipTabs }}" as="c" hint-placeholder-count="3"><button onClick="{{ c.on }}" aria-pressed="{{ c.sel }}" style="cursor:pointer;padding:11px 16px;font:700 14px Cinzel,serif;border:1px solid {{ c.bc }};background:{{ c.bg }};color:{{ c.fg }}">{{ c.l }}</button></sc-for>
+  </div>
+  <div style="aspect-ratio:16/9;background:#0a111c;border:1px solid rgba(226,193,114,.3)"><iframe src="{{ clipSrc }}" title="{{ clipTitle }}" allow="autoplay" style="width:100%;height:100%;border:0;display:block"></iframe></div>
+  <sc-if value="{{ spyTab }}" hint-placeholder-val="{{ false }}">
+    <div style="margin-top:32px;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,400px),1fr));gap:28px;align-items:center">
+      <div style="border:1px solid rgba(226,193,114,.35)"><img src="assets/site_spy.jpg" width="1920" height="1080" loading="lazy" alt="{{ t.spyAlt }}" style="display:block;width:100%;height:auto"></div>
+      <div><p style="margin:0 0 12px;font-size:16px;line-height:1.6;color:#cfd6e2">{{ t.spyP }}</p><p style="margin:0;font-size:13px;line-height:1.55;color:#aab5c8">{{ t.spyNote }}</p></div>
+    </div>
+  </sc-if>
+</div>
+
+<div style="max-width:1180px;margin:0 auto;padding:96px 20px 88px">
+  <div style="font:800 12px Mulish;letter-spacing:.24em;color:#e2c172;text-transform:uppercase">{{ t.oEy }}</div>
+  <h2 style="font:600 clamp(32px,5vw,56px)/1.05 Fraunces,serif;margin:14px 0 14px;max-width:20ch">{{ t.oH }}</h2>
+  <p style="font-size:18px;line-height:1.6;color:#cfd6e2;max-width:62ch;margin:0 0 36px">{{ t.oP }}</p>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr));gap:32px;align-items:start">
+    <div style="background:rgba(30,48,80,.92);border:1px solid rgba(255,255,255,.08);border-radius:6px">
+      <div style="padding:14px 18px;border-bottom:1px solid rgba(255,255,255,.08);display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap"><span style="font:700 16px Cinzel,serif;color:#e2c172">Arjuna · The Huns → The Aksumites</span><span style="background:rgba(8,16,30,.55);font-size:13px;padding:3px 9px">{{ t.priv }} · T82</span></div>
+      <p style="padding:16px 18px 20px;margin:0;font-size:17px;line-height:1.6;color:#e6e9f0"><span style="color:#e2c172">My own floor stays mine</span><br><br>Ancestral, king of the Aksumites. I will not set my people’s own roof as tribute. Count my horses: none stands on your soil. Yet your host still anchors in Ain, my land, and your demand takes the floor my people sleep on. Call your standards home, reopen the frank road, and let no altar weigh two houses that once kept faith. <mark style="background:rgba(196,36,94,.55);color:inherit">Ḫattuša stays mine.</mark> — Arjuna, of the Huns.</p>
+    </div>
+    <div style="display:grid;gap:12px">
+      <sc-for list="{{ actions }}" as="a" hint-placeholder-count="4">
+        <div style="display:grid;grid-template-columns:48px 1fr;gap:12px"><div style="font:700 13px Cinzel,serif;color:#e2c172;text-align:right;padding-top:14px">T82</div><div style="border-left:3px solid #c4245e;background:rgba(8,16,30,.6);padding:12px 14px;font-size:15px;color:#cfd6e2"><b style="display:block;color:#f1ead9;font-size:12px;letter-spacing:.14em;margin-bottom:2px">{{ a.k }}</b>{{ a.t }}</div></div>
+      </sc-for>
+      <div style="font-size:13px;line-height:1.55;color:#aab5c8">{{ t.oNote }}</div>
+    </div>
+  </div>
+  <div style="margin-top:56px;font:700 20px Cinzel,serif;color:#e2c172">{{ t.kinds }}</div>
+  <div style="margin-top:18px;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,250px),1fr));gap:14px">
+    <sc-for list="{{ actionKinds }}" as="g" hint-placeholder-count="8">
+      <div style="border:1px solid rgba(226,193,114,.22);background:rgba(16,27,45,.8);padding:18px" style-hover="border-color:#c4245e"><div style="font:700 15px Cinzel,serif;color:#f1ead9">{{ g.h }}</div><div style="margin-top:8px;font-size:14px;line-height:1.55;color:#aab5c8">{{ g.b }}</div></div>
+    </sc-for>
+  </div>
+  <div style="margin-top:12px;font-size:13px;color:#aab5c8">{{ t.dlc }}</div>
+</div>
+
+<div style="background:linear-gradient(90deg,#1a2540,#2a1730);border-top:1px solid rgba(226,193,114,.25);border-bottom:1px solid rgba(226,193,114,.25)">
+  <div style="max-width:1180px;margin:0 auto;padding:34px 20px;display:flex;justify-content:space-between;align-items:center;gap:20px;flex-wrap:wrap">
+    <div><div style="font:600 clamp(24px,3.4vw,34px)/1.15 Fraunces,serif">{{ t.b1H }}</div><div style="margin-top:6px;color:#cfd6e2;font-size:15px">{{ t.b1P }}</div></div>
+    <button onClick="{{ buy }}" style="background:linear-gradient(180deg,#d93c72,#c4245e);color:#fff;border:0;font:800 14px Mulish;letter-spacing:.12em;text-transform:uppercase;padding:17px 28px;border-radius:3px;cursor:pointer" style-hover="filter:brightness(1.12)">{{ t.buy }}</button>
+  </div>
+</div>
+
+<div style="max-width:1180px;margin:0 auto;padding:96px 20px 88px">
+  <div style="font:800 12px Mulish;letter-spacing:.24em;color:#e2c172;text-transform:uppercase">{{ t.kEy }}</div>
+  <h2 style="font:600 clamp(32px,5vw,56px)/1.05 Fraunces,serif;margin:14px 0 14px;max-width:20ch">{{ t.kH }}</h2>
+  <p style="font-size:18px;line-height:1.6;color:#cfd6e2;max-width:64ch;margin:0 0 36px">{{ t.kP }}</p>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr));gap:24px">
+    <div><div style="border:1px solid rgba(226,193,114,.35);box-shadow:0 30px 70px -30px #000"><img src="assets/site_council.jpg" width="1920" height="1080" loading="lazy" alt="{{ t.k1Alt }}" style="display:block;width:100%;height:auto"></div><div style="margin-top:10px;font-size:13px;color:#aab5c8">{{ t.k1Cap }}</div></div>
+    <div><div style="border:1px solid rgba(226,193,114,.35);box-shadow:0 30px 70px -30px #000"><img src="assets/site_16.jpg" width="1920" height="1080" loading="lazy" alt="{{ t.k2Alt }}" style="display:block;width:100%;height:auto"></div><div style="margin-top:10px;font-size:13px;color:#aab5c8">{{ t.k2Cap }}</div></div>
+  </div>
+</div>
+
+<div style="background:#0f1a2e;border-top:1px solid rgba(226,193,114,.15);border-bottom:1px solid rgba(226,193,114,.15)">
+<div style="max-width:1180px;margin:0 auto;padding:88px 20px">
+  <div style="font:800 12px Mulish;letter-spacing:.24em;color:#e2c172;text-transform:uppercase">{{ t.mEy }}</div>
+  <h2 style="font:600 clamp(32px,5vw,56px)/1.05 Fraunces,serif;margin:14px 0 14px;max-width:22ch">{{ t.mH }}</h2>
+  <p style="font-size:18px;line-height:1.6;color:#cfd6e2;max-width:64ch;margin:0 0 36px">{{ t.mP }}</p>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,400px),1fr));gap:28px;align-items:start">
+    <div style="display:grid;gap:14px">
+      <div style="background:rgba(30,48,80,.92);border:1px solid rgba(226,193,114,.3);border-radius:6px;padding:24px">
+        <div style="font:700 17px Cinzel,serif;color:#e2c172">{{ t.dT }}</div>
+        <label style="display:block;margin-top:18px;font-size:14px;color:#cfd6e2">{{ t.dRate }}: <b style="color:#f1ead9">{{ rateLabel }}</b></label>
+        <input type="range" min="0" max="5" step="0.5" value="{{ rate }}" onInput="{{ setRate }}" aria-label="{{ t.dRate }}">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:18px">
+          <div style="background:rgba(8,16,30,.6);padding:14px"><div style="font-size:11px;letter-spacing:.14em;color:#aab5c8">{{ t.dProd }}</div><div style="font:600 34px Fraunces,serif">{{ prodMult }}</div></div>
+          <div style="background:rgba(8,16,30,.6);padding:14px"><div style="font-size:11px;letter-spacing:.14em;color:#aab5c8">{{ t.dInfl }}</div><div style="font:600 34px Fraunces,serif">{{ inflLabel }}</div></div>
+        </div>
+        <p style="margin:16px 0 0;font-size:13px;line-height:1.55;color:#aab5c8">{{ t.dNote }}</p>
+      </div>
+      <div style="border:1px solid rgba(226,193,114,.35)"><img src="assets/site_cycle.jpg" width="1920" height="1080" loading="lazy" alt="{{ t.cycleAlt }}" style="display:block;width:100%;height:auto"></div>
+    </div>
+    <div style="display:grid;gap:14px">
+      <div style="background:rgba(30,48,80,.92);border:1px solid rgba(226,193,114,.3);border-radius:6px;padding:24px">
+        <div style="font:700 17px Cinzel,serif;color:#e2c172">{{ t.tT }}</div>
+        <div style="display:flex;gap:8px;margin-top:16px">
+          <sc-for list="{{ tollModes }}" as="m" hint-placeholder-count="3"><button onClick="{{ m.on }}" style="flex:1;padding:11px 6px;cursor:pointer;font:800 11px Mulish;letter-spacing:.1em;text-transform:uppercase;border:1px solid {{ m.bc }};background:{{ m.bg }};color:#f1ead9">{{ m.l }}</button></sc-for>
+        </div>
+        <label style="display:block;margin-top:18px;font-size:14px;color:#cfd6e2">{{ t.tPrice }}: <b style="color:#f1ead9">{{ priceLabel }}</b></label>
+        <input type="range" min="1" max="6" step="1" value="{{ price }}" onInput="{{ setPrice }}" aria-label="{{ t.tPrice }}">
+        <div style="margin-top:18px;background:rgba(8,16,30,.6);padding:16px;display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap"><div style="font:600 28px Fraunces,serif">{{ preview }}</div><div style="font-size:14px;color:#cfd6e2">{{ t.tInc }}: <b>{{ income }}</b></div></div>
+        <p style="margin:14px 0 0;font-size:13px;line-height:1.55;color:#aab5c8">{{ t.tNote }}</p>
+      </div>
+      <div style="border:1px solid rgba(226,193,114,.35)"><img src="assets/site_toll.jpg" width="1920" height="1080" loading="lazy" alt="{{ t.tollAlt }}" style="display:block;width:100%;height:auto"></div>
+    </div>
+  </div>
+</div>
+</div>
+
+<div style="background:linear-gradient(90deg,#1a2540,#2a1730);border-bottom:1px solid rgba(226,193,114,.25)">
+  <div style="max-width:1180px;margin:0 auto;padding:34px 20px;display:flex;justify-content:space-between;align-items:center;gap:20px;flex-wrap:wrap">
+    <div><div style="font:600 clamp(24px,3.4vw,34px)/1.15 Fraunces,serif">{{ t.b2H }}</div><div style="margin-top:6px;color:#cfd6e2;font-size:15px">{{ t.b2P }}</div></div>
+    <button onClick="{{ buy }}" style="background:linear-gradient(180deg,#d93c72,#c4245e);color:#fff;border:0;font:800 14px Mulish;letter-spacing:.12em;text-transform:uppercase;padding:17px 28px;border-radius:3px;cursor:pointer" style-hover="filter:brightness(1.12)">{{ t.buy }}</button>
+  </div>
+</div>
+
+<div id="cost" style="max-width:1180px;margin:0 auto;padding:96px 20px">
+  <div style="font:800 12px Mulish;letter-spacing:.24em;color:#e2c172;text-transform:uppercase">{{ t.xEy }}</div>
+  <h2 style="font:600 clamp(32px,5vw,56px)/1.05 Fraunces,serif;margin:14px 0 14px;max-width:20ch">{{ t.xH }}</h2>
+  <p style="font-size:18px;line-height:1.6;color:#cfd6e2;max-width:64ch;margin:0 0 36px">{{ t.xP }}</p>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,380px),1fr));gap:28px;align-items:start">
+    <div style="background:rgba(30,48,80,.92);border:1px solid rgba(226,193,114,.3);border-radius:6px;padding:24px">
+      <label style="display:block;font-size:14px;color:#cfd6e2">{{ t.xProv }}</label>
+      <select onChange="{{ setProv }}" aria-label="{{ t.xProv }}" style="width:100%;margin-top:6px;padding:12px;background:#0c1522;color:#f1ead9;border:1px solid rgba(226,193,114,.4);font:600 15px Mulish">
+        <sc-for list="{{ providers }}" as="p" hint-placeholder-count="5"><option value="{{ p.i }}">{{ p.n }}</option></sc-for>
+      </select>
+      <label style="display:block;margin-top:18px;font-size:14px;color:#cfd6e2">{{ t.xEmp }}: <b style="color:#f1ead9">{{ empires }}</b></label>
+      <input type="range" min="2" max="16" step="1" value="{{ empires }}" onInput="{{ setEmp }}" aria-label="{{ t.xEmp }}">
+      <label style="display:block;margin-top:14px;font-size:14px;color:#cfd6e2">{{ t.xTurns }}: <b style="color:#f1ead9">{{ turns }}</b></label>
+      <input type="range" min="20" max="300" step="10" value="{{ turns }}" onInput="{{ setTurns }}" aria-label="{{ t.xTurns }}">
+    </div>
+    <div style="background:rgba(8,16,30,.7);border:1px solid rgba(226,193,114,.3);padding:24px">
+      <div style="font-size:11px;letter-spacing:.16em;color:#aab5c8">{{ t.xPer }}</div><div style="font:600 40px Fraunces,serif">{{ perTurn }}</div>
+      <div style="margin-top:14px;font-size:11px;letter-spacing:.16em;color:#aab5c8">{{ t.xGame }}</div><div style="font:600 40px Fraunces,serif;color:#e2c172">{{ total }}</div>
+      <div style="margin-top:14px;font-size:15px;color:#cfd6e2">{{ capLine }}</div>
+      <div style="margin-top:14px;padding:10px 12px;background:rgba(196,36,94,.18);font-size:13px;line-height:1.5">{{ provNote }}</div>
+      <p style="margin:14px 0 0;font-size:12px;line-height:1.55;color:#aab5c8">{{ t.xNote }}</p>
+    </div>
+  </div>
+</div>
+
+<div style="background:#0f1a2e;border-top:1px solid rgba(226,193,114,.15)">
+<div style="max-width:1180px;margin:0 auto;padding:88px 20px 40px">
+  <div style="font:800 12px Mulish;letter-spacing:.24em;color:#e2c172;text-transform:uppercase">{{ t.iEy }}</div>
+  <h2 style="font:600 clamp(32px,5vw,48px)/1.08 Fraunces,serif;margin:14px 0 28px">{{ t.iH }}</h2>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:20px">
+    <sc-for list="{{ steps }}" as="s" hint-placeholder-count="3">
+      <div style="background:#101b2d;border:1px solid rgba(255,255,255,.08);padding:24px"><div style="font:600 44px Fraunces,serif;color:#c4245e">{{ s.n }}</div><div style="font:700 17px Cinzel,serif;margin:6px 0 8px">{{ s.h }}</div><div style="font-size:15px;line-height:1.55;color:#aab5c8">{{ s.b }}</div></div>
+    </sc-for>
+  </div>
+  <div style="margin-top:28px;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:20px;font-size:14px;line-height:1.6;color:#cfd6e2">
+    <div style="border-left:3px solid #e2c172;padding-left:14px"><b style="color:#f1ead9">{{ t.reqY }}</b><br>{{ t.reqYb }}</div>
+    <div style="border-left:3px solid #c4245e;padding-left:14px"><b style="color:#f1ead9">{{ t.reqN }}</b><br>{{ t.reqNb }}</div>
+  </div>
+</div>
+<div id="faq" style="max-width:860px;margin:0 auto;padding:56px 20px 96px">
+  <h2 style="font:600 clamp(30px,5vw,44px)/1.08 Fraunces,serif;margin:0 0 24px">{{ t.fH }}</h2>
+  <div style="border-top:1px solid rgba(226,193,114,.25)">
+    <sc-for list="{{ faq }}" as="f" hint-placeholder-count="8">
+      <div style="border-bottom:1px solid rgba(226,193,114,.25)">
+        <button onClick="{{ f.toggle }}" aria-expanded="{{ f.open }}" style="width:100%;text-align:left;background:transparent;border:0;color:#f1ead9;cursor:pointer;padding:20px 0;display:flex;justify-content:space-between;gap:16px;font:700 18px Mulish" style-hover="color:#e2c172"><span>{{ f.q }}</span><span style="color:#e2c172;font-size:22px;line-height:1">{{ f.sign }}</span></button>
+        <div style="display:{{ f.disp }};padding:0 0 22px;font-size:16px;line-height:1.65;color:#cfd6e2;max-width:70ch">{{ f.a }}</div>
+      </div>
+    </sc-for>
+  </div>
+</div>
+</div>
+
+<div style="background:radial-gradient(ellipse at 50% 100%,#2a1730,#0c1522 70%);border-top:1px solid rgba(226,193,114,.25)">
+  <div style="max-width:720px;margin:0 auto;padding:96px 20px;text-align:center">
+    <div style="background:linear-gradient(170deg,#efe3c8,#e0cfab);color:#2a1d12;padding:56px 32px 40px;position:relative;box-shadow:0 40px 90px -25px #000;font-family:'IM Fell English',Georgia,serif;text-align:left">
+      <div style="position:absolute;left:50%;top:-34px;margin-left:-34px;width:68px;height:68px;border-radius:50%;background:radial-gradient(circle at 38% 34%,#c13a48,#8e1b2a 62%,#5c0f1b);box-shadow:0 8px 16px rgba(0,0,0,.5);color:#d0505c;font:600 28px Fraunces,serif;display:flex;align-items:center;justify-content:center">R</div>
+      <div style="font:800 11px Mulish;letter-spacing:.16em;color:#6d5435">{{ t.endTo }}</div>
+      <p style="font-size:clamp(22px,3vw,28px);line-height:1.4;margin:16px 0 8px">{{ t.endBody }}</p>
+      <p style="margin:0;font-style:italic;text-align:right;font-size:17px">— Realpolitik</p>
+    </div>
+    <button onClick="{{ buy }}" style="margin-top:36px;background:linear-gradient(180deg,#d93c72,#c4245e);color:#fff;border:0;font:800 15px Mulish;letter-spacing:.12em;text-transform:uppercase;padding:19px 34px;border-radius:3px;cursor:pointer;box-shadow:0 14px 34px -14px #c4245e" style-hover="filter:brightness(1.12)">{{ t.buy }}</button>
+    <div style="margin-top:14px;font-size:13px;color:#aab5c8">{{ t.endSub }}</div>
+  </div>
+</div>
+
+<div style="background:#070d16;border-top:1px solid rgba(255,255,255,.08)">
+  <div style="max-width:1180px;margin:0 auto;padding:36px 20px;font-size:13px;line-height:1.7;color:#aab5c8">
+    <div style="display:flex;gap:20px;flex-wrap:wrap;margin-bottom:16px"><a href="privacy.html">{{ t.fPriv }}</a><a href="terms.html">{{ t.fTerms }}</a><a href="changelog.html">Changelog</a><a href="install.html">{{ t.fInst }}</a><a href="mailto:CONTACT_EMAIL_PLACEHOLDER">{{ t.fContact }}</a></div>
+    Unofficial fan-made mod. Not affiliated with or endorsed by Amplitude Studios or SEGA. HUMANKIND is a trademark of its respective owners.
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  // ---- Edit here ----
+  static CHECKOUT_URL = 'https://YOUR-STORE.lemonsqueezy.com/checkout/buy/PRODUCT_ID_PLACEHOLDER';
+  // Cloudflare Web Analytics token: PLACEHOLDER_CF_TOKEN
+  state = { lang: 'en', open: false, rate: 1, mode: 'toll', price: 3, faq: 0, prov: 0, emp: 16, turns: 100, clip: 0 };
+  componentDidMount() {
+    let l = null;
+    try { l = localStorage.getItem('rp-lang'); } catch (e) {}
+    if (!l) l = (navigator.language || 'en').slice(0, 2);
+    if (Component.T[l]) this.setState({ lang: l });
+  }
+  setLang(l) { try { localStorage.setItem('rp-lang', l); } catch (e) {} document.documentElement.lang = l; this.setState({ lang: l }); }
+  renderVals() {
+    const s = this.state, L = s.lang, t = Component.T[L], set = o => () => this.setState(o);
+    const dec = v => L === 'en' ? v : v.replace('.', ',');
+    const buy = () => { if (window.LemonSqueezy && window.LemonSqueezy.Url) window.LemonSqueezy.Url.Open(Component.CHECKOUT_URL); else window.open(Component.CHECKOUT_URL, '_blank'); };
+    const mult = Math.max(.75, Math.min(1.05, 1 - .05 * (s.rate - 1)));
+    const infl = Math.max(-1, .5 + (1 - s.rate) * .4);
+    let pays = 0, det = 0, inc = 0;
+    if (s.mode === 'free') pays = 4; else if (s.mode === 'block') det = 4;
+    else [1, 2, 3, 5].forEach(c => { if (s.price <= c) { pays++; inc += s.price; } else det++; });
+    const modes = [['free', t.tFree], ['toll', t.tToll], ['block', t.tBlock]].map(([k, l]) => ({ l, on: set({ mode: k }), bg: s.mode === k ? '#c4245e' : 'rgba(8,16,30,.6)', bc: s.mode === k ? '#c4245e' : 'rgba(226,193,114,.35)' }));
+    const P = [[t.pDs, .13, 1], ['OpenAI gpt-5-nano ' + t.est, .064, 0], ['Gemini 2.5 Flash-Lite ' + t.est, .074, 0], ['GLM-4.7-FlashX ' + t.est, .069, 0], ['GLM-4.7-Flash ' + t.est, 0, 0]];
+    const e = s.emp, shape = e <= 10 ? .03 * e / 10 : .03 + (e - 10) * (.10 / 6);
+    const pr = P[s.prov], pt = pr[1] * shape / .13;
+    const money = v => v === 0 ? t.free : 'US$ ' + dec(v < 1 ? v.toFixed(3) : v.toFixed(2));
+    const tabs = t.clips.split('|').map((l, i) => ({ l, sel: s.clip === i ? 'true' : 'false', on: set({ clip: i }), bc: s.clip === i ? '#e2c172' : 'rgba(226,193,114,.3)', bg: s.clip === i ? 'rgba(226,193,114,.14)' : 'transparent', fg: s.clip === i ? '#e2c172' : '#cfd6e2' }));
+    const ids = ['two-faces', 'war', 'intercepted'], cl = L === 'pt' ? 'pt' : 'en';
+    const split = x => x.split('||').map(r => r.split('|'));
+    return {
+      t, buy,
+      langBtns: ['en', 'pt', 'es', 'fr', 'de'].map(l => ({ l: l.toUpperCase(), sel: L === l ? 'true' : 'false', bg: L === l ? '#e2c172' : 'transparent', fg: L === l ? '#0c1522' : '#cfd6e2', on: () => this.setLang(l) })),
+      sealOpen: s.open, sealClosed: !s.open, shake: s.open ? 'rpShake .4s 1' : 'none', breakSeal: set({ open: true }),
+      clipTabs: tabs, clipSrc: 'clip-embed.html?c=' + ids[s.clip] + '&lang=' + cl, clipTitle: t.clips.split('|')[s.clip], spyTab: s.clip === 2,
+      actions: split(t.acts).map(a => ({ k: a[0], t: a[1] })),
+      actionKinds: split(t.kindList).map(g => ({ h: g[0], b: g[1] })),
+      rateLabel: dec(s.rate.toFixed(1)) + '%', rate: s.rate, setRate: ev => this.setState({ rate: +ev.target.value }),
+      prodMult: '×' + dec(mult.toFixed(2)), inflLabel: dec(infl.toFixed(1)) + '%',
+      tollModes: modes, price: s.price, priceLabel: s.mode === 'toll' ? s.price + ' ' + t.gold : '–', setPrice: ev => this.setState({ price: +ev.target.value, mode: 'toll' }),
+      preview: pays + ' ' + t.pay + ' · ' + det + ' ' + t.detour, income: inc ? inc + ' / ' + t.turnLc : '0',
+      providers: P.map((p, i) => ({ n: p[0], i })), setProv: ev => this.setState({ prov: +ev.target.value }),
+      empires: e, setEmp: ev => this.setState({ emp: +ev.target.value }), turns: s.turns, setTurns: ev => this.setState({ turns: +ev.target.value }),
+      perTurn: money(pt), total: money(pt * s.turns),
+      capLine: pt === 0 ? t.capNone : t.cap1 + ' ' + Math.floor(5 / pt) + ' ' + t.cap2,
+      provNote: pr[2] ? t.measured : t.estimate,
+      steps: split(t.stepList).map((x, i) => ({ n: i + 1, h: x[0], b: x[1] })),
+      faq: split(t.faqList).map((q, i) => ({ q: q[0], a: q[1], open: s.faq === i + 1 ? 'true' : 'false', sign: s.faq === i + 1 ? '–' : '+', disp: s.faq === i + 1 ? 'block' : 'none', toggle: () => this.setState(st => ({ faq: st.faq === i + 1 ? 0 : i + 1 })) }))
+    };
+  }
+  static T = {
+    en: {
+      buy: 'Get it — $10', nHow: 'How it works', nCost: 'Cost', turn: 'Turn', turnLc: 'turn', free: 'Free', est: '(estimate)', gold: 'gold', pay: 'pay', detour: 'detour',
+      eyebrow: 'A mod for HUMANKIND', h1a: 'Words become', h1b: 'orders.', sub: 'Declare war, march an army, demand tribute, sponsor rebels. 32 real in-game actions, each one chosen by a nation that wrote you first.',
+      watch: 'Watch it in action', meta: 'Windows · Steam · Single-player · 5 languages · One-time payment · 7-day refund',
+      heroAlt: 'The mod’s Mail screen in HUMANKIND: nations and their unanswered letters, in the game’s own interface', heroCap: 'Real screenshot, turn 82 of a 16-empire test game, in the game’s own interface. Player name edited to “Shah”.',
+      lEy: 'Living Nations', lH: 'What they wrote you. What they wrote themselves.', lP: 'Every turn, each nation reads a dossier with only what it knows, so fog of war holds. It writes a secret diary, keeps memory and feelings (affection, trust, fear, anger), and writes letters in the voice of its culture. It bluffs, stalls, feigns misunderstanding, betrays, and collects on old promises. Nothing is forced, and ignoring a rival has consequences. Letters cite only resources, cities, leaders and events that exist in your game.',
+      lPub: 'Public declaration', sealCta: 'Break the seal', sealSub: 'Read what he wrote himself.', diary: 'His secret diary · same turn', never: 'never sent',
+      lNote: 'Real letter and diary, unedited game output (DeepSeek). 16-empire test game. Nations write letters in the language you choose; these samples were generated in English.',
+      cEy: 'Three true stories · about 30 s each', cH: 'Watch a letter turn into a war.', cP: 'Animated retellings of real letters, diaries and actions from test games. Starts muted; use the speaker icon for the score.', clips: 'Two faces|Words become war|Intercepted',
+      spyAlt: 'Intelligence screen, Letters tab: a Mongol letter to the Norsemen read by the player’s spy', spyP: 'Your spies intercept private letters, and an intercepted letter is never delivered. AI nations spy on each other too. The Letters tab lives inside the game’s own Intelligence screen.', spyNote: 'Staged capture: for this screenshot the spy was created and the interception forced with a developer command. The mechanic is real and happens on its own in play.',
+      oEy: 'Words become orders', oH: 'What Arjuna wrote. What Arjuna did.', oP: 'This is not a chatbot on top of the game. The nation decides, and the game executes.', priv: 'Private', oNote: 'Real actions from the game’s log, same turn as the letter. Letter in its original English.',
+      acts: 'REFUSED|Aksumites’ formal demand: cede Ḫattuša||REFUSED|The Norsemen’s demand for 600 gold||STANCE|Distrustful toward the Aksumites||ORDER|Army A220 defends Ain for 6 turns',
+      kinds: '32 kinds of action, all real', dlc: 'Five Congress actions need the Together We Rule DLC.',
+      kindList: 'War and peace|Declare war, formal or by surprise. Make peace. Surrender with terms.||Pacts|Alliances, and economic, information, cultural and military agreements.||Pressure|Demands and crises.||Gifts|Money, influence, cities and armies.||Land and peoples|Cede territory. Sponsor independent peoples, up to vassalage and annexation.||Armies|Orders to move, attack, defend and besiege.||Court and trade|Trade policy, blocking correspondence, dismissing ministers.||World Congress|Propose laws, vote, bribe, open crises, challenge verdicts.',
+      b1H: 'Sixteen rulers are waiting to write you.', b1P: '$10, one time. 7-day refund. Without a key, everything but AI Diplomacy still works.',
+      kEy: 'Your court, their courts', kH: 'Twelve chairs. Sixteen thrones.', kP: 'Your council has eleven ministries plus the Hand of the Throne. Up to six speak each turn, you answer up to eight times, their regard for you moves, and you can dismiss any of them. Rivals keep councils of twelve too. The base game stops at 10 empires; with the optional MoreEmpires plugin you get up to 16, tested on Tiny, Normal and Huge maps.',
+      k1Alt: 'Council screen: 12 advisers, 6 of whom spoke on turn 82', k1Cap: 'Council, turn 82. The meeting cost US$ 0.0020 in AI fees.', k2Alt: 'Mail screen, Nations section: 14 known nations with their leaders', k2Cap: 'Nations, turn 80 of a 16-empire game. Some leader names come from the save in Portuguese.',
+      mEy: 'Money and trade', mH: 'Every empire prints its own coin. Every caravan chooses its road.', mP: 'A Central Bank with four tabs: Exchange, Policy, Cycle, Your currency. Set the rate by hand or let the Taylor rule do it. Production feeds inflation, inflation feeds interest, interest slows production, so nobody grows forever. Trading posts can be Free, Toll or Blocked per foreign empire; routes weigh paying against detouring. Blocking files a real diplomatic grievance, and the AI taxes and blocks you back.',
+      dT: 'Try the interest dial', dRate: 'Interest rate per turn', dProd: 'PRODUCTION', dInfl: 'INFLATION (ILLUSTRATIVE)', dNote: 'Neutral rate 1% per turn. Each point above it takes about 5% off production, from ×0.75 to ×1.05. Inflation target 0.5%. The inflation figure is illustrative; the production multiplier follows the mod’s rule.', cycleAlt: 'Central Bank, Cycle tab',
+      tT: 'Trading post · Hàojīng', tFree: 'Free', tToll: 'Toll', tBlock: 'Blocked', tPrice: 'Toll price', tInc: 'Income', tNote: 'Illustrative sandbox with four sample routes. The in-game preview reads “X pays · Y detour”.', tollAlt: 'Trading Post panel with per-empire toll and block controls',
+      b2H: 'Try the economy free. Pay for the letters.', b2P: 'Currency, Central Bank, tolls and 16 empires run without a key.',
+      xEy: 'What the AI costs', xH: 'Know the bill before the first turn.', xP: 'The $10 buys the mod. The AI is paid separately, to the provider you pick. Choose one, set a cap (default US$ 5 per game), and if every provider fails the game’s native AI takes over.',
+      xProv: 'Provider', xEmp: 'Empires', xTurns: 'Turns played', xPer: 'PER TURN', xGame: 'WHOLE GAME', cap1: 'A US$ 5 cap lasts about', cap2: 'turns.', capNone: 'No cost on a free tier, within its call limits.', pDs: 'DeepSeek (measured)',
+      measured: 'Measured on real games. Peak hours cost about double.', estimate: 'Estimate, not measured. Free tiers may have call limits.',
+      xNote: 'Measured with DeepSeek: about US$ 0.03 per turn with 10 empires, US$ 0.12 to 0.14 with 16 off-peak. Values between are interpolated. Free OpenRouter models are capped at 50 calls a day, and a 16-empire turn uses 21 to 28.',
+      iEy: 'Install', iH: 'Three steps to the first letter.', stepList: 'Buy and download|One payment of $10 through Lemon Squeezy. Download links arrive right away.||Copy into the game folder|Unzip into your HUMANKIND folder on Steam. An installer is in preparation. Details on the install page.||Pick your AI|Sign in with OpenRouter or paste a key (DeepSeek, OpenAI, Gemini, GLM, xAI). Set your spending cap. Play.',
+      reqY: 'Works on', reqYb: 'Windows · HUMANKIND on Steam · single-player only. Steam Deck: experimental.', reqN: 'Does not work on', reqNb: 'Mac · Xbox / Game Pass · multiplayer (the mod turns itself off). Epic: not tested yet.',
+      fH: 'Questions, answered straight.',
+      faqList: 'Does it work in multiplayer?|No. The mod turns itself off in multiplayer. It is single-player only.||Will my saves break if I remove it? How do I uninstall?|Saves keep opening without the mod, except saves with more than 10 empires, which need the MoreEmpires plugin. To uninstall, delete two folders. An installer is in preparation.||Steam, Epic, Steam Deck, Mac, Xbox?|Windows with HUMANKIND on Steam. Epic is untested. Steam Deck is experimental. Mac and Xbox / Game Pass are not supported.||How much does the AI cost?|You pay your provider directly. With DeepSeek, measured at about US$ 0.03 a turn with 10 empires and US$ 0.12 to 0.14 with 16 off-peak. Other providers are estimates. A spending cap per game (default US$ 5) stops the bill.||Is there DRM? Do I need my own API key?|No DRM. You bring your own API key (DeepSeek, OpenRouter, OpenAI, Gemini, Z.ai or xAI). If one provider fails, the mod moves to the next; if all fail, the game’s native AI takes over.||What data leaves my PC?|Only each nation’s dossier goes to your provider: what it sees on the map, its relations, letters and memory. Nothing personal, not your name or Steam account. API keys are stored encrypted on your PC.||What do I get without a license key?|Everything except AI Diplomacy: own currency, Central Bank, tolls and 16 empires are free to try.||Updates, refunds, support?|Updates are free: download again. Refunds within 7 days. A contact address is coming soon.',
+      endTo: 'TO THE ONE WHO PLAYS · UNSEALED', endBody: '“Sixteen courts have your name in their ledgers. Come and answer.”', endSub: 'One-time payment · 7-day refund · AI usage billed by your chosen provider', fPriv: 'Privacy', fTerms: 'Terms', fInst: 'Install', fContact: 'Contact (placeholder)'
+    },
+    pt: {
+      buy: 'Comprar — US$ 10', nHow: 'Como funciona', nCost: 'Custo', turn: 'Turno', turnLc: 'turno', free: 'Grátis', est: '(estimativa)', gold: 'ouro', pay: 'pagam', detour: 'desviam',
+      eyebrow: 'Um mod para HUMANKIND', h1a: 'Palavras viram', h1b: 'ordens.', sub: 'Declare guerra, marche um exército, exija tributo, patrocine rebeldes. 32 ações reais do jogo, cada uma escolhida por uma nação que escreveu primeiro a você.',
+      watch: 'Veja em ação', meta: 'Windows · Steam · Single-player · 5 idiomas · Pagamento único · Reembolso em 7 dias',
+      heroAlt: 'Tela de Correio do mod em HUMANKIND: nações e suas cartas sem resposta, na interface do próprio jogo', heroCap: 'Print real, turno 82 de uma partida de teste com 16 impérios, na interface do próprio jogo. Nome do jogador editado para “Shah”.',
+      lEy: 'Nações vivas', lH: 'O que escreveram a você. O que escreveram para si.', lP: 'A cada turno, cada nação lê um dossiê com só o que ela sabe, então a névoa de guerra vale. Escreve um diário secreto, guarda memória e sentimentos (afeto, confiança, medo, raiva) e escreve cartas na voz da sua cultura. Blefa, enrola, finge não entender, trai e cobra promessas antigas. Nada é forçado, e ignorar um rival tem consequências. As cartas citam só recursos, cidades, líderes e eventos que existem na sua partida.',
+      lPub: 'Declaração pública', sealCta: 'Rompa o selo', sealSub: 'Leia o que ele escreveu para si.', diary: 'Seu diário secreto · mesmo turno', never: 'nunca enviado',
+      lNote: 'Carta e diário reais, saída do jogo sem edição (DeepSeek). Partida de teste com 16 impérios. As nações escrevem no idioma que você escolher; estes exemplos foram gerados em inglês.',
+      cEy: 'Três histórias reais · cerca de 30 s cada', cH: 'Veja uma carta virar guerra.', cP: 'Reconstituições animadas de cartas, diários e ações reais de partidas de teste. Começa mudo; use o ícone de som para a trilha.', clips: 'Duas faces|Palavras viram guerra|Interceptada',
+      spyAlt: 'Tela de Inteligência, aba Letters: carta dos mongóis aos nórdicos lida pelo espião do jogador', spyP: 'Seus espiões interceptam cartas privadas, e a carta interceptada nunca chega ao destino. As nações da IA também espionam umas às outras. A aba Letters fica dentro da tela nativa de Inteligência.', spyNote: 'Captura encenada: para este print o espião foi criado e a interceptação forçada com um comando de desenvolvedor. O mecanismo é real e acontece sozinho no jogo.',
+      oEy: 'Palavras viram ordens', oH: 'O que Arjuna escreveu. O que Arjuna fez.', oP: 'Não é um chatbot por cima do jogo. A nação decide, e o jogo executa.', priv: 'Privada', oNote: 'Ações reais do registro do jogo, no mesmo turno da carta. Carta no inglês original.',
+      acts: 'RECUSADA|Exigência formal dos axumitas: ceder Ḫattuša||RECUSADA|Exigência dos nórdicos de 600 de ouro||POSTURA|Desconfiada em relação aos axumitas||ORDEM|Exército A220 defende Ain por 6 turnos',
+      kinds: '32 tipos de ação, todos reais', dlc: 'Cinco ações do Congresso exigem a DLC Together We Rule.',
+      kindList: 'Guerra e paz|Declarar guerra, formal ou de surpresa. Fazer paz. Render-se com termos.||Pactos|Alianças e acordos econômicos, de informação, culturais e militares.||Pressão|Exigências e crises.||Presentes|Dinheiro, influência, cidades e exércitos.||Terras e povos|Ceder território. Patrocinar povos independentes, até vassalagem e anexação.||Exércitos|Ordens para mover, atacar, defender e cercar.||Corte e comércio|Política comercial, bloquear correspondência, demitir ministros.||Congresso mundial|Propor leis, votar, subornar, abrir crises, desafiar vereditos.',
+      b1H: 'Dezesseis governantes esperam para lhe escrever.', b1P: 'US$ 10, pagamento único. Reembolso em 7 dias. Sem chave, tudo funciona menos a Diplomacia IA.',
+      kEy: 'Sua corte, as cortes deles', kH: 'Doze cadeiras. Dezesseis tronos.', kP: 'Seu conselho tem onze pastas mais a Mão do Trono. Até seis falam a cada turno, você responde até oito vezes, o apreço por você muda e você pode demitir qualquer um. Os rivais também têm conselhos de doze. O jogo base vai até 10 impérios; com o plugin opcional MoreEmpires, até 16, testado em mapas Tiny, Normal e Huge.',
+      k1Alt: 'Tela do Conselho: 12 conselheiros, 6 falaram no turno 82', k1Cap: 'Conselho, turno 82. A reunião custou US$ 0,0020 em IA.', k2Alt: 'Tela de Correio, seção Nações: 14 nações conhecidas com seus líderes', k2Cap: 'Nações, turno 80 de uma partida com 16 impérios. Alguns nomes de líderes vêm do save em português.',
+      mEy: 'Dinheiro e comércio', mH: 'Cada império cunha a própria moeda. Cada caravana escolhe o próprio caminho.', mP: 'Um Banco Central com quatro abas: Câmbio, Política, Ciclo, Sua moeda. Defina o juro à mão ou deixe a regra de Taylor fazer isso. A produção puxa a inflação, a inflação puxa os juros, os juros freiam a produção, então ninguém cresce para sempre. Cada posto comercial pode ser Livre, Pedágio ou Bloqueado por império estrangeiro; as rotas comparam pagar com desviar. Bloquear gera uma queixa diplomática real, e a IA também taxa e bloqueia você.',
+      dT: 'Teste o botão de juros', dRate: 'Juro por turno', dProd: 'PRODUÇÃO', dInfl: 'INFLAÇÃO (ILUSTRATIVA)', dNote: 'Juro neutro de 1% por turno. Cada ponto acima tira cerca de 5% da produção, de ×0,75 a ×1,05. Inflação alvo de 0,5%. O valor da inflação é ilustrativo; o multiplicador de produção segue a regra do mod.', cycleAlt: 'Banco Central, aba Ciclo',
+      tT: 'Posto comercial · Hàojīng', tFree: 'Livre', tToll: 'Pedágio', tBlock: 'Bloqueado', tPrice: 'Preço do pedágio', tInc: 'Renda', tNote: 'Simulador ilustrativo com quatro rotas de exemplo. A prévia no jogo mostra “X pagam · Y desviam”.', tollAlt: 'Painel do posto comercial com pedágio e bloqueio por império',
+      b2H: 'Teste a economia de graça. Pague pelas cartas.', b2P: 'Moeda, Banco Central, pedágio e 16 impérios funcionam sem chave.',
+      xEy: 'Quanto a IA custa', xH: 'Saiba a conta antes do primeiro turno.', xP: 'Os US$ 10 compram o mod. A IA é paga à parte, ao provedor que você escolher. Escolha um, defina um teto (padrão US$ 5 por partida), e se todos falharem a IA nativa do jogo assume.',
+      xProv: 'Provedor', xEmp: 'Impérios', xTurns: 'Turnos jogados', xPer: 'POR TURNO', xGame: 'PARTIDA INTEIRA', cap1: 'Um teto de US$ 5 dura cerca de', cap2: 'turnos.', capNone: 'Sem custo no plano grátis, dentro do limite de chamadas.', pDs: 'DeepSeek (medido)',
+      measured: 'Medido em partidas reais. No horário de pico custa cerca do dobro.', estimate: 'Estimativa, não medido. Planos grátis podem ter limite de chamadas.',
+      xNote: 'Medido com DeepSeek: cerca de US$ 0,03 por turno com 10 impérios, US$ 0,12 a 0,14 com 16 fora do pico. Valores intermediários são interpolados. Modelos grátis do OpenRouter têm limite de 50 chamadas por dia, e um turno de 16 impérios usa de 21 a 28.',
+      iEy: 'Instalação', iH: 'Três passos até a primeira carta.', stepList: 'Compre e baixe|Um pagamento de US$ 10 pela Lemon Squeezy. Os links de download chegam na hora.||Copie para a pasta do jogo|Descompacte na pasta do HUMANKIND na Steam. Um instalador está em preparação. Detalhes na página de instalação.||Escolha sua IA|Entre com o OpenRouter ou cole uma chave (DeepSeek, OpenAI, Gemini, GLM, xAI). Defina seu teto de gasto. Jogue.',
+      reqY: 'Funciona em', reqYb: 'Windows · HUMANKIND na Steam · só single-player. Steam Deck: experimental.', reqN: 'Não funciona em', reqNb: 'Mac · Xbox / Game Pass · multiplayer (o mod se desliga sozinho). Epic: ainda não testado.',
+      fH: 'Perguntas, respondidas sem rodeios.',
+      faqList: 'Funciona em multiplayer?|Não. O mod se desliga sozinho em multiplayer. É só single-player.||Meus saves quebram se eu remover? Como desinstalo?|Os saves continuam abrindo sem o mod, exceto saves com mais de 10 impérios, que precisam do plugin MoreEmpires. Para desinstalar, apague duas pastas. Um instalador está em preparação.||Steam, Epic, Steam Deck, Mac, Xbox?|Windows com HUMANKIND na Steam. Epic não foi testado. Steam Deck é experimental. Mac e Xbox / Game Pass não são suportados.||Quanto custa a IA?|Você paga direto ao seu provedor. Com DeepSeek, medimos cerca de US$ 0,03 por turno com 10 impérios e US$ 0,12 a 0,14 com 16 fora do pico. Outros provedores são estimativas. Um teto de gasto por partida (padrão US$ 5) segura a conta.||Tem DRM? Preciso da minha própria chave de API?|Sem DRM. Você usa sua própria chave de API (DeepSeek, OpenRouter, OpenAI, Gemini, Z.ai ou xAI). Se um provedor falha, o mod passa ao próximo; se todos falham, a IA nativa do jogo assume.||Que dados saem do meu PC?|Só o dossiê de cada nação vai ao seu provedor: o que ela vê no mapa, relações, cartas e memória. Nada pessoal, nem seu nome nem sua conta Steam. As chaves ficam criptografadas no seu PC.||O que tenho sem a chave de licença?|Tudo menos a Diplomacia IA: moeda própria, Banco Central, pedágio e 16 impérios são grátis para testar.||Atualizações, reembolso, suporte?|Atualizações são grátis: baixe de novo. Reembolso em até 7 dias. O endereço de contato vem em breve.',
+      endTo: 'AO QUE JOGA · SEM SELO', endBody: '“Dezesseis cortes têm o seu nome em seus livros. Venha responder.”', endSub: 'Pagamento único · Reembolso em 7 dias · Uso da IA cobrado pelo provedor que você escolher', fPriv: 'Privacidade', fTerms: 'Termos', fInst: 'Instalação', fContact: 'Contato (provisório)'
+    },
+    es: {
+      buy: 'Comprar — US$ 10', nHow: 'Cómo funciona', nCost: 'Coste', turn: 'Turno', turnLc: 'turno', free: 'Gratis', est: '(estimación)', gold: 'oro', pay: 'pagan', detour: 'desvían',
+      eyebrow: 'Un mod para HUMANKIND', h1a: 'Las palabras se vuelven', h1b: 'órdenes.', sub: 'Declara la guerra, marcha con un ejército, exige tributo, patrocina rebeldes. 32 acciones reales del juego, cada una elegida por una nación que te escribió antes.',
+      watch: 'Míralo en acción', meta: 'Windows · Steam · Un jugador · 5 idiomas · Pago único · Reembolso en 7 días',
+      heroAlt: 'Pantalla de Correo del mod en HUMANKIND: naciones y sus cartas sin responder, con la interfaz del propio juego', heroCap: 'Captura real, turno 82 de una partida de prueba con 16 imperios, con la interfaz del propio juego. Nombre del jugador editado a “Shah”.',
+      lEy: 'Naciones vivas', lH: 'Lo que te escribieron. Lo que se escribieron a sí mismas.', lP: 'Cada turno, cada nación lee un dosier con solo lo que sabe, así que la niebla de guerra se respeta. Escribe un diario secreto, guarda memoria y sentimientos (afecto, confianza, miedo, ira) y escribe cartas con la voz de su cultura. Farolea, da largas, finge no entender, traiciona y cobra promesas antiguas. Nada es forzado, y ignorar a un rival tiene consecuencias. Las cartas solo citan recursos, ciudades, líderes y sucesos que existen en tu partida.',
+      lPub: 'Declaración pública', sealCta: 'Rompe el sello', sealSub: 'Lee lo que él escribió para sí.', diary: 'Su diario secreto · mismo turno', never: 'nunca enviado',
+      lNote: 'Carta y diario reales, salida del juego sin editar (DeepSeek). Partida de prueba con 16 imperios. Las naciones escriben en el idioma que elijas; estos ejemplos se generaron en inglés.',
+      cEy: 'Tres historias reales · unos 30 s cada una', cH: 'Mira cómo una carta se convierte en guerra.', cP: 'Relatos animados de cartas, diarios y acciones reales de partidas de prueba. Empieza sin sonido; usa el icono del altavoz para la banda sonora.', clips: 'Dos caras|Las palabras se vuelven guerra|Interceptada',
+      spyAlt: 'Pantalla de Inteligencia, pestaña Letters: carta de los mongoles a los nórdicos leída por el espía del jugador', spyP: 'Tus espías interceptan cartas privadas, y una carta interceptada nunca llega a su destino. Las naciones de la IA también se espían entre sí. La pestaña Letters está dentro de la pantalla nativa de Inteligencia.', spyNote: 'Captura escenificada: para esta imagen se creó el espía y se forzó la intercepción con un comando de desarrollador. El mecanismo es real y ocurre solo durante la partida.',
+      oEy: 'Las palabras se vuelven órdenes', oH: 'Lo que Arjuna escribió. Lo que Arjuna hizo.', oP: 'No es un chatbot encima del juego. La nación decide y el juego ejecuta.', priv: 'Privada', oNote: 'Acciones reales del registro del juego, en el mismo turno que la carta. Carta en su inglés original.',
+      acts: 'RECHAZADA|Exigencia formal de los axumitas: ceder Ḫattuša||RECHAZADA|Exigencia de los nórdicos de 600 de oro||POSTURA|Desconfiada hacia los axumitas||ORDEN|El ejército A220 defiende Ain durante 6 turnos',
+      kinds: '32 tipos de acción, todos reales', dlc: 'Cinco acciones del Congreso requieren el DLC Together We Rule.',
+      kindList: 'Guerra y paz|Declarar guerra, formal o por sorpresa. Hacer la paz. Rendirse con condiciones.||Pactos|Alianzas y acuerdos económicos, de información, culturales y militares.||Presión|Exigencias y crisis.||Regalos|Dinero, influencia, ciudades y ejércitos.||Tierras y pueblos|Ceder territorio. Patrocinar pueblos independientes, hasta vasallaje y anexión.||Ejércitos|Órdenes de mover, atacar, defender y asediar.||Corte y comercio|Política comercial, bloquear correspondencia, destituir ministros.||Congreso mundial|Proponer leyes, votar, sobornar, abrir crisis, impugnar veredictos.',
+      b1H: 'Dieciséis gobernantes esperan para escribirte.', b1P: '10 US$, pago único. Reembolso en 7 días. Sin clave, todo funciona menos la Diplomacia IA.',
+      kEy: 'Tu corte, sus cortes', kH: 'Doce sillas. Dieciséis tronos.', kP: 'Tu consejo tiene once carteras más la Mano del Trono. Hasta seis hablan cada turno, tú respondes hasta ocho veces, su estima hacia ti cambia y puedes destituir a cualquiera. Los rivales también tienen consejos de doce. El juego base llega a 10 imperios; con el plugin opcional MoreEmpires, hasta 16, probado en mapas Tiny, Normal y Huge.',
+      k1Alt: 'Pantalla del Consejo: 12 consejeros, 6 hablaron en el turno 82', k1Cap: 'Consejo, turno 82. La reunión costó US$ 0,0020 en IA.', k2Alt: 'Pantalla de Correo, sección Naciones: 14 naciones conocidas con sus líderes', k2Cap: 'Naciones, turno 80 de una partida con 16 imperios. Algunos nombres de líderes vienen del save en portugués.',
+      mEy: 'Dinero y comercio', mH: 'Cada imperio acuña su moneda. Cada caravana elige su camino.', mP: 'Un Banco Central con cuatro pestañas: Cambio, Política, Ciclo, Tu moneda. Fija el tipo a mano o deja que lo haga la regla de Taylor. La producción impulsa la inflación, la inflación impulsa los tipos, los tipos frenan la producción, así que nadie crece para siempre. Cada puesto comercial puede estar Libre, con Peaje o Bloqueado por imperio extranjero; las rutas comparan pagar con desviarse. Bloquear genera una queja diplomática real, y la IA también te grava y te bloquea.',
+      dT: 'Prueba el dial de intereses', dRate: 'Tipo de interés por turno', dProd: 'PRODUCCIÓN', dInfl: 'INFLACIÓN (ILUSTRATIVA)', dNote: 'Tipo neutro del 1% por turno. Cada punto por encima quita cerca del 5% de producción, de ×0,75 a ×1,05. Inflación objetivo del 0,5%. La cifra de inflación es ilustrativa; el multiplicador de producción sigue la regla del mod.', cycleAlt: 'Banco Central, pestaña Ciclo',
+      tT: 'Puesto comercial · Hàojīng', tFree: 'Libre', tToll: 'Peaje', tBlock: 'Bloqueado', tPrice: 'Precio del peaje', tInc: 'Ingresos', tNote: 'Simulador ilustrativo con cuatro rutas de ejemplo. La vista previa del juego muestra “X pagan · Y desvían”.', tollAlt: 'Panel del puesto comercial con peaje y bloqueo por imperio',
+      b2H: 'Prueba la economía gratis. Paga por las cartas.', b2P: 'Moneda, Banco Central, peajes y 16 imperios funcionan sin clave.',
+      xEy: 'Lo que cuesta la IA', xH: 'Conoce la factura antes del primer turno.', xP: 'Los 10 US$ compran el mod. La IA se paga aparte, al proveedor que elijas. Elige uno, fija un tope (por defecto 5 US$ por partida), y si todos fallan toma el control la IA nativa del juego.',
+      xProv: 'Proveedor', xEmp: 'Imperios', xTurns: 'Turnos jugados', xPer: 'POR TURNO', xGame: 'PARTIDA COMPLETA', cap1: 'Un tope de 5 US$ dura unos', cap2: 'turnos.', capNone: 'Sin coste en el plan gratuito, dentro de su límite de llamadas.', pDs: 'DeepSeek (medido)',
+      measured: 'Medido en partidas reales. En hora punta cuesta cerca del doble.', estimate: 'Estimación, no medido. Los planes gratuitos pueden tener límite de llamadas.',
+      xNote: 'Medido con DeepSeek: unos 0,03 US$ por turno con 10 imperios, de 0,12 a 0,14 con 16 fuera de hora punta. Los valores intermedios se interpolan. Los modelos gratuitos de OpenRouter tienen un límite de 50 llamadas al día, y un turno de 16 imperios usa de 21 a 28.',
+      iEy: 'Instalación', iH: 'Tres pasos hasta la primera carta.', stepList: 'Compra y descarga|Un pago de 10 US$ con Lemon Squeezy. Los enlaces de descarga llegan al instante.||Copia a la carpeta del juego|Descomprime en la carpeta de HUMANKIND en Steam. Hay un instalador en preparación. Detalles en la página de instalación.||Elige tu IA|Inicia sesión con OpenRouter o pega una clave (DeepSeek, OpenAI, Gemini, GLM, xAI). Fija tu tope de gasto. Juega.',
+      reqY: 'Funciona en', reqYb: 'Windows · HUMANKIND en Steam · solo un jugador. Steam Deck: experimental.', reqN: 'No funciona en', reqNb: 'Mac · Xbox / Game Pass · multijugador (el mod se desactiva solo). Epic: aún sin probar.',
+      fH: 'Preguntas, respondidas sin rodeos.',
+      faqList: '¿Funciona en multijugador?|No. El mod se desactiva solo en multijugador. Es solo para un jugador.||¿Se rompen mis partidas si lo quito? ¿Cómo lo desinstalo?|Las partidas guardadas siguen abriéndose sin el mod, salvo las de más de 10 imperios, que necesitan el plugin MoreEmpires. Para desinstalar, borra dos carpetas. Hay un instalador en preparación.||¿Steam, Epic, Steam Deck, Mac, Xbox?|Windows con HUMANKIND en Steam. Epic sin probar. Steam Deck es experimental. Mac y Xbox / Game Pass no son compatibles.||¿Cuánto cuesta la IA?|Pagas directamente a tu proveedor. Con DeepSeek medimos unos 0,03 US$ por turno con 10 imperios y de 0,12 a 0,14 con 16 fuera de hora punta. Los demás proveedores son estimaciones. Un tope de gasto por partida (por defecto 5 US$) frena la factura.||¿Hay DRM? ¿Necesito mi propia clave de API?|Sin DRM. Usas tu propia clave de API (DeepSeek, OpenRouter, OpenAI, Gemini, Z.ai o xAI). Si un proveedor falla, el mod pasa al siguiente; si todos fallan, toma el control la IA nativa del juego.||¿Qué datos salen de mi PC?|Solo el dosier de cada nación llega a tu proveedor: lo que ve en el mapa, sus relaciones, cartas y memoria. Nada personal, ni tu nombre ni tu cuenta de Steam. Las claves se guardan cifradas en tu PC.||¿Qué obtengo sin clave de licencia?|Todo menos la Diplomacia IA: moneda propia, Banco Central, peajes y 16 imperios son gratis para probar.||¿Actualizaciones, reembolso, soporte?|Las actualizaciones son gratis: descarga de nuevo. Reembolso en 7 días. La dirección de contacto llegará pronto.',
+      endTo: 'PARA QUIEN JUEGA · SIN SELLO', endBody: '“Dieciséis cortes tienen tu nombre en sus libros. Ven y responde.”', endSub: 'Pago único · Reembolso en 7 días · El uso de la IA lo cobra el proveedor que elijas', fPriv: 'Privacidad', fTerms: 'Términos', fInst: 'Instalación', fContact: 'Contacto (provisional)'
+    },
+    fr: {
+      buy: 'Acheter — 10 $', nHow: 'Fonctionnement', nCost: 'Coût', turn: 'Tour', turnLc: 'tour', free: 'Gratuit', est: '(estimation)', gold: 'or', pay: 'paient', detour: 'contournent',
+      eyebrow: 'Un mod pour HUMANKIND', h1a: 'Les mots deviennent', h1b: 'des ordres.', sub: 'Déclarez la guerre, menez une armée, exigez un tribut, soutenez des rebelles. 32 actions réelles du jeu, chacune choisie par une nation qui vous a d’abord écrit.',
+      watch: 'Voir en action', meta: 'Windows · Steam · Solo · 5 langues · Paiement unique · Remboursement sous 7 jours',
+      heroAlt: 'Écran Courrier du mod dans HUMANKIND : les nations et leurs lettres sans réponse, dans l’interface du jeu', heroCap: 'Capture réelle, tour 82 d’une partie test à 16 empires, dans l’interface du jeu. Nom du joueur modifié en « Shah ».',
+      lEy: 'Nations vivantes', lH: 'Ce qu’elles vous ont écrit. Ce qu’elles se sont écrit.', lP: 'À chaque tour, chaque nation lit un dossier avec seulement ce qu’elle sait, le brouillard de guerre est donc respecté. Elle tient un journal secret, garde mémoire et sentiments (affection, confiance, peur, colère) et écrit des lettres dans la voix de sa culture. Elle bluffe, temporise, feint de ne pas comprendre, trahit et réclame de vieilles promesses. Rien n’est forcé, et ignorer un rival a des conséquences. Les lettres ne citent que des ressources, villes, dirigeants et événements qui existent dans votre partie.',
+      lPub: 'Déclaration publique', sealCta: 'Brisez le sceau', sealSub: 'Lisez ce qu’il s’est écrit à lui-même.', diary: 'Son journal secret · même tour', never: 'jamais envoyé',
+      lNote: 'Lettre et journal réels, sortie du jeu non modifiée (DeepSeek). Partie test à 16 empires. Les nations écrivent dans la langue que vous choisissez ; ces exemples ont été générés en anglais.',
+      cEy: 'Trois histoires vraies · environ 30 s chacune', cH: 'Voyez une lettre devenir une guerre.', cP: 'Récits animés de lettres, journaux et actions réels issus de parties test. Démarre sans son ; utilisez l’icône haut-parleur pour la musique.', clips: 'Deux visages|Les mots deviennent guerre|Interceptée',
+      spyAlt: 'Écran Renseignement, onglet Letters : lettre des Mongols aux Nordiques lue par l’espion du joueur', spyP: 'Vos espions interceptent les lettres privées, et une lettre interceptée n’arrive jamais. Les nations de l’IA s’espionnent aussi entre elles. L’onglet Letters se trouve dans l’écran natif Renseignement.', spyNote: 'Capture mise en scène : pour cette image, l’espion a été créé et l’interception forcée avec une commande de développeur. Le mécanisme est réel et se produit seul en jeu.',
+      oEy: 'Les mots deviennent des ordres', oH: 'Ce qu’Arjuna a écrit. Ce qu’Arjuna a fait.', oP: 'Ce n’est pas un chatbot posé sur le jeu. La nation décide, et le jeu exécute.', priv: 'Privée', oNote: 'Actions réelles tirées du journal du jeu, au même tour que la lettre. Lettre en anglais d’origine.',
+      acts: 'REFUSÉE|Exigence formelle des Axoumites : céder Ḫattuša||REFUSÉE|Exigence des Nordiques de 600 d’or||POSTURE|Méfiante envers les Axoumites||ORDRE|L’armée A220 défend Ain pendant 6 tours',
+      kinds: '32 types d’action, tous réels', dlc: 'Cinq actions du Congrès exigent le DLC Together We Rule.',
+      kindList: 'Guerre et paix|Déclarer la guerre, formelle ou par surprise. Faire la paix. Se rendre avec conditions.||Pactes|Alliances et accords économiques, d’information, culturels et militaires.||Pression|Exigences et crises.||Cadeaux|Argent, influence, villes et armées.||Terres et peuples|Céder du territoire. Soutenir des peuples indépendants, jusqu’à la vassalité et l’annexion.||Armées|Ordres de déplacer, attaquer, défendre et assiéger.||Cour et commerce|Politique commerciale, bloquer le courrier, renvoyer des ministres.||Congrès mondial|Proposer des lois, voter, corrompre, ouvrir des crises, contester des verdicts.',
+      b1H: 'Seize dirigeants attendent de vous écrire.', b1P: '10 $, paiement unique. Remboursement sous 7 jours. Sans clé, tout fonctionne sauf la Diplomatie IA.',
+      kEy: 'Votre cour, leurs cours', kH: 'Douze sièges. Seize trônes.', kP: 'Votre conseil compte onze portefeuilles plus la Main du Trône. Jusqu’à six parlent à chaque tour, vous répondez jusqu’à huit fois, leur estime pour vous évolue et vous pouvez en renvoyer. Les rivaux ont aussi des conseils de douze. Le jeu de base s’arrête à 10 empires ; avec le plugin optionnel MoreEmpires, jusqu’à 16, testé sur cartes Tiny, Normal et Huge.',
+      k1Alt: 'Écran du Conseil : 12 conseillers, 6 ont parlé au tour 82', k1Cap: 'Conseil, tour 82. La réunion a coûté 0,0020 US$ d’IA.', k2Alt: 'Écran Courrier, section Nations : 14 nations connues avec leurs dirigeants', k2Cap: 'Nations, tour 80 d’une partie à 16 empires. Certains noms de dirigeants viennent de la sauvegarde en portugais.',
+      mEy: 'Argent et commerce', mH: 'Chaque empire frappe sa monnaie. Chaque caravane choisit sa route.', mP: 'Une Banque centrale à quatre onglets : Change, Politique, Cycle, Votre monnaie. Fixez le taux à la main ou laissez la règle de Taylor s’en charger. La production alimente l’inflation, l’inflation alimente les taux, les taux freinent la production : personne ne croît éternellement. Chaque poste commercial peut être Libre, Péage ou Bloqué par empire étranger ; les routes comparent payer et contourner. Bloquer déclenche un vrai grief diplomatique, et l’IA vous taxe et vous bloque aussi.',
+      dT: 'Essayez le cadran des taux', dRate: 'Taux d’intérêt par tour', dProd: 'PRODUCTION', dInfl: 'INFLATION (ILLUSTRATIVE)', dNote: 'Taux neutre de 1 % par tour. Chaque point au-dessus retire environ 5 % de production, de ×0,75 à ×1,05. Inflation cible de 0,5 %. Le chiffre d’inflation est illustratif ; le multiplicateur de production suit la règle du mod.', cycleAlt: 'Banque centrale, onglet Cycle',
+      tT: 'Poste commercial · Hàojīng', tFree: 'Libre', tToll: 'Péage', tBlock: 'Bloqué', tPrice: 'Prix du péage', tInc: 'Revenu', tNote: 'Bac à sable illustratif avec quatre routes d’exemple. L’aperçu en jeu affiche « X paient · Y contournent ».', tollAlt: 'Panneau du poste commercial avec péage et blocage par empire',
+      b2H: 'Essayez l’économie gratuitement. Payez pour les lettres.', b2P: 'Monnaie, Banque centrale, péages et 16 empires fonctionnent sans clé.',
+      xEy: 'Ce que coûte l’IA', xH: 'Connaissez la note avant le premier tour.', xP: 'Les 10 $ achètent le mod. L’IA se paie à part, auprès du fournisseur de votre choix. Choisissez-en un, fixez un plafond (5 US$ par partie par défaut), et si tous échouent, l’IA native du jeu reprend la main.',
+      xProv: 'Fournisseur', xEmp: 'Empires', xTurns: 'Tours joués', xPer: 'PAR TOUR', xGame: 'PARTIE ENTIÈRE', cap1: 'Un plafond de 5 US$ dure environ', cap2: 'tours.', capNone: 'Aucun coût sur l’offre gratuite, dans sa limite d’appels.', pDs: 'DeepSeek (mesuré)',
+      measured: 'Mesuré sur de vraies parties. En heures de pointe, environ le double.', estimate: 'Estimation, non mesuré. Les offres gratuites peuvent limiter les appels.',
+      xNote: 'Mesuré avec DeepSeek : environ 0,03 US$ par tour avec 10 empires, 0,12 à 0,14 avec 16 hors pointe. Les valeurs intermédiaires sont interpolées. Les modèles gratuits d’OpenRouter sont limités à 50 appels par jour, et un tour à 16 empires en utilise 21 à 28.',
+      iEy: 'Installation', iH: 'Trois étapes jusqu’à la première lettre.', stepList: 'Achetez et téléchargez|Un paiement de 10 $ via Lemon Squeezy. Les liens de téléchargement arrivent aussitôt.||Copiez dans le dossier du jeu|Décompressez dans votre dossier HUMANKIND sur Steam. Un installateur est en préparation. Détails sur la page d’installation.||Choisissez votre IA|Connectez-vous avec OpenRouter ou collez une clé (DeepSeek, OpenAI, Gemini, GLM, xAI). Fixez votre plafond de dépenses. Jouez.',
+      reqY: 'Fonctionne sur', reqYb: 'Windows · HUMANKIND sur Steam · solo uniquement. Steam Deck : expérimental.', reqN: 'Ne fonctionne pas sur', reqNb: 'Mac · Xbox / Game Pass · multijoueur (le mod se désactive seul). Epic : pas encore testé.',
+      fH: 'Des questions, des réponses directes.',
+      faqList: 'Ça marche en multijoueur ?|Non. Le mod se désactive seul en multijoueur. Il est réservé au solo.||Mes sauvegardes cassent-elles si je le retire ? Comment désinstaller ?|Les sauvegardes s’ouvrent toujours sans le mod, sauf celles de plus de 10 empires, qui exigent le plugin MoreEmpires. Pour désinstaller, supprimez deux dossiers. Un installateur est en préparation.||Steam, Epic, Steam Deck, Mac, Xbox ?|Windows avec HUMANKIND sur Steam. Epic non testé. Steam Deck est expérimental. Mac et Xbox / Game Pass ne sont pas pris en charge.||Combien coûte l’IA ?|Vous payez directement votre fournisseur. Avec DeepSeek, nous avons mesuré environ 0,03 US$ par tour avec 10 empires et 0,12 à 0,14 avec 16 hors pointe. Les autres fournisseurs sont des estimations. Un plafond de dépenses par partie (5 US$ par défaut) limite la note.||Y a-t-il un DRM ? Faut-il ma propre clé d’API ?|Pas de DRM. Vous utilisez votre propre clé d’API (DeepSeek, OpenRouter, OpenAI, Gemini, Z.ai ou xAI). Si un fournisseur échoue, le mod passe au suivant ; si tous échouent, l’IA native du jeu reprend la main.||Quelles données quittent mon PC ?|Seul le dossier de chaque nation part vers votre fournisseur : ce qu’elle voit sur la carte, ses relations, lettres et mémoire. Rien de personnel, ni votre nom ni votre compte Steam. Les clés sont stockées chiffrées sur votre PC.||Que j’ai-je sans clé de licence ?|Tout sauf la Diplomatie IA : monnaie propre, Banque centrale, péages et 16 empires sont gratuits à essayer.||Mises à jour, remboursement, support ?|Les mises à jour sont gratuites : retéléchargez. Remboursement sous 7 jours. L’adresse de contact arrive bientôt.',
+      endTo: 'À CELUI QUI JOUE · DESCELLÉ', endBody: '« Seize cours ont votre nom dans leurs registres. Venez répondre. »', endSub: 'Paiement unique · Remboursement sous 7 jours · Usage de l’IA facturé par le fournisseur choisi', fPriv: 'Confidentialité', fTerms: 'Conditions', fInst: 'Installation', fContact: 'Contact (provisoire)'
+    },
+    de: {
+      buy: 'Kaufen — 10 $', nHow: 'So funktioniert’s', nCost: 'Kosten', turn: 'Runde', turnLc: 'Runde', free: 'Kostenlos', est: '(Schätzung)', gold: 'Gold', pay: 'zahlen', detour: 'weichen aus',
+      eyebrow: 'Eine Mod für HUMANKIND', h1a: 'Worte werden', h1b: 'Befehle.', sub: 'Erkläre Krieg, schick ein Heer los, fordere Tribut, unterstütze Rebellen. 32 echte Spielaktionen, jede gewählt von einer Nation, die dir zuerst geschrieben hat.',
+      watch: 'In Aktion ansehen', meta: 'Windows · Steam · Einzelspieler · 5 Sprachen · Einmalzahlung · 7 Tage Rückgabe',
+      heroAlt: 'Post-Bildschirm der Mod in HUMANKIND: Nationen und ihre unbeantworteten Briefe, in der Oberfläche des Spiels', heroCap: 'Echter Screenshot, Runde 82 eines Testspiels mit 16 Reichen, in der Oberfläche des Spiels. Spielername zu „Shah“ geändert.',
+      lEy: 'Lebendige Nationen', lH: 'Was sie dir schrieben. Was sie sich selbst schrieben.', lP: 'Jede Runde liest jede Nation ein Dossier mit nur dem, was sie weiß, der Kriegsnebel bleibt also erhalten. Sie führt ein geheimes Tagebuch, merkt sich Vergangenes und Gefühle (Zuneigung, Vertrauen, Furcht, Zorn) und schreibt Briefe in der Stimme ihrer Kultur. Sie blufft, hält hin, stellt sich dumm, verrät und fordert alte Versprechen ein. Nichts ist erzwungen, und einen Rivalen zu ignorieren hat Folgen. Die Briefe nennen nur Ressourcen, Städte, Anführer und Ereignisse, die in deiner Partie existieren.',
+      lPub: 'Öffentliche Erklärung', sealCta: 'Siegel brechen', sealSub: 'Lies, was er sich selbst schrieb.', diary: 'Sein geheimes Tagebuch · gleiche Runde', never: 'nie gesendet',
+      lNote: 'Echter Brief und echtes Tagebuch, unbearbeitete Spielausgabe (DeepSeek). Testspiel mit 16 Reichen. Die Nationen schreiben in der Sprache deiner Wahl; diese Beispiele wurden auf Englisch erzeugt.',
+      cEy: 'Drei wahre Geschichten · je etwa 30 s', cH: 'Sieh, wie aus einem Brief ein Krieg wird.', cP: 'Animierte Nacherzählungen echter Briefe, Tagebücher und Aktionen aus Testspielen. Startet stumm; das Lautsprechersymbol schaltet die Musik ein.', clips: 'Zwei Gesichter|Worte werden Krieg|Abgefangen',
+      spyAlt: 'Geheimdienst-Bildschirm, Reiter Letters: Brief der Mongolen an die Nordmänner, gelesen vom Spion des Spielers', spyP: 'Deine Spione fangen private Briefe ab, und ein abgefangener Brief kommt nie an. Auch die KI-Nationen spionieren einander aus. Der Reiter Letters liegt im nativen Geheimdienst-Bildschirm.', spyNote: 'Gestellte Aufnahme: Für diesen Screenshot wurde der Spion erstellt und das Abfangen per Entwicklerbefehl erzwungen. Der Mechanismus ist echt und läuft im Spiel von selbst.',
+      oEy: 'Worte werden Befehle', oH: 'Was Arjuna schrieb. Was Arjuna tat.', oP: 'Das ist kein Chatbot über dem Spiel. Die Nation entscheidet, und das Spiel führt aus.', priv: 'Privat', oNote: 'Echte Aktionen aus dem Spielprotokoll, gleiche Runde wie der Brief. Brief im englischen Original.',
+      acts: 'ABGELEHNT|Förmliche Forderung der Aksumiten: Ḫattuša abtreten||ABGELEHNT|Forderung der Nordmänner über 600 Gold||HALTUNG|Misstrauisch gegenüber den Aksumiten||BEFEHL|Armee A220 verteidigt Ain für 6 Runden',
+      kinds: '32 Aktionstypen, alle echt', dlc: 'Fünf Kongress-Aktionen benötigen das DLC Together We Rule.',
+      kindList: 'Krieg und Frieden|Krieg erklären, förmlich oder als Überfall. Frieden schließen. Kapitulieren mit Bedingungen.||Bündnisse|Allianzen sowie Wirtschafts-, Informations-, Kultur- und Militärabkommen.||Druck|Forderungen und Krisen.||Geschenke|Geld, Einfluss, Städte und Armeen.||Land und Völker|Gebiet abtreten. Unabhängige Völker unterstützen, bis hin zu Vasallentum und Annexion.||Armeen|Befehle zum Bewegen, Angreifen, Verteidigen und Belagern.||Hof und Handel|Handelspolitik, Korrespondenz blockieren, Minister entlassen.||Weltkongress|Gesetze vorschlagen, abstimmen, bestechen, Krisen eröffnen, Urteile anfechten.',
+      b1H: 'Sechzehn Herrscher warten darauf, dir zu schreiben.', b1P: '10 $, einmalig. 7 Tage Rückgabe. Ohne Schlüssel läuft alles außer der KI-Diplomatie.',
+      kEy: 'Dein Hof, ihre Höfe', kH: 'Zwölf Stühle. Sechzehn Throne.', kP: 'Dein Rat hat elf Ressorts plus die Hand des Throns. Bis zu sechs sprechen pro Runde, du antwortest bis zu achtmal, ihre Wertschätzung für dich ändert sich, und du kannst jeden entlassen. Auch Rivalen haben Räte aus zwölf. Das Basisspiel endet bei 10 Reichen; mit dem optionalen Plugin MoreEmpires sind es bis zu 16, getestet auf Tiny-, Normal- und Huge-Karten.',
+      k1Alt: 'Ratsbildschirm: 12 Berater, 6 sprachen in Runde 82', k1Cap: 'Rat, Runde 82. Die Sitzung kostete 0,0020 US$ KI-Gebühren.', k2Alt: 'Post-Bildschirm, Abschnitt Nationen: 14 bekannte Nationen mit ihren Anführern', k2Cap: 'Nationen, Runde 80 eines Spiels mit 16 Reichen. Manche Anführernamen stammen portugiesisch aus dem Spielstand.',
+      mEy: 'Geld und Handel', mH: 'Jedes Reich prägt eigene Münzen. Jede Karawane wählt ihren Weg.', mP: 'Eine Zentralbank mit vier Reitern: Wechselkurs, Politik, Zyklus, Deine Währung. Stelle den Zins von Hand ein oder überlasse es der Taylor-Regel. Produktion treibt die Inflation, Inflation treibt die Zinsen, Zinsen bremsen die Produktion, also wächst niemand ewig. Jeder Handelsposten kann pro fremdem Reich Frei, Maut oder Gesperrt sein; Routen wägen Zahlen gegen Ausweichen ab. Sperren löst eine echte diplomatische Beschwerde aus, und auch die KI besteuert und sperrt dich.',
+      dT: 'Probiere den Zinsregler', dRate: 'Zinssatz pro Runde', dProd: 'PRODUKTION', dInfl: 'INFLATION (ILLUSTRATIV)', dNote: 'Neutraler Zins 1 % pro Runde. Jeder Punkt darüber kostet etwa 5 % Produktion, von ×0,75 bis ×1,05. Inflationsziel 0,5 %. Der Inflationswert ist illustrativ; der Produktionsfaktor folgt der Regel der Mod.', cycleAlt: 'Zentralbank, Reiter Zyklus',
+      tT: 'Handelsposten · Hàojīng', tFree: 'Frei', tToll: 'Maut', tBlock: 'Gesperrt', tPrice: 'Mautpreis', tInc: 'Einnahmen', tNote: 'Illustrative Sandbox mit vier Beispielrouten. Die Vorschau im Spiel zeigt „X zahlen · Y weichen aus“.', tollAlt: 'Handelsposten-Fenster mit Maut und Sperre pro Reich',
+      b2H: 'Teste die Wirtschaft gratis. Bezahle für die Briefe.', b2P: 'Währung, Zentralbank, Mautstellen und 16 Reiche laufen ohne Schlüssel.',
+      xEy: 'Was die KI kostet', xH: 'Kenne die Rechnung vor der ersten Runde.', xP: 'Die 10 $ kaufen die Mod. Die KI bezahlst du separat beim Anbieter deiner Wahl. Wähle einen, setze ein Limit (Standard 5 US$ pro Partie), und wenn alle ausfallen, übernimmt die native KI des Spiels.',
+      xProv: 'Anbieter', xEmp: 'Reiche', xTurns: 'Gespielte Runden', xPer: 'PRO RUNDE', xGame: 'GANZE PARTIE', cap1: 'Ein Limit von 5 US$ reicht für etwa', cap2: 'Runden.', capNone: 'Keine Kosten im Gratis-Tarif, innerhalb seines Aufruflimits.', pDs: 'DeepSeek (gemessen)',
+      measured: 'In echten Partien gemessen. Zu Stoßzeiten etwa das Doppelte.', estimate: 'Schätzung, nicht gemessen. Gratis-Tarife können Aufruflimits haben.',
+      xNote: 'Gemessen mit DeepSeek: etwa 0,03 US$ pro Runde mit 10 Reichen, 0,12 bis 0,14 mit 16 außerhalb der Stoßzeit. Zwischenwerte sind interpoliert. Kostenlose OpenRouter-Modelle sind auf 50 Aufrufe pro Tag begrenzt, und eine Runde mit 16 Reichen braucht 21 bis 28.',
+      iEy: 'Installation', iH: 'Drei Schritte bis zum ersten Brief.', stepList: 'Kaufen und herunterladen|Eine Zahlung von 10 $ über Lemon Squeezy. Die Download-Links kommen sofort.||In den Spielordner kopieren|In deinen HUMANKIND-Ordner auf Steam entpacken. Ein Installer ist in Vorbereitung. Details auf der Installationsseite.||KI wählen|Mit OpenRouter anmelden oder einen Schlüssel einfügen (DeepSeek, OpenAI, Gemini, GLM, xAI). Ausgabenlimit setzen. Spielen.',
+      reqY: 'Läuft auf', reqYb: 'Windows · HUMANKIND auf Steam · nur Einzelspieler. Steam Deck: experimentell.', reqN: 'Läuft nicht auf', reqNb: 'Mac · Xbox / Game Pass · Mehrspieler (die Mod schaltet sich selbst ab). Epic: noch nicht getestet.',
+      fH: 'Fragen, klar beantwortet.',
+      faqList: 'Funktioniert es im Mehrspielermodus?|Nein. Die Mod schaltet sich im Mehrspielermodus selbst ab. Nur Einzelspieler.||Gehen meine Spielstände kaputt, wenn ich sie entferne? Wie deinstalliere ich?|Spielstände lassen sich ohne die Mod weiter öffnen, außer solche mit mehr als 10 Reichen, die das Plugin MoreEmpires brauchen. Zum Deinstallieren lösche zwei Ordner. Ein Installer ist in Vorbereitung.||Steam, Epic, Steam Deck, Mac, Xbox?|Windows mit HUMANKIND auf Steam. Epic ungetestet. Steam Deck ist experimentell. Mac und Xbox / Game Pass werden nicht unterstützt.||Was kostet die KI?|Du zahlst direkt an deinen Anbieter. Mit DeepSeek haben wir etwa 0,03 US$ pro Runde mit 10 Reichen und 0,12 bis 0,14 mit 16 außerhalb der Stoßzeit gemessen. Andere Anbieter sind Schätzungen. Ein Ausgabenlimit pro Partie (Standard 5 US$) begrenzt die Rechnung.||Gibt es DRM? Brauche ich einen eigenen API-Schlüssel?|Kein DRM. Du nutzt deinen eigenen API-Schlüssel (DeepSeek, OpenRouter, OpenAI, Gemini, Z.ai oder xAI). Fällt ein Anbieter aus, wechselt die Mod zum nächsten; fallen alle aus, übernimmt die native KI des Spiels.||Welche Daten verlassen meinen PC?|Nur das Dossier jeder Nation geht an deinen Anbieter: was sie auf der Karte sieht, ihre Beziehungen, Briefe und Erinnerungen. Nichts Persönliches, weder dein Name noch dein Steam-Konto. API-Schlüssel liegen verschlüsselt auf deinem PC.||Was bekomme ich ohne Lizenzschlüssel?|Alles außer der KI-Diplomatie: eigene Währung, Zentralbank, Mautstellen und 16 Reiche sind kostenlos zum Ausprobieren.||Updates, Rückgabe, Support?|Updates sind kostenlos: einfach neu herunterladen. Rückgabe innerhalb von 7 Tagen. Eine Kontaktadresse folgt bald.',
+      endTo: 'AN DEN, DER SPIELT · ENTSIEGELT', endBody: '„Sechzehn Höfe führen deinen Namen in ihren Büchern. Komm und antworte.“', endSub: 'Einmalzahlung · 7 Tage Rückgabe · KI-Nutzung wird vom gewählten Anbieter berechnet', fPriv: 'Datenschutz', fTerms: 'Bedingungen', fInst: 'Installation', fContact: 'Kontakt (Platzhalter)'
+    }
+  };
+}
+</script>
+</body>
+</html>

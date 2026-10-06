@@ -1,0 +1,74 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net472</TargetFramework>
+    <AssemblyName>CurrencyMod</AssemblyName>
+    <RootNamespace>CurrencyMod</RootNamespace>
+    <LangVersion>latest</LangVersion>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <Nullable>disable</Nullable>
+    <GameDir>$(MSBuildThisFileDirectory)..\..\..\</GameDir>
+    <ManagedDir>$(GameDir)Humankind_Data\Managed\</ManagedDir>
+    <BepInExDir>$(GameDir)BepInEx\</BepInExDir>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3" PrivateAssets="all" />
+    <!-- Torna membros internal/private do jogo acessíveis em tempo de compilação -->
+    <PackageReference Include="Krafs.Publicizer" Version="2.2.1" PrivateAssets="all" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Publicize Include="Amplitude.Mercury.Firstpass" />
+    <Publicize Include="Amplitude.Framework" />
+    <Publicize Include="Amplitude.UI" />
+    <Publicize Include="Assembly-CSharp" />
+    <Publicize Include="Amplitude.AI" />
+    <Publicize Include="Amplitude.Mercury.AI.Brain" />
+    <!-- Métodos que o mod sobrescreve precisam manter o modificador original. -->
+    <DoNotPublicize Include="Amplitude.UI:Amplitude.UI.Windows.UIWindow.PostLoad" />
+    <DoNotPublicize Include="Amplitude.UI:Amplitude.UI.Windows.UIWindow.PreUnload" />
+    <DoNotPublicize Include="Amplitude.Mercury.Firstpass:Amplitude.Mercury.Sandbox.Sandbox.OnSaveStateChange" />
+    <DoNotPublicize Include="Amplitude.Mercury.Firstpass:Amplitude.Mercury.Sandbox.Sandbox.OnLoadStateChange" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="BepInEx"><HintPath>$(BepInExDir)core\BepInEx.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="0Harmony"><HintPath>$(BepInExDir)core\0Harmony.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="UnityEngine"><HintPath>$(ManagedDir)UnityEngine.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="UnityEngine.CoreModule"><HintPath>$(ManagedDir)UnityEngine.CoreModule.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="UnityEngine.IMGUIModule"><HintPath>$(ManagedDir)UnityEngine.IMGUIModule.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="UnityEngine.InputLegacyModule"><HintPath>$(ManagedDir)UnityEngine.InputLegacyModule.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="UnityEngine.TextRenderingModule"><HintPath>$(ManagedDir)UnityEngine.TextRenderingModule.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="UnityEngine.ScreenCaptureModule"><HintPath>$(ManagedDir)UnityEngine.ScreenCaptureModule.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="UnityEngine.ImageConversionModule"><HintPath>$(ManagedDir)UnityEngine.ImageConversionModule.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="Newtonsoft.Json"><HintPath>$(ManagedDir)Newtonsoft.Json.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="Amplitude"><HintPath>$(ManagedDir)Amplitude.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="Amplitude.Framework"><HintPath>$(ManagedDir)Amplitude.Framework.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="Amplitude.Graphics"><HintPath>$(ManagedDir)Amplitude.Graphics.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="Amplitude.Mercury.Firstpass"><HintPath>$(ManagedDir)Amplitude.Mercury.Firstpass.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="Amplitude.Mercury.Data"><HintPath>$(ManagedDir)Amplitude.Mercury.Data.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="Amplitude.UI"><HintPath>$(ManagedDir)Amplitude.UI.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="Assembly-CSharp"><HintPath>$(ManagedDir)Assembly-CSharp.dll</HintPath><Private>false</Private></Reference>
+    <!-- IA nativa: travas das grandes decisões quando a IA de linguagem responde pela nação (Diplomacia\NativeAiLocks.cs). -->
+    <Reference Include="Amplitude.AI"><HintPath>$(ManagedDir)Amplitude.AI.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="Amplitude.Mercury.AI.Brain"><HintPath>$(ManagedDir)Amplitude.Mercury.AI.Brain.dll</HintPath><Private>false</Private></Reference>
+    <!-- Base das definições de dados do jogo (FactionDefinition etc.): só para compilar Databases.GetDatabase<T>(). -->
+    <Reference Include="Sirenix.Serialization"><HintPath>$(ManagedDir)Sirenix.Serialization.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="Amplitude.IO"><HintPath>$(ManagedDir)Amplitude.IO.dll</HintPath><Private>false</Private></Reference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Página do visualizador de debug da IA (F10), servida pelo próprio mod em http://localhost:porta/ -->
+    <EmbeddedResource Include="Diplomacia\Viewer\viewer.html" LogicalName="viewer.html" />
+    <!-- Traduções da interface (L.cs): {"texto em português": "tradução"}. -->
+    <EmbeddedResource Include="Lang\*.json" LogicalName="lang.%(Filename).json" />
+  </ItemGroup>
+
+  <!-- O núcleo fica fora de BepInEx\plugins: quem carrega (e recarrega a quente) é o CurrencyMod.Loader. -->
+  <!-- dotnet build -p:SkipDeploy=true só compila (usado pelo script de empacotamento). -->
+  <Target Name="DeployCore" AfterTargets="Build" Condition="'$(SkipDeploy)' != 'true'">
+    <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(BepInExDir)CurrencyModCore\" />
+  </Target>
+
+</Project>

@@ -1,0 +1,13 @@
+# Cenários fixos da bancada: arquivo do corpus · o que testa. Linhas com # são ignoradas.
+b44f3e76\T105_E7.json · carta do jogador + guerra + ultimato
+b44f3e76\T106_E3.json · carta do jogador + pedágio + proposta
+b44f3e76\T118_E0.json · véspera da guerra contra o jogador
+b44f3e76\T128_E0.json · guerra + rendição oferecida pelo jogador
+b44f3e76\T129_E7.json · guerra + rendição + crise
+b44f3e76\T101_E7.json · guerra + proposta + ultimato + forjador
+b44f3e76\T117_E0.json · espiões + pedágio + ultimato + crise
+b44f3e76\T100_E6.json · proposta + ultimato + pedágio + crise
+b44f3e76\T125_E5.json · aliança proposta + perdão de queixas
+b44f3e76\T124_E8.json · forjador (Teodoro) + declarações públicas
+b44f3e76\T112_E3.json · rotina
+b44f3e76\T110_E4.json · rotina

@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Realpolitik: Living Nations for HUMANKIND</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;1,9..144,400&family=IM+Fell+English:ital@0;1&family=Mulish:wght@400;600;700;800&display=swap" rel="stylesheet">
+<script src="https://assets.lemonsqueezy.com/lemon.js" defer></script>
+<style>html{scroll-behavior:smooth}body{margin:0;background:#0c1522;color:#f1ead9;font-family:Mulish,system-ui,sans-serif;overflow-x:hidden}a{color:#e2c172}a:hover{color:#f1ead9}*{box-sizing:border-box}img{max-width:100%}button{font-family:inherit}input[type=range]{accent-color:#c4245e;width:100%}@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}*{transition:none!important}}</style>
+</helmet>
+
+<!-- NAV -->
+<div style="position:sticky;top:0;z-index:50;background:rgba(12,21,34,.92);backdrop-filter:blur(8px);border-bottom:1px solid rgba(226,193,114,.18)">
+  <div style="max-width:1180px;margin:0 auto;padding:12px 24px;display:flex;justify-content:space-between;align-items:center;gap:16px">
+    <a href="#top" style="text-decoration:none;font:700 15px Cinzel,serif;letter-spacing:.14em;color:#e2c172">REALPOLITIK</a>
+    <div style="display:flex;gap:22px;align-items:center">
+      <a href="#how" style="text-decoration:none;font-size:13px;color:#cfd6e2;font-weight:700">How it works</a>
+      <a href="#cost" style="text-decoration:none;font-size:13px;color:#cfd6e2;font-weight:700">Cost</a>
+      <a href="#faq" style="text-decoration:none;font-size:13px;color:#cfd6e2;font-weight:700">FAQ</a>
+      <button onClick="{{ buy }}" style="background:#c4245e;color:#fff;border:0;font:800 12px Mulish;letter-spacing:.12em;text-transform:uppercase;padding:12px 18px;border-radius:3px;cursor:pointer" style-hover="filter:brightness(1.15)">Get it — $10</button>
+    </div>
+  </div>
+</div>
+
+<!-- HERO -->
+<div id="top" style="background:radial-gradient(ellipse at 50% 0,#1b2c4a,#0e1a30 60%,#0c1522)">
+  <div style="text-align:center;padding:72px 24px 40px;max-width:1000px;margin:0 auto">
+    <div style="font:800 12px Mulish;letter-spacing:.24em;color:#e2c172;text-transform:uppercase">A mod for HUMANKIND</div>
+    <h1 style="font:600 clamp(48px,9vw,104px)/.95 Fraunces,serif;letter-spacing:-.03em;margin:18px 0">Words become <em style="font-weight:400;color:#e2c172">orders.</em></h1>
+    <p style="font-size:clamp(17px,2.2vw,21px);line-height:1.5;color:#cfd6e2;max-width:42ch;margin:0 auto">Declare war, march an army, demand tribute, sponsor rebels. 32 real in-game actions, each one chosen by a nation that wrote you first.</p>
+    <div style="display:flex;gap:12px;justify-content:center;margin-top:30px;flex-wrap:wrap">
+      <button onClick="{{ buy }}" style="background:linear-gradient(180deg,#d93c72,#c4245e);color:#fff;border:0;font:800 14px Mulish;letter-spacing:.12em;text-transform:uppercase;padding:17px 28px;border-radius:3px;cursor:pointer;box-shadow:0 14px 34px -14px #c4245e" style-hover="filter:brightness(1.12);transform:translateY(-1px)">Get it — $10</button>
+      <a href="#clips" style="color:#f1ead9;text-decoration:none;border:1px solid rgba(226,193,114,.55);font:800 14px Mulish;letter-spacing:.12em;text-transform:uppercase;padding:17px 24px;border-radius:3px" style-hover="border-color:#e2c172">▶ Watch it in action</a>
+    </div>
+    <div style="margin-top:20px;font-size:13px;letter-spacing:.05em;color:#aab5c8">Windows · Steam · Single-player · 5 languages · One-time payment · 7-day refund</div>
+  </div>
+  <div style="max-width:1180px;margin:0 auto;padding:0 24px 0;position:relative">
+    <div style="border:1px solid rgba(226,193,114,.35);box-shadow:0 40px 80px -30px #000"><img src="assets/site_mail.jpg" width="1920" height="1080" alt="The mod's Mail screen in HUMANKIND: nations and their unanswered letters, in the game's own interface" style="display:block;width:100%;height:auto"></div>
+    <div style="font-size:13px;color:#aab5c8;margin-top:12px">Real screenshot, turn 82 of a 16-empire test game. Player name edited to “Shah”.</div>
+  </div>
+</div>
+
+<!-- PROBLEM -->
+<div style="max-width:1180px;margin:0 auto;padding:96px 24px 40px">
+  <div style="font:800 12px Mulish;letter-spacing:.24em;color:#e2c172;text-transform:uppercase">The problem</div>
+  <h2 style="font:600 clamp(32px,5vw,56px)/1.05 Fraunces,serif;margin:14px 0 36px;max-width:18ch">The war arrived. Nobody told you why.</h2>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr));gap:24px">
+    <div style="background:#101b2d;border:1px solid rgba(255,255,255,.08);padding:28px">
+      <div style="font:800 11px Mulish;letter-spacing:.2em;color:#aab5c8">DEFAULT DIPLOMACY</div>
+      <p style="font:600 26px/1.25 Fraunces,serif;margin:16px 0 10px;color:#cfd6e2">“The Carthaginians have declared war on you.”</p>
+      <p style="margin:0;color:#aab5c8;line-height:1.6">A notification. No reason, no terms, no memory of what you promised last time.</p>
+    </div>
+    <div style="background:linear-gradient(170deg,#efe3c8,#e0cfab);color:#2a1d12;padding:28px;font-family:'IM Fell English',Georgia,serif;box-shadow:0 30px 60px -25px #000">
+      <div style="font:800 11px Mulish;letter-spacing:.2em;color:#6d5435">WITH REALPOLITIK · TURN 82</div>
+      <p style="font-size:23px;line-height:1.4;margin:16px 0 10px">“I sell no false peace: loose the ground you took and the gold you owe, and we sit.”</p>
+      <p style="margin:0;font-size:17px;font-style:italic;text-align:right">— Alexandre, King of the Mongols</p>
+    </div>
+  </div>
+</div>
+
+<!-- LIVING NATIONS -->
+<div id="how" style="background:#0f1a2e;border-top:1px solid rgba(226,193,114,.15);border-bottom:1px solid rgba(226,193,114,.15)">
+<div style="max-width:1180px;margin:0 auto;padding:96px 24px">
+  <div style="font:800 12px Mulish;letter-spacing:.24em;color:#e2c172;text-transform:uppercase">Living Nations</div>
+  <h2 style="font:600 clamp(32px,5vw,56px)/1.05 Fraunces,serif;margin:14px 0 14px;max-width:20ch">What they wrote you. What they wrote themselves.</h2>
+  <p style="font-size:18px;line-height:1.6;color:#cfd6e2;max-width:60ch;margin:0 0 40px">Every turn, each nation reads a dossier with only what it knows, so fog of war holds. It writes a secret diary, keeps memory and feelings (affection, trust, fear, anger), and writes letters in the voice of its culture. It bluffs, stalls, feigns misunderstanding, betrays, and collects on old promises. Nothing is forced, and ignoring a rival has consequences. Letters cite only resources, cities, leaders and events that exist in your game.</p>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr));gap:28px;align-items:start">
+    <div style="position:relative;padding-top:34px">
+      <sc-if value="{{ sealClosed }}" hint-placeholder-val="{{ true }}">
+        <button onClick="{{ breakSeal }}" aria-label="Break the seal" style="position:absolute;left:50%;top:0;margin-left:-38px;z-index:2;width:76px;height:76px;border-radius:50%;border:0;cursor:pointer;background:radial-gradient(circle at 38% 34%,#c13a48,#8e1b2a 62%,#5c0f1b);box-shadow:0 8px 16px rgba(0,0,0,.5);color:#d0505c;font:600 30px Fraunces,serif" style-hover="transform:scale(1.07)">R</button>
+      </sc-if>
+      <sc-if value="{{ sealOpen }}" hint-placeholder-val="{{ false }}">
+        <div style="position:absolute;left:50%;top:0;margin-left:-58px;z-index:2;width:116px;height:76px;display:flex;justify-content:center;gap:6px;pointer-events:none">
+          <div style="width:48px;height:68px;background:radial-gradient(circle at 60% 40%,#a82333,#6e1220);border-radius:50% 10% 40% 50%;transform:rotate(-24deg) translateX(-14px)"></div>
+          <div style="width:48px;height:68px;background:radial-gradient(circle at 40% 40%,#a82333,#6e1220);border-radius:10% 50% 50% 40%;transform:rotate(22deg) translateX(14px)"></div>
+        </div>
+      </sc-if>
+      <div style="background:linear-gradient(170deg,#efe3c8,#e0cfab);color:#2a1d12;padding:48px 30px 24px;border-radius:3px;box-shadow:0 40px 90px -25px #000;font-family:'IM Fell English',Georgia,serif">
+        <div style="display:flex;justify-content:space-between;font:800 11px Mulish;letter-spacing:.14em;text-transform:uppercase;color:#6d5435"><span>Public declaration</span><span>Turn 82</span></div>
+        <p style="font-size:21px;line-height:1.42;margin:16px 0 12px">“Kings and peoples, hear Alexandre. The Celt speaks of a draw where the field reads thirty to nothing, her sails still sleeping at Kuma and San Lorenzo. I sell no false peace: loose the ground you took and the gold you owe, and we sit. <b style="font-weight:400;background:rgba(142,27,42,.18)">My feet quit Polis as my word promised — my honor keeps my ledger.</b> To merchants, my fairs stay open.”</p>
+        <p style="font-style:italic;font-size:17px;text-align:right;margin:0">— Alexandre, King of the Mongols, to all nations</p>
+      </div>
+    </div>
+    <div>
+      <sc-if value="{{ sealOpen }}" hint-placeholder-val="{{ false }}">
+        <div style="background:#14100d;color:#eadcc2;border-left:3px solid #c13a48;padding:24px 26px;font-family:'IM Fell English',Georgia,serif;box-shadow:0 20px 50px -20px #000">
+          <div style="display:flex;justify-content:space-between;font:800 11px Mulish;letter-spacing:.14em;text-transform:uppercase;color:#d0505c"><span>His secret diary · same turn</span><span>never sent</span></div>
+          <p style="font-style:italic;font-size:20px;line-height:1.5;margin:12px 0 0">“Leonardo counts steel at his door — I tell him plainly it is Gilgamés’ galley, not my hand. Wang Zhenyi wants Polis empty; <b style="font-weight:400;color:#f2b8bf">my hull is penned by a blocked road, so it takes the long water home.</b> The Celt offers a draw while squatting my ground: the account still reads thirty to nothing. Victor’s eight hundred stays unpaid; let him weigh iron if he dares.”</p>
+        </div>
+      </sc-if>
+      <sc-if value="{{ sealClosed }}" hint-placeholder-val="{{ true }}">
+        <button onClick="{{ breakSeal }}" style="width:100%;min-height:220px;background:transparent;border:1px dashed rgba(226,193,114,.6);color:#e2c172;font:800 13px Mulish;letter-spacing:.16em;text-transform:uppercase;padding:20px;cursor:pointer" style-hover="background:rgba(226,193,114,.08)">Break the seal<br><span style="font:400 15px Mulish;letter-spacing:0;text-transform:none;color:#cfd6e2;display:block;margin-top:8px">Read what he wrote himself.</span></button>
+      </sc-if>
+      <div style="margin-top:14px;font-size:13px;color:#aab5c8">Real letter and diary, unedited game output (DeepSeek, English). 16-empire test game.</div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- CLIPS -->
+<div id="clips" style="max-width:1180px;margin:0 auto;padding:96px 24px 0">
+  <div style="font:800 12px Mulish;letter-spacing:.24em;color:#e2c172;text-transform:uppercase">Three true stories · ~30 s each</div>
+  <h2 style="font:600 clamp(32px,5vw,56px)/1.05 Fraunces,serif;margin:14px 0 14px;max-width:20ch">Watch a letter turn into a war.</h2>
+  <p style="font-size:16px;color:#aab5c8;margin:0 0 36px;max-width:60ch">Animated retellings of real letters, diaries and actions from test games. Starts muted; use the speaker icon for the score.</p>
+  <div style="display:grid;gap:56px">
+    <div>
+      <div style="font:700 17px Cinzel,serif;color:#e2c172;margin-bottom:12px">1 · Two faces <span style="font:600 13px Mulish;color:#aab5c8;letter-spacing:.06em">· Turn 65</span></div>
+      <div style="aspect-ratio:16/9;background:#0a111c;border:1px solid rgba(226,193,114,.3)"><iframe src="clip-embed.html?c=two-faces" title="Clip: Two faces" loading="lazy" allow="autoplay" style="width:100%;height:100%;border:0;display:block"></iframe></div>
+    </div>
+    <div>
+      <div style="font:700 17px Cinzel,serif;color:#e2c172;margin-bottom:12px">2 · Words become war <span style="font:600 13px Mulish;color:#aab5c8;letter-spacing:.06em">· Turns 118 to 128</span></div>
+      <div style="aspect-ratio:16/9;background:#0a111c;border:1px solid rgba(226,193,114,.3)"><iframe src="clip-embed.html?c=war" title="Clip: Words become war" loading="lazy" allow="autoplay" style="width:100%;height:100%;border:0;display:block"></iframe></div>
+    </div>
+  </div>
+</div>
+
+<!-- WORDS BECOME ORDERS -->
+<div style="max-width:1180px;margin:0 auto;padding:96px 24px">
+  <div style="font:800 12px Mulish;letter-spacing:.24em;color:#e2c172;text-transform:uppercase">Words become orders</div>
+  <h2 style="font:600 clamp(32px,5vw,56px)/1.05 Fraunces,serif;margin:14px 0 14px;max-width:20ch">What Arjuna wrote. <em style="font-weight:400;color:#e2c172">What Arjuna did.</em></h2>
+  <p style="font-size:18px;line-height:1.6;color:#cfd6e2;max-width:60ch;margin:0 0 36px">This is not a chatbot on top of the game. The nation decides, and the game executes.</p>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr));gap:32px;align-items:start">
+    <div style="background:rgba(30,48,80,.92);border:1px solid rgba(255,255,255,.08);border-radius:6px">
+      <div style="padding:14px 18px;border-bottom:1px solid rgba(255,255,255,.08);display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap"><span style="font:700 16px Cinzel,serif;color:#e2c172">Arjuna · The Huns → The Aksumites</span><span style="background:rgba(8,16,30,.55);font-size:13px;padding:3px 9px">Private · T82</span></div>
+      <p style="padding:16px 18px 20px;margin:0;font-size:17px;line-height:1.6;color:#e6e9f0"><span style="color:#e2c172">My own floor stays mine</span><br><br>Ancestral, king of the Aksumites. I will not set my people’s own roof as tribute. Count my horses: none stands on your soil. Yet your host still anchors in Ain, my land, and your demand takes the floor my people sleep on. Call your standards home, reopen the frank road, and let no altar weigh two houses that once kept faith. <mark style="background:rgba(196,36,94,.55);color:inherit">Ḫattuša stays mine.</mark> — Arjuna, of the Huns.</p>
+    </div>
+    <div style="display:grid;gap:12px">
+      <sc-for list="{{ actions }}" as="a" hint-placeholder-count="4">
+        <div style="display:grid;grid-template-columns:48px 1fr;gap:12px"><div style="font:700 13px Cinzel,serif;color:#e2c172;text-align:right;padding-top:14px">T82</div><div style="border-left:3px solid #c4245e;background:rgba(8,16,30,.6);padding:12px 14px;font-size:15px;color:#cfd6e2"><b style="display:block;color:#f1ead9;font-size:12px;letter-spacing:.14em;margin-bottom:2px">{{ a.k }}</b>{{ a.t }}</div></div>
+      </sc-for>
+      <div style="font-size:13px;color:#aab5c8">Real actions from the game's log, same turn as the letter.</div>
+    </div>
+  </div>
+  <div style="margin-top:64px;font:700 20px Cinzel,serif;color:#e2c172">32 kinds of action, all real</div>
+  <div style="margin-top:18px;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));gap:14px">
+    <sc-for list="{{ actionKinds }}" as="g" hint-placeholder-count="8">
+      <div style="border:1px solid rgba(226,193,114,.22);background:rgba(16,27,45,.8);padding:18px 18px 16px" style-hover="border-color:#c4245e">
+        <div style="font:700 15px Cinzel,serif;color:#f1ead9;letter-spacing:.03em">{{ g.h }}</div>
+        <div style="margin-top:8px;font-size:14px;line-height:1.55;color:#aab5c8">{{ g.b }}</div>
+      </div>
+    </sc-for>
+  </div>
+  <div style="margin-top:12px;font-size:13px;color:#aab5c8">Five Congress actions need the Together We Rule DLC.</div>
+</div>
+
+<!-- BUY BAND 1 -->
+<div style="background:linear-gradient(90deg,#1a2540,#2a1730);border-top:1px solid rgba(226,193,114,.25);border-bottom:1px solid rgba(226,193,114,.25)">
+  <div style="max-width:1180px;margin:0 auto;padding:36px 24px;display:flex;justify-content:space-between;align-items:center;gap:20px;flex-wrap:wrap">
+    <div><div style="font:600 clamp(24px,3.4vw,34px)/1.15 Fraunces,serif">Sixteen rulers are waiting to write you.</div><div style="margin-top:6px;color:#cfd6e2;font-size:15px">$10, one time. 7-day refund. Without a key, everything but AI Diplomacy still works.</div></div>
+    <button onClick="{{ buy }}" style="background:linear-gradient(180deg,#d93c72,#c4245e);color:#fff;border:0;font:800 14px Mulish;letter-spacing:.12em;text-transform:uppercase;padding:17px 28px;border-radius:3px;cursor:pointer" style-hover="filter:brightness(1.12)">Get it — $10</button>
+  </div>
+</div>
+
+<!-- ESPIONAGE -->
+<div style="max-width:1180px;margin:0 auto;padding:96px 24px">
+  <div style="font:800 12px Mulish;letter-spacing:.24em;color:#e2c172;text-transform:uppercase">Espionage</div>
+  <h2 style="font:600 clamp(32px,5vw,56px)/1.05 Fraunces,serif;margin:14px 0 14px;max-width:18ch">Some letters never arrive.</h2>
+  <p style="font-size:18px;line-height:1.6;color:#cfd6e2;max-width:62ch;margin:0 0 36px">Your spies intercept private letters. An intercepted letter is never delivered. AI nations spy on each other too. In turn 74 of a real game, the Celts wrote to the Sumerians about the North, and the Norse leader’s own spy read it.</p>
+  <div style="aspect-ratio:16/9;background:#0a111c;border:1px solid rgba(226,193,114,.3)"><iframe src="clip-embed.html?c=intercepted" title="Clip: Intercepted" loading="lazy" allow="autoplay" style="width:100%;height:100%;border:0;display:block"></iframe></div>
+  <div style="margin-top:40px;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr));gap:28px;align-items:center">
+    <div style="border:1px solid rgba(226,193,114,.35);box-shadow:0 30px 70px -30px #000"><img src="assets/site_spy.jpg" width="1920" height="1080" loading="lazy" alt="Intelligence screen, Letters tab: a Mongol letter to the Norsemen read by the player's spy" style="display:block;width:100%;height:auto"></div>
+    <div>
+      <p style="margin:0 0 12px;font-size:16px;line-height:1.6;color:#cfd6e2">The Letters tab lives inside the game's own Intelligence screen. Each spy reads at most one letter per turn.</p>
+      <p style="margin:0;font-size:13px;line-height:1.55;color:#aab5c8"><b style="color:#e2c172">Staged capture.</b> For this screenshot the spy was created and the interception forced with a developer command. The mechanic is real and happens on its own in play.</p>
+    </div>
+  </div>
+</div>
+
+<!-- COUNCIL -->
+<div style="background:#0f1a2e;border-top:1px solid rgba(226,193,114,.15);border-bottom:1px solid rgba(226,193,114,.15)">
+<div style="max-width:1180px;margin:0 auto;padding:96px 24px">
+  <div style="font:800 12px Mulish;letter-spacing:.24em;color:#e2c172;text-transform:uppercase">Your council</div>
+  <h2 style="font:600 clamp(32px,5vw,56px)/1.05 Fraunces,serif;margin:14px 0 14px;max-width:20ch">Twelve chairs. Six speak each turn.</h2>
+  <p style="font-size:18px;line-height:1.6;color:#cfd6e2;max-width:62ch;margin:0 0 36px">Eleven ministries plus the Hand of the Throne. You answer up to eight times a turn, they react, their regard for you moves, and you can dismiss any of them. Rival nations keep councils of twelve too.</p>
+  <div style="border:1px solid rgba(226,193,114,.35);box-shadow:0 30px 70px -30px #000"><img src="assets/site_council.jpg" width="1920" height="1080" loading="lazy" alt="Council screen: 12 advisers, 6 of whom spoke on turn 82" style="display:block;width:100%;height:auto"></div>
+  <div style="margin-top:12px;font-size:13px;color:#aab5c8">Real screenshot, turn 82. The meeting cost US$ 0.0020 in AI fees.</div>
+</div>
+</div>
+
+<!-- ECONOMY -->
+<div style="max-width:1180px;margin:0 auto;padding:96px 24px">
+  <div style="font:800 12px Mulish;letter-spacing:.24em;color:#e2c172;text-transform:uppercase">Money</div>
+  <h2 style="font:600 clamp(32px,5vw,56px)/1.05 Fraunces,serif;margin:14px 0 14px;max-width:20ch">Every empire prints its own coin. Every point of interest costs you.</h2>
+  <p style="font-size:18px;line-height:1.6;color:#cfd6e2;max-width:62ch;margin:0 0 36px">A Central Bank with four tabs: Exchange, Policy, Cycle, Your currency. Set the rate by hand, or let the Taylor rule do it. Production feeds inflation, inflation feeds interest, interest slows production, so nobody grows forever. Exchange rates follow economic strength and inflation, every transfer between empires is converted, and the effects show up in the game's native bonus and penalty tooltips.</p>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,380px),1fr));gap:28px;align-items:start">
+    <div style="background:rgba(30,48,80,.92);border:1px solid rgba(226,193,114,.3);border-radius:6px;padding:24px">
+      <div style="font:700 17px Cinzel,serif;color:#e2c172">Try the interest dial</div>
+      <label style="display:block;margin-top:18px;font-size:14px;color:#cfd6e2">Interest rate per turn: <b style="color:#f1ead9">{{ rateLabel }}</b></label>
+      <input type="range" min="0" max="5" step="0.5" value="{{ rate }}" onInput="{{ setRate }}" aria-label="Interest rate per turn">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:18px">
+        <div style="background:rgba(8,16,30,.6);padding:14px"><div style="font-size:11px;letter-spacing:.14em;color:#aab5c8">PRODUCTION</div><div style="font:600 34px Fraunces,serif;color:#f1ead9">{{ prodMult }}</div></div>
+        <div style="background:rgba(8,16,30,.6);padding:14px"><div style="font-size:11px;letter-spacing:.14em;color:#aab5c8">INFLATION (ILLUSTRATIVE)</div><div style="font:600 34px Fraunces,serif;color:#f1ead9">{{ inflLabel }}</div></div>
+      </div>
+      <p style="margin:16px 0 0;font-size:13px;line-height:1.55;color:#aab5c8">Neutral rate 1% per turn. Each point above it takes about 5% off production, from ×0.75 to ×1.05. Inflation target 0.5%. Inflation figure is illustrative; production multiplier follows the mod's rule.</p>
+    </div>
+    <div style="display:grid;gap:14px">
+      <div style="border:1px solid rgba(226,193,114,.35)"><img src="assets/site_cycle.jpg" width="1920" height="1080" loading="lazy" alt="Central Bank, Cycle tab" style="display:block;width:100%;height:auto"></div>
+      <div style="font-size:13px;color:#aab5c8">Central Bank, Cycle tab. Real screenshot.</div>
+    </div>
+  </div>
+</div>
+
+<!-- TOLL -->
+<div style="background:#0f1a2e;border-top:1px solid rgba(226,193,114,.15);border-bottom:1px solid rgba(226,193,114,.15)">
+<div style="max-width:1180px;margin:0 auto;padding:96px 24px">
+  <div style="font:800 12px Mulish;letter-spacing:.24em;color:#e2c172;text-transform:uppercase">Trade blockades</div>
+  <h2 style="font:600 clamp(32px,5vw,56px)/1.05 Fraunces,serif;margin:14px 0 14px;max-width:20ch">Name a toll. Watch the caravans choose.</h2>
+  <p style="font-size:18px;line-height:1.6;color:#cfd6e2;max-width:62ch;margin:0 0 36px">Each trading post can be Free, Toll or Blocked, per foreign empire. Routes weigh paying against detouring, and the preview tells you how many do which. Blocking files a real diplomatic grievance with the victim. The AI taxes and blocks you back.</p>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,380px),1fr));gap:28px;align-items:start">
+    <div style="background:rgba(30,48,80,.92);border:1px solid rgba(226,193,114,.3);border-radius:6px;padding:24px">
+      <div style="font:700 17px Cinzel,serif;color:#e2c172">Trading post · Hàojīng</div>
+      <div style="display:flex;gap:8px;margin-top:16px">
+        <sc-for list="{{ tollModes }}" as="m" hint-placeholder-count="3">
+          <button onClick="{{ m.on }}" style="flex:1;padding:11px 8px;cursor:pointer;font:800 12px Mulish;letter-spacing:.12em;text-transform:uppercase;border:1px solid {{ m.bc }};background:{{ m.bg }};color:#f1ead9">{{ m.l }}</button>
+        </sc-for>
+      </div>
+      <label style="display:block;margin-top:18px;font-size:14px;color:#cfd6e2">Toll price: <b style="color:#f1ead9">{{ priceLabel }}</b></label>
+      <input type="range" min="1" max="6" step="1" value="{{ price }}" onInput="{{ setPrice }}" aria-label="Toll price">
+      <div style="margin-top:18px;background:rgba(8,16,30,.6);padding:16px;display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap"><div style="font:600 28px Fraunces,serif;color:#f1ead9">{{ preview }}</div><div style="font-size:14px;color:#cfd6e2">Income: <b>{{ income }}</b></div></div>
+      <p style="margin:14px 0 0;font-size:13px;line-height:1.55;color:#aab5c8">Illustrative sandbox with four sample routes. The in-game preview reads “X pays · Y detour”; a screenshot of it is still to come.</p>
+    </div>
+    <div style="display:grid;gap:14px">
+      <div style="border:1px solid rgba(226,193,114,.35)"><img src="assets/site_toll.jpg" width="1920" height="1080" loading="lazy" alt="Trading Post panel with per-empire toll and block controls" style="display:block;width:100%;height:auto"></div>
+      <div style="font-size:13px;color:#aab5c8">Real screenshot: toll per empire, block, apply to all posts.</div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- 16 EMPIRES -->
+<div style="max-width:1180px;margin:0 auto;padding:96px 24px">
+  <div style="font:800 12px Mulish;letter-spacing:.24em;color:#e2c172;text-transform:uppercase">Up to 16 empires</div>
+  <h2 style="font:600 clamp(32px,5vw,56px)/1.05 Fraunces,serif;margin:14px 0 14px;max-width:20ch">Sixteen thrones. Everyone is writing.</h2>
+  <p style="font-size:18px;line-height:1.6;color:#cfd6e2;max-width:62ch;margin:0 0 36px">The base game stops at 10. With the optional MoreEmpires plugin you get up to 16, tested on Tiny, Normal and Huge maps.</p>
+  <div style="border:1px solid rgba(226,193,114,.35);box-shadow:0 30px 70px -30px #000"><img src="assets/site_16.jpg" width="1920" height="1080" loading="lazy" alt="Mail screen, Nations section: 14 known nations with their leaders" style="display:block;width:100%;height:auto"></div>
+  <div style="margin-top:12px;font-size:13px;color:#aab5c8">Real screenshot, turn 80 of a 16-empire game. Some leader names come from the save in Portuguese.</div>
+</div>
+
+<!-- NATIVE -->
+<div style="background:#0f1a2e;border-top:1px solid rgba(226,193,114,.15);border-bottom:1px solid rgba(226,193,114,.15)">
+<div style="max-width:1180px;margin:0 auto;padding:96px 24px">
+  <div style="font:800 12px Mulish;letter-spacing:.24em;color:#e2c172;text-transform:uppercase">Native interface</div>
+  <h2 style="font:600 clamp(32px,5vw,56px)/1.05 Fraunces,serif;margin:14px 0 36px;max-width:20ch">It looks like it shipped with the game.</h2>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr));gap:20px">
+    <div><div style="border:1px solid rgba(226,193,114,.35)"><img src="assets/site_letters_tab.jpg" width="1548" height="1080" loading="lazy" alt="Letters tab inside the Norsemen's diplomacy screen" style="display:block;width:100%;height:auto"></div><div style="margin-top:8px;font-size:13px;color:#aab5c8">Letters tab in each nation's diplomacy screen. Player name edited to “Shah”.</div></div>
+    <div><div style="border:1px solid rgba(226,193,114,.35)"><img src="assets/site_bank.jpg" width="1920" height="1080" loading="lazy" alt="Central Bank, Policy tab" style="display:block;width:100%;height:auto"></div><div style="margin-top:8px;font-size:13px;color:#aab5c8">Central Bank, Policy.</div></div>
+    <div><div style="border:1px solid rgba(226,193,114,.35)"><img src="assets/site_bank_exchange.jpg" width="1920" height="1080" loading="lazy" alt="Central Bank, Exchange tab" style="display:block;width:100%;height:auto"></div><div style="margin-top:8px;font-size:13px;color:#aab5c8">Central Bank, Exchange. Default currency names still appear in Portuguese.</div></div>
+  </div>
+</div>
+</div>
+
+<!-- COST -->
+<div id="cost" style="max-width:1180px;margin:0 auto;padding:96px 24px">
+  <div style="font:800 12px Mulish;letter-spacing:.24em;color:#e2c172;text-transform:uppercase">What the AI costs</div>
+  <h2 style="font:600 clamp(32px,5vw,56px)/1.05 Fraunces,serif;margin:14px 0 14px;max-width:20ch">Know the bill before the first turn.</h2>
+  <p style="font-size:18px;line-height:1.6;color:#cfd6e2;max-width:62ch;margin:0 0 36px">The $10 buys the mod. The AI is paid separately, to the provider you pick. Pick one, set a cap (default US$ 5 per game), and if every provider fails the game's native AI takes over.</p>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,380px),1fr));gap:28px;align-items:start">
+    <div style="background:rgba(30,48,80,.92);border:1px solid rgba(226,193,114,.3);border-radius:6px;padding:24px">
+      <label style="display:block;font-size:14px;color:#cfd6e2">Provider</label>
+      <select onChange="{{ setProv }}" aria-label="Provider" style="width:100%;margin-top:6px;padding:12px;background:#0c1522;color:#f1ead9;border:1px solid rgba(226,193,114,.4);font:600 15px Mulish">
+        <sc-for list="{{ providers }}" as="p" hint-placeholder-count="5"><option value="{{ p.i }}">{{ p.n }}</option></sc-for>
+      </select>
+      <label style="display:block;margin-top:18px;font-size:14px;color:#cfd6e2">Empires: <b style="color:#f1ead9">{{ empires }}</b></label>
+      <input type="range" min="2" max="16" step="1" value="{{ empires }}" onInput="{{ setEmp }}" aria-label="Number of empires">
+      <label style="display:block;margin-top:14px;font-size:14px;color:#cfd6e2">Turns played: <b style="color:#f1ead9">{{ turns }}</b></label>
+      <input type="range" min="20" max="300" step="10" value="{{ turns }}" onInput="{{ setTurns }}" aria-label="Turns played">
+    </div>
+    <div style="background:rgba(8,16,30,.7);border:1px solid rgba(226,193,114,.3);padding:24px">
+      <div style="font-size:11px;letter-spacing:.16em;color:#aab5c8">PER TURN</div><div style="font:600 40px Fraunces,serif">{{ perTurn }}</div>
+      <div style="margin-top:14px;font-size:11px;letter-spacing:.16em;color:#aab5c8">WHOLE GAME</div><div style="font:600 40px Fraunces,serif;color:#e2c172">{{ total }}</div>
+      <div style="margin-top:14px;font-size:15px;color:#cfd6e2">A US$ 5 cap lasts about <b>{{ capTurns }}</b> turns.</div>
+      <div style="margin-top:14px;padding:10px 12px;background:rgba(196,36,94,.18);font-size:13px;line-height:1.5;color:#f1ead9">{{ provNote }}</div>
+      <p style="margin:14px 0 0;font-size:12px;line-height:1.55;color:#aab5c8">Measured with DeepSeek: about US$ 0.03 per turn with 10 empires, US$ 0.12 to 0.14 with 16 off-peak (roughly double at peak hours). Values between are interpolated. Free OpenRouter models are capped at 50 calls a day, and a 16-empire turn uses 21 to 28.</p>
+    </div>
+  </div>
+</div>
+
+<!-- LANGUAGES -->
+<div style="background:#0f1a2e;border-top:1px solid rgba(226,193,114,.15);border-bottom:1px solid rgba(226,193,114,.15)">
+<div style="max-width:1180px;margin:0 auto;padding:72px 24px;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr));gap:28px;align-items:center">
+  <div><div style="font:800 12px Mulish;letter-spacing:.24em;color:#e2c172;text-transform:uppercase">Languages</div>
+  <h2 style="font:600 clamp(30px,4vw,44px)/1.08 Fraunces,serif;margin:14px 0 12px">The nations write in your language.</h2>
+  <p style="margin:0;font-size:17px;line-height:1.6;color:#cfd6e2">English, Portuguese, Spanish, French and German. 1,192 interface texts in each, and the letters come out in the language you choose.</p></div>
+  <div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <sc-for list="{{ langs }}" as="l" hint-placeholder-count="5"><span style="border:1px solid rgba(226,193,114,.5);padding:10px 16px;font:700 14px Cinzel,serif;color:#e2c172">{{ l }}</span></sc-for>
+    </div>
+    <div style="margin-top:14px;border:1px dashed rgba(170,181,200,.5);padding:14px;font-size:13px;color:#aab5c8">Space reserved: the same letter in all five languages, once real multilingual letters from one turn are available.</div>
+  </div>
+</div>
+</div>
+
+<!-- COMPARE -->
+<div style="max-width:1180px;margin:0 auto;padding:96px 24px">
+  <div style="font:800 12px Mulish;letter-spacing:.24em;color:#e2c172;text-transform:uppercase">Side by side</div>
+  <h2 style="font:600 clamp(32px,5vw,48px)/1.08 Fraunces,serif;margin:14px 0 28px">HUMANKIND, with and without.</h2>
+  <div style="border:1px solid rgba(226,193,114,.25)">
+    <div style="display:grid;grid-template-columns:minmax(90px,1fr) 2fr 2fr;background:#101b2d;font:800 11px Mulish;letter-spacing:.16em;color:#e2c172"><div style="padding:14px"></div><div style="padding:14px">HUMANKIND</div><div style="padding:14px">+ REALPOLITIK</div></div>
+    <sc-for list="{{ compare }}" as="r" hint-placeholder-count="5">
+      <div style="display:grid;grid-template-columns:minmax(90px,1fr) 2fr 2fr;border-top:1px solid rgba(255,255,255,.07);font-size:15px;line-height:1.5"><div style="padding:14px;font-weight:800;color:#f1ead9">{{ r.a }}</div><div style="padding:14px;color:#aab5c8">{{ r.b }}</div><div style="padding:14px;color:#f1ead9">{{ r.c }}</div></div>
+    </sc-for>
+  </div>
+</div>
+
+<!-- BUY BAND 2 -->
+<div style="background:linear-gradient(90deg,#1a2540,#2a1730);border-top:1px solid rgba(226,193,114,.25);border-bottom:1px solid rgba(226,193,114,.25)">
+  <div style="max-width:1180px;margin:0 auto;padding:36px 24px;display:flex;justify-content:space-between;align-items:center;gap:20px;flex-wrap:wrap">
+    <div><div style="font:600 clamp(24px,3.4vw,34px)/1.15 Fraunces,serif">Try the economy free. Pay for the letters.</div><div style="margin-top:6px;color:#cfd6e2;font-size:15px">Currency, Central Bank, tolls and 16 empires run without a key.</div></div>
+    <button onClick="{{ buy }}" style="background:linear-gradient(180deg,#d93c72,#c4245e);color:#fff;border:0;font:800 14px Mulish;letter-spacing:.12em;text-transform:uppercase;padding:17px 28px;border-radius:3px;cursor:pointer" style-hover="filter:brightness(1.12)">Get it — $10</button>
+  </div>
+</div>
+
+<!-- INSTALL -->
+<div style="max-width:1180px;margin:0 auto;padding:96px 24px 40px">
+  <div style="font:800 12px Mulish;letter-spacing:.24em;color:#e2c172;text-transform:uppercase">Install</div>
+  <h2 style="font:600 clamp(32px,5vw,48px)/1.08 Fraunces,serif;margin:14px 0 28px">Three steps to the first letter.</h2>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:20px">
+    <sc-for list="{{ steps }}" as="s" hint-placeholder-count="3">
+      <div style="background:#101b2d;border:1px solid rgba(255,255,255,.08);padding:24px"><div style="font:600 44px Fraunces,serif;color:#c4245e">{{ s.n }}</div><div style="font:700 17px Cinzel,serif;color:#f1ead9;margin:6px 0 8px">{{ s.h }}</div><div style="font-size:15px;line-height:1.55;color:#aab5c8">{{ s.b }}</div></div>
+    </sc-for>
+  </div>
+  <div style="margin-top:28px;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:20px;font-size:14px;line-height:1.6;color:#cfd6e2">
+    <div style="border-left:3px solid #e2c172;padding-left:14px"><b style="color:#f1ead9">Works on</b><br>Windows · HUMANKIND on Steam · single-player only. Steam Deck: experimental.</div>
+    <div style="border-left:3px solid #c4245e;padding-left:14px"><b style="color:#f1ead9">Does not work on</b><br>Mac · Xbox / Game Pass · multiplayer (the mod turns itself off). Epic: not tested yet.</div>
+    <div style="border-left:3px solid #aab5c8;padding-left:14px"><b style="color:#f1ead9">Placeholder</b><br>Detailed install page with Steam Deck notes and the Windows SmartScreen warning: /install.</div>
+  </div>
+</div>
+
+<!-- FAQ -->
+<div id="faq" style="max-width:860px;margin:0 auto;padding:72px 24px 96px">
+  <h2 style="font:600 clamp(32px,5vw,48px)/1.08 Fraunces,serif;margin:0 0 28px">Questions, answered straight.</h2>
+  <div style="border-top:1px solid rgba(226,193,114,.25)">
+    <sc-for list="{{ faq }}" as="f" hint-placeholder-count="8">
+      <div style="border-bottom:1px solid rgba(226,193,114,.25)">
+        <button onClick="{{ f.toggle }}" aria-expanded="{{ f.open }}" style="width:100%;text-align:left;background:transparent;border:0;color:#f1ead9;cursor:pointer;padding:20px 0;display:flex;justify-content:space-between;gap:16px;font:700 18px Mulish" style-hover="color:#e2c172"><span>{{ f.q }}</span><span style="color:#e2c172;font-size:22px;line-height:1">{{ f.sign }}</span></button>
+        <div style="display:{{ f.disp }};padding:0 0 22px;font-size:16px;line-height:1.65;color:#cfd6e2;max-width:70ch">{{ f.a }}</div>
+      </div>
+    </sc-for>
+  </div>
+  <div style="margin-top:48px;border:1px dashed rgba(170,181,200,.5);padding:16px;font-size:13px;color:#aab5c8">Space reserved: player testimonials. None yet, so none shown.</div>
+</div>
+
+<!-- FINAL CTA -->
+<div style="background:radial-gradient(ellipse at 50% 100%,#2a1730,#0c1522 70%);border-top:1px solid rgba(226,193,114,.25)">
+  <div style="max-width:720px;margin:0 auto;padding:96px 24px;text-align:center">
+    <div style="background:linear-gradient(170deg,#efe3c8,#e0cfab);color:#2a1d12;padding:56px 32px 40px;position:relative;box-shadow:0 40px 90px -25px #000;font-family:'IM Fell English',Georgia,serif;text-align:left">
+      <div style="position:absolute;left:50%;top:-34px;margin-left:-34px;width:68px;height:68px;border-radius:50%;background:radial-gradient(circle at 38% 34%,#c13a48,#8e1b2a 62%,#5c0f1b);box-shadow:0 8px 16px rgba(0,0,0,.5);color:#d0505c;font:600 28px Fraunces,serif;display:flex;align-items:center;justify-content:center">R</div>
+      <div style="font:800 11px Mulish;letter-spacing:.16em;color:#6d5435">TO THE ONE WHO PLAYS · UNSEALED</div>
+      <p style="font-size:clamp(22px,3vw,28px);line-height:1.4;margin:16px 0 8px">“Sixteen courts have your name in their ledgers. Come and answer.”</p>
+      <p style="margin:0;font-style:italic;text-align:right;font-size:17px">— Realpolitik</p>
+    </div>
+    <button onClick="{{ buy }}" style="margin-top:36px;background:linear-gradient(180deg,#d93c72,#c4245e);color:#fff;border:0;font:800 15px Mulish;letter-spacing:.12em;text-transform:uppercase;padding:19px 34px;border-radius:3px;cursor:pointer;box-shadow:0 14px 34px -14px #c4245e" style-hover="filter:brightness(1.12)">Get it — $10</button>
+    <div style="margin-top:14px;font-size:13px;color:#aab5c8">One-time payment · 7-day refund · AI usage billed by your chosen provider</div>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<div style="background:#070d16;border-top:1px solid rgba(255,255,255,.08)">
+  <div style="max-width:1180px;margin:0 auto;padding:36px 24px;font-size:13px;line-height:1.7;color:#aab5c8">
+    <div style="display:flex;gap:20px;flex-wrap:wrap;margin-bottom:16px"><a href="privacy.html">Privacy</a><a href="terms.html">Terms</a><a href="changelog.html">Changelog</a><a href="install.html">Install</a><a href="mailto:CONTACT_EMAIL_PLACEHOLDER">Contact (placeholder)</a></div>
+    Unofficial fan-made mod. Not affiliated with or endorsed by Amplitude Studios or SEGA. HUMANKIND is a trademark of its respective owners.
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  // ---- Edit here ----
+  static CHECKOUT_URL = 'https://YOUR-STORE.lemonsqueezy.com/checkout/buy/PRODUCT_ID_PLACEHOLDER';
+  static PRICE = '$10';
+  // Cloudflare Web Analytics token: PLACEHOLDER_CF_TOKEN
+  state = { open: false, rate: 1, mode: 'toll', price: 3, faq: 0, prov: 0, emp: 16, turns: 100 };
+  componentDidMount() {
+    if (!window.__rpCf) { window.__rpCf = 1; const s = document.createElement('script'); s.defer = true; s.src = 'https://static.cloudflareinsights.com/beacon.min.js'; s.setAttribute('data-cf-beacon', '{"token":"PLACEHOLDER_CF_TOKEN"}'); /* document.head.appendChild(s); enable with real token */ }
+  }
+  renderVals() {
+    const s = this.state, set = o => () => this.setState(o);
+    const buy = () => { if (window.LemonSqueezy && window.LemonSqueezy.Url) window.LemonSqueezy.Url.Open(Component.CHECKOUT_URL); else window.open(Component.CHECKOUT_URL, '_blank'); };
+    const mult = Math.max(.75, Math.min(1.05, 1 - .05 * (s.rate - 1)));
+    const infl = Math.max(-1, .5 + (1 - s.rate) * .4);
+    const routes = [1, 2, 3, 5];
+    let pays = 0, det = 0, inc = 0;
+    if (s.mode === 'free') pays = 4;
+    else if (s.mode === 'block') det = 4;
+    else routes.forEach(c => { if (s.price <= c) { pays++; inc += s.price; } else det++; });
+    const modes = [['free', 'Free'], ['toll', 'Toll'], ['block', 'Blocked']].map(([k, l]) => ({ l, on: set({ mode: k }), bg: s.mode === k ? '#c4245e' : 'rgba(8,16,30,.6)', bc: s.mode === k ? '#c4245e' : 'rgba(226,193,114,.35)' }));
+    const P = [['DeepSeek (measured)', .13, 1], ['OpenAI gpt-5-nano (estimate)', .064, 0], ['Gemini 2.5 Flash-Lite (estimate)', .074, 0], ['GLM-4.7-FlashX (estimate)', .069, 0], ['GLM-4.7-Flash (free tier, estimate)', 0, 0]];
+    const e = s.emp, shape = e <= 10 ? .03 * e / 10 : .03 + (e - 10) * (.10 / 6);
+    const pr = P[s.prov], pt = pr[1] * shape / .13;
+    const money = v => v === 0 ? 'US$ 0' : 'US$ ' + (v < 1 ? v.toFixed(3) : v.toFixed(2));
+    const faqs = [
+      ['Does it work in multiplayer?', 'No. The mod turns itself off in multiplayer. It is single-player only.'],
+      ['Will my saves break if I remove it?', 'Saves keep opening without the mod. The exception is saves with more than 10 empires, which need the MoreEmpires plugin.'],
+      ['How do I uninstall it?', 'Delete two folders. An installer is in preparation.'],
+      ['Steam, Epic, Steam Deck, Mac, Xbox?', 'Windows with HUMANKIND on Steam. Epic is untested. Steam Deck is experimental. Mac and Xbox / Game Pass are not supported.'],
+      ['How much does the AI cost?', 'You pay your provider directly. With DeepSeek, measured at about US$ 0.03 a turn with 10 empires and US$ 0.12 to 0.14 with 16 off-peak. Other providers are estimates. A spending cap per game (default US$ 5) stops the bill.'],
+      ['What data leaves my PC?', 'Only each nation’s dossier goes to your provider: what it sees on the map, its relations, letters and memory. Nothing personal, not your name or Steam account. API keys and logins are stored encrypted on your PC.'],
+      ['What if a provider is down?', 'The mod tries the next one. If all fail, the game’s native AI takes over.'],
+      ['What do I get without a license key?', 'Everything except AI Diplomacy: own currency, Central Bank, tolls and 16 empires are free to try.'],
+      ['Is there DRM? Do I need my own API key?', 'No DRM. You bring your own API key (DeepSeek, OpenRouter, OpenAI, Gemini, Z.ai or xAI) and the mod falls through the list if one fails.'],
+      ['Do the nations really do things, or just talk?', 'They act. Wars, peace, treaties, gifts, demands, surrenders, sponsoring minor peoples, Congress votes, and army orders that move, attack or besiege cities.'],
+      ['Updates and refunds?', 'Updates are free: download again. Refunds within 7 days.'],
+      ['Support?', 'Contact address coming soon (placeholder).']
+    ].map((q, i) => ({ q: q[0], a: q[1], open: s.faq === i + 1 ? 'true' : 'false', sign: s.faq === i + 1 ? '–' : '+', disp: s.faq === i + 1 ? 'block' : 'none', toggle: () => this.setState(st => ({ faq: st.faq === i + 1 ? 0 : i + 1 })) }));
+    return {
+      buy, faq: faqs,
+      sealOpen: s.open, sealClosed: !s.open, breakSeal: set({ open: true }),
+      actions: [['REFUSED', 'Aksumites’ formal demand: cede Ḫattuša'], ['REFUSED', 'The Norsemen’s demand for 600 gold'], ['STANCE', 'Distrustful toward the Aksumites'], ['ORDER', 'Army A220 defends Ain for 6 turns']].map(a => ({ k: a[0], t: a[1] })),
+      actionKinds: [['War and peace', 'Declare war, formal or by surprise. Make peace. Surrender with terms.'], ['Pacts', 'Alliances, and economic, information, cultural and military agreements.'], ['Pressure', 'Demands and crises.'], ['Gifts', 'Money, influence, cities and armies.'], ['Land and peoples', 'Cede territory. Sponsor independent peoples, up to vassalage and annexation.'], ['Armies', 'Orders to move, attack and defend.'], ['Court and trade', 'Trade policy, blocking correspondence, dismissing ministers.'], ['World Congress', 'Propose laws, vote, bribe, open crises, challenge verdicts. Needs Together We Rule.']].map(g => ({ h: g[0], b: g[1] })),
+      rate: s.rate, rateLabel: s.rate.toFixed(1) + '%', setRate: ev => this.setState({ rate: +ev.target.value }),
+      prodMult: '×' + mult.toFixed(2), inflLabel: infl.toFixed(1) + '%',
+      tollModes: modes, price: s.price, priceLabel: s.mode === 'toll' ? s.price + ' gold' : '–', setPrice: ev => this.setState({ price: +ev.target.value, mode: 'toll' }),
+      preview: pays + ' pay · ' + det + ' detour', income: inc ? inc + ' / turn' : '0',
+      providers: P.map((p, i) => ({ n: p[0], i })), setProv: ev => this.setState({ prov: +ev.target.value }),
+      empires: e, setEmp: ev => this.setState({ emp: +ev.target.value }), turns: s.turns, setTurns: ev => this.setState({ turns: +ev.target.value }),
+      perTurn: pt === 0 ? 'Free' : money(pt), total: pt === 0 ? 'Free' : money(pt * s.turns), capTurns: pt === 0 ? 'unlimited' : Math.floor(5 / pt),
+      provNote: pr[2] ? 'Measured on real games. Peak hours (01–04 and 06–10 UTC, weekdays) cost about double.' : 'Estimate, not measured. Free tiers may have call limits.',
+      langs: ['English', 'Português', 'Español', 'Français', 'Deutsch'],
+      compare: [['Rival rulers', 'Act through menus and notifications.', 'Write letters and secret diaries, remember promises, feel affection and anger.'], ['War', 'Declared with little explanation.', 'Declared in a letter, with reasons and terms.'], ['Armies', 'Moved by built-in AI.', 'Ordered by the nation’s own decisions: move, attack, defend, besiege.'], ['Money', 'Native economy.', 'One currency per empire, exchange rates, a Central Bank.'], ['Trade', 'Open routes.', 'Free, Toll or Blocked per foreign empire; routes pay or detour.'], ['Spies', 'Standard intelligence.', 'Intercept private letters that then never arrive.']].map(r => ({ a: r[0], b: r[1], c: r[2] })),
+      steps: [['1', 'Buy and download', 'One payment of $10 through Lemon Squeezy. Download links arrive right away.'], ['2', 'Copy into the game folder', 'Unzip into your HUMANKIND folder on Steam. An installer is in preparation. [Placeholder: exact steps on /install]'], ['3', 'Pick your AI', 'Sign in with OpenRouter or paste a key (DeepSeek, OpenAI, Gemini, GLM, xAI). Set your spending cap. Play.']].map(x => ({ n: x[0], h: x[1], b: x[2] }))
+    };
+  }
+}
+</script>
+</body>
+</html>

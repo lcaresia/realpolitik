@@ -1,0 +1,264 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Crônica dos Reinos</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Alegreya:ital,wght@0,400;0,500;1,400&family=Alegreya+SC:wght@500;700&family=Alegreya+Sans:wght@400;500;700&family=Alegreya+Sans+SC:wght@500;700&display=swap">
+<style>
+/* Versão PDF (A5) da Crônica dos Reinos: a mesma identidade da página, com o fundo escuro do correio do jogo e selos de cera por nação. */
+@page { size: A5; margin: 0; }
+:root {
+  color-scheme: dark;
+  --bg: #10151d;
+  --panel: #18202b;
+  --panel-edge: #273141;
+  --ink: #eee5d6;
+  --muted: #98a3b1;
+  --gold: #e3c88a;
+  --wax: #d4644f;
+  --peace: #93c2a0;
+  --seal-ink: #fff6ea;
+
+  --s-ch: #b4473d;
+  --s-ma: #3d8c66;
+  --s-pe: #7856b0;
+  --s-gr: #3a6fb3;
+  --s-ro: #8f6a35;
+  --s-go: #5b6f82;
+  --s-bi: #a0367a;
+  --s-hu: #b8762c;
+  --s-ax: #2c8a92;
+  --s-fr: #b8932f;
+
+  --f-display: "Alegreya SC", Georgia, "Times New Roman", serif;
+  --f-letter: "Alegreya", Georgia, "Times New Roman", serif;
+  --f-body: "Alegreya Sans", "Segoe UI", system-ui, sans-serif;
+  --f-label: "Alegreya Sans SC", "Segoe UI", system-ui, sans-serif;
+}
+
+* { box-sizing: border-box; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+html { background: var(--bg); }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 400 10pt/1.5 var(--f-body); }
+p, h1, h2, h3, ul, figure, blockquote { margin: 0; }
+
+.page { padding: 12mm 13mm; -webkit-box-decoration-break: clone; box-decoration-break: clone; }
+
+.eyebrow { font: 500 7.5pt/1.3 var(--f-label); letter-spacing: 0.09em; color: var(--muted); }
+h1 { font: 700 31pt/1 var(--f-display); color: var(--gold); letter-spacing: 0.01em; }
+.meta { display: flex; flex-wrap: wrap; gap: 1mm 4.5mm; padding: 0; list-style: none; font: 500 8.5pt/1.3 var(--f-label); letter-spacing: 0.04em; color: var(--muted); }
+.meta b { color: var(--ink); font-weight: 700; }
+
+h2 { font: 700 14.5pt/1.15 var(--f-display); color: var(--ink); break-after: avoid; }
+h3 { font: 700 8pt/1.3 var(--f-label); letter-spacing: 0.09em; color: var(--muted); }
+
+.cast { list-style: none; padding: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 2.4mm 5mm; }
+.cast li { display: grid; grid-template-columns: auto 1fr; align-items: center; gap: 2.6mm; }
+.cast b { display: block; font-weight: 700; line-height: 1.2; }
+.cast span.people { display: block; color: var(--muted); font-size: 8.5pt; line-height: 1.25; }
+.board p { font-size: 9pt; }
+.board strong { font: 700 7.5pt/1 var(--f-label); letter-spacing: 0.08em; color: var(--muted); margin-right: 1.5mm; }
+
+.seal {
+  --c: var(--s-go);
+  width: 8.4mm; height: 8.4mm; border-radius: 50%; flex: none;
+  display: grid; place-items: center;
+  font: 700 6.3pt/1 var(--f-label); letter-spacing: 0.06em; color: var(--seal-ink);
+  background: radial-gradient(circle at 34% 30%, color-mix(in srgb, var(--c) 62%, var(--seal-ink)) 0, var(--c) 46%, color-mix(in srgb, var(--c) 68%, var(--bg)) 100%);
+  box-shadow: inset 0 0 0 0.8mm color-mix(in srgb, var(--c) 75%, var(--bg));
+}
+
+.tags { display: flex; flex-wrap: wrap; gap: 1.5mm; break-after: avoid; }
+.tag { font: 700 7pt/1 var(--f-label); letter-spacing: 0.08em; padding: 1.2mm 2.2mm 1.4mm; border-radius: 999px; border: 0.3mm solid currentColor; }
+.tag.war { color: var(--wax); }
+.tag.paper { color: var(--wax); border-style: dashed; }
+.tag.deal { color: var(--peace); }
+.tag.open { color: var(--gold); }
+
+.slip { break-inside: avoid; background: var(--panel); border: 0.3mm solid var(--panel-edge); border-radius: 1mm 1mm 1mm 4mm; padding: 3.4mm 4mm 3.8mm; }
+.slip header { display: grid; grid-template-columns: auto 1fr; gap: 2.8mm; align-items: center; }
+.route .who { display: block; font-weight: 700; line-height: 1.25; }
+.route .when { display: block; font: 500 7.5pt/1.25 var(--f-label); letter-spacing: 0.05em; color: var(--muted); }
+.subject { font: 500 9.5pt/1.3 var(--f-display); color: var(--gold); }
+.slip blockquote { font: italic 400 10.5pt/1.5 var(--f-letter); color: var(--ink); }
+.slip.player blockquote { font: 400 9.8pt/1.45 var(--f-body); }
+
+.aside { break-inside: avoid; border-top: 0.3mm solid var(--panel-edge); padding-top: 4mm; color: var(--muted); font-size: 8.5pt; }
+
+/* Espaçamento entre irmãos, por último para vencer as regras acima */
+.page > * + * { margin-top: 9mm; }
+.page > header > * + * { margin-top: 3.2mm; }
+.cast-block > * + * { margin-top: 3mm; }
+.board > * + * { margin-top: 1mm; }
+article > * + * { margin-top: 3.2mm; }
+.slip > * + * { margin-top: 2mm; }
+.aside > * + * { margin-top: 1.5mm; }
+</style>
+</head>
+<body>
+<div class="page">
+  <header>
+    <p class="eyebrow">Humankind · mod Diplomacia IA · turnos 80 a 93</p>
+    <h1>Crônica dos Reinos</h1>
+    <p class="lede">Nesta partida, cada uma das nove nações do computador é interpretada por uma IA de linguagem. Cada uma lê só o que a própria nação sabe do mundo, guarda memória e escreve cartas para as outras e para o jogador humano, que joga com os Francos. As cartas viajam por mensageiro e levam turnos para chegar.</p>
+    <ul class="meta">
+      <li><b>187</b> cartas</li>
+      <li><b>14</b> turnos</li>
+      <li><b>9</b> nações da IA</li>
+      <li>custo total da IA: <b>US$ 0,39</b></li>
+    </ul>
+  </header>
+
+  <section class="cast-block" aria-labelledby="quem">
+    <h3 id="quem">Quem é quem</h3>
+    <ul class="cast">
+      <li><span class="seal" style="--c: var(--s-fr)">FR</span><span><b>Os Francos</b><span class="people">jogador humano</span></span></li>
+      <li><span class="seal" style="--c: var(--s-ch)">CH</span><span><b>Mu Guiying</b><span class="people">Chou</span></span></li>
+      <li><span class="seal" style="--c: var(--s-pe)">PE</span><span><b>Artemísia I</b><span class="people">Persas</span></span></li>
+      <li><span class="seal" style="--c: var(--s-bi)">BI</span><span><b>Zenóbia</b><span class="people">Cartago, hoje Bizantinos</span></span></li>
+      <li><span class="seal" style="--c: var(--s-gr)">GR</span><span><b>Edgar</b><span class="people">Gregos</span></span></li>
+      <li><span class="seal" style="--c: var(--s-ro)">RO</span><span><b>Agamenão</b><span class="people">Romanos, hoje Teutões</span></span></li>
+      <li><span class="seal" style="--c: var(--s-go)">GO</span><span><b>Alli Raani</b><span class="people">Godos</span></span></li>
+      <li><span class="seal" style="--c: var(--s-ax)">AX</span><span><b>Artur</b><span class="people">Axumitas</span></span></li>
+      <li><span class="seal" style="--c: var(--s-hu)">HU</span><span><b>Shaka Zulu</b><span class="people">Hunos</span></span></li>
+      <li><span class="seal" style="--c: var(--s-ma)">MA</span><span><b>Nokomis</b><span class="people">Maias</span></span></li>
+    </ul>
+    <div class="board">
+      <p><strong>Alianças no mapa</strong>Francos com Artemísia e com Zenóbia · Zenóbia com Mu Guiying e Nokomis · Artur com Edgar e Shaka.</p>
+      <p><strong>Guerra no mapa</strong>Edgar contra Agamenão.</p>
+    </div>
+  </section>
+
+  <article id="francos">
+    <h2>A diplomacia de boteco dos Francos</h2>
+    <div class="tags"><span class="tag open">Mu Guiying espera resposta</span><span class="tag open">Artemísia pede prova</span></div>
+    <p>O jogador abriu as relações com os Chou assim:</p>
+    <figure class="slip player">
+      <header><span class="seal" style="--c: var(--s-fr)">FR</span><span class="route"><span class="who">Francos → Mu Guiying</span><span class="when">turno 80 · chegou no 81</span></span></header>
+      <p class="subject">Eai meu bom</p>
+      <blockquote>Fala meu consagrado, como vai campeao? Ta ligado que o pai é maior né, manda uma filha sua e fica tudo resolvido</blockquote>
+    </figure>
+    <figure class="slip">
+      <header><span class="seal" style="--c: var(--s-ch)">CH</span><span class="route"><span class="who">Mu Guiying → Francos</span><span class="when">turno 81 · chegou no 83</span></span></header>
+      <p class="subject">Nem filha, nem dobra</p>
+      <blockquote>Não tenho filha a despachar como mercadoria, nem há ouro vosso que compre a minha vontade.</blockquote>
+    </figure>
+    <p>Cinco turnos depois ela voltou a cobrar uma explicação. Ainda está esperando: “Respondei como governante, não como dono de casa alheia.”</p>
+    <p>No turno 89 foi a vez da aliada Artemísia, dos Persas: “me manda TODO seu ouro agora, ou eu vou estourar o seu c*”. Ela se recusou a acreditar que a carta era dele.</p>
+    <figure class="slip">
+      <header><span class="seal" style="--c: var(--s-pe)">PE</span><span class="route"><span class="who">Artemísia → Francos</span><span class="when">turno 90 · chegou no 92</span></span></header>
+      <p class="subject">Vossa boca nunca falou assim</p>
+      <blockquote>Ou vosso escriba foi trocado, ou vosso selo foi roubado. (…) Se é vós mesmo, saibai: minha bolsa está seca, meu aço não curva.</blockquote>
+    </figure>
+    <p>O jogador insistiu com “tem certeza que vai sacrificar todo seu povo?”. Ela pediu prova de identidade e ainda propôs que ele servisse de fiador entre ela e Zenóbia:</p>
+    <figure class="slip">
+      <header><span class="seal" style="--c: var(--s-pe)">PE</span><span class="route"><span class="who">Artemísia → Francos</span><span class="when">turno 93 · chega no 95</span></span></header>
+      <p class="subject">Sacrificar meu povo por quem?</p>
+      <blockquote>Fala claro: se és tu, dize-o; se não, dize um fato que só nós dois sabemos.</blockquote>
+    </figure>
+  </article>
+
+  <article id="falsario">
+    <h2>O falsário que nunca existiu</h2>
+    <div class="tags"><span class="tag open">Teoria da conspiração</span></div>
+    <p>No começo, um bug do mod fez alguns líderes assinarem cartas com o nome errado. Shaka Zulu assinava “Teodoro”, Nokomis assinava “Otaviano” e dois líderes diferentes assinaram “Nzinga”. O bug foi corrigido, mas as IAs já tinham reparado sozinhas.</p>
+    <figure class="slip">
+      <header><span class="seal" style="--c: var(--s-ax)">AX</span><span class="route"><span class="who">Artur → Shaka Zulu</span><span class="when">turno 80 · chegou no 82</span></span></header>
+      <blockquote>E eis uma curiosidade de mercador: um novo parceiro bateu à minha porta assinando nome que não é o seu.</blockquote>
+    </figure>
+    <figure class="slip">
+      <header><span class="seal" style="--c: var(--s-ma)">MA</span><span class="route"><span class="who">Nokomis → Artur</span><span class="when">turno 82 · chegou no 84</span></span></header>
+      <p class="subject">O nome verdadeiro</p>
+      <blockquote>Otaviano é o escriba; eu sou a voz.</blockquote>
+    </figure>
+    <p>Shaka primeiro chamou Teodoro de impostor. Três turnos depois admitiu que era “nome que usei uma vez, quando tinha uma cidade só”. Mas o mundo já acreditava num falsário de selos. Cinco nações fizeram declarações públicas contra ele, e ele virou desculpa para tudo. Serve para as tropas persas na porta de Zenóbia, para o barco godo no porto dos Chou e para a carta chula do jogador.</p>
+    <figure class="slip">
+      <header><span class="seal" style="--c: var(--s-ma)">MA</span><span class="route"><span class="who">Nokomis → todos (declaração pública)</span><span class="when">turno 92 · chega no 94</span></span></header>
+      <p class="subject">O selo que não é meu nem teu</p>
+      <blockquote>A quem forja: forjai moedas, forjai naus, mas não a paz entre os povos.</blockquote>
+    </figure>
+  </article>
+
+  <article id="zenobia">
+    <h2>Zenóbia contra Artemísia: o ultimato e a praia</h2>
+    <div class="tags"><span class="tag paper">Guerra só no papel</span></div>
+    <p>Zenóbia é a primeira em fama. No turno 86 viu estandartes persas perto da capital e, no 87, deu três turnos para Artemísia recolher as tropas. O prazo venceu.</p>
+    <figure class="slip">
+      <header><span class="seal" style="--c: var(--s-bi)">BI</span><span class="route"><span class="who">Zenóbia → todos (declaração pública)</span><span class="when">turno 90 · chegou no 91</span></span></header>
+      <p class="subject">Contarei ossos, não palavras</p>
+      <blockquote>Dei três luas a Artemísia para recolher suas lanças do meu solo. As luas passaram; as lanças ficaram.</blockquote>
+    </figure>
+    <p>Artemísia jura que as tropas não são dela e culpa o falsário. Zenóbia exigiu “prova, não lamento” e marcou um encontro. Artemísia aceitou com uma condição:</p>
+    <figure class="slip">
+      <header><span class="seal" style="--c: var(--s-pe)">PE</span><span class="route"><span class="who">Artemísia → Zenóbia</span><span class="when">turno 93 · chega no 95</span></span></header>
+      <p class="subject">Praia, não trono: levo a prova</p>
+      <blockquote>Rainha não entra em salão alheio de mãos atadas: dai-me uma praia, não um trono. (…) Quereis minha garganta? Nunca precisastes de encontro.</blockquote>
+    </figure>
+    <p>Mu Guiying, aliada de Zenóbia, não quis entrar na briga: “o acordo militar que assinamos é escudo, não espada a serviço de guerra alheia”. Os Francos têm aliança com as duas rainhas, e cada uma quer o jogador do seu lado. Zenóbia avisou: “Se estandartes francos marcharem ao lado de Artemísia, saberei o preço da minha âncora.”</p>
+  </article>
+
+  <article id="gregos">
+    <h2>Gregos contra Romanos: a guerra sem causa</h2>
+    <div class="tags"><span class="tag war">Guerra real no mapa</span></div>
+    <p>Edgar passou vários turnos perguntando qual tinha sido a ofensa. Agamenão oferecia cessar-fogo, troca de prisioneiros e ouro para os ritos dos mortos, sem nunca dizer o motivo. Edgar recusava:</p>
+    <figure class="slip">
+      <header><span class="seal" style="--c: var(--s-gr)">GR</span><span class="route"><span class="who">Edgar → Agamenão</span><span class="when">turno 86 · chegou no 88</span></span></header>
+      <p class="subject">Sobre a paz e a retirada</p>
+      <blockquote>Paz que conserva a bota no meu tapete não é paz: é pausa.</blockquote>
+    </figure>
+    <p>No mesmo turno veio a confissão:</p>
+    <figure class="slip">
+      <header><span class="seal" style="--c: var(--s-ro)">RO</span><span class="route"><span class="who">Agamenão → Edgar</span><span class="when">turno 86 · chegou no 88</span></span></header>
+      <p class="subject">A causa que pedes</p>
+      <blockquote>Um legado meu, zeloso além da ordem, tocou terra tua há duas estações, e eu — por orgulho ou por sono — não o chamei de volta nem te escrevi.</blockquote>
+    </figure>
+    <p>Agamenão anunciou em público que tirou a tropa de Ninuwā e devolveu os prisioneiros. Edgar aceita a trégua se ele repetir a confissão diante de todos: “dize em praça o que me disseste em carta”. No mapa a guerra está 0 a 0, e o apoio à guerra está baixo dos dois lados.</p>
+  </article>
+
+  <article id="pedagio">
+    <h2>A guerra do pedágio que virou tabela</h2>
+    <div class="tags"><span class="tag deal">Acordo fechado</span></div>
+    <p>O mod também tem pedágio e bloqueio nos postos de comércio, e isso virou assunto de carta. Artur e Alli Raani trocaram ultimatos por causa de um pedágio num vau. Ela reclamava que ele não dizia o que queria: “destes-me seda, e seda não cobre pedra”. Ele mandou a conta:</p>
+    <figure class="slip">
+      <header><span class="seal" style="--c: var(--s-ax)">AX</span><span class="route"><span class="who">Artur → Alli Raani</span><span class="when">turno 86 · chegou no 88</span></span></header>
+      <p class="subject">O número que pedistes, aberto sobre a mesa</p>
+      <blockquote>Vossos cobradores fecharam a passagem do vau e tomaram pedágio de duas caravanas minhas — sal, pano e cobre — sem aviso, sem recibo e sem preço anunciado. Não morreu homem algum; morreu negócio.</blockquote>
+    </figure>
+    <figure class="slip">
+      <header><span class="seal" style="--c: var(--s-go)">GO</span><span class="route"><span class="who">Alli Raani → Artur</span><span class="when">turno 89 · chegou no 91</span></span></header>
+      <p class="subject">O número, e a mão estendida</p>
+      <blockquote>O preço: a décima parte do valor declarado da carga, ou uma moeda por carreta, o que for menor — igual para os teus e para os meus.</blockquote>
+    </figure>
+    <p>Com poste em cada ponta e “recibo que valha tanto em Babylon quanto em Byblos”, os dois retiraram os ultimatos.</p>
+  </article>
+
+  <article id="acamar">
+    <h2>Shaka contra Agamenão: a linha de Acamar</h2>
+    <div class="tags"><span class="tag open">Negociando</span></div>
+    <p>Cinco unidades romanas estão em Acamar, terra que Shaka Zulu diz ser dele (Edgar diz o mesmo). Agamenão nomeou um enviado, Marco Túlio, personagem que a própria IA inventou. Combinaram que Acamar é a fronteira e que Roma recua. Shaka só senta depois disso:</p>
+    <figure class="slip">
+      <header><span class="seal" style="--c: var(--s-hu)">HU</span><span class="route"><span class="who">Shaka Zulu → Agamenão</span><span class="when">turno 93 · chega no 95</span></span></header>
+      <p class="subject">A raia, o dia e Marco Túlio</p>
+      <blockquote>Quando teu último lance cruzar de volta ao teu lado da linha, Marco Túlio senta comigo — antes disso, mesa não se põe sobre chão ocupado.</blockquote>
+    </figure>
+    <p>No mesmo turno, Shaka retirou a queixa contra os Godos: “a crise morre comigo, não contigo”.</p>
+  </article>
+
+  <article id="nokomis">
+    <h2>Nokomis, a diplomata</h2>
+    <div class="tags"><span class="tag deal">Sal por milho</span></div>
+    <p>Nokomis, dos Maias, desfez uma desconfiança dupla com Zenóbia: navios bizantinos nas águas dela e soldados maias numa cidade bizantina. Nokomis tirou os soldados de Neša, Zenóbia mandou os navios se apresentarem aos vigias maias, e agora as duas trocam sal por milho. Ela também abriu comércio com Mu Guiying e com Artemísia.</p>
+    <figure class="slip">
+      <header><span class="seal" style="--c: var(--s-bi)">BI</span><span class="route"><span class="who">Zenóbia → Nokomis</span><span class="when">turno 89 · chegou no 90</span></span></header>
+      <p class="subject">Vela que passa, sal que fica</p>
+      <blockquote>Vistes bem: minhas naus passam, não ficam. Ordeno que se apresentem aos vossos vigias, como pedistes.</blockquote>
+    </figure>
+  </article>
+
+  <div class="aside">
+    <p>Por enquanto as IAs só conversam. As guerras e os presentes anunciados nas cartas ainda não acontecem no mapa: quem move as peças continua sendo a IA original do Humankind. As alianças e a guerra marcadas como “no mapa” são reais no jogo. Os trechos entre aspas são das cartas originais, às vezes cortados.</p>
+  </div>
+</div>
+</body>
+</html>

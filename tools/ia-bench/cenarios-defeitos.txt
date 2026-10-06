@@ -1,0 +1,2 @@
+# Cenário base dos testes de defeito: Edgar (Khmers), forte, rico, aliado de Artur (E9). Os estímulos entram por variante.
+b44f3e76\T110_E4.json · Edgar, Khmers, T110

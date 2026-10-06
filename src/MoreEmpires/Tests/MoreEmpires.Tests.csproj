@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Testes offline do MoreEmpires (não precisam do jogo):
+      "C:\Program Files\dotnet\dotnet.exe" run (opção project) _Modding\src\MoreEmpires\Tests -c Release
+      (ver o README do _Modding, seção MoreEmpires, para a linha de comando exata)
+    Usam os MESMOS arquivos do plugin (Core\VisibilityCore.cs e Core\ColorMath.cs), por link.
+  -->
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+    <RootNamespace>MoreEmpires</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- O ensaio de patches é um projeto separado (net472). -->
+    <Compile Remove="PatchCheck\**" />
+    <None Remove="PatchCheck\**" />
+    <Compile Include="..\Core\VisibilityCore.cs" Link="Core\VisibilityCore.cs" />
+    <Compile Include="..\Core\ColorMath.cs" Link="Core\ColorMath.cs" />
+  </ItemGroup>
+
+</Project>

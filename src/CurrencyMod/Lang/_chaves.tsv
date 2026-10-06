@@ -1,0 +1,1053 @@
+CentralBankWindow.cs	(você)
+Diplomacia\UI\InterceptedLettersTab.cs	({0:0}% por carta)
+Diplomacia\UI\InterceptedLettersTab.cs	, revelado em ~{0} turno(s)
+NativeUI\TradePostWindow.cs	0 desviam
+NativeUI\TradePostWindow.cs	1 barrada
+Diplomacia\UI\MailScreen.cs	1 carta
+Diplomacia\UI\InterceptedLettersTab.cs	1 carta lida
+Diplomacia\UI\CorrespondenceTab.cs	1 carta nova desta nação.
+Diplomacia\UI\MailButton.cs	1 carta nova.
+NativeUI\DiplomacyTradePolicyPanel.cs	1 de {0} rotas deles paga
+NativeUI\TradePostWindow.cs	1 desvia
+NativeUI\DiplomacyTradePolicyPanel.cs	1 desvia dos seus postos
+Diplomacia\UI\MailScreen.cs	1 enviada
+Diplomacia\UI\InterceptedLettersTab.cs	1 espião fora
+NativeUI\TradePostWindow.cs	1 paga
+Diplomacia\UI\MailScreen.cs	1 recebida
+NativeUI\TradePostWindow.cs	1 rota aqui
+NativeUI\DiplomacyTradePolicyPanel.cs	1 rota deles passa pelos seus territórios
+NativeUI\TradePostWindow.cs	1 território
+NativeUI\NativeBankWindow.cs	1 · Oferta × demanda
+NativeUI\NativeBankWindow.cs	1 · Oferta × demanda: {0}
+NativeUI\NativeBankWindow.cs	2 · Inflação → juros: {0} (meta {1})
+NativeUI\NativeBankWindow.cs	3 · Juros → produção: {0}
+NativeUI\NativeBankButton.cs	<c=E8685E>Alerta: {0}.</c> Veja o diagnóstico na aba Ciclo.
+Diplomacia\UI\CouncilScreen.cs	A Mão
+Diplomacia\UI\CorrespondenceTab.cs	A carta está vazia.
+Diplomacia\UI\CorrespondenceTab.cs	A carta nova fica ligada à última carta deles que pedia resposta.
+Diplomacia\UI\CouncilScreen.cs	A chamada falhou: {0}. Use "Convocar de novo", à direita.
+Diplomacia\UI\CouncilScreen.cs	A chamada à API falhou: {0}
+NativeUI\NativeBankWindow.cs	A comparação entre o dinheiro e a produção aparece depois do próximo fim de turno.
+Diplomacia\UI\CorrespondenceTab.cs	A correspondência com esta nação, em ordem, e o campo para escrever. A carta leva o tempo de entrega da sua era.
+NativeUI\NativeBankWindow.cs	A decomposição aparece depois do próximo fim de turno.
+EconomyDiagnosis.cs	A dívida custa {0} por turno e empurra a inflação para cima ({1}). Equilibre a renda antes de mexer nos juros.
+NativeUI\NativeBankWindow.cs	A dívida paga os juros mais {0} de spread, menos a inflação. Saldo negativo também sobe a inflação.
+Diplomacia\Council\CouncilEngine.cs	A fé do povo está tranquila.
+Diplomacia\Council\CouncilEngine.cs	A glória pede obras e festas.
+NativeUI\NativeBankWindow.cs	A inflação anda {0:0}% por turno em direção ao rumo.
+NativeUI\NativeBankWindow.cs	A inflação está acima dos juros: o dinheiro parado perde valor a cada turno (já descontado da renda da barra do topo). Juros acima da inflação fazem o saldo render.
+NativeUI\NativeBankWindow.cs	A inflação que o modo automático tenta alcançar. Acima dela, a moeda perde valor mais rápido.
+NativeUI\DiplomacyEconomyPanel.cs	A moeda deles vale mais: importar deles sai <b>caro</b>
+EconomyDiagnosis.cs	A produção cresce {0} acima do ritmo do dinheiro: os preços tendem a cair. Há espaço para juros mais baixos e mais crédito.
+NativeUI\NativeBankWindow.cs	A produção está crescendo {0} acima do ritmo do dinheiro, comparado ao resto do mundo: sobra oferta e os preços caem.
+EconomyDiagnosis.cs	A renda cresce {0} acima do ritmo da produção: sobra demanda e a inflação tende a subir. Mais indústria ou juros mais altos seguram os preços.
+Diplomacia\UI\MailScreen.cs	A responder
+Diplomacia\UI\CouncilButton.cs	A reunião deste turno está pronta.
+Diplomacia\UI\CouncilButton.cs	A reunião deste turno falhou; abra para convocar de novo.
+Diplomacia\UI\CouncilButton.cs	A reunião deste turno já aconteceu.
+Diplomacia\UI\CouncilScreen.cs	A reunião falhou
+Diplomacia\UI\CouncilScreen.cs	A reunião não saiu: {0}. Use "Convocar de novo", à direita.
+Diplomacia\UI\CouncilScreen.cs	A reunião é escrita uma vez por turno, a partir do seu dossiê (só o que o seu reino sabe).
+NativeUI\DiplomacyTradePolicyPanel.cs	A rota deles desvia dos seus postos
+NativeUI\DiplomacyTradePolicyPanel.cs	A rota deles paga o pedágio · nenhuma desvia
+Diplomacia\UI\MailScreen.cs	Abre a tela de diplomacia com essa nação, na aba Cartas: a conversa inteira, em ordem.
+Diplomacia\UI\MailScreen.cs	Abre o painel de escrever, à direita, endereçado a quem mandou esta carta e ligado a ela.
+NativeUI\NativeBankWindow.cs	Abreviação curta (até 4 letras), como R$. Use letras: a fonte do jogo não tem todos os símbolos.
+Diplomacia\UI\MailScreen.cs	Aceitar cartas
+Diplomacia\Council\CouncilEngine.cs	Aceite: vale mais um amigo na fronteira.
+EconomyDiagnosis.cs	Acima de {0} por turno a população sente os preços: a meta de estabilidade de cada cidade cai {1}. {2}
+Diplomacia\Council\CouncilBank.cs	Agricultura
+Diplomacia\UI\CouncilScreen.cs	Aguardando o turno
+Diplomacia\UI\MailScreen.cs	Ainda viajando. Chega no turno {0}; a resposta, se vier, sai no turno seguinte.
+NativeUI\NativeBankWindow.cs	Ajustar juros
+Diplomacia\UI\MailScreen.cs	Aliança
+CentralBankWindow.cs	Alta
+NativeUI\NativeBankWindow.cs	Alvo da produção
+NativeUI\NativeBankWindow.cs	Alvo ×{0}
+Diplomacia\Council\CouncilBank.cs	Anciã do Clã
+Diplomacia\Council\CouncilBank.cs	Ancião do Clã
+NativeUI\NativeBankWindow.cs	Aplica o nome, o plural e o símbolo. Enter num campo também salva.
+NativeUI\TradePostWindow.cs	Aplicar
+NativeUI\TradePostWindow.cs	Aplicar a todos os postos
+Diplomacia\UI\CouncilScreen.cs	Apreço +{0}
+Diplomacia\UI\CouncilScreen.cs	Apreço 0
+Diplomacia\UI\CouncilScreen.cs	Apreço por você
+Diplomacia\UI\CouncilScreen.cs	Apreço {0:+0;-0}
+Diplomacia\UI\CouncilScreen.cs	Apreço {0}
+CentralBankWindow.cs	Aquece os preços
+Diplomacia\Council\CouncilBank.cs	Arquiteta Real
+Diplomacia\Council\CouncilBank.cs	Arquiteto Real
+NativeUI\NativeBankWindow.cs	Arraste para definir os juros por turno. Mexer aqui passa o banco para o modo manual.
+Diplomacia\UI\MailScreen.cs	As cartas privadas dessa nação passam a voltar sem ser lidas. Ela descobre quando a carta volta.
+Diplomacia\UI\MailScreen.cs	As cartas privadas dessa nação voltam a chegar.
+Diplomacia\Council\CouncilEngine.cs	As cidades pararam de crescer: precisamos de mais terra boa (expansão).
+Diplomacia\Council\CouncilEngine.cs	As cidades produzem {0} de indústria por turno.
+Diplomacia\UI\MailScreen.cs	As nações aparecem aqui depois do primeiro contato.
+Diplomacia\UI\CouncilScreen.cs	As reuniões dos turnos anteriores, com o que cada um aconselhou e o que você respondeu.
+Diplomacia\UI\CouncilScreen.cs	As reuniões dos turnos passados aparecem aqui (as últimas 12).
+NativeUI\DiplomacyTradePolicyPanel.cs	As rotas desse império não podem atravessar nenhum território seu; sem outro caminho, são destruídas.
+NativeUI\DiplomacyTradePolicyPanel.cs	As rotas desse império passam livremente por todos os seus territórios.
+NativeUI\TradePostWindow.cs	As rotas são recalculadas na sua próxima ação ou no fim do turno.
+NativeUI\DiplomacyTradePolicyPanel.cs	As {0} rotas deles desviam dos seus postos
+NativeUI\DiplomacyTradePolicyPanel.cs	As {0} rotas deles pagam · nenhuma desvia
+NativeUI\NativeBankWindow.cs	Assim o nome e o símbolo aparecem nos textos do jogo.
+Diplomacia\UI\MailScreen.cs	Assunto
+Diplomacia\UI\CorrespondenceTab.cs	Assunto (opcional)
+NativeUI\NativeBankWindow.cs	Atual {0}
+Diplomacia\UI\CouncilScreen.cs	Até 8 por turno. Os ministros respondem com o que sabem do reino e mudam o apreço por você conforme o que ouvem.
+CentralBankWindow.cs	Automático
+NativeUI\NativeBankWindow.cs	Automático: o banco ajusta os juros sozinho para levar a inflação à meta.
+Manual: você decide pelo controle abaixo.
+Clique para trocar.
+CentralBankWindow.cs	BANCO CENTRAL
+CentralBankWindow.cs	Baixa
+NativeUI\TradePostWindow.cs	Baixar o pedágio
+NativeUI\DiplomacyTradePolicyPanel.cs	Baixar o pedágio deles
+CentralBankWindow.cs	Banco Central
+NativeUI\TradePostWindow.cs	Barradas
+Diplomacia\Council\CouncilBank.cs	Batedor-Mor
+Diplomacia\Council\CouncilBank.cs	Batedora-Mor
+NativeUI\TradePostWindow.cs	Bloqueado
+NativeUI\DiplomacyTradePolicyPanel.cs	Bloqueado em todos os {0} postos
+NativeUI\TradePostWindow.cs	Bloqueado: as rotas desse império não podem atravessar este território; sem outro caminho, a rota é destruída.
+NativeUI\DiplomacyTradePolicyPanel.cs	Bloquear
+NativeUI\DiplomacyTradePolicyPanel.cs	Bloquear em todos os seus postos
+NativeUI\TradePostWindow.cs	Bloquear ou cobrar pedágio dá a ele uma reclamação "Bloqueio comercial" contra você.
+Trade\TradeGrievances.cs	Bloqueio comercial
+Trade\TradeGrievances.cs	Bloqueio comercial em {0}
+Diplomacia\Council\CouncilBank.cs	Braço Direito
+NativeUI\NativeBankWindow.cs	Cada ponto de juro real acima do neutro tira {0:0.#}% da produção (de ×{1} a ×{2}). Nas cidades, aparece como "Crédito" no detalhamento de indústria.
+NativeUI\DiplomacyTradePolicyPanel.cs	Calculando o efeito nas rotas deles…
+Diplomacia\Council\CouncilBank.cs	Capelã-Mor
+Diplomacia\Council\CouncilBank.cs	Capelão-Mor
+Diplomacia\UI\CorrespondenceTab.cs	Carta do turno {0}
+Diplomacia\UI\CorrespondenceTab.cs	Carta enviada.
+Diplomacia\UI\MailScreen.cs	Carta enviada. Chega no turno {0}.
+Diplomacia\UI\CorrespondenceTab.cs	Carta privada
+Diplomacia\UI\MailScreen.cs	Carta privada → Ultimato → Declaração pública.
+Diplomacia\UI\CorrespondenceTab.cs	Carta privada ↔ Ultimato. Declarações públicas ficam no Correio.
+Diplomacia\UI\CorrespondenceTab.cs	Cartas
+Diplomacia\UI\InterceptedLettersTab.cs	Cartas ({0})
+Diplomacia\UI\MailScreen.cs	Cartas acima de {0} palavras são cortadas. Cartas curtas costumam ser mais bem lidas.
+Diplomacia\UI\InterceptedLettersTab.cs	Cartas interceptadas
+Diplomacia\UI\InterceptedLettersTab.cs	Cartas lidas
+Diplomacia\UI\MailScreen.cs	Cartas privadas e ultimatos que pedem resposta e ainda não têm a sua (até {0} turnos atrás).
+Diplomacia\UI\InterceptedLettersTab.cs	Cartas privadas que os seus espiões leram no caminho, e a chance de ler as de cada nação. Espião oculto no território de outra nação, de preferência na capital, pega parte das cartas que ela escreve ou recebe.
+Diplomacia\UI\MailScreen.cs	Cartas que chegaram e você ainda não leu.
+Diplomacia\UI\MailScreen.cs	Cartas que você já respondeu, com a sua resposta ligada.
+Diplomacia\UI\MailScreen.cs	Cartas trocadas com essa nação até agora.
+Diplomacia\Council\CouncilEngine.cs	Ceder agora convida mais exigências: recuse ou enrole.
+Diplomacia\Council\CouncilEngine.cs	Ceder custa menos que uma guerra; aceite e cobre gratidão depois.
+Diplomacia\UI\InterceptedLettersTab.cs	Chance de ler as cartas privadas que escrevem ou recebem:
+Diplomacia\Council\CouncilBank.cs	Chanceler
+Diplomacia\Council\CouncilBank.cs	Chefe Guerreira
+Diplomacia\Council\CouncilBank.cs	Chefe Guerreiro
+Diplomacia\Council\CouncilBank.cs	Chefe da Polícia Secreta
+Diplomacia\Council\CouncilBank.cs	Chefe de Gabinete
+Diplomacia\Council\CouncilBank.cs	Chefe do Gabinete Negro
+Diplomacia\UI\CorrespondenceTab.cs	Chega no turno {0}
+Diplomacia\UI\CorrespondenceTab.cs	Chegada
+Diplomacia\UI\CorrespondenceTab.cs	Chegou no turno {0}
+Diplomacia\UI\MailScreen.cs	Chegou; o destinatário lê no começo do próximo turno dele.
+NativeUI\NativeBankWindow.cs	Ciclo
+NativeUI\NativeBankWindow.cs	Ciclo econômico
+Diplomacia\Council\CouncilBank.cs	Ciência
+Diplomacia\UI\CouncilScreen.cs	Clique de novo para demitir. Outra pessoa assume a pasta; o resto do conselho sente o golpe.
+NativeUI\TradePostWindow.cs	Cobra mais desse império neste posto, por recurso transportado. Se pagar sair mais caro que desviar, a rota desvia e você não recebe nada.
+NativeUI\TradePostWindow.cs	Cobra menos desse império neste posto, por recurso transportado. Pedágio mais barato faz menos rotas desviarem.
+Diplomacia\Council\CouncilEngine.cs	Cofre cheio é força na próxima crise: guarde.
+Diplomacia\Council\CouncilEngine.cs	Comerciamos com {0} nação(ões); as rotas rendem.
+NativeUI\DiplomacyTradePolicyPanel.cs	Como esse império está tratado nos seus postos hoje. "Misto" quando você ajustou postos diferentes pela janela do Posto Comercial (visão Comercializar). "Preço próprio": um posto em que você pôs outro preço só para ele; os botões - e + daqui trocam o preço de todos os postos de uma vez.
+NativeUI\NativeBankWindow.cs	Como produção, inflação e juros se puxam no seu império: o diagnóstico do momento e o que fazer.
+Diplomacia\Council\CouncilEngine.cs	Como sempre previ: {0}
+Diplomacia\UI\MailScreen.cs	Como vocês estão hoje no jogo.
+NativeUI\TradePostWindow.cs	Compra {0} · Vende {1}
+Diplomacia\UI\MailScreen.cs	Comunicados públicos
+Diplomacia\Council\CouncilBank.cs	Comércio
+NativeUI\TradePostWindow.cs	Comércio nessas rotas
+Diplomacia\Council\CouncilBank.cs	Confessor Real
+Diplomacia\Council\CouncilBank.cs	Confessora Real
+Diplomacia\UI\CouncilScreen.cs	Confirmar
+Diplomacia\UI\CouncilScreen.cs	Confirmar a demissão
+Diplomacia\Council\CouncilEngine.cs	Conhecemos {0} nação(ões); nenhuma pendência diplomática urgente.
+Diplomacia\Council\CouncilBank.cs	Conselheiro
+Diplomacia\UI\CouncilButton.cs	Conselho
+Diplomacia\UI\CouncilScreen.cs	Conselho fechado
+Diplomacia\UI\CouncilScreen.cs	Conselho:
+NativeUI\NativeBankWindow.cs	Conta o ritmo, não o tamanho: a referência acompanha o império em ~15 turnos.
+Diplomacia\Council\CouncilBank.cs	Contador de Histórias
+Diplomacia\Council\CouncilBank.cs	Contadora de Histórias
+Diplomacia\Council\CouncilEngine.cs	Contas no azul; nada urgente.
+Diplomacia\UI\MailScreen.cs	Contato recente
+Diplomacia\UI\CorrespondenceTab.cs	Conversa vazia
+Diplomacia\UI\CouncilScreen.cs	Convocar de novo
+NativeUI\TradePostWindow.cs	Copia as escolhas deste posto (livre, pedágio ou bloqueio para cada império) para todos os seus territórios.
+Diplomacia\UI\MailScreen.cs	Correio
+Diplomacia\UI\MailButton.cs	Correio Diplomático
+Diplomacia\UI\MailScreen.cs	Correio fechado
+Diplomacia\UI\MailScreen.cs	Correspondência
+Diplomacia\UI\CorrespondenceTab.cs	Correspondência com {0}
+Diplomacia\UI\MailScreen.cs	Correspondência recusada
+NativeUI\DiplomacyEconomyPanel.cs	Cotação
+Diplomacia\UI\CouncilScreen.cs	Credibilidade
+Diplomacia\UI\CouncilScreen.cs	Credibilidade {0}
+NativeUI\NativeBankWindow.cs	Crescente / decrescente
+NativeEffects.cs	Crédito barato (juros de {0})
+NativeUI\NativeBankWindow.cs	Crédito barato: a produção das cidades vai subir até ×{0}, aos poucos.
+NativeUI\NativeBankWindow.cs	Crédito barato: as cidades produzem mais no patamar dos juros atuais.
+EconomyDiagnosis.cs	Crédito caro
+NativeEffects.cs	Crédito caro (juros de {0})
+NativeUI\NativeBankWindow.cs	Crédito caro: a produção das cidades está cortada no patamar dos juros atuais.
+NativeUI\NativeBankWindow.cs	Crédito caro: a produção das cidades vai cair até ×{0}, aos poucos.
+NativeUI\NativeBankWindow.cs	Crédito neutro: os juros não mexem na produção.
+NativeUI\NativeBankWindow.cs	Crédito: juro real (juros − inflação) acima do neutro encarece o investimento e corta a produção das cidades; abaixo, aquece. A produção chega ao novo patamar aos poucos. Detalhes na aba Ciclo.
+Diplomacia\Council\CouncilBank.cs	Cultura
+NativeUI\NativeBankWindow.cs	Custa 500 {0}
+CentralBankWindow.cs	Custa <b>500 {0}</b>
+Diplomacia\UI\CouncilScreen.cs	Custo
+NativeUI\NativeBankWindow.cs	Custo da dívida
+NativeUI\NativeBankWindow.cs	Custo da dívida: {0}/turno
+CentralBankWindow.cs	CÂMBIO
+CentralBankWindow.cs	CÂMBIO EM RELAÇÃO À MÉDIA MUNDIAL
+CentralBankWindow.cs	Câmbio
+NativeUI\NativeBankWindow.cs	Câmbio {0}×
+NativeUI\NativeBankWindow.cs	Da inflação que vem da dívida ({0}), a regra conta {1}: a dívida pesa, mas com teto, para os juros não encarecerem a própria dívida sem fim.
+NativeUI\DiplomacyTradePolicyPanel.cs	Das rotas desse império que passariam pelos seus territórios sem pedágio nem bloqueio, quantas continuam passando (e pagam) e quantas vão por outro caminho, mais barato. Calculado pelo caminho do próprio jogo; atualiza na hora quando você muda o preço. As rotas mudam de verdade na sua próxima ação.
+NativeUI\TradePostWindow.cs	Das rotas desse império que passariam por este posto sem pedágio, quantas continuam passando (e pagam) e quantas desviam por um caminho mais barato. Muda na hora quando você mexe no preço. Uma rota entre dois impérios que você taxa paga os dois pedágios.
+NativeUI\TradePostWindow.cs	Das rotas estrangeiras que passariam por aqui sem pedágio nem bloqueio, quantas vão por outro caminho por causa das suas regras: desviam do pedágio (a volta sai mais barata que pagar) ou ficam barradas pelo bloqueio. Calculado pelo próprio caminho do jogo e atualizado na hora quando você muda o preço; as rotas mudam de verdade na sua próxima ação.
+Diplomacia\UI\MailScreen.cs	Declaração pública
+Diplomacia\UI\MailScreen.cs	Declarações públicas: todas as nações que conhecem quem escreveu leem.
+CentralBankWindow.cs	Deflação
+Diplomacia\UI\CouncilScreen.cs	Demitir
+Diplomacia\Council\CouncilEngine.cs	Desconfio da pressa deles: deixe esperar.
+CentralBankWindow.cs	Descontrolada
+NativeEffects.cs	Desemprego pelo crédito caro
+NativeUI\NativeBankWindow.cs	Desemprego {0}
+NativeUI\TradePostWindow.cs	Desviam
+NativeUI\NativeBankWindow.cs	Diagnóstico: {0}
+Diplomacia\UI\CouncilScreen.cs	Diga ao conselho o que pensa, pergunte a um ministro pelo nome ou pela pasta, ou dê uma ordem…
+NativeUI\NativeBankWindow.cs	Dinheiro e produção crescem no ritmo do resto do mundo: sem pressão nos preços.
+NativeUI\DiplomacyEconomyPanel.cs	Dinheiro ganho por turno, cada um na sua moeda. A barra compara em valor real, já convertido pelo câmbio.
+NativeUI\NativeBankWindow.cs	Dinheiro novo por turno, em média dos últimos turnos.
+EconomyDiagnosis.cs	Dinheiro à frente da produção
+Diplomacia\Council\CouncilBank.cs	Diretor da Academia
+Diplomacia\Council\CouncilBank.cs	Diretor de Inteligência
+Diplomacia\Council\CouncilBank.cs	Diretora da Academia
+Diplomacia\Council\CouncilBank.cs	Diretora de Inteligência
+Diplomacia\Council\CouncilEngine.cs	Dominamos {0} tecnologias e produzimos {1} de ciência por turno.
+CentralBankWindow.cs	DÍVIDA (JURO REAL)
+CentralBankWindow.cs	Dívida paga juros mais um spread. Inflação alta corrói a dívida, mas derruba o câmbio.
+NativeUI\NativeBankWindow.cs	Dívida {0}
+CentralBankWindow.cs	EFEITO ESPERADO NO PRÓXIMO TURNO
+NativeUI\DiplomacyEconomyPanel.cs	Economia
+EconomyDiagnosis.cs	Economia equilibrada
+NativeUI\NativeBankWindow.cs	Efeito na inflação
+NativeUI\NativeBankWindow.cs	Efeito na produção
+NativeUI\DiplomacyTradePolicyPanel.cs	Ele ganha uma reclamação "Bloqueio comercial" contra você.
+Diplomacia\UI\CorrespondenceTab.cs	Eles esperam uma resposta sua. Responda no painel ao lado.
+EconomyDiagnosis.cs	Em dívida
+Diplomacia\UI\CorrespondenceTab.cs	Em resposta a
+Diplomacia\UI\MailScreen.cs	Em resposta à carta {0} do turno {1}{2}.
+Diplomacia\UI\MailScreen.cs	Em resposta à sua carta do turno {0}{1}.
+NativeUI\DiplomacyTradePolicyPanel.cs	Em todos os seus territórios, as rotas desse império pagam pedágio por turno (por recurso transportado), ou desviam se a volta sair mais barata.
+Diplomacia\Council\CouncilBank.cs	Emissária-Mor
+Diplomacia\Council\CouncilBank.cs	Emissário-Mor
+Diplomacia\UI\MailScreen.cs	Endereça o painel de escrever, à direita, a essa nação.
+Diplomacia\UI\MailScreen.cs	Enter quebra a linha. Até {0} palavras.
+Diplomacia\UI\CouncilScreen.cs	Enter quebra a linha. Até {0} palavras. Cada fala sua custa uma chamada à API.
+Diplomacia\UI\MailScreen.cs	Entregue
+Diplomacia\UI\CorrespondenceTab.cs	Enviada
+Diplomacia\UI\CorrespondenceTab.cs	Enviada no turno {0}
+Diplomacia\UI\MailScreen.cs	Enviadas
+Diplomacia\UI\CorrespondenceTab.cs	Enviar
+Diplomacia\UI\MailScreen.cs	Envio
+Diplomacia\GameText.cs	Era Antiga
+Diplomacia\GameText.cs	Era Clássica
+Diplomacia\GameText.cs	Era Contemporânea
+Diplomacia\GameText.cs	Era Industrial
+Diplomacia\GameText.cs	Era Medieval
+Diplomacia\GameText.cs	Era Moderna
+Diplomacia\GameText.cs	Era Neolítica
+Diplomacia\GameText.cs	Era {0}
+CentralBankWindow.cs	Erosão do saldo
+Diplomacia\UI\MailScreen.cs	Escolha para quem escrever.
+Diplomacia\UI\CorrespondenceTab.cs	Escreva a carta acima
+Diplomacia\UI\CouncilScreen.cs	Escreva acima
+Diplomacia\UI\CorrespondenceTab.cs	Escreva ao lado
+Diplomacia\UI\MailScreen.cs	Escreva sua carta como o líder do seu povo…
+Diplomacia\UI\CorrespondenceTab.cs	Escreva sua carta…
+Diplomacia\UI\MailScreen.cs	Escreve uma carta nova, sem ligar a esta.
+Diplomacia\UI\CorrespondenceTab.cs	Escreve uma carta nova, sem ligar àquela.
+Diplomacia\UI\MailScreen.cs	Escrever
+Diplomacia\UI\MailScreen.cs	Escrever de novo
+Diplomacia\Council\CouncilBank.cs	Escriba-Mor
+Diplomacia\UI\InterceptedLettersTab.cs	Escrita no turno {0} · {1} em {2}.
+Diplomacia\UI\CorrespondenceTab.cs	Escrita no turno {0}, chegou no turno {1}.
+Diplomacia\UI\MailScreen.cs	Escrita no turno {0}; chega no turno {1}.
+Diplomacia\UI\MailScreen.cs	Escrita no turno {0}; chegou no turno {1}.
+Diplomacia\UI\InterceptedLettersTab.cs	Escrita no turno {0}; seu espião pegou no turno {1}. Ela não chegou a quem era endereçada.
+Diplomacia\UI\CouncilScreen.cs	Espere a reunião
+Diplomacia\UI\CouncilScreen.cs	Espere a reunião começar
+Diplomacia\Council\CouncilBank.cs	Espionagem
+Diplomacia\UI\InterceptedLettersTab.cs	Espião
+Diplomacia\UI\InterceptedLettersTab.cs	Espiões fora
+Diplomacia\UI\InterceptedLettersTab.cs	Espiões seus em território de outra nação. Só eles leem cartas, e só enquanto ficam ocultos.
+Diplomacia\UI\MailScreen.cs	Esta carta fica ligada à original: as duas aparecem juntas em Respondidas.
+Diplomacia\UI\CorrespondenceTab.cs	Esta nação não recebe cartas
+Diplomacia\Council\CouncilEngine.cs	Estabilidade em {0}%: as cidades estão em ordem.
+Diplomacia\Council\CouncilEngine.cs	Estabilidade em {0}%: o povo está inquieto. Evite guerras novas e cuide das cidades.
+NativeUI\NativeBankWindow.cs	Estabilidade: sem perdas
+NativeUI\NativeBankWindow.cs	Estabilidade: {0} na meta das cidades
+Trade\TradeGrievances.cs	Estamos bloqueando ou cobrando pedágio das rotas comerciais {0} nos nossos postos comerciais.
+Diplomacia\Council\CouncilEngine.cs	Estamos gastando a influência mais rápido do que ela entra.
+Diplomacia\Council\CouncilEngine.cs	Estamos perdendo: proponha paz enquanto há o que salvar.
+Diplomacia\Council\CouncilBank.cs	Estratega
+Diplomacia\Council\CouncilBank.cs	Estratego
+CentralBankWindow.cs	Estável
+CentralBankWindow.cs	Ex.: R$
+CentralBankWindow.cs	Ex.: Reais
+CentralBankWindow.cs	Ex.: Real
+Diplomacia\UI\MailScreen.cs	Exigência
+Diplomacia\UI\MailScreen.cs	Exigência com prazo
+Diplomacia\UI\MailScreen.cs	Exigência com prazo. Chega mesmo para quem recusa sua correspondência.
+Diplomacia\UI\MailScreen.cs	Exigência: {0} — prazo de {1} turnos (vence no turno {2}).
+Diplomacia\UI\MailScreen.cs	Explore o mapa
+Diplomacia\Council\CouncilEngine.cs	Exército parado enferruja: reforce-o.
+Diplomacia\IaModule.cs	E{0} não é uma nação do computador viva
+Diplomacia\UI\CouncilScreen.cs	Falar
+Diplomacia\UI\CouncilScreen.cs	Falar ao conselho
+Diplomacia\UI\CouncilScreen.cs	Falas
+Diplomacia\UI\CouncilScreen.cs	Falas acima de {0} palavras são cortadas.
+Diplomacia\UI\CouncilScreen.cs	Falhou
+Diplomacia\UI\CouncilScreen.cs	Fecha o conselho. O ESC e o botão do conselho também fecham.
+Diplomacia\UI\MailScreen.cs	Fecha o correio. O ESC e o botão do envelope também fecham.
+Diplomacia\UI\MailScreen.cs	Filtrar por nação
+Diplomacia\UI\MailScreen.cs	Filtrar por período
+Diplomacia\Council\CouncilBank.cs	Finanças
+NativeUI\DiplomacyEconomyPanel.cs	Força da moeda
+Diplomacia\Council\CouncilEngine.cs	Fronteiras calmas. Força total {0} em {1} unidade(s).
+Diplomacia\Council\CouncilBank.cs	Fé
+CentralBankWindow.cs	Ganho/perda de câmbio
+Diplomacia\Council\CouncilEngine.cs	Gastamos mais do que entra: cobre de quem nos deve, por exigência ou pedágio, e nada de presentes agora.
+Diplomacia\Council\CouncilEngine.cs	Gastamos mais do que entra: corte despesas e não mande presentes enquanto isso.
+Diplomacia\Council\CouncilBank.cs	Governador das Províncias
+Diplomacia\Council\CouncilBank.cs	Governadora das Províncias
+Diplomacia\Council\CouncilBank.cs	Guardiã das Trocas
+Diplomacia\Council\CouncilBank.cs	Guardiã do Saber
+Diplomacia\Council\CouncilBank.cs	Guardiã dos Celeiros
+Diplomacia\Council\CouncilBank.cs	Guardião das Trocas
+Diplomacia\Council\CouncilBank.cs	Guardião do Saber
+Diplomacia\Council\CouncilBank.cs	Guardião dos Celeiros
+Diplomacia\Council\CouncilBank.cs	Guerra
+Diplomacia\Council\CouncilEngine.cs	Guerra com {0}: placar {1} contra {2}, apoio à guerra {3} contra {4}.
+Diplomacia\Council\CouncilEngine.cs	Guerra com {0}: placar {1} contra {2}. Pressione agora, antes que se reergam.
+Diplomacia\Council\CouncilEngine.cs	Guerra com {0}: placar {1} contra {2}. Segure as fronteiras e espere o erro deles.
+Diplomacia\Council\CouncilEngine.cs	Há espiões estrangeiros em {0}: o que se escreve em carta privada pode estar sendo lido.
+Diplomacia\Council\CouncilEngine.cs	Há proposta formal de {0} esperando você.
+CentralBankWindow.cs	IDENTIDADE DA MOEDA
+CentralBankWindow.cs	IMPÉRIO
+CentralBankWindow.cs	INFLAÇÃO
+CentralBankWindow.cs	INFLAÇÃO POR TURNO
+CentralBankWindow.cs	Império local não encontrado.
+CentralBankWindow.cs	Império {0}
+NativeUI\NativeBankWindow.cs	Indústria das cidades por turno, já com o efeito do crédito, em média dos últimos turnos.
+NativeUI\NativeBankWindow.cs	Inflação
+NativeUI\NativeBankWindow.cs	Inflação acima de {0} por turno baixa a meta de estabilidade de cada cidade, e o dobro acima de {1}. Produção cortada por crédito caro vira desemprego, que também baixa a meta. A estabilidade anda até a meta no ritmo do jogo, e cada perda aparece no detalhamento de estabilidade das cidades.
+EconomyDiagnosis.cs	Inflação acima do tolerável
+EconomyDiagnosis.cs	Inflação alta
+NativeUI\NativeBankWindow.cs	Inflação alta tende a enfraquecer a moeda deles com o tempo.
+NativeEffects.cs	Inflação corroendo o saldo
+NativeEffects.cs	Inflação de {0} por turno
+EconomyDiagnosis.cs	Inflação de {0} por turno: a meta de estabilidade de cada cidade cai {1}. {2}
+NativeUI\NativeBankWindow.cs	Inflação deles
+EconomyDiagnosis.cs	Inflação perto da meta ({0}) e produção ×{1}. Nada a corrigir agora.
+NativeUI\DiplomacyEconomyPanel.cs	Inflação por turno
+NativeUI\NativeBankWindow.cs	Inflação {0}
+TextPatches.cs	Inflação {0}  ·  Juros {1}
+NativeUI\NativeBankWindow.cs	Inflação: {0}/turno
+Diplomacia\Council\CouncilEngine.cs	Influência {0} ({1} por turno).
+Diplomacia\Council\CouncilBank.cs	Intendente da Agricultura
+Diplomacia\Council\CouncilBank.cs	Intendente das Colheitas
+Diplomacia\Council\CouncilBank.cs	Intendente do Comércio
+Diplomacia\Council\CouncilBank.cs	Intendente do Reino
+Diplomacia\UI\InterceptedLettersTab.cs	Interceptada
+Diplomacia\Council\CouncilBank.cs	Interior
+NativeUI\NativeBankWindow.cs	Inverte a ordem da lista.
+Diplomacia\Council\CouncilEngine.cs	Isso é provocação: temos pretexto.
+Diplomacia\Council\CouncilEngine.cs	Isso é tributo disfarçado: exija o fim ou feche nossas rotas.
+CentralBankWindow.cs	JUROS
+NativeUI\NativeBankWindow.cs	Juro real
+EconomyDiagnosis.cs	Juro real de {0} (neutro {1}): a produção das cidades está ×{2} e o desemprego baixa a meta de estabilidade em {3}. {4}
+EconomyDiagnosis.cs	Juro real de {0} (neutro {1}): a produção das cidades está ×{2}. {3}
+NativeUI\NativeBankWindow.cs	Juro real neutro
+NativeUI\NativeBankWindow.cs	Juro real {0}
+NativeUI\NativeBankWindow.cs	Juros
+NativeUI\NativeBankWindow.cs	Juros + spread {0}
+CentralBankWindow.cs	Juros altos fazem o saldo render e seguram a inflação, que é o que sustenta o câmbio. O custo é o crédito caro: a produção das cidades cai aos poucos.
+NativeUI\NativeBankWindow.cs	Juros altos seguram a inflação; juros baixos a empurram para cima.
+CentralBankWindow.cs	Juros baixos barateiam o crédito e aquecem a produção, mas a inflação sobe, tira estabilidade das cidades e a sua moeda perde valor lá fora.
+NativeEffects.cs	Juros da dívida
+L.cs	Juros de {0}%
+NativeUI\NativeBankWindow.cs	Juros deles
+NativeUI\NativeBankWindow.cs	Juros do banco central deles, por turno.
+NativeUI\DiplomacyEconomyPanel.cs	Juros do banco central. Juros altos seguram a inflação, mas esfriam a renda.
+NativeEffects.cs	Juros do saldo
+EconomyDiagnosis.cs	Juros fixados por comando de teste em {0}.
+NativeUI\NativeBankWindow.cs	Juros fixados por comando de teste. A regra automática pediria {0}.
+EconomyDiagnosis.cs	Juros mais altos esfriam a demanda: a regra automática pediria {0} (hoje {1}, no manual).
+EconomyDiagnosis.cs	Juros mais baixos barateiam o crédito: a regra automática pediria {0} (hoje {1}, no manual).
+NativeUI\NativeBankWindow.cs	Juros menos inflação. É o custo de verdade do crédito.
+NativeUI\NativeBankWindow.cs	Juros neutro
+NativeUI\NativeBankWindow.cs	Juros neutros ({0}) + 1,5 × (inflação − meta) + um pouco da pressão de demanda, entre {1} e {2}. A inflação que vem da dívida conta quase inteira quando é pequena e cada vez menos quando cresce (teto suave de {3}).
+NativeUI\NativeBankWindow.cs	Juros neutros menos a meta de inflação: nesse ponto o crédito não aquece nem esfria.
+EconomyDiagnosis.cs	Juros no manual em {0}; a regra automática pediria {1}.
+NativeUI\DiplomacyEconomyPanel.cs	Juros por turno
+NativeUI\NativeBankWindow.cs	Juros {0}
+NativeUI\NativeBankWindow.cs	Juros: {0}/turno
+Diplomacia\Council\CouncilEngine.cs	Já comerciamos: hora de pensar em aliança.
+Diplomacia\Council\CouncilEngine.cs	Já mostramos força; uma paz agora guarda o que ganhamos.
+Diplomacia\UI\CouncilScreen.cs	Lealdade {0} · ambição {1} · no cargo desde o turno {2}
+Diplomacia\UI\MailButton.cs	Leia e responda as cartas das nações, escreva para elas ou recuse a correspondência de alguém.
+Diplomacia\UI\MailScreen.cs	Leitores
+NativeUI\TradePostWindow.cs	Liberar
+Diplomacia\UI\MailScreen.cs	Lida
+Diplomacia\UI\MailScreen.cs	Lida por {0}
+Diplomacia\UI\MailScreen.cs	Lida por {0} nação(ões) até agora.
+Diplomacia\UI\MailScreen.cs	Lidas
+NativeUI\DiplomacyTradePolicyPanel.cs	Livre
+NativeUI\DiplomacyTradePolicyPanel.cs	Livre em todos os seus postos
+NativeUI\DiplomacyTradePolicyPanel.cs	Livre em todos os {0} postos
+NativeUI\TradePostWindow.cs	Livre → Pedágio → Bloqueado
+CentralBankWindow.cs	META DE INFLAÇÃO
+CentralBankWindow.cs	MOEDA
+NativeUI\DiplomacyTradePolicyPanel.cs	Mais barato, menos rotas desviam.
+Diplomacia\UI\MailScreen.cs	Manda a carta. Ela aparece em Enviadas com a situação da entrega.
+Diplomacia\UI\CorrespondenceTab.cs	Manda a carta. Ela aparece na conversa com a situação da entrega.
+Diplomacia\UI\CouncilScreen.cs	Manda a sua fala ao conselho. As reações aparecem na reunião, logo abaixo da sua fala.
+Diplomacia\UI\InterceptedLettersTab.cs	Mande um espião para o território de outra nação e deixe-o oculto, de preferência na região da capital. A cada turno ele pode ler uma carta privada que essa nação escreve ou recebe. Carta lida pelos seus espiões nunca chega ao destino, e ninguém fica sabendo.
+CentralBankWindow.cs	Manual
+Diplomacia\Council\CouncilBank.cs	Marechal
+Diplomacia\Council\CouncilBank.cs	Mecenas da Corte
+Diplomacia\Council\CouncilBank.cs	Mensageira-Mor
+Diplomacia\Council\CouncilBank.cs	Mensageiro-Mor
+Diplomacia\Council\CouncilBank.cs	Mestra Construtor
+Diplomacia\Council\CouncilBank.cs	Mestra da Academia
+Diplomacia\Council\CouncilBank.cs	Mestra das Caravanas
+Diplomacia\Council\CouncilBank.cs	Mestra das Guildas
+Diplomacia\Council\CouncilBank.cs	Mestra das Trocas
+Diplomacia\Council\CouncilBank.cs	Mestra de Armas
+Diplomacia\Council\CouncilBank.cs	Mestra de Cerimônias
+Diplomacia\Council\CouncilBank.cs	Mestra de Obras
+Diplomacia\Council\CouncilBank.cs	Mestra dos Estudos
+Diplomacia\Council\CouncilBank.cs	Mestra dos Jogos
+Diplomacia\Council\CouncilBank.cs	Mestra dos Ritos
+Diplomacia\Council\CouncilBank.cs	Mestra dos Sussurros
+Diplomacia\Council\CouncilBank.cs	Mestre Construtor
+Diplomacia\Council\CouncilBank.cs	Mestre da Academia
+Diplomacia\Council\CouncilBank.cs	Mestre das Caravanas
+Diplomacia\Council\CouncilBank.cs	Mestre das Guildas
+Diplomacia\Council\CouncilBank.cs	Mestre das Trocas
+Diplomacia\Council\CouncilBank.cs	Mestre de Armas
+Diplomacia\Council\CouncilBank.cs	Mestre de Cerimônias
+Diplomacia\Council\CouncilBank.cs	Mestre de Obras
+Diplomacia\Council\CouncilBank.cs	Mestre dos Estudos
+Diplomacia\Council\CouncilBank.cs	Mestre dos Jogos
+Diplomacia\Council\CouncilBank.cs	Mestre dos Ritos
+Diplomacia\Council\CouncilBank.cs	Mestre dos Sussurros
+NativeUI\NativeBankWindow.cs	Meta de inflação
+NativeUI\NativeBankWindow.cs	Meta {0}
+Diplomacia\Council\CouncilBank.cs	Ministra da Agricultura
+Diplomacia\Council\CouncilBank.cs	Ministra da Ciência
+Diplomacia\Council\CouncilBank.cs	Ministra da Cultura
+Diplomacia\Council\CouncilBank.cs	Ministra da Defesa
+Diplomacia\Council\CouncilBank.cs	Ministra da Economia
+Diplomacia\Council\CouncilBank.cs	Ministra da Fazenda
+Diplomacia\Council\CouncilBank.cs	Ministra da Guerra
+Diplomacia\Council\CouncilBank.cs	Ministra da Infraestrutura
+Diplomacia\Council\CouncilBank.cs	Ministra da Instrução
+Diplomacia\Council\CouncilBank.cs	Ministra das Belas-Artes
+Diplomacia\Council\CouncilBank.cs	Ministra das Obras Públicas
+Diplomacia\Council\CouncilBank.cs	Ministra das Relações Exteriores
+Diplomacia\Council\CouncilBank.cs	Ministra do Comércio
+Diplomacia\Council\CouncilBank.cs	Ministra do Comércio Exterior
+Diplomacia\Council\CouncilBank.cs	Ministra do Interior
+Diplomacia\Council\CouncilBank.cs	Ministra dos Cultos
+Diplomacia\Council\CouncilBank.cs	Ministro da Agricultura
+Diplomacia\Council\CouncilBank.cs	Ministro da Ciência
+Diplomacia\Council\CouncilBank.cs	Ministro da Cultura
+Diplomacia\Council\CouncilBank.cs	Ministro da Defesa
+Diplomacia\Council\CouncilBank.cs	Ministro da Economia
+Diplomacia\Council\CouncilBank.cs	Ministro da Fazenda
+Diplomacia\Council\CouncilBank.cs	Ministro da Guerra
+Diplomacia\Council\CouncilBank.cs	Ministro da Infraestrutura
+Diplomacia\Council\CouncilBank.cs	Ministro da Instrução
+Diplomacia\Council\CouncilBank.cs	Ministro das Belas-Artes
+Diplomacia\Council\CouncilBank.cs	Ministro das Obras Públicas
+Diplomacia\Council\CouncilBank.cs	Ministro das Relações Exteriores
+Diplomacia\Council\CouncilBank.cs	Ministro do Comércio
+Diplomacia\Council\CouncilBank.cs	Ministro do Comércio Exterior
+Diplomacia\Council\CouncilBank.cs	Ministro do Interior
+Diplomacia\Council\CouncilBank.cs	Ministro dos Cultos
+L.cs	Ministros
+Diplomacia\UI\CouncilScreen.cs	Ministros · {0}
+NativeUI\DiplomacyTradePolicyPanel.cs	Misto: {0} com pedágio, {1} bloqueados
+CentralBankWindow.cs	Moderada
+NativeUI\NativeBankWindow.cs	Modo automático
+NativeUI\NativeBankWindow.cs	Modo dos juros
+NativeUI\NativeBankWindow.cs	Modo manual
+NativeUI\NativeBankWindow.cs	Modo: automático
+NativeUI\NativeBankWindow.cs	Modo: manual
+CentralBankWindow.cs	Moeda salva. Ela vai junto no próximo save do jogo.
+NativeUI\NativeBankButton.cs	Moeda, câmbio, inflação e juros do seu império.
+NativeUI\DiplomacyEconomyPanel.cs	Moedas equivalentes
+Diplomacia\UI\MailScreen.cs	Mostra só as cartas trocadas com uma nação. Clique para passar à próxima; depois da última, volta a todas.
+Diplomacia\UI\CouncilScreen.cs	Mudanças no conselho
+NativeUI\TradePostWindow.cs	Mude com - e +.
+Diplomacia\Council\CouncilBank.cs	Mão
+Diplomacia\Council\CouncilBank.cs	Mão do Trono
+Diplomacia\UI\InterceptedLettersTab.cs	Na chegada
+Diplomacia\UI\MailScreen.cs	Na diplomacia
+Diplomacia\UI\InterceptedLettersTab.cs	Na saída
+Diplomacia\UI\MailScreen.cs	Nada por aqui
+Diplomacia\Council\CouncilEngine.cs	Nada urgente na pauta.
+NativeUI\TradePostWindow.cs	Nas rotas daqui ele compra {0} e vende {1} recurso(s).
+Diplomacia\UI\MailScreen.cs	Nação: todas
+Diplomacia\UI\MailScreen.cs	Nação: {0}
+Diplomacia\UI\MailScreen.cs	Nações
+Diplomacia\UI\MailScreen.cs	Nações que conhecem você e vão ler a declaração.
+Diplomacia\UI\MailScreen.cs	Nações que você conhece: escrever para elas ou recusar as cartas privadas delas.
+Diplomacia\UI\MailScreen.cs	Nações · {0} conhecidas
+Diplomacia\Council\CouncilEngine.cs	Negocie: um acordo vale mais que o pedágio.
+Diplomacia\UI\MailScreen.cs	Nenhum comunicado público
+Diplomacia\UI\InterceptedLettersTab.cs	Nenhum espião seu em território estrangeiro.
+NativeUI\TradePostWindow.cs	Nenhum império estrangeiro usa este posto
+Diplomacia\UI\MailScreen.cs	Nenhuma carta esperando resposta
+Diplomacia\UI\InterceptedLettersTab.cs	Nenhuma carta interceptada
+Diplomacia\UI\MailScreen.cs	Nenhuma carta lida ainda
+Diplomacia\UI\MailScreen.cs	Nenhuma carta nova
+Diplomacia\UI\MailButton.cs	Nenhuma carta nova.
+Diplomacia\UI\CorrespondenceTab.cs	Nenhuma carta trocada ainda
+Diplomacia\UI\CouncilScreen.cs	Nenhuma reunião anterior
+NativeUI\DiplomacyTradePolicyPanel.cs	Nenhuma rota deles passa pelos seus territórios
+NativeUI\DiplomacyTradePolicyPanel.cs	Nenhuma rota deles passaria pelos seus territórios
+NativeUI\NativeBankWindow.cs	Nesse nível os juros não aquecem nem esfriam a economia.
+CentralBankWindow.cs	Neutro {0}
+Diplomacia\UI\CouncilScreen.cs	Ninguém respondeu
+NativeUI\TradePostWindow.cs	No último turno ele pagou {0} {1} somando todos os seus postos.
+CentralBankWindow.cs	Nome
+NativeUI\NativeBankWindow.cs	Nome da moeda
+NativeUI\NativeBankWindow.cs	Nome da moeda no singular, como em "1 Real".
+CentralBankWindow.cs	Nome e símbolo não podem ficar vazios.
+NativeUI\NativeBankWindow.cs	Nome, plural e símbolo da moeda do seu império.
+Diplomacia\Council\CouncilEngine.cs	Nossa força total é {0}. {1} não merece confiança: prepare as lanças contra eles.
+Diplomacia\Council\CouncilEngine.cs	Nossos espiões leram {0} carta(s) alheia(s) nos últimos turnos. Use o que sabemos, mas sem revelar como sabemos.
+Diplomacia\UI\CorrespondenceTab.cs	Nova
+Diplomacia\UI\MailScreen.cs	Novas
+Diplomacia\Council\CouncilEngine.cs	Não temos olhos em terra estrangeira: um espião na capital de um rival leria parte das cartas deles.
+Diplomacia\Council\CouncilEngine.cs	Não temos rotas de comércio com ninguém: um acordo econômico abriria mercados.
+CentralBankWindow.cs	Não use os caracteres % [ ] < > { }.
+Diplomacia\UI\CouncilScreen.cs	Números da pasta:
+CentralBankWindow.cs	O CurrencyMod fica desativado em partidas multiplayer.
+NativeUI\NativeBankWindow.cs	O banco anda {0:0}% da diferença por turno: os juros vão cair até {1}.
+NativeUI\NativeBankWindow.cs	O banco anda {0:0}% da diferença por turno: os juros vão subir até {1}.
+NativeUI\DiplomacyTradePolicyPanel.cs	O bloqueio barra 1 rota deles
+NativeUI\DiplomacyTradePolicyPanel.cs	O bloqueio barra {0} rotas deles
+Diplomacia\UI\CouncilScreen.cs	O conselho ainda não se formou
+Diplomacia\UI\CouncilScreen.cs	O conselho do jogador está desligado no .cfg ([IA] ConselhoDoJogador).
+Diplomacia\UI\CouncilScreen.cs	O conselho está ouvindo…
+Diplomacia\UI\CouncilButton.cs	O conselho está se reunindo.
+Diplomacia\UI\CouncilScreen.cs	O conselho está se reunindo…
+Diplomacia\UI\CouncilScreen.cs	O conselho se reúne a cada turno: a Mão abre a pauta e os ministros das pastas mais urgentes falam. Responda à direita; eles reagem.
+Diplomacia\UI\CouncilButton.cs	O conselho se reúne no começo de cada turno.
+Diplomacia\UI\CouncilScreen.cs	O conselho se reúne quando a partida estiver carregada.
+Diplomacia\UI\MailScreen.cs	O correio abre quando a partida estiver carregada.
+Diplomacia\UI\MailScreen.cs	O destinatário já leu. Se ele responder, a carta chega pelo tempo de entrega da era dele.
+Diplomacia\UI\MailScreen.cs	O destinatário recusa a sua correspondência privada: a carta voltou sem ser lida.
+NativeUI\NativeBankWindow.cs	O dinheiro está crescendo {0} acima do ritmo da produção, comparado ao resto do mundo: sobra demanda e os preços sobem.
+CentralBankWindow.cs	O nome atual foi sorteado. Dê à sua moeda um nome digno do seu império.
+NativeUI\TradePostWindow.cs	O que cada rota paga por recurso transportado, por turno, quando você não definiu outro preço. Mude o preço de um império neste posto com − e + na linha dele, ou o preço dele em todos os postos na aba Comércio da diplomacia.
+Diplomacia\UI\CouncilScreen.cs	O que ele achou da sua fala: {0:+0;-0}. Agora: {1:+0;-0} (de -100 a 100).
+Diplomacia\UI\CouncilScreen.cs	O que você disse ao conselho. As reações vêm logo abaixo.
+Diplomacia\UI\CorrespondenceTab.cs	O que você exige (ultimato)
+Diplomacia\UI\MailScreen.cs	O que você exige no ultimato. O prazo fica no controle abaixo.
+NativeUI\NativeBankWindow.cs	O saldo rende juros reais (juros − inflação). Até cerca de {0:0} turnos de renda ({1} {2}) rende quase tudo; acima disso, cada vez menos. Os juros já entram na renda por turno da barra do topo.
+Diplomacia\Council\CouncilEngine.cs	O ultimato de {0} contra nós venceu.
+Diplomacia\Council\CouncilBank.cs	Obras
+Diplomacia\Council\CouncilBank.cs	Olhos do Trono
+NativeUI\NativeBankWindow.cs	Ordena pela cotação: quanto 1 da sua moeda compra da moeda de cada império.
+NativeUI\NativeBankWindow.cs	Ordena pela inflação de cada império.
+NativeUI\NativeBankWindow.cs	Ordena pelos juros do banco central de cada império.
+NativeUI\NativeBankWindow.cs	Ordenar por cotação
+NativeUI\NativeBankWindow.cs	Ordenar por inflação
+NativeUI\NativeBankWindow.cs	Ordenar por juros
+Diplomacia\Council\CouncilEngine.cs	Os celeiros dão conta: crescimento de {0} por turno somando as cidades.
+CentralBankWindow.cs	Os dados aparecem a partir do primeiro fim de turno.
+EconomyDiagnosis.cs	Os juros automáticos estão indo de {0} para {1}.
+EconomyDiagnosis.cs	Os juros automáticos já estão no ponto da regra.
+NativeUI\NativeBankWindow.cs	Os juros já estão onde a regra quer: inflação e demanda equilibradas.
+Diplomacia\UI\CouncilScreen.cs	Os ministros chegam com a primeira reunião do turno.
+Diplomacia\UI\CouncilScreen.cs	Os ministros estão lendo os despachos do turno. A reunião aparece aqui em instantes.
+Diplomacia\Council\CouncilEngine.cs	Os templos estão vazios de oferendas; um reino sem fé perde o rumo.
+Diplomacia\UI\CouncilButton.cs	Ouça a Mão e os ministros, responda a eles e demita quem não serve mais.
+NativeUI\DiplomacyEconomyPanel.cs	PIB estimado
+CentralBankWindow.cs	PRESSÃO NA INFLAÇÃO
+CentralBankWindow.cs	PRODUÇÃO (CRÉDITO)
+CentralBankWindow.cs	PRÉVIA
+NativeUI\TradePostWindow.cs	Paga {0} {1} por recurso transportado, por turno, para passar aqui (ou desvia, se a volta sair mais barata).
+NativeUI\TradePostWindow.cs	Pagam
+Diplomacia\Council\CouncilEngine.cs	Pagamos {0} {1} de pedágio por turno a {2}.
+NativeUI\TradePostWindow.cs	Pagou {0} {1}
+Diplomacia\UI\CorrespondenceTab.cs	Palavras da carta. O máximo é {0}.
+NativeUI\NativeBankWindow.cs	Para onde a produção anda, {0:0}% da diferença por turno: investimento demora.
+Diplomacia\UI\MailScreen.cs	Para {0}
+Diplomacia\UI\MailScreen.cs	Para: todas as nações
+Diplomacia\UI\MailScreen.cs	Para: {0}
+NativeUI\TradePostWindow.cs	Passa livremente por aqui.
+Diplomacia\UI\MailScreen.cs	Passa para a próxima nação que você conhece. Na seção Nações dá para escolher direto.
+Diplomacia\Council\CouncilEngine.cs	Pauta de hoje: {0}
+Diplomacia\UI\MailScreen.cs	Paz
+Diplomacia\UI\CorrespondenceTab.cs	Pede resposta
+NativeUI\DiplomacyTradePolicyPanel.cs	Pedágio em todos os {0} postos
+NativeUI\TradePostWindow.cs	Pedágio padrão
+NativeUI\TradePostWindow.cs	Pedágio padrão: {0} {1}/recurso
+NativeUI\TradePostWindow.cs	Pedágio pago
+NativeUI\TradePostWindow.cs	Pedágio {0} {1}
+NativeUI\TradePostWindow.cs	Pedágio: as rotas desse império continuam passando aqui, mas ele paga por turno, por recurso transportado, na sua moeda. Rotas podem desviar se houver outro caminho.
+NativeUI\DiplomacyTradePolicyPanel.cs	Pedágio: {0} {1} por recurso
+NativeUI\DiplomacyTradePolicyPanel.cs	Pedágio: {0} {1} por recurso (padrão)
+NativeUI\TradePostWindow.cs	Pedágios recebidos
+Diplomacia\UI\CouncilScreen.cs	Pensando
+Diplomacia\UI\MailScreen.cs	Período: tudo
+CentralBankWindow.cs	Piloto automático: o banco central persegue a meta de inflação
+CentralBankWindow.cs	Plural
+NativeUI\NativeBankWindow.cs	Política
+CentralBankWindow.cs	Política monetária
+CentralBankWindow.cs	Política monetária do seu império
+NativeUI\TradePostWindow.cs	Posto Comercial
+Diplomacia\UI\MailScreen.cs	Prazo do ultimato
+Diplomacia\UI\CorrespondenceTab.cs	Prazo: {0} turnos
+Diplomacia\Council\CouncilBank.cs	Prefeita dos Celeiros
+Diplomacia\Council\CouncilBank.cs	Prefeita dos Mercados
+Diplomacia\Council\CouncilBank.cs	Prefeito dos Celeiros
+Diplomacia\Council\CouncilBank.cs	Prefeito dos Mercados
+Diplomacia\Council\CouncilBank.cs	Pretor
+NativeUI\TradePostWindow.cs	Preço deste posto.
+NativeUI\DiplomacyTradePolicyPanel.cs	Preço do pedágio deles
+NativeUI\TradePostWindow.cs	Preço geral desse império (aba Comércio da diplomacia).
+NativeUI\TradePostWindow.cs	Preço padrão.
+NativeUI\DiplomacyTradePolicyPanel.cs	Preço por recurso transportado, por turno, que esse império paga em todos os seus postos com pedágio. Vale também para os postos em que você tinha posto outro preço.
+EconomyDiagnosis.cs	Preços caindo {0} por turno: o saldo rende mais, mas o juro real de {1} encarece o crédito (produção ×{2}). Juros mais baixos reaquecem a economia.
+NativeUI\NativeBankWindow.cs	Preços ×{0}
+Diplomacia\Council\CouncilBank.cs	Primeira Conselheira
+Diplomacia\Council\CouncilBank.cs	Primeiro Conselheiro
+Diplomacia\UI\MailScreen.cs	Privada
+NativeUI\NativeBankWindow.cs	Produção (oferta)
+NativeUI\NativeBankWindow.cs	Produção {0}
+NativeUI\NativeBankWindow.cs	Produção ×{0}
+EconomyDiagnosis.cs	Produção à frente do dinheiro
+NativeUI\TradePostWindow.cs	Proibido de passar por aqui. Sem outro caminho, a rota é destruída.
+Diplomacia\UI\CorrespondenceTab.cs	Pronta para enviar
+Diplomacia\UI\CouncilScreen.cs	Pronto para falar
+NativeUI\NativeBankWindow.cs	Prévia
+Diplomacia\UI\MailScreen.cs	Pública
+NativeUI\TradePostWindow.cs	Quando vale
+Diplomacia\UI\CouncilScreen.cs	Quantas vezes você respondeu ao conselho nessa reunião.
+NativeUI\DiplomacyEconomyPanel.cs	Quanto 1 {0} compra de {1}. Moeda mais forte deixa as importações mais baratas.
+NativeUI\NativeBankWindow.cs	Quanto 1 {0} compra de {1}. Quando eles recebem dinheiro seu (comércio, presentes), recebem convertido por essa cotação.
+▲ seu dinheiro vale mais que no turno passado, ▼ vale menos.
+NativeUI\NativeBankWindow.cs	Quanto a dívida cresce por turno: juros mais a taxa extra de dívida, menos a inflação.
+NativeUI\NativeBankWindow.cs	Quanto a pressão de demanda soma (ou tira) da inflação por turno.
+Diplomacia\UI\CouncilScreen.cs	Quanto a reunião deste turno e as suas falas custaram na API até agora.
+NativeUI\TradePostWindow.cs	Quanto ele pagou a você no último turno, somando todos os seus postos.
+NativeUI\DiplomacyTradePolicyPanel.cs	Quanto esse império paga, por recurso transportado e por turno, para passar pelos seus postos com pedágio. Os botões mudam o preço em todos os postos; na janela do Posto Comercial (visão Comercializar) dá para pôr um preço só naquele posto.
+NativeUI\NativeBankWindow.cs	Quanto o seu saldo cresce (ou encolhe) por turno: juros menos inflação.
+NativeUI\NativeBankWindow.cs	Quanto os preços sobem por turno. A inflação corrói o dinheiro guardado e enfraquece o câmbio.
+NativeUI\DiplomacyEconomyPanel.cs	Quanto os preços sobem por turno. Aqui a barra favorece quem tem a inflação mais baixa.
+NativeUI\NativeBankWindow.cs	Quanto os preços subiram desde o início da partida. Preços altos enfraquecem o câmbio.
+CentralBankWindow.cs	Quanto vale 1 {0} ({1}) em cada moeda. No comércio e na diplomacia, quem recebe dinheiro recebe convertido pela cotação.
+NativeUI\NativeBankWindow.cs	Quanto vale a sua moeda em cada moeda estrangeira. No comércio e na diplomacia, quem recebe dinheiro recebe convertido por essa cotação.
+Diplomacia\UI\CouncilScreen.cs	Quantos ministros falaram nessa reunião, fora a Mão.
+NativeUI\TradePostWindow.cs	Quantos postos recebem as escolhas deste ao clicar em Aplicar.
+Diplomacia\UI\MailScreen.cs	Quem assina
+Diplomacia\UI\MailScreen.cs	Quem escreveu espera uma resposta sua. Ficar em silêncio também é uma resposta.
+Diplomacia\UI\CouncilScreen.cs	Quem são os seus ministros: traços, voz, credibilidade (os números da pasta) e o apreço por você. Aqui você demite quem não serve mais.
+Diplomacia\Council\CouncilBank.cs	Questor
+Diplomacia\Council\CouncilBank.cs	Questora
+NativeUI\TradePostWindow.cs	Recursos que ele compra e vende nas rotas que passam por aqui. Mais recursos, pedágio maior.
+Diplomacia\UI\MailScreen.cs	Recusada
+Diplomacia\UI\MailScreen.cs	Recusar cartas
+Diplomacia\Council\CouncilEngine.cs	Reforce as guarnições e exija explicação por carta.
+NativeUI\NativeBankWindow.cs	Regra automática (Taylor)
+NativeUI\NativeBankWindow.cs	Regra pede {0}
+Diplomacia\UI\MailScreen.cs	Relação
+Diplomacia\UI\MailScreen.cs	Relação atual
+Diplomacia\Council\CouncilBank.cs	Relações
+NativeUI\NativeBankWindow.cs	Renda (demanda)
+NativeUI\DiplomacyEconomyPanel.cs	Renda por turno
+NativeUI\NativeBankWindow.cs	Renda {0}
+NativeUI\NativeBankWindow.cs	Rende bem até {0} {1}
+CentralBankWindow.cs	Rendimento do saldo
+NativeUI\NativeBankWindow.cs	Rendimento do saldo: {0}/turno
+Diplomacia\UI\MailScreen.cs	Responder
+Diplomacia\UI\MailScreen.cs	Responderam no turno {0}; a resposta chega no turno {1}.
+Diplomacia\UI\MailScreen.cs	Responderam no turno {0}; a resposta está nas suas cartas recebidas.
+Diplomacia\UI\CorrespondenceTab.cs	Respondida
+Diplomacia\UI\MailScreen.cs	Respondidas
+Diplomacia\UI\MailScreen.cs	Resposta a caminho
+Diplomacia\UI\CorrespondenceTab.cs	Resposta à carta do turno {0}
+Diplomacia\UI\CouncilScreen.cs	Reunindo
+Diplomacia\UI\CouncilScreen.cs	Reunião do turno
+Diplomacia\UI\CouncilScreen.cs	Reunião do turno {0}
+Diplomacia\UI\CouncilScreen.cs	Reunião do turno {0} · {1} ministro(s) falaram
+Diplomacia\UI\CouncilScreen.cs	Reunião feita
+Diplomacia\UI\CouncilScreen.cs	Reuniões anteriores
+Diplomacia\UI\CouncilScreen.cs	Reuniões anteriores · {0}
+NativeUI\TradePostWindow.cs	Rotas aqui
+NativeUI\DiplomacyTradePolicyPanel.cs	Rotas comerciais desse império com terceiros que atravessam algum território seu. Só essas podem ser taxadas ou bloqueadas.
+NativeUI\TradePostWindow.cs	Rotas comerciais entre outros impérios que atravessam este território agora.
+NativeUI\TradePostWindow.cs	Rotas comerciais entre outros impérios que atravessam este território agora. {0} império(s) bloqueado(s) aqui.
+NativeUI\DiplomacyTradePolicyPanel.cs	Rotas deles
+NativeUI\DiplomacyTradePolicyPanel.cs	Rotas deles e o pedágio
+NativeUI\TradePostWindow.cs	Rotas desse império com outros que atravessam este território agora.
+NativeUI\TradePostWindow.cs	Rotas desse império que passariam por aqui e o bloqueio barra (desviam ou são destruídas).
+NativeUI\TradePostWindow.cs	Rotas estrangeiras
+NativeUI\TradePostWindow.cs	Rotas que fogem deste posto
+NativeUI\NativeBankWindow.cs	Rumo da inflação
+NativeUI\NativeBankWindow.cs	Rumo da inflação: {0}/turno
+CentralBankWindow.cs	SALDO
+CentralBankWindow.cs	SALDO (JURO REAL)
+Diplomacia\Council\CouncilEngine.cs	Saber é poder que não se rouba: invista nos sábios.
+NativeUI\NativeBankWindow.cs	Saldo {0}
+CentralBankWindow.cs	Saldo: <b>{0} {1}</b>
+NativeUI\NativeBankWindow.cs	Saldo: {0} {1}
+NativeUI\NativeBankWindow.cs	Saldo: {0} {1}  ({2}/turno)
+NativeUI\NativeBankWindow.cs	Salvar
+CentralBankWindow.cs	Salvar moeda
+Trade\TradeGrievances.cs	Se a exigência for aceita, os bloqueios e pedágios contra quem exigiu são retirados.
+NativeUI\DiplomacyTradePolicyPanel.cs	Se pagar sair mais caro que desviar, a rota desvia e você não recebe nada.
+Diplomacia\Council\CouncilBank.cs	Secretária de Estado
+Diplomacia\Council\CouncilBank.cs	Secretário de Estado
+CentralBankWindow.cs	Segura os preços
+Diplomacia\UI\MailScreen.cs	Sem contatos
+Diplomacia\UI\CorrespondenceTab.cs	Sem correio
+Diplomacia\UI\InterceptedLettersTab.cs	Sem espião oculto em território estrangeiro, nenhuma carta é interceptada.
+NativeUI\TradePostWindow.cs	Sem rotas aqui
+Diplomacia\Council\CouncilBank.cs	Senescal
+Diplomacia\Council\CouncilBank.cs	Senhor dos Celeiros
+Diplomacia\Council\CouncilBank.cs	Senhora dos Celeiros
+Diplomacia\UI\InterceptedLettersTab.cs	Seu espião
+Diplomacia\Council\CouncilEngine.cs	Seu ultimato a {0} venceu: cumpra ou recue.
+NativeUI\DiplomacyTradePolicyPanel.cs	Seus Postos Comerciais
+NativeUI\TradePostWindow.cs	Seus territórios
+Diplomacia\UI\CouncilScreen.cs	Simpatiza com {0}.
+Diplomacia\UI\CouncilScreen.cs	Simpatiza com {0}; desconfia de {1}.
+Diplomacia\UI\CorrespondenceTab.cs	Situação
+NativeUI\TradePostWindow.cs	Situação neste posto
+NativeUI\DiplomacyTradePolicyPanel.cs	Situação nos seus postos
+Diplomacia\UI\CouncilScreen.cs	Sobe e desce com os números da pasta dele no jogo.
+Diplomacia\UI\CouncilScreen.cs	Sobe e desce com os números da pasta dele no jogo. Ministro com credibilidade baixa costuma errar.
+Diplomacia\Council\CouncilEngine.cs	Sobra moeda: um presente bem dado ou o patrocínio de um povo independente compra amizade.
+Diplomacia\UI\CorrespondenceTab.cs	Soltar
+Diplomacia\Council\CouncilEngine.cs	Somos o {0}º reino em fama.
+Diplomacia\UI\CorrespondenceTab.cs	Sua carta viaja por {0} e chega no turno {1}. A resposta sai no turno seguinte à chegada.
+Diplomacia\UI\CouncilScreen.cs	Sua fala
+CentralBankWindow.cs	Sua moeda
+NativeUI\DiplomacyEconomyPanel.cs	Sua moeda vale mais: importar deles sai <b>barato</b>
+Diplomacia\UI\InterceptedLettersTab.cs	Sua rede de espiões
+Diplomacia\UI\MailScreen.cs	Suas cartas e a situação de cada uma: a caminho, entregue, lida, respondida ou recusada.
+Diplomacia\UI\CouncilScreen.cs	Suas falas
+Diplomacia\UI\CouncilScreen.cs	Suas respostas
+NativeUI\TradePostWindow.cs	Subir o pedágio
+NativeUI\DiplomacyTradePolicyPanel.cs	Subir o pedágio deles
+Diplomacia\Council\CouncilBank.cs	Suma Sacerdotisa
+Diplomacia\Council\CouncilBank.cs	Sumo Sacerdote
+Diplomacia\Council\CouncilBank.cs	Superintendente das Finanças
+Diplomacia\Council\CouncilBank.cs	Superintendente das Obras
+CentralBankWindow.cs	Símbolo
+Diplomacia\UI\InterceptedLettersTab.cs	Só cartas privadas
+Diplomacia\UI\MailScreen.cs	Só ele lê
+Diplomacia\UI\CorrespondenceTab.cs	Só nações do computador
+Diplomacia\UI\MailScreen.cs	Só o destinatário lê. Não chega se ele recusar a sua correspondência.
+CentralBankWindow.cs	TAXA DE JUROS
+CentralBankWindow.cs	TENDÊNCIA
+Diplomacia\UI\CorrespondenceTab.cs	Tamanho
+NativeUI\DiplomacyEconomyPanel.cs	Tamanho da economia: renda, produção, ciência e influência somadas por turno. A barra mostra a sua fatia.
+NativeUI\NativeBankWindow.cs	Taxa de juros do seu banco central e o efeito dela no saldo, na produção e na inflação.
+NativeUI\NativeBankWindow.cs	Taxa do seu banco central por turno. Ajuste na aba Política.
+NativeUI\DiplomacyTradePolicyPanel.cs	Taxar
+NativeUI\DiplomacyTradePolicyPanel.cs	Taxar em todos os seus postos
+Diplomacia\Council\CouncilEngine.cs	Temos {0} espião(ões) em terra estrangeira, quietos por enquanto.
+Diplomacia\UI\CouncilScreen.cs	Tenta a reunião (ou a sua última fala) de novo.
+Diplomacia\Council\CouncilBank.cs	Tesoureira Real
+Diplomacia\Council\CouncilBank.cs	Tesoureira-Mor
+Diplomacia\Council\CouncilBank.cs	Tesoureiro Real
+Diplomacia\Council\CouncilBank.cs	Tesoureiro-Mor
+Diplomacia\Council\CouncilEngine.cs	Tesouro em {0} {1}, {2} por turno.
+Diplomacia\UI\MailScreen.cs	Texto da carta
+Diplomacia\UI\CouncilScreen.cs	Tira o ministro do cargo e põe outra pessoa no lugar. Pede confirmação.
+Diplomacia\UI\MailScreen.cs	Todas as cartas privadas e ultimatos que você já leu.
+Diplomacia\UI\InterceptedLettersTab.cs	Todas as cartas que os seus espiões já interceptaram nesta partida.
+Diplomacia\UI\MailScreen.cs	Todas as nações que conhecem quem escreveu leem. Serve de propaganda, aviso ou denúncia.
+Diplomacia\UI\MailScreen.cs	Todos leem
+NativeUI\TradePostWindow.cs	Todos os seus postos
+NativeUI\TradePostWindow.cs	Total que você arrecadou de pedágio no último turno, em todos os postos. Se a volta sair mais barata que o pedágio, a rota desvia.
+Diplomacia\UI\CouncilScreen.cs	Traços: {0}
+Diplomacia\UI\CorrespondenceTab.cs	Trocar
+Diplomacia\UI\MailScreen.cs	Trocar destinatário
+Diplomacia\UI\CorrespondenceTab.cs	Trocar tipo
+Diplomacia\Council\CouncilEngine.cs	Tropas de {0} dentro do nosso território ({1} unidade(s) em {2}).
+NativeUI\NativeBankWindow.cs	Troque na aba Política.
+Diplomacia\UI\MailScreen.cs	Tudo, ou só as cartas dos últimos 5, 15 ou 30 turnos.
+Diplomacia\UI\CouncilScreen.cs	Turno {0}
+CentralBankWindow.cs	Turno {0}  ·  Taxas por turno  ·  {1} abre e fecha
+Diplomacia\UI\CouncilScreen.cs	Turno {0}. O conselho se forma na primeira reunião.
+Diplomacia\UI\MailScreen.cs	Turno {0}. Suas cartas chegam em 1 turno ({1}).
+Diplomacia\UI\MailScreen.cs	Turno {0}. Suas cartas chegam em {1} turnos ({2}).
+Diplomacia\UI\MailScreen.cs	Turno {0}. Suas cartas chegam no mesmo turno ({1}).
+Diplomacia\UI\CouncilScreen.cs	Turno {0}. {1} conselheiros
+Diplomacia\UI\MailScreen.cs	Turnos que a nação tem para cumprir a exigência, contados a partir do envio.
+Diplomacia\UI\CorrespondenceTab.cs	Ultimato
+Diplomacia\UI\InterceptedLettersTab.cs	Ultimatos vão por enviado formal e declarações públicas todos leem: espião não intercepta.
+Diplomacia\Council\CouncilEngine.cs	Um acordo com eles abriria caminho.
+Trade\TradeGrievances.cs	Um império está bloqueando ou cobrando pedágio das rotas comerciais de outro nos seus postos comerciais.
+Diplomacia\UI\CorrespondenceTab.cs	Um ultimato precisa de uma exigência.
+Diplomacia\UI\MailScreen.cs	Uma linha que resume a carta. Opcional.
+Diplomacia\Council\CouncilEngine.cs	Uma maravilha levaria o seu nome pelos séculos.
+CentralBankWindow.cs	Usada pelo automático
+NativeUI\NativeBankWindow.cs	Usado nos valores: "Custa 500 Reais". Em branco, é deduzido do nome.
+NativeUI\TradePostWindow.cs	Vale na próxima ação
+NativeUI\DiplomacyEconomyPanel.cs	Valor da moeda comparado à média do mundo (1,00×). A mais forte compra mais da outra no comércio.
+NativeUI\NativeBankWindow.cs	Valor da sua moeda comparado à média do mundo (1,00×). Depende do tamanho da economia, da estabilidade e da inflação.
+▲ subiu desde o turno passado, ▼ caiu.
+Diplomacia\UI\MailScreen.cs	Vence no turno {0}
+Diplomacia\UI\MailScreen.cs	Venceu no turno {0}
+CentralBankWindow.cs	Visão geral
+Diplomacia\UI\CorrespondenceTab.cs	Você
+Diplomacia\UI\MailScreen.cs	Você ainda não conhece nenhuma nação
+Diplomacia\UI\MailScreen.cs	Você ainda não conhece ninguém
+Diplomacia\UI\MailScreen.cs	Você ainda não escreveu
+Diplomacia\UI\MailScreen.cs	Você ainda não respondeu nenhuma carta
+Diplomacia\UI\CorrespondenceTab.cs	Você escreveu no turno {0}; chega no turno {1}.
+Diplomacia\UI\CouncilScreen.cs	Você fala ao conselho
+NativeUI\NativeBankWindow.cs	Você fixou os juros em {0}. A regra automática pediria {1}: ela sobe 1,5 ponto por ponto de inflação acima da meta, e mais quando a demanda passa da oferta.
+Diplomacia\UI\CorrespondenceTab.cs	Você já respondeu a esta carta.
+Diplomacia\UI\MailScreen.cs	Você já respondeu esta carta; a sua resposta aparece logo abaixo do texto.
+Diplomacia\UI\MailScreen.cs	Você recusa as cartas privadas dessa nação: elas voltam sem ser lidas, e a nação fica sabendo. Ultimatos e declarações públicas continuam chegando.
+Diplomacia\UI\CouncilScreen.cs	Você responde à reunião deste turno. No próximo turno o conselho se reúne de novo.
+Diplomacia\UI\MailScreen.cs	Você · a todas as nações
+Diplomacia\UI\CouncilScreen.cs	Você: {0}
+Diplomacia\UI\CorrespondenceTab.cs	Vocês ainda não trocaram cartas. Escreva a primeira no painel ao lado.
+Diplomacia\UI\MailScreen.cs	Voltar a aceitar cartas
+Diplomacia\UI\CouncilScreen.cs	Voltar ao jogo
+Diplomacia\UI\CouncilScreen.cs	Voz: {0}
+Diplomacia\Council\CouncilBank.cs	Xamã
+Diplomacia\UI\MailScreen.cs	a todos
+Diplomacia\Council\CouncilBank.cs	acha que tudo dá certo
+Diplomacia\Council\CouncilBank.cs	acha uma saída em cada crise
+Diplomacia\Council\CouncilBank.cs	acredita na fortuna do reino
+Diplomacia\IaModule.cs	ainda sem foto do turno; tente de novo em alguns segundos
+Diplomacia\UI\InterceptedLettersTab.cs	alta
+Diplomacia\Council\CouncilBank.cs	ambiciosa
+Diplomacia\Council\CouncilBank.cs	ambicioso
+Diplomacia\Council\CouncilBank.cs	astuta
+Diplomacia\Council\CouncilBank.cs	astuto
+Diplomacia\Council\CouncilBank.cs	avisa os riscos sem rodeios
+Diplomacia\UI\InterceptedLettersTab.cs	baixa
+NativeUI\NativeBankWindow.cs	base
+Diplomacia\Council\CouncilBank.cs	bate na mesa
+Diplomacia\Council\CouncilBank.cs	belicista
+Diplomacia\Council\CouncilBank.cs	busca o favor do líder
+Diplomacia\Council\CouncilBank.cs	busca sinais antes de agir
+Diplomacia\Council\CouncilBank.cs	calcula cada passo
+NativeUI\TradePostWindow.cs	calculando…
+Diplomacia\IaModule.cs	carta vazia
+Diplomacia\Council\CouncilBank.cs	cautelosa
+Diplomacia\Council\CouncilBank.cs	cauteloso
+Diplomacia\UI\MailScreen.cs	chegou no turno {0}
+Diplomacia\Council\CouncilBank.cs	cita os sábios antigos
+Diplomacia\Council\CouncilBank.cs	cita versos e intrigas
+Diplomacia\Council\CouncilBank.cs	cobra cada dívida
+Diplomacia\Council\CouncilBank.cs	conta lanças e cavalos
+Diplomacia\Council\CouncilBank.cs	conta moedas enquanto fala
+Diplomacia\Council\CouncilBank.cs	corta discursos e vai ao ponto
+Diplomacia\Council\CouncilEngine.cs	de dinheiro
+Diplomacia\Council\CouncilBank.cs	defende o trono com a vida
+Diplomacia\Council\CouncilBank.cs	defende os fracos
+NativeUI\NativeBankWindow.cs	demanda acima da oferta
+Diplomacia\UI\InterceptedLettersTab.cs	descoberto
+Diplomacia\UI\CouncilScreen.cs	desconfia de {0}.
+Diplomacia\Council\CouncilBank.cs	desconfiada
+Diplomacia\Council\CouncilBank.cs	desconfiado
+Diplomacia\Council\CouncilBank.cs	devota
+Diplomacia\Council\CouncilBank.cs	devoto
+Diplomacia\Council\PlayerCouncil.cs	diga alguma coisa ao conselho
+NativeUI\NativeBankWindow.cs	dinheiro parado demais
+Diplomacia\Council\CouncilBank.cs	diz o que ninguém quer ouvir
+NativeUI\NativeBankWindow.cs	dívida
+Diplomacia\UI\CouncilScreen.cs	e
+Diplomacia\Council\CouncilBank.cs	elogia o trono antes de pedir algo
+Diplomacia\GameText.cs	era desconhecida
+Diplomacia\UI\CouncilScreen.cs	erro desconhecido
+NativeUI\NativeBankWindow.cs	estabilidade alta
+NativeUI\NativeBankWindow.cs	estabilidade baixa
+Diplomacia\Council\CouncilBank.cs	fala baixo e em segredo
+Diplomacia\Council\CouncilBank.cs	fala da terra e da palavra dada
+Diplomacia\Council\CouncilBank.cs	fala de honra a todo instante
+Diplomacia\Council\CouncilBank.cs	fala devagar e cita precedentes
+Diplomacia\Council\CouncilBank.cs	fala do povo das cidades
+Diplomacia\Council\CouncilBank.cs	fala dos antepassados e da honra
+Diplomacia\Council\CouncilBank.cs	fala em caridade e dever
+Diplomacia\Council\CouncilBank.cs	fala em conquistar
+Diplomacia\Council\CouncilBank.cs	fala em harmonia e virtude
+Diplomacia\Council\CouncilBank.cs	fala em prosperidade para todos
+Diplomacia\Council\CouncilBank.cs	fala em sacrifício e vitória
+Diplomacia\Council\CouncilBank.cs	faz contas antes de falar
+Diplomacia\Council\CouncilBank.cs	fria
+Diplomacia\Council\CouncilBank.cs	frio
+Diplomacia\Council\CouncilBank.cs	gananciosa
+Diplomacia\Council\CouncilBank.cs	ganancioso
+Diplomacia\Council\CouncilBank.cs	generosa
+Diplomacia\Council\CouncilBank.cs	generoso
+Diplomacia\Council\CouncilBank.cs	guarda os segredos do trono
+Diplomacia\Council\CouncilBank.cs	honesta
+Diplomacia\Council\CouncilBank.cs	honesto
+NativeUI\DiplomacyTradePolicyPanel.cs	há postos com preço próprio
+Diplomacia\Council\CouncilBank.cs	idealista
+CentralBankWindow.cs	indo para ×{0}
+Diplomacia\UI\InterceptedLettersTab.cs	infiltrado
+Diplomacia\UI\InterceptedLettersTab.cs	infiltrando
+Diplomacia\Council\CouncilBank.cs	invoca os deuses a cada frase
+Diplomacia\Council\CouncilBank.cs	joga um vizinho contra o outro
+NativeUI\NativeBankWindow.cs	juros abaixo do neutro
+NativeUI\NativeBankWindow.cs	juros acima do neutro
+Diplomacia\Council\CouncilBank.cs	jurou servir e cumpre
+Diplomacia\Council\CouncilBank.cs	leal
+Diplomacia\Council\CouncilBank.cs	lembra cada desfeita
+Diplomacia\Council\CouncilBank.cs	lembra os feitos dos antepassados
+Diplomacia\Council\CouncilBank.cs	mede riscos em voz alta
+Diplomacia\Delivery.cs	mensageiro
+Diplomacia\Delivery.cs	mensageiro a cavalo
+Diplomacia\Council\CouncilBank.cs	mira o próprio cargo acima de tudo
+Diplomacia\UI\InterceptedLettersTab.cs	média
+Diplomacia\Council\CouncilBank.cs	negocia até a última moeda
+Diplomacia\UI\InterceptedLettersTab.cs	nenhuma
+Diplomacia\UI\CouncilScreen.cs	ninguém
+Diplomacia\Council\PlayerCouncil.cs	ninguém nessa pasta
+Diplomacia\Council\CouncilBank.cs	nunca esquece uma ofensa
+Diplomacia\Council\CouncilBank.cs	não perdoa quem subestima o reino
+Diplomacia\Council\CouncilBank.cs	não sabe mentir ao líder
+Diplomacia\Council\PlayerCouncil.cs	o conselho ainda está respondendo
+Diplomacia\Council\PlayerCouncil.cs	o conselho ainda não se reuniu neste turno
+Diplomacia\Council\PlayerCouncil.cs	o conselho está ouvindo
+Diplomacia\Council\PlayerCouncil.cs	o conselho já ouviu {0} falas suas neste turno; continue no próximo
+Diplomacia\Council\PlayerCouncil.cs	o conselho vai se reunir de novo
+Diplomacia\Council\CouncilBank.cs	obedece e cobra obediência
+Diplomacia\UI\InterceptedLettersTab.cs	observando
+NativeUI\NativeBankWindow.cs	oferta e demanda no mesmo ritmo
+Diplomacia\Council\CouncilBank.cs	orgulhosa
+Diplomacia\Council\CouncilBank.cs	orgulhoso
+Diplomacia\Council\CouncilBank.cs	otimista
+Diplomacia\Council\CouncilBank.cs	ousada
+Diplomacia\Council\CouncilBank.cs	ousado
+NativeUI\DiplomacyTradePolicyPanel.cs	pagaram {0} {1}
+Diplomacia\Council\CouncilBank.cs	passional
+Diplomacia\Council\PlayerCouncil.cs	pasta desconhecida ({0})
+Diplomacia\Council\CouncilBank.cs	pede paz e esmola
+Diplomacia\Council\CouncilBank.cs	pede tempo e dados antes de opinar
+Diplomacia\Council\CouncilBank.cs	pensa nas colheitas
+Diplomacia\Council\CouncilBank.cs	pergunta sempre quanto rende
+Diplomacia\Council\CouncilBank.cs	pondera cada palavra
+Diplomacia\Council\CouncilBank.cs	pragmática
+Diplomacia\Council\CouncilBank.cs	pragmático
+Diplomacia\Council\CouncilBank.cs	prefere a espada à pena
+Diplomacia\Council\CouncilBank.cs	prefere a verdade ao conforto
+NativeUI\NativeBankWindow.cs	pressão {0}
+NativeUI\NativeBankWindow.cs	produção à frente da demanda
+Diplomacia\Council\CouncilBank.cs	promete demais
+Diplomacia\Council\CouncilBank.cs	propõe alianças largas
+Diplomacia\Council\CouncilBank.cs	propõe sempre o passo mais largo
+Diplomacia\Council\CouncilBank.cs	prudente
+Diplomacia\Council\CouncilBank.cs	quer o povo alimentado antes de tudo
+Diplomacia\Council\CouncilBank.cs	quer obras com o próprio nome
+Diplomacia\Council\CouncilBank.cs	quer ser lembrada
+Diplomacia\Council\CouncilBank.cs	quer ver o nome do reino temido
+Diplomacia\Council\CouncilBank.cs	rancorosa
+Diplomacia\Council\CouncilBank.cs	rancoroso
+Diplomacia\Council\CouncilBank.cs	resume tudo em três pontos
+NativeUI\TradePostWindow.cs	rota com {0}
+NativeUI\TradePostWindow.cs	rota com {0} (passa pelo seu posto de {1})
+NativeUI\TradePostWindow.cs	rota com {0} (sai das suas terras)
+Diplomacia\Delivery.cs	rádio
+Diplomacia\Council\CouncilBank.cs	sabe o preço de tudo
+Diplomacia\Council\CouncilBank.cs	se emociona com a glória do trono
+Diplomacia\IaModule.cs	sem partida
+Diplomacia\UI\InterceptedLettersTab.cs	sem poder agir (acordo com eles)
+Diplomacia\Council\PlayerCouncil.cs	sem reunião neste turno
+Diplomacia\Council\CouncilBank.cs	serve por dever
+Diplomacia\Council\CouncilBank.cs	sonha com um império maior
+Diplomacia\Council\CouncilBank.cs	sorri antes de discordar
+Diplomacia\Council\CouncilBank.cs	só fala em números
+Diplomacia\Delivery.cs	telégrafo
+Diplomacia\Council\CouncilBank.cs	teme a ira do céu
+Diplomacia\Council\CouncilBank.cs	teme espiões em todo canto
+Diplomacia\Council\CouncilBank.cs	trata a guerra como aritmética
+Diplomacia\Council\CouncilBank.cs	trata vizinhos como vassalos futuros
+Diplomacia\UI\CorrespondenceTab.cs	turno {0}
+Diplomacia\Council\CouncilBank.cs	vaidosa
+Diplomacia\Council\CouncilBank.cs	vaidoso
+Diplomacia\UI\InterceptedLettersTab.cs	vigiando a capital
+Diplomacia\UI\InterceptedLettersTab.cs	vigiando uma cidade
+Diplomacia\Council\CouncilBank.cs	vê castigo divino nos inimigos
+Diplomacia\Council\CouncilBank.cs	vê mercado em tudo
+Diplomacia\Council\CouncilBank.cs	vê o melhor em todos
+Diplomacia\Council\CouncilBank.cs	vê traição em toda carta
+Diplomacia\UI\CouncilScreen.cs	{0:+0;-0}, de -100 a 100. Lealdade {1}, ambição {2}.
+Diplomacia\UI\CouncilScreen.cs	{0:+0;-0}, de -100 a 100. Sobe quando você segue os conselhos dele ou o trata bem; desce quando faz o contrário.
+Diplomacia\UI\MailScreen.cs	{0} a caminho.
+NativeUI\TradePostWindow.cs	{0} barradas
+Diplomacia\UI\MailScreen.cs	{0} cartas
+Diplomacia\UI\InterceptedLettersTab.cs	{0} cartas lidas
+L.cs	{0} cartas novas
+Diplomacia\UI\CorrespondenceTab.cs	{0} cartas novas desta nação.
+Diplomacia\UI\MailButton.cs	{0} cartas novas.
+Diplomacia\Council\CouncilEngine.cs	{0} cidade(s) nossa(s) sob cerco: isso vem antes de qualquer outra coisa.
+Diplomacia\UI\CouncilScreen.cs	{0} com apreço por você
+NativeUI\DiplomacyTradePolicyPanel.cs	{0} de {1} rotas deles pagam
+Diplomacia\UI\CouncilScreen.cs	{0} demitido; no lugar entra {1}
+NativeUI\TradePostWindow.cs	{0} desviam
+NativeUI\DiplomacyTradePolicyPanel.cs	{0} desviam dos seus postos
+Diplomacia\Council\CouncilEngine.cs	{0} e mais {1} estão perdendo população por falta de comida. Cuide dos campos antes de pensar em guerra.
+Diplomacia\UI\InterceptedLettersTab.cs	{0} em {1}, terra {2}: {3}{4}.
+Diplomacia\UI\MailScreen.cs	{0} enviadas
+Diplomacia\UI\InterceptedLettersTab.cs	{0} espiões fora
+Trade\TradeGrievances.cs	{0} está bloqueando ou cobrando pedágio das nossas rotas comerciais que passam pelos postos comerciais deles.
+Diplomacia\Council\CouncilEngine.cs	{0} está perdendo população por falta de comida. Cuide dos campos antes de pensar em guerra.
+Diplomacia\Council\CouncilEngine.cs	{0} estão perdendo população por falta de comida. Cuide dos campos antes de pensar em guerra.
+Diplomacia\UI\CouncilScreen.cs	{0} fala(s)
+Diplomacia\UI\CouncilScreen.cs	{0} fala(s) sua(s)
+Diplomacia\UI\MailScreen.cs	{0} leem
+NativeUI\TradePostWindow.cs	{0} pagam
+CentralBankWindow.cs	{0} por turno
+Diplomacia\UI\MailScreen.cs	{0} recebidas
+Diplomacia\UI\CouncilScreen.cs	{0} resposta(s) sua(s)
+Diplomacia\UI\CouncilScreen.cs	{0} ressentido(s)
+NativeUI\TradePostWindow.cs	{0} rotas aqui
+NativeUI\DiplomacyTradePolicyPanel.cs	{0} rotas deles passam pelos seus territórios
+Diplomacia\Council\CouncilEngine.cs	{0} tem exigências contra nós esperando resposta.
+NativeUI\TradePostWindow.cs	{0} territórios
+NativeUI\TradePostWindow.cs	{0} {1}/turno
+CentralBankWindow.cs	{0} · Inflação {1} · Juros {2}
+Diplomacia\UI\CorrespondenceTab.cs	{0} · a todos
+Diplomacia\Council\CouncilEngine.cs	{0} é gente de palavra.
+Diplomacia\UI\InterceptedLettersTab.cs	{0}, em {1}, pegou a carta antes de chegar a quem ia receber.
+Diplomacia\UI\InterceptedLettersTab.cs	{0}, em {1}, pegou a carta quando saía de quem escreveu.
+Diplomacia\UI\CorrespondenceTab.cs	{0}/{1} palavras
+Diplomacia\Council\CouncilEngine.cs	É pouco para o tamanho do reino.
+NativeUI\NativeBankWindow.cs	Índice de preços
+CentralBankWindow.cs	Índice de preços: {0}  ·  PIB estimado: {1}  ·  Estabilidade: {2}%
+CentralBankWindow.cs	ÚLTIMO FIM DE TURNO
+Diplomacia\UI\MailScreen.cs	Últimos 15 turnos
+Diplomacia\UI\MailScreen.cs	Últimos 30 turnos
+Diplomacia\UI\MailScreen.cs	Últimos 5 turnos
+CentralBankWindow.cs	▲ {0} no turno
+CentralBankWindow.cs	▼ {0} no turno

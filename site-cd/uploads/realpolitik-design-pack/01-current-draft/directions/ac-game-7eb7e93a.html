@@ -1,0 +1,334 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Realpolitik: Living Nations — draft A+C</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;1,9..144,400&family=IM+Fell+English:ital@0;1&family=Mulish:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="clips/clips.css">
+<style>
+  :root {
+    --night: #0c1522; --night-2: #13213a; --slate: #24395c; --panel: rgba(30,48,80,.92);
+    --gold: #e2c172; --gold-dim: #9c8148; --cream: #f1ead9; --muted: #aab5c8;
+    --paper: #efe3c8; --paper-2: #e0cfab; --ink: #2a1d12; --wax: #8e1b2a; --wax-hi: #c13a48; --magenta: #c4245e;
+  }
+  * { box-sizing: border-box; margin: 0; }
+  html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; }
+  body { background: var(--night); color: var(--cream); font: 400 17px/1.6 Mulish, system-ui, sans-serif; overflow-x: hidden; }
+  img { max-width: 100%; display: block; }
+  a { color: inherit; }
+  :focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; }
+
+  /* nav */
+  .nav { position: fixed; inset: 0 0 auto; z-index: 40; display: flex; align-items: center; justify-content: space-between; gap: 12px;
+         padding: 12px 16px; background: linear-gradient(rgba(12,21,34,.9), rgba(12,21,34,0)); }
+  .brand { font: 700 15px/1 Cinzel, serif; letter-spacing: .14em; color: var(--gold); text-decoration: none; white-space: nowrap; }
+  .brand small { display: block; font: 600 9px/1.6 Mulish; letter-spacing: .26em; color: var(--muted); }
+  .nav-r { display: flex; align-items: center; gap: 14px; font-size: 13px; }
+  .lang a, .lang b { padding: 2px 3px; text-decoration: none; }
+  .lang b { color: var(--gold); }
+  .lang a { color: var(--muted); }
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 48px; padding: 0 22px; border-radius: 3px;
+         font: 800 14px Mulish; letter-spacing: .12em; text-transform: uppercase; text-decoration: none; transition: transform .2s, filter .2s, border-color .2s, color .2s; }
+  .btn-buy { background: linear-gradient(180deg, #d93c72, var(--magenta)); color: #fff; box-shadow: 0 0 0 1px rgba(255,255,255,.25) inset, 0 12px 30px -12px var(--magenta); }
+  .btn-buy:hover { transform: translateY(-2px); filter: brightness(1.12); }
+  .btn-ghost { color: var(--cream); border: 1px solid rgba(226,193,114,.55); background: rgba(12,21,34,.4); }
+  .btn-ghost:hover { border-color: var(--gold); color: var(--gold); }
+  .nav .btn { min-height: 38px; padding: 0 14px; font-size: 12px; }
+  @media (max-width: 520px) { .nav .btn { display: none; } }
+
+  /* hero */
+  .hero { position: relative; min-height: 100svh; overflow: hidden; display: flex; align-items: center; }
+  /* Map band shown at <= 1:1 (source is 1540x485) so it never gets upscaled; fades into the night on every side. */
+  .hero-bg { position: absolute; left: 50%; top: 0; width: min(100%, 1540px); aspect-ratio: 1540 / 485; transform: translateX(-50%);
+             background: url(../assets/shots/map-hero.jpg) center / cover no-repeat;
+             -webkit-mask-image: linear-gradient(180deg, #000 55%, transparent), linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent);
+             -webkit-mask-composite: source-in; mask-image: linear-gradient(180deg, #000 55%, transparent), linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent);
+             mask-composite: intersect; }
+  .hero::before { content: ''; position: absolute; inset: 0; z-index: 1;
+    background: linear-gradient(90deg, rgba(12,21,34,.92) 0%, rgba(12,21,34,.6) 45%, rgba(12,21,34,.15) 80%); }
+  @media (max-width: 959px) { .hero-bg { width: 100%; aspect-ratio: auto; height: 300px; }
+    .hero::before { background: linear-gradient(180deg, rgba(12,21,34,.35) 0%, rgba(12,21,34,.85) 240px, var(--night) 320px); } }
+  .hero-in { position: relative; z-index: 2; width: 100%; max-width: 1280px; margin: 0 auto; padding: 104px 16px 64px; display: grid; gap: 44px; align-items: center; }
+  @media (min-width: 960px) { .hero-in { grid-template-columns: 1.05fr 1fr; padding: 96px 40px 72px; gap: 64px; } }
+  .eyebrow { font: 800 12px/1 Mulish; letter-spacing: .24em; text-transform: uppercase; color: var(--gold); }
+  h1 { font: 600 clamp(40px, 6.6vw, 82px)/1 Fraunces, serif; letter-spacing: -.02em; margin: 18px 0 20px; text-shadow: 0 4px 30px rgba(0,0,0,.5); }
+  h1 em { font-style: italic; font-weight: 400; color: var(--gold); }
+  .sub { font-size: clamp(17px, 2vw, 20px); color: #cfd6e2; max-width: 36ch; }
+  .ctas { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 30px; }
+  .meta { margin-top: 20px; font-size: 13px; letter-spacing: .05em; color: var(--muted); }
+
+  .stage { position: relative; perspective: 1400px; }
+  .letter { position: relative; background: linear-gradient(170deg, var(--paper), var(--paper-2)); color: var(--ink); padding: 34px 28px 26px; border-radius: 3px;
+            box-shadow: 0 40px 90px -25px rgba(0,0,0,.85); transform-origin: top center; font-family: 'IM Fell English', Georgia, serif; }
+  .l-head { display: flex; justify-content: space-between; gap: 12px; font: 800 11px/1.3 Mulish; letter-spacing: .14em; text-transform: uppercase; color: #6d5435; }
+  .l-body { font-size: clamp(20px, 2.2vw, 24px); line-height: 1.45; margin: 20px 0 16px; min-height: 5.8em; }
+  .l-sign { font-style: italic; font-size: 18px; text-align: right; }
+  .caret { display: inline-block; width: 2px; height: 1em; background: var(--ink); vertical-align: -2px; margin-left: 1px; animation: blink 1s steps(1) infinite; }
+  @keyframes blink { 50% { opacity: 0; } }
+  .seal { position: absolute; left: 50%; top: -40px; width: 92px; height: 92px; margin-left: -46px; z-index: 3; }
+  .seal svg { width: 100%; height: 100%; overflow: visible; filter: drop-shadow(0 6px 10px rgba(0,0,0,.45)); }
+  .diary { margin-top: 16px; background: rgba(20,16,13,.94); color: #eadcc2; border-left: 3px solid var(--wax-hi); padding: 18px 22px; border-radius: 2px;
+           font-family: 'IM Fell English', Georgia, serif; box-shadow: 0 20px 50px -20px rgba(0,0,0,.8); }
+  .diary .l-head { color: var(--wax-hi); }
+  .diary p { font-style: italic; font-size: clamp(18px, 2vw, 21px); line-height: 1.45; margin-top: 8px; }
+  .src { margin-top: 12px; font-size: 12px; color: var(--muted); }
+
+  /* sections */
+  section.s { max-width: 1280px; margin: 0 auto; padding: 96px 16px; }
+  @media (min-width: 960px) { section.s { padding: 128px 40px; } }
+  .kicker { font: 800 12px/1 Mulish; letter-spacing: .24em; text-transform: uppercase; color: var(--gold); }
+  h2 { font: 700 clamp(30px, 4.4vw, 52px)/1.08 Cinzel, serif; margin: 14px 0 16px; letter-spacing: .01em; }
+  h2 span { color: var(--gold); }
+  .lead { color: #cfd6e2; font-size: clamp(17px, 1.8vw, 19px); max-width: 60ch; }
+
+  /* native panel */
+  .panel { background: var(--panel); border: 1px solid rgba(255,255,255,.08); border-radius: 6px; box-shadow: 0 30px 70px -30px rgba(0,0,0,.9); }
+  .panel-h { padding: 14px 18px; border-bottom: 1px solid rgba(255,255,255,.08); display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+  .panel-h h3 { font: 700 16px/1.25 Cinzel, serif; color: var(--gold); letter-spacing: .04em; }
+  .chips { display: flex; gap: 6px; flex-wrap: wrap; }
+  .chip { background: rgba(8,16,30,.55); font-size: 13px; padding: 3px 9px; border-radius: 2px; }
+  .chip.gold { color: var(--gold); }
+  .panel-b { padding: 14px 18px 18px; font-size: 16px; line-height: 1.55; }
+  mark { background: linear-gradient(rgba(196,36,94,.55), rgba(196,36,94,.55)) no-repeat 0 0 / 100% 100%; color: inherit; padding: 0 2px; }
+
+  /* words become orders: timeline */
+  .orders { display: grid; gap: 28px; margin-top: 48px; align-items: start; }
+  @media (min-width: 1000px) { .orders { grid-template-columns: 400px 1fr; gap: 48px; } }
+  .steps { display: grid; gap: 14px; }
+  .step { display: grid; grid-template-columns: 64px 1fr; gap: 14px; align-items: start; }
+  .turn { font: 700 13px/1.2 Cinzel, serif; color: var(--gold); text-align: right; padding-top: 14px; }
+  .action { padding: 12px 14px; border-left: 3px solid var(--magenta); background: rgba(8,16,30,.6); border-radius: 0 4px 4px 0; font-size: 15px; color: var(--muted); }
+  .action b { display: block; color: var(--cream); font-size: 12px; letter-spacing: .14em; text-transform: uppercase; margin-bottom: 2px; }
+
+  /* screenshot frame */
+  .shot { position: relative; border-radius: 6px; overflow: hidden; border: 1px solid rgba(226,193,114,.35);
+          box-shadow: 0 0 0 6px rgba(12,21,34,.9), 0 0 0 7px rgba(226,193,114,.2), 0 40px 80px -30px rgba(0,0,0,.9); background: #0a111c; }
+  .shot img { width: 100%; height: auto; }
+  .shot.todo { aspect-ratio: 16 / 9; display: grid; place-items: center; padding: 24px; text-align: center; color: var(--muted); font-size: 15px;
+               border-style: dashed; background: repeating-linear-gradient(135deg, rgba(255,255,255,.02) 0 12px, transparent 12px 24px), #0a111c; }
+  .cap { margin-top: 14px; font-size: 13px; color: var(--muted); }
+  .cap b { color: var(--gold); font-weight: 700; }
+
+  .split { display: grid; gap: 32px; margin-top: 48px; align-items: center; }
+  @media (min-width: 1000px) { .split { grid-template-columns: 1.6fr 1fr; gap: 48px; } .split.rev { grid-template-columns: minmax(0, 360px) 1fr; } }
+  .split.rev > :first-child { max-width: 360px; justify-self: center; }
+  .zoom { position: relative; }
+  .zoom .callout { position: absolute; right: -10px; bottom: -28px; width: 38%; min-width: 150px; }
+  @media (max-width: 640px) { .zoom .callout { position: static; width: 70%; margin: -40px 0 0 auto; } }
+
+  .ticks { list-style: none; padding: 0; margin-top: 22px; display: grid; gap: 10px; }
+  .ticks li { padding-left: 26px; position: relative; color: #cfd6e2; font-size: 16px; }
+  .ticks li::before { content: ''; position: absolute; left: 0; top: .55em; width: 12px; height: 12px; transform: rotate(45deg); background: var(--gold); }
+
+  /* mid-page buy bands */
+  .cta-band { margin: 0 auto; max-width: 1280px; padding: 0 16px; }
+  @media (min-width: 960px) { .cta-band { padding: 0 40px; } }
+  .cta-in { position: relative; overflow: hidden; display: grid; gap: 22px; align-items: center; padding: 36px 28px; border-radius: 8px;
+    border: 1px solid rgba(226,193,114,.35); background: radial-gradient(80% 140% at 0% 50%, rgba(196,36,94,.22), transparent 60%), linear-gradient(120deg, #13213a, #0f1a2e); }
+  .cta-band.alt .cta-in { background: radial-gradient(80% 140% at 100% 50%, rgba(226,193,114,.18), transparent 60%), linear-gradient(120deg, #0f1a2e, #13213a); }
+  .cta-in::after { content: ''; position: absolute; right: -40px; top: -40px; width: 180px; height: 180px; border-radius: 50%; pointer-events: none;
+    background: radial-gradient(circle at 40% 40%, #b8323f, #6e1220 70%); opacity: .18; } /* wax-seal glow */
+  @media (min-width: 900px) { .cta-in { grid-template-columns: 1fr auto; padding: 40px 48px; } }
+  .cta-h { font: 600 clamp(26px, 3.2vw, 38px)/1.15 Fraunces, serif; letter-spacing: -.01em; }
+  .cta-h span { color: var(--gold); font-style: italic; font-weight: 400; }
+  .cta-r { display: grid; gap: 10px; justify-items: start; }
+  @media (min-width: 900px) { .cta-r { justify-items: end; text-align: right; } }
+  .cta-m { font-size: 13px; color: var(--muted); letter-spacing: .03em; }
+  .final { text-align: center; padding: 120px 16px 140px; background: radial-gradient(60% 60% at 50% 40%, rgba(226,193,114,.12), transparent 70%); }
+  .final h2 { max-width: 18ch; margin: 14px auto 18px; }
+  .final .ctas { justify-content: center; }
+  footer { text-align: center; font-size: 12px; color: #7f8ca3; padding: 0 16px 40px; max-width: 760px; margin: 0 auto; }
+  .note { position: fixed; left: 12px; bottom: 12px; z-index: 50; font: 700 11px Mulish; letter-spacing: .1em; text-transform: uppercase; background: var(--magenta);
+          color: #fff; padding: 6px 9px; border-radius: 3px; }
+
+  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } .caret { animation: none; } * { transition: none !important; } }
+</style>
+</head>
+<body>
+<div class="note"><a href="index.html" data-i18n="note">Draft · direction A+C</a></div>
+
+<header class="nav">
+  <a class="brand" href="#top">REALPOLITIK<small>LIVING NATIONS</small></a>
+  <div class="nav-r">
+    <span class="lang" id="lang"></span>
+    <a class="btn btn-buy" href="#buy" data-i18n="buy">Get it — $10</a>
+  </div>
+</header>
+
+<main id="top">
+  <section class="hero">
+    <div class="hero-bg" id="heroBg" role="img" aria-label="In-game screenshot: a HUMANKIND map with 16 empires"></div>
+    <div class="hero-in">
+      <div>
+        <p class="eyebrow" data-i18n="eyebrow">A mod for HUMANKIND</p>
+        <h1 data-i18n="h1">Your rivals finally have <em>something to say.</em></h1>
+        <p class="sub" data-i18n="sub">Every AI empire thinks, remembers, bluffs — and writes to you. Then it acts on its words.</p>
+        <div class="ctas">
+          <a class="btn btn-buy" href="#buy" data-i18n="buy">Get it — $10</a>
+          <a class="btn btn-ghost" href="#watch" data-i18n="watch">▶ Watch it in action</a>
+        </div>
+        <p class="meta" data-i18n="meta">Windows · Steam · Single-player · 5 languages</p>
+      </div>
+
+      <div class="stage">
+        <article class="letter" id="letter">
+          <div class="seal" id="seal" aria-hidden="true">
+            <svg viewBox="0 0 100 100">
+              <g id="sealL"><path d="M50 4 C22 4 4 24 6 50 C8 76 26 96 50 96 L44 70 L54 52 L42 34 Z" fill="var(--wax)"/>
+                <path d="M50 14 C30 14 16 30 17 50 C18 70 32 86 50 86" fill="none" stroke="var(--wax-hi)" stroke-width="2.5" opacity=".7"/></g>
+              <g id="sealR"><path d="M50 4 C78 4 96 24 94 50 C92 76 74 96 50 96 L44 70 L54 52 L42 34 Z" fill="#7a1523"/>
+                <path d="M50 14 C70 14 84 30 83 50 C82 70 68 86 50 86" fill="none" stroke="var(--wax-hi)" stroke-width="2.5" opacity=".7"/>
+                <text x="62" y="58" font-family="Fraunces" font-size="22" font-weight="600" fill="#d0505c" text-anchor="middle">R</text></g>
+            </svg>
+          </div>
+          <div class="l-head" data-i18n="l.head"><span>Private letter</span><span>Turn 65</span></div>
+          <p class="l-body" id="lbody" data-i18n-text="l.body" data-text="I bring not the sword, but the word. I propose open trade between our peoples — caravans and open gates, without toll or blood."></p>
+          <p class="l-sign" data-i18n="l.sign">— Solomon, to Arjuna of the Huns</p>
+        </article>
+        <aside class="diary" id="diary">
+          <div class="l-head" data-i18n="d.head"><span>His secret diary · same turn</span><span>never sent</span></div>
+          <p data-i18n="d.body">“…while I smile, two of my armies still sleep at the Hun’s door. Word and wall, wall and word.”</p>
+        </aside>
+        <p class="src" data-i18n="l.src">Real letter and diary (16-empire test game, turn 65). Draft: translated from the Portuguese original.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="s" id="faces">
+    <p class="kicker" data-i18n="f2.kicker">Living Nations</p>
+    <h2 data-i18n="f2.h2">Two faces. <span>One turn.</span></h2>
+    <div class="rv" style="margin-top:40px"><div class="clip" data-clip="two-faces"></div></div>
+  </section>
+
+  <section class="s" id="orders">
+    <p class="kicker" data-i18n="o.kicker">Words become orders</p>
+    <h2 data-i18n="o.h2">Not a chatbot. <span>A nation deciding.</span></h2>
+    <p class="lead" data-i18n="o.lead">What a nation writes, it can do: declare war, march an army, demand tribute, sponsor rebels, vote in Congress, surrender on terms. 32 kinds of real in-game actions.</p>
+
+    <div class="orders">
+      <div class="steps">
+        <article class="panel rv">
+          <div class="panel-h"><h3 data-i18n="o.who">Zenobia · The Byzantines</h3><div class="chips"><span class="chip gold" data-i18n="o.t119">Turn 119</span><span class="chip" data-i18n="o.pub">Public</span></div></div>
+          <div class="panel-b" data-i18n="o.letter"><p>Eleven turns I let my patience sleep; today it woke as iron… <mark>I raise my spear beside Mu Guiying</mark>… Whoever has a score against the debtor, count on me.</p></div>
+        </article>
+        <div class="step rv"><span class="turn" data-i18n="o.t119s">T119</span><p class="action" data-i18n="o.a1"><b>Order</b>Declares war on the Franks — honouring her ally’s call</p></div>
+        <div class="step rv"><span class="turn">T121–129</span><p class="action" data-i18n="o.a2"><b>Order</b>Her fleet attacks two Frankish ports</p></div>
+        <div class="step rv"><span class="turn">T128</span><p class="action" data-i18n="o.a3"><b>Outcome</b>The war turns. Zenobia offers her surrender</p></div>
+      </div>
+      <figure class="rv">
+        <div class="clip" data-clip="war"></div>
+      </figure>
+    </div>
+  </section>
+
+  <aside class="cta-band rv" aria-label="Buy">
+    <div class="cta-in">
+      <p class="cta-h" data-i18n="cta1.h">Your rivals are <span>already writing.</span></p>
+      <div class="cta-r">
+        <a class="btn btn-buy" href="#buy" data-i18n="buy">Get it — $10</a>
+        <p class="cta-m" data-i18n="cta.m">One-time purchase · Windows · Steam · Single-player</p>
+      </div>
+    </div>
+  </aside>
+
+  <section class="s" id="spies">
+    <p class="kicker" data-i18n="s.kicker">Espionage</p>
+    <h2 data-i18n="s.h2">Your spies <span>read their mail.</span></h2>
+    <div class="rv" style="margin-top:40px"><div class="clip" data-clip="intercepted"></div></div>
+    <div class="split">
+      <figure class="zoom rv">
+        <div class="shot"><img src="../assets/shots/spy-full.jpg" width="1600" height="1067" loading="lazy" alt="Native intelligence map with the mod's Letters tab open, showing an intercepted letter."></div>
+        <div class="shot callout"><img src="../assets/shots/spy-panel.jpg" width="460" height="710" loading="lazy" alt="Close-up: an intercepted letter from the Teutons to the Huns, written on turn 110."></div>
+      </figure>
+      <div class="rv">
+        <p class="lead" data-i18n="s.lead">Private letters between AI nations travel across the map. A spy in the right place can read them — and an intercepted letter never arrives.</p>
+        <ul class="ticks" data-i18n="s.ticks">
+          <li>A “Letters” tab inside the native intelligence screen</li>
+          <li>Chance per letter depends on your spy network</li>
+          <li>The AI nations spy on each other too</li>
+        </ul>
+        <p class="cap" data-i18n="s.cap"><b>Real screenshot, turn 111:</b> the Teutons’ letter to the Huns, read by your spy.</p>
+      </div>
+    </div>
+  </section>
+
+  <aside class="cta-band alt rv" aria-label="Buy">
+    <div class="cta-in">
+      <p class="cta-h" data-i18n="cta2.h">Every letter here was <span>written by the game.</span> Yours are next.</p>
+      <div class="cta-r">
+        <a class="btn btn-buy" href="#buy" data-i18n="buy">Get it — $10</a>
+        <p class="cta-m" data-i18n="cta.m">One-time purchase · Windows · Steam · Single-player</p>
+      </div>
+    </div>
+  </aside>
+
+  <section class="s" id="native">
+    <p class="kicker" data-i18n="n.kicker">Looks like it shipped with the game</p>
+    <h2 data-i18n="n.h2">Every screen is <span>native.</span></h2>
+    <p class="lead" data-i18n="n.lead">Letters live in a new tab of the diplomacy screen. Your economy gets its own Central Bank. No overlays, no browser windows — built with the game’s own interface.</p>
+    <div class="split rev">
+      <figure class="rv">
+        <div class="shot"><img src="../assets/shots/bank-panel.jpg" width="465" height="735" loading="lazy" alt="The mod's Central Bank panel in English: balance, inflation, interest, exchange rate and the economic cycle diagnosis."></div>
+      </figure>
+      <figure class="rv">
+        <div class="shot"><img src="../assets/shots/letters-tab.jpg" width="1176" height="440" loading="lazy" alt="Native diplomacy screen with the mod's Letters tab: public and private letters from Queen Zenobia."></div>
+        <figcaption class="cap" data-i18n="n.cap"><b>Real screenshots.</b> Central Bank (English UI) and the Letters tab in diplomacy.</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <section class="final" id="buy">
+    <p class="kicker" data-i18n="f.kicker">Realpolitik: Living Nations for HUMANKIND</p>
+    <h2 data-i18n="f.h2">The other empires are <span>waiting for your reply.</span></h2>
+    <div class="ctas"><a class="btn btn-buy" href="#buy" data-i18n="buy">Get it — $10</a></div>
+    <p class="meta" data-i18n="meta">Windows · Steam · Single-player · 5 languages</p>
+  </section>
+</main>
+
+<footer data-i18n="footer">Unofficial fan-made mod. Not affiliated with or endorsed by Amplitude Studios or SEGA. HUMANKIND is a trademark of its respective owners.</footer>
+
+<script src="ac-i18n.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.13.0/gsap.min.js" defer></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.13.0/ScrollTrigger.min.js" defer></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.13.0/MotionPathPlugin.min.js" defer></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.13.0/DrawSVGPlugin.min.js" defer></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.13.0/CustomEase.min.js" defer></script>
+<script src="clips/sound.js" defer></script>
+<script src="clips/clips.js" defer></script>
+<script defer>
+  window.addEventListener('DOMContentLoaded', () => {
+    const body = document.getElementById('lbody');
+    const text = body.dataset.text;
+    const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (reduce || !window.gsap) { body.textContent = text; return; }
+    gsap.registerPlugin(ScrollTrigger);
+
+    // Hero: seal breaks, letter is written, diary slides out.
+    body.textContent = '';
+    const out = document.createElement('span'); const caret = document.createElement('span'); caret.className = 'caret';
+    body.append(out, caret);
+    gsap.timeline({ delay: .3 })
+      .from('.hero-in > div:first-child > *', { y: 24, opacity: 0, stagger: .08, duration: .8, ease: 'power3.out' })
+      .from('#letter', { rotateX: -70, y: 40, opacity: 0, duration: 1.1, ease: 'power3.out' }, .2)
+      .from('#seal', { scale: 1.6, opacity: 0, duration: .5, ease: 'back.out(2)' }, '-=.4')
+      .to('#sealL', { rotation: -28, x: -26, y: 30, opacity: 0, transformOrigin: '50% 100%', duration: .8, ease: 'power2.in' }, '+=.35')
+      .to('#sealR', { rotation: 24, x: 30, y: 34, opacity: 0, transformOrigin: '50% 100%', duration: .8, ease: 'power2.in' }, '<')
+      .to({ n: 0 }, { n: text.length, duration: text.length * 0.032, ease: 'none',
+            onUpdate() { out.textContent = text.slice(0, Math.round(this.targets()[0].n)); } }, '-=.2')
+      .set(caret, { display: 'none' })
+      .from('#diary', { y: -40, opacity: 0, duration: .9, ease: 'power3.out' }, '+=.3')
+      .from('.src', { opacity: 0, duration: .5 });
+
+    // Slow parallax on the map.
+    gsap.to('#heroBg', { yPercent: 10, ease: 'none', scrollTrigger: { trigger: '.hero', start: 'top top', end: 'bottom top', scrub: true } });
+
+    // Reveal blocks as they enter.
+    gsap.utils.toArray('.rv').forEach(el => gsap.from(el, { y: 40, opacity: 0, duration: .9, ease: 'power3.out', scrollTrigger: { trigger: el, start: 'top 85%' } }));
+    gsap.from('.callout', { scale: .85, opacity: 0, duration: .8, ease: 'back.out(1.6)', scrollTrigger: { trigger: '.zoom', start: 'top 60%' } });
+  });
+</script>
+</body>
+</html>
