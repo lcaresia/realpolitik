@@ -119,6 +119,13 @@ ilspycmd -p -o _Modding\decompiled\<Assembly> -r Humankind_Data\Managed Humankin
 ## Backups
 Ficam em `Documentos\HumankindModding\backups\` (fora da pasta da Steam).
 
+## Repositório e versões
+- Repositório privado: `github.com/lcaresia/realpolitik`. A raiz é esta pasta (`_Modding`).
+- Use o Git do **WSL**, não o do Windows: `wsl -e bash -c "cd '/mnt/c/Program Files (x86)/Steam/steamapps/common/Humankind/_Modding' && git status"`.
+- O `.gitignore` deixa de fora o `.env` e as chaves, o `decompiled\` (código do jogo), o `dev\`, o `dist\`, o `bin`/`obj` e os dados do `ia-bench`.
+- Cada versão publicada recebe uma tag `vX.Y.Z` (ex.: `v1.0.0`) no commit que gerou o pacote. Versões de teste usam o sufixo `-beta.N`.
+- O número de versão do produto (Realpolitik) é separado do número interno das DLLs.
+
 ## MoreEmpires: até 16 impérios em qualquer tamanho de mapa
 Plugin BepInEx **separado** do CurrencyMod. Ele faz cinco coisas:
 - deixa o lobby aceitar de 2 a 16 impérios (jogador + IA) em todos os tamanhos de mapa;
