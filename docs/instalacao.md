@@ -33,6 +33,15 @@ em partida online o mod se desliga sozinho.
 Sem IA conectada, as nações jogam com a IA normal do jogo; o resto do mod funciona normalmente. Nada de editar
 arquivos: tudo é feito numa tela do jogo.
 1. Abra o jogo. No menu principal, clique em **Diplomacia IA** (o mesmo botão existe no menu de pausa da partida, ESC).
+   **Ative a licença primeiro:** a tela abre em **Licença**. Cole a chave da compra (`RPLN-XXXXX-XXXXX-XXXXX-XXXXX`, a
+   que aparece na página depois do pagamento) e clique em **Ativar**. Precisa de internet só nessa hora.
+   - Vale em **até 3 PCs**. Para trocar de PC, use **Liberar este PC** no PC antigo (até 3 liberações a cada 30 dias).
+   - O jogo confere a licença sozinho a cada partida. Sem internet, ela continua valendo por **14 dias** depois da
+     última conferência.
+   - Sem licença, todo o resto do mod funciona (moeda, Banco Central, pedágios, 16 impérios) e as nações usam a IA
+     normal do jogo.
+   - Perdeu a chave? Recupere em `realpolitik-living-nations.pages.dev/download.html` com o e-mail da compra e o
+     número do recibo da Stripe.
 2. Escolha um provedor na coluna da esquerda. O mais fácil é o **OpenRouter**:
    1. clique em **Entrar**: o navegador abre no site do OpenRouter;
    2. entre com a sua conta (ou crie uma) e autorize;

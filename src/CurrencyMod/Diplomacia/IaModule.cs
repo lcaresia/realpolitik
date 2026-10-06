@@ -292,6 +292,10 @@ namespace CurrencyMod.Diplomacia
 
             AdoptWorld(guid);
             playerIndex = player;
+            if (currentTurn < 0)
+            {
+                Licenca.License.OnGameEntered(); // valida a licença a cada partida iniciada ou carregada
+            }
             currentTurn = turn;
             if (turn != lastTurnSeen)
             {
@@ -329,6 +333,11 @@ namespace CurrencyMod.Diplomacia
             if (!IaConfig.Enabled.Value)
             {
                 SetStatus("desligada", "warn", "IA de linguagem desligada no .cfg ([IA] Ativo = false).");
+                return;
+            }
+            if (!Licenca.License.AllowsAi)
+            {
+                SetStatus("sem licença", "err", "Diplomacia IA sem licença ativa neste PC (tela Diplomacia IA → Licença): " + Licenca.License.Describe());
                 return;
             }
             if (!Llm.Providers.ProviderRouter.AnyReady)
@@ -372,7 +381,7 @@ namespace CurrencyMod.Diplomacia
         /// </summary>
         private void UpdateLocks(int turn)
         {
-            bool healthy = IaConfig.Enabled.Value && IaConfig.ExecuteActions.Value && Llm.Providers.ProviderRouter.AnyReady
+            bool healthy = IaConfig.Enabled.Value && IaConfig.ExecuteActions.Value && Licenca.License.AllowsAi && Llm.Providers.ProviderRouter.AnyReady
                 && consecutiveFailures < 3 && World != null && World.TotalCostUsd < IaConfig.SpendingCapUsd.Value;
             int size = World == null || World.Nations.Count == 0 ? 0 : World.Nations.Max(n => n.EmpireIndex) + 1;
             var active = new bool[size];

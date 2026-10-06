@@ -49,9 +49,13 @@ propósito.
 - **Contestação (chargeback):** a chave desliga quando a contestação abre e volta se você ganhar. Para a defesa, a
   consulta admin mostra as datas de ativação e de último uso.
 - **Consultar um cliente:** `GET /api/admin/order?email=...` com `Authorization: Bearer <LOJA_ADMIN_TOKEN>`.
-- **Pedido de teste manual** (para ter uma chave no jogo sem pagar): copie a função `Send-Event` de `testar-loja.ps1`,
-  mande um `checkout.session.completed` com `customer_details.email` terminando em `@example.invalid` e leia a chave em
-  `obrigado.html?session_id=...`. Apague depois (bloco "Limpeza" do mesmo script).
+- **Pedido de teste** (para ter uma chave no jogo sem pagar): `loja\tools\pedido-teste.ps1`.
+  - `-Criar`: a chave vai para `dev\out\chave-teste.txt` e não é impressa.
+  - `-Ocupar N`: ativa a chave em N PCs falsos.
+  - `-Reembolsar`: manda o reembolso.
+  - `-Apagar`: apaga tudo do D1. Sempre rode no fim.
+
+  No jogo: `ia licenca ativar <chave>` (ver `docs\diplomacia-ia.md` §16).
 - **Site:** `_Modding\site\tools\deploy-cloudflare.ps1`. O botão "Comprar" chama `/api/checkout`; se a Stripe recusar
   (conta ainda não ativada), mostra "a loja abre em breve". Ou seja: **o botão começa a vender sozinho quando a Stripe
   liberar a conta.**

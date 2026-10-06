@@ -11,6 +11,7 @@ using Amplitude.UI.Animations.Scene;
 using Amplitude.UI.Interactables;
 using Amplitude.UI.Renderers;
 using Amplitude.UI.Windows;
+using CurrencyMod.Diplomacia.Licenca;
 using CurrencyMod.Diplomacia.Llm;
 using CurrencyMod.Diplomacia.Llm.Providers;
 using CurrencyMod.NativeUI;
@@ -44,6 +45,9 @@ namespace CurrencyMod.Diplomacia.UI
         private const float RowGap = 10f;
         private const float ToggleTop = 210f;
         private const float ToggleStep = 76f;
+
+        /// <summary>Id da seção "Licença" (a primeira da esquerda).</summary>
+        internal const string LicenseSection = "licenca";
 
         internal static ProvidersScreen Instance;
         internal static bool IsOpen => Instance != null && Instance.Shown;
@@ -89,8 +93,13 @@ namespace CurrencyMod.Diplomacia.UI
         private Row nationsRow;
         private Row languageRow;
         private Row reasoningRow;
+        private Row licensePasteRow;
+        private Row licenseReleaseRow;
+        private Row licenseUpdateRow;
         private UITextField keyField;
         private ProviderDef keyProvider;
+        /// <summary>O campo de texto da seção é o da chave de licença (Enter = ativar).</summary>
+        private bool keyIsLicense;
         private UITextFieldResponder hookedResponder;
 
         // Estado do provedor aberto.
@@ -279,10 +288,10 @@ namespace CurrencyMod.Diplomacia.UI
             }
         }
 
-        /// <summary>"Em uso" + um botão por provedor (os que dependem de aprovação só existem com o identificador no .cfg).</summary>
+        /// <summary>"Licença", "Em uso" + um botão por provedor (os que dependem de aprovação só existem com o identificador no .cfg).</summary>
         private void BuildToggles()
         {
-            var ids = new List<string> { null };
+            var ids = new List<string> { LicenseSection, null };
             ids.AddRange(ProviderCatalog.All.Select(p => p.Id));
             for (int i = 0; i < ids.Count; i++)
             {
@@ -306,7 +315,11 @@ namespace CurrencyMod.Diplomacia.UI
 
         private static string DefaultSection()
         {
-            // Sem nada configurado, abre direto no sugerido (OpenRouter); senão, no resumo.
+            // Sem licença, abre nela; sem nada configurado, no sugerido (OpenRouter); senão, no resumo.
+            if (!License.AllowsAi)
+            {
+                return LicenseSection;
+            }
             return ProviderRouter.Ready().Count == 0 ? ProviderCatalog.Suggested : null;
         }
 
@@ -377,6 +390,11 @@ namespace CurrencyMod.Diplomacia.UI
                 closed?.Invoke();
             }
             wasShown = Shown;
+            string url = License.TakePendingUrl(); // "Baixar atualização" pronto (código de uso único pedido na thread de trabalho)
+            if (url != null)
+            {
+                OAuthLogin.OpenUrl(url);
+            }
             if (!Shown || Time.unscaledTime < nextRefresh)
             {
                 return;
@@ -402,8 +420,9 @@ namespace CurrencyMod.Diplomacia.UI
                 pendingSection = id;
                 return;
             }
-            ProviderDef provider = id == null ? null : ProviderCatalog.Get(id);
-            if (id != null && (provider == null || !provider.Visible))
+            bool license = id == LicenseSection;
+            ProviderDef provider = id == null || license ? null : ProviderCatalog.Get(id);
+            if (id != null && !license && (provider == null || !provider.Visible))
             {
                 id = null;
                 provider = null;
@@ -413,7 +432,14 @@ namespace CurrencyMod.Diplomacia.UI
                 section = id;
                 feedback = null;
                 deleteArmedUntil = 0;
-                BuildRows(provider);
+                if (license)
+                {
+                    BuildLicenseRows();
+                }
+                else
+                {
+                    BuildRows(provider);
+                }
             }
             for (int i = 0; i < toggles.Count; i++)
             {
@@ -435,6 +461,8 @@ namespace CurrencyMod.Diplomacia.UI
             privacyLabel = null;
             queueRow = accountRow = keyRow = pasteRow = modelRow = testRow = siteRow = deleteRow = null;
             enabledRow = capRow = nationsRow = languageRow = reasoningRow = null;
+            licensePasteRow = licenseReleaseRow = licenseUpdateRow = null;
+            keyIsLicense = false;
             if (keyField != null && hookedResponder != null)
             {
                 keyField.TextValidation -= KeyField_TextValidation;
@@ -479,6 +507,26 @@ namespace CurrencyMod.Diplomacia.UI
             privacyLabel = AddText(ref y, 90f);
             FillQueueChoices(provider);
             FillModelChoices(provider, force: true);
+        }
+
+        private void BuildLicenseRows()
+        {
+            ClearRows();
+            float y = RowsTop + 12f;
+            // Só o essencial: sem licença, campo + Ativar; com licença, o estado + Liberar este PC. A conferência com o
+            // servidor é sozinha (ao abrir esta seção e a cada partida); a linha de atualização só aparece se houver.
+            introLabel = AddText(ref y, 80f);
+            keyRow = AddKeyField(ref y, null, license: true);
+            licensePasteRow = AddButton(ref y, ActivateFromFieldOrClipboard);
+            licenseReleaseRow = AddButton(ref y, ReleaseLicense);
+            licenseUpdateRow = AddButton(ref y, () =>
+            {
+                feedback = null;
+                License.DownloadUpdateAsync();
+            });
+            privacyLabel = AddText(ref y, 100f);
+            License.ValidateAsync(force: false);
+            License.CheckVersionAsync(force: false);
         }
 
         // ---------------- Montagem das linhas ----------------
@@ -566,8 +614,11 @@ namespace CurrencyMod.Diplomacia.UI
             return label;
         }
 
-        /// <summary>Linha de botão com o campo de texto nativo (anotações do save) no lugar do botão, em modo senha.</summary>
-        private Row AddKeyField(ref float y, ProviderDef provider)
+        /// <summary>
+        /// Linha de botão com o campo de texto nativo (anotações do save) no lugar do botão: em modo senha para a chave de
+        /// API; à mostra para a chave de licença (o comprador confere o que digitou; ela não dá acesso a conta nenhuma).
+        /// </summary>
+        private Row AddKeyField(ref float y, ProviderDef provider, bool license = false)
         {
             Row row = AddButton(ref y, () => { });
             B.SetVisible(row.Button.transform, false);
@@ -585,17 +636,28 @@ namespace CurrencyMod.Diplomacia.UI
             UITransform buttonUi = row.Button.GetComponent<UITransform>();
             NativeUIKit.Place(item, RowWidth - 430f, 10f, 420f, RowHeight - 20f);
             keyField = item.GetComponent<UITextField>();
-            keyField.maximumChars = 300;
+            keyField.maximumChars = license ? 64 : 300;
             keyField.whiteList = string.Empty;
             keyField.BlackList = " <>{}\"'";
-            keyField.PasswordChar = '*';
+            if (!license)
+            {
+                keyField.PasswordChar = '*';
+            }
             keyField.multiline = false;
             keyField.actionOnReturn = UITextFieldKeyAction.Validate; // o doador (anotações do save) não valida no Enter
-            keyField.InstructionText = $"<c=F5EBE166><i>{L.T("Cole ou digite a chave e tecle Enter")}</i></c>";
+            keyField.InstructionText = KeyHint(license);
             NativeUIKit.BlockGameShortcuts(keyField);
             keyProvider = provider;
+            keyIsLicense = license;
             hookedResponder = null; // ligado no Refresh, depois que o campo carregar (HookKeyField)
-            NativeUIKit.Tip(item, L.T("Chave de API"), L.T("Fica criptografada neste PC (Windows, só o seu usuário). A tela mostra só os 4 últimos caracteres."));
+            if (license)
+            {
+                NativeUIKit.Tip(item, L.T("Chave de licença"), L.T("A chave que aparece depois da compra (RPLN-...). Fica criptografada neste PC."));
+            }
+            else
+            {
+                NativeUIKit.Tip(item, L.T("Chave de API"), L.T("Fica criptografada neste PC (Windows, só o seu usuário). A tela mostra só os 4 últimos caracteres."));
+            }
             return row;
         }
 
@@ -618,11 +680,18 @@ namespace CurrencyMod.Diplomacia.UI
 
         private void KeyField_TextValidation(IUITextField field, string text)
         {
-            if (keyProvider != null)
+            if (keyIsLicense)
+            {
+                ActivateLicense(text);
+            }
+            else if (keyProvider != null)
             {
                 SaveKey(keyProvider, text);
             }
         }
+
+        private static string KeyHint(bool license) =>
+            $"<c=F5EBE166><i>{(license ? L.T("Cole ou digite a chave de licença e tecle Enter") : L.T("Cole ou digite a chave e tecle Enter"))}</i></c>";
 
         private void PlaceRow(Transform root, ref float y)
         {
@@ -693,8 +762,12 @@ namespace CurrencyMod.Diplomacia.UI
             B.SetLabel(closeButton.transform, string.Empty, inGame ? "%SystemSettingPauseMenuButtonTitle" : "%SystemSettingMainMenuButtonTitle");
             B.Tip(closeButton.transform, string.Empty, L.T("Voltar"), L.T("Fecha esta tela. O ESC também fecha. Tudo já fica salvo."));
             RefreshToggles();
-            ProviderDef provider = section == null ? null : ProviderCatalog.Get(section);
-            if (provider == null)
+            ProviderDef provider = section == null || section == LicenseSection ? null : ProviderCatalog.Get(section);
+            if (section == LicenseSection)
+            {
+                RefreshLicense();
+            }
+            else if (provider == null)
             {
                 RefreshSummary();
             }
@@ -712,7 +785,7 @@ namespace CurrencyMod.Diplomacia.UI
             for (int i = 0; i < toggles.Count; i++)
             {
                 string id = toggleIds[i];
-                ProviderDef provider = id == null ? null : ProviderCatalog.Get(id);
+                ProviderDef provider = id == null || id == LicenseSection ? null : ProviderCatalog.Get(id);
                 bool visible = provider == null || provider.Visible;
                 Transform item = toggles[i].transform;
                 B.SetVisible(item, visible);
@@ -722,6 +795,14 @@ namespace CurrencyMod.Diplomacia.UI
                 }
                 NativeUIKit.Place(item, 0f, ToggleTop - 210f + slot * ToggleStep, 306f, 60f);
                 slot++;
+                if (id == LicenseSection)
+                {
+                    string chip = LicenseChip(out string chipColor);
+                    B.SetLabel(item, string.Empty, $"{L.T("Licença")}\n<c={chipColor}>{chip}</c>");
+                    B.Tip(item, string.Empty, L.T("Licença"),
+                        L.T("A chave da compra libera a Diplomacia IA neste PC (até 3 PCs). Sem ela, todo o resto do mod funciona."));
+                    continue;
+                }
                 string name = provider == null ? L.T("Em uso") : provider.Name;
                 string state = provider == null ? UsageLine(chain) : StateText(provider, chain, out _);
                 B.SetLabel(item, string.Empty, $"{name}\n<c={StateColor(provider, chain)}>{state}</c>");
@@ -877,6 +958,10 @@ namespace CurrencyMod.Diplomacia.UI
             {
                 intro += "\n" + L.F("Gasto nesta partida: US$ {0:0.00} de US$ {1:0.##} (teto).", world.TotalCostUsd, IaConfig.SpendingCapUsd.Value);
             }
+            if (!License.AllowsAi)
+            {
+                intro = $"<c={Red}>{L.T("Sem licença ativa: as nações jogam com a IA nativa. Ative a chave em Licença, à esquerda.")}</c>\n" + intro;
+            }
             introLabel.Text = intro;
 
             SetRowLabel(enabledRow, L.T("Diplomacia IA"), L.T("Diplomacia IA"),
@@ -916,6 +1001,167 @@ namespace CurrencyMod.Diplomacia.UI
         private void OnLanguageChanged(Row row, Choice choice) => IaConfig.WritingLanguage.Value = choice.Value;
 
         private void OnReasoningChanged(Row row, Choice choice) => IaConfig.Reasoning.Value = choice.Value;
+
+        // ---------------- Licença ----------------
+
+        /// <summary>Chip de estado da licença no botão da esquerda.</summary>
+        private static string LicenseChip(out string color)
+        {
+            LicenseRecord current = License.Current;
+            if (current == null)
+            {
+                color = License.DevMode ? Gold : Red;
+                return License.DevMode ? L.T("Modo de desenvolvimento") : L.T("Sem licença");
+            }
+            if (current.Problem != null)
+            {
+                color = Red;
+                return L.T("Recusada");
+            }
+            if (!License.LicenseValid)
+            {
+                color = Red;
+                return L.T("Precisa conferir");
+            }
+            if (License.IsStale(current))
+            {
+                color = Gold;
+                return L.F("Offline · {0} dia(s)", License.OfflineDaysLeft(current));
+            }
+            color = Green;
+            return L.T("Ativada");
+        }
+
+        private void RefreshLicense()
+        {
+            sectionTitleLabel.Text = L.T("Licença");
+            LicenseRecord current = License.Current;
+            string state;
+            if (current == null)
+            {
+                state = License.DevMode
+                    ? $"<c={Gold}>{L.T("Modo de desenvolvimento: nesta máquina a Diplomacia IA funciona sem chave. Ativar aqui testa o fluxo do comprador.")}</c>"
+                    : L.T("Cole a chave da compra e clique em Ativar. Sem ela, todo o resto do mod funciona e as nações usam a IA nativa do jogo.");
+            }
+            else if (current.Problem != null)
+            {
+                state = $"<c={Red}>{L.F("Licença …{0} recusada pelo servidor.", current.Tail)}</c> " + License.Text(current.Problem, -1, -1, out _);
+            }
+            else if (!License.LicenseValid)
+            {
+                state = $"<c={Red}>{L.F("A licença …{0} não é conferida há mais de {1} dias.", current.Tail, License.OfflineDays)}</c> " + L.T("Conecte o PC à internet; ela é conferida sozinha.");
+            }
+            else
+            {
+                state = $"<c={Green}>{L.F("Ativada neste PC ({0} de {1}).", current.Usage, current.Limit)}</c> " + L.T("A Diplomacia IA está liberada.");
+                if (License.IsStale(current))
+                {
+                    state += " " + L.F("Sem conferir com o servidor há {0} dia(s); offline, ela vale por mais {1} dia(s).",
+                        (int)(DateTime.UtcNow - current.LastOkUtc).TotalDays, License.OfflineDaysLeft(current));
+                }
+            }
+            introLabel.Text = state + (License.Busy ? "\n" + $"<c={Gold}>{L.T("Consultando o servidor de licenças…")}</c>" : string.Empty);
+
+            bool has = current != null;
+            bool usable = has && current.Problem == null;
+            HookKeyField();
+            if (keyField != null && keyField.InstructionText != KeyHint(license: true))
+            {
+                keyField.InstructionText = KeyHint(license: true);
+            }
+            SetRowLabel(keyRow, L.T("Chave de licença"), L.T("Chave de licença"),
+                L.T("A chave da compra (RPLN-XXXXX-XXXXX-XXXXX-XXXXX). Enter também ativa. Ativar de novo no mesmo PC não gasta vaga."));
+            B.SetVisible(keyRow.Root, !usable);
+            SetRowLabel(licensePasteRow, L.T("Ativar neste PC"), L.T("Ativar"),
+                L.T("Ativa a chave digitada no campo (ou a copiada, se o campo estiver vazio). Precisa de internet."));
+            B.SetLabel(licensePasteRow.Button.transform, string.Empty, L.T("Ativar"));
+            B.SetVisible(licensePasteRow.Root, !usable);
+
+            bool armed = Time.unscaledTime < deleteArmedUntil;
+            SetRowLabel(licenseReleaseRow, L.T("Liberar este PC"), L.T("Liberar este PC"),
+                L.T("Desativa a licença neste PC e devolve a vaga para usar em outro (até 3 liberações a cada 30 dias). Clique duas vezes para confirmar."));
+            B.SetLabel(licenseReleaseRow.Button.transform, string.Empty, armed ? L.T("Confirmar") : L.T("Liberar"));
+            B.SetVisible(licenseReleaseRow.Root, has);
+
+            bool update = License.UpdateAvailable;
+            if (update)
+            {
+                string game = License.GameVersion;
+                bool untested = !string.IsNullOrEmpty(License.LatestTestedGame) && !string.IsNullOrEmpty(game) && License.LatestTestedGame != game;
+                SetRowLabel(licenseUpdateRow,
+                    L.F("Versão {0} disponível (você tem a {1})", License.LatestVersion, Plugin.ProductVersion)
+                        + (untested ? $"  <c={Gold}>{L.F("testada no jogo {0}", License.LatestTestedGame)}</c>" : string.Empty),
+                    L.T("Atualização"),
+                    (string.IsNullOrEmpty(License.LatestNotes) ? string.Empty : License.LatestNotes + "\n")
+                        + L.T("Abre a página de download no navegador. Instale por cima: configurações, chaves e saves ficam."));
+                B.SetLabel(licenseUpdateRow.Button.transform, string.Empty, L.T("Baixar"));
+            }
+            B.SetVisible(licenseUpdateRow.Root, update);
+
+            string result = feedback;
+            bool resultError = feedbackError;
+            if (result == null)
+            {
+                result = License.OutcomeText(out resultError);
+                if (current?.Problem != null && result == License.Text(current.Problem, -1, -1, out _))
+                {
+                    result = null; // a recusa já está no topo
+                }
+            }
+            privacyLabel.Text = (result != null ? $"<c={(resultError ? Red : Green)}>{result}</c>\n" : string.Empty)
+                + L.T("Vale em até 3 PCs. Só a chave e um nome do PC sem dado pessoal saem daqui.");
+        }
+
+        private void ActivateLicense(string text)
+        {
+            if (keyField != null)
+            {
+                keyField.ReplaceText(string.Empty);
+            }
+            NativeUIKit.ReleaseTextFocus();
+            feedback = null;
+            License.ClearOutcome();
+            License.ActivateAsync(text);
+            nextRefresh = 0;
+        }
+
+        /// <summary>Botão Ativar: a chave digitada no campo ou, com o campo vazio, a da área de transferência.</summary>
+        private void ActivateFromFieldOrClipboard()
+        {
+            string text = keyField != null ? keyField.Text : null;
+            if (string.IsNullOrWhiteSpace(text))
+            {
+                try
+                {
+                    text = GUIUtility.systemCopyBuffer;
+                }
+                catch (Exception)
+                {
+                    text = null;
+                }
+            }
+            if (string.IsNullOrWhiteSpace(text))
+            {
+                SetFeedback(L.T("Cole a chave no campo (Ctrl+V) ou copie a chave na página da compra e clique de novo."), true);
+                return;
+            }
+            ActivateLicense(text.Trim().Split('\n')[0]);
+        }
+
+        private void ReleaseLicense()
+        {
+            if (Time.unscaledTime >= deleteArmedUntil)
+            {
+                deleteArmedUntil = Time.unscaledTime + 4f;
+                nextRefresh = 0;
+                return;
+            }
+            deleteArmedUntil = 0;
+            feedback = null;
+            License.ClearOutcome();
+            License.DeactivateAsync();
+            nextRefresh = 0;
+        }
 
         // ---------------- Um provedor ----------------
 
@@ -1027,7 +1273,7 @@ namespace CurrencyMod.Diplomacia.UI
             if (keyRow != null)
             {
                 HookKeyField();
-                string hint = $"<c=F5EBE166><i>{L.T("Cole ou digite a chave e tecle Enter")}</i></c>";
+                string hint = KeyHint(license: false);
                 if (keyField != null && keyField.InstructionText != hint)
                 {
                     keyField.InstructionText = hint; // troca de idioma com a tela aberta

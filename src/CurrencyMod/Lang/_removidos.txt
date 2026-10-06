@@ -1,40 +1,68 @@
-[en] A xAI não informou os endereços do login por código.
-[en] Abre o site da xAI e mostra um código curto para digitar lá. Depois disso, o jogo conecta sozinho.
-[en] Aguardando aprovação: o identificador do app ainda não foi liberado pelo provedor.
-[en] Conectado ao ChatGPT.
-[en] Conectado ao Grok.
-[en] Digite o código <c={0}>{1}</c> no site que abriu
-[en] Digite o código {0} no site da xAI.
-[en] Entre com a sua conta da xAI: o uso sai da cota do SuperGrok ou X Premium+.
-[en] Entre com a sua conta do ChatGPT: o uso sai da cota do seu plano Plus ou Pro, sem chave.
-[en] entre de novo
-[es] A xAI não informou os endereços do login por código.
-[es] Abre o site da xAI e mostra um código curto para digitar lá. Depois disso, o jogo conecta sozinho.
-[es] Aguardando aprovação: o identificador do app ainda não foi liberado pelo provedor.
-[es] Conectado ao ChatGPT.
-[es] Conectado ao Grok.
-[es] Digite o código <c={0}>{1}</c> no site que abriu
-[es] Digite o código {0} no site da xAI.
-[es] Entre com a sua conta da xAI: o uso sai da cota do SuperGrok ou X Premium+.
-[es] Entre com a sua conta do ChatGPT: o uso sai da cota do seu plano Plus ou Pro, sem chave.
-[es] entre de novo
-[fr] A xAI não informou os endereços do login por código.
-[fr] Abre o site da xAI e mostra um código curto para digitar lá. Depois disso, o jogo conecta sozinho.
-[fr] Aguardando aprovação: o identificador do app ainda não foi liberado pelo provedor.
-[fr] Conectado ao ChatGPT.
-[fr] Conectado ao Grok.
-[fr] Digite o código <c={0}>{1}</c> no site que abriu
-[fr] Digite o código {0} no site da xAI.
-[fr] Entre com a sua conta da xAI: o uso sai da cota do SuperGrok ou X Premium+.
-[fr] Entre com a sua conta do ChatGPT: o uso sai da cota do seu plano Plus ou Pro, sem chave.
-[fr] entre de novo
-[de] A xAI não informou os endereços do login por código.
-[de] Abre o site da xAI e mostra um código curto para digitar lá. Depois disso, o jogo conecta sozinho.
-[de] Aguardando aprovação: o identificador do app ainda não foi liberado pelo provedor.
-[de] Conectado ao ChatGPT.
-[de] Conectado ao Grok.
-[de] Digite o código <c={0}>{1}</c> no site que abriu
-[de] Digite o código {0} no site da xAI.
-[de] Entre com a sua conta da xAI: o uso sai da cota do SuperGrok ou X Premium+.
-[de] Entre com a sua conta do ChatGPT: o uso sai da cota do seu plano Plus ou Pro, sem chave.
-[de] entre de novo
+[en] A licença libera a Diplomacia IA: as nações pensam com a IA que você escolher, escrevem cartas e negociam. Vale em até 3 PCs.
+[en] A área de transferência está vazia. Copie a chave na página da compra (Ctrl+C) e clique de novo.
+[en] Abre o site do Realpolitik: comprar, ou recuperar a chave na página Download com o e-mail da compra e o número do recibo.
+[en] Ainda não tem a chave, ou perdeu a sua?
+[en] Chave de licença: …{0}
+[en] Chave …{0}.
+[en] Colar a chave copiada e ativar
+[en] Cole a chave da compra (RPLN-XXXXX-XXXXX-XXXXX-XXXXX) e tecle Enter para ativar neste PC. Ativar de novo no mesmo PC não gasta vaga.
+[en] Conecte o PC à internet e clique em Verificar.
+[en] Conferir a licença com o servidor
+[en] Nenhuma licença neste PC.
+[en] O jogo confere sozinho a cada partida. Sem internet, a licença vale por {0} dias depois da última conferência boa.
+[en] O que sai do PC: só a chave e um nome do PC sem dado pessoal ({0}), para contar as ativações. A licença fica criptografada neste PC.
+[en] Pega a chave da área de transferência (Ctrl+C na página da compra) e ativa neste PC. Precisa de internet.
+[en] Sem ela, todo o resto do mod funciona (moeda, Banco Central, pedágios, 16 impérios) e as nações usam a IA nativa do jogo.
+[en] Site do Realpolitik
+[en] Verificar
+[es] A licença libera a Diplomacia IA: as nações pensam com a IA que você escolher, escrevem cartas e negociam. Vale em até 3 PCs.
+[es] A área de transferência está vazia. Copie a chave na página da compra (Ctrl+C) e clique de novo.
+[es] Abre o site do Realpolitik: comprar, ou recuperar a chave na página Download com o e-mail da compra e o número do recibo.
+[es] Ainda não tem a chave, ou perdeu a sua?
+[es] Chave de licença: …{0}
+[es] Chave …{0}.
+[es] Colar a chave copiada e ativar
+[es] Cole a chave da compra (RPLN-XXXXX-XXXXX-XXXXX-XXXXX) e tecle Enter para ativar neste PC. Ativar de novo no mesmo PC não gasta vaga.
+[es] Conecte o PC à internet e clique em Verificar.
+[es] Conferir a licença com o servidor
+[es] Nenhuma licença neste PC.
+[es] O jogo confere sozinho a cada partida. Sem internet, a licença vale por {0} dias depois da última conferência boa.
+[es] O que sai do PC: só a chave e um nome do PC sem dado pessoal ({0}), para contar as ativações. A licença fica criptografada neste PC.
+[es] Pega a chave da área de transferência (Ctrl+C na página da compra) e ativa neste PC. Precisa de internet.
+[es] Sem ela, todo o resto do mod funciona (moeda, Banco Central, pedágios, 16 impérios) e as nações usam a IA nativa do jogo.
+[es] Site do Realpolitik
+[es] Verificar
+[fr] A licença libera a Diplomacia IA: as nações pensam com a IA que você escolher, escrevem cartas e negociam. Vale em até 3 PCs.
+[fr] A área de transferência está vazia. Copie a chave na página da compra (Ctrl+C) e clique de novo.
+[fr] Abre o site do Realpolitik: comprar, ou recuperar a chave na página Download com o e-mail da compra e o número do recibo.
+[fr] Ainda não tem a chave, ou perdeu a sua?
+[fr] Chave de licença: …{0}
+[fr] Chave …{0}.
+[fr] Colar a chave copiada e ativar
+[fr] Cole a chave da compra (RPLN-XXXXX-XXXXX-XXXXX-XXXXX) e tecle Enter para ativar neste PC. Ativar de novo no mesmo PC não gasta vaga.
+[fr] Conecte o PC à internet e clique em Verificar.
+[fr] Conferir a licença com o servidor
+[fr] Nenhuma licença neste PC.
+[fr] O jogo confere sozinho a cada partida. Sem internet, a licença vale por {0} dias depois da última conferência boa.
+[fr] O que sai do PC: só a chave e um nome do PC sem dado pessoal ({0}), para contar as ativações. A licença fica criptografada neste PC.
+[fr] Pega a chave da área de transferência (Ctrl+C na página da compra) e ativa neste PC. Precisa de internet.
+[fr] Sem ela, todo o resto do mod funciona (moeda, Banco Central, pedágios, 16 impérios) e as nações usam a IA nativa do jogo.
+[fr] Site do Realpolitik
+[fr] Verificar
+[de] A licença libera a Diplomacia IA: as nações pensam com a IA que você escolher, escrevem cartas e negociam. Vale em até 3 PCs.
+[de] A área de transferência está vazia. Copie a chave na página da compra (Ctrl+C) e clique de novo.
+[de] Abre o site do Realpolitik: comprar, ou recuperar a chave na página Download com o e-mail da compra e o número do recibo.
+[de] Ainda não tem a chave, ou perdeu a sua?
+[de] Chave de licença: …{0}
+[de] Chave …{0}.
+[de] Colar a chave copiada e ativar
+[de] Cole a chave da compra (RPLN-XXXXX-XXXXX-XXXXX-XXXXX) e tecle Enter para ativar neste PC. Ativar de novo no mesmo PC não gasta vaga.
+[de] Conecte o PC à internet e clique em Verificar.
+[de] Conferir a licença com o servidor
+[de] Nenhuma licença neste PC.
+[de] O jogo confere sozinho a cada partida. Sem internet, a licença vale por {0} dias depois da última conferência boa.
+[de] O que sai do PC: só a chave e um nome do PC sem dado pessoal ({0}), para contar as ativações. A licença fica criptografada neste PC.
+[de] Pega a chave da área de transferência (Ctrl+C na página da compra) e ativa neste PC. Precisa de internet.
+[de] Sem ela, todo o resto do mod funciona (moeda, Banco Central, pedágios, 16 impérios) e as nações usam a IA nativa do jogo.
+[de] Site do Realpolitik
+[de] Verificar

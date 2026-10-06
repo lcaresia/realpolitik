@@ -19,16 +19,23 @@ NativeUI\DiplomacyTradePolicyPanel.cs	1 rota deles passa pelos seus territórios
 NativeUI\TradePostWindow.cs	1 território
 NativeUI\NativeBankWindow.cs	1 · Oferta × demanda
 NativeUI\NativeBankWindow.cs	1 · Oferta × demanda: {0}
+Diplomacia\UI\ProvidersScreen.cs	1º da fila: é o principal.
+Diplomacia\UI\ProvidersScreen.cs	1º: principal
 NativeUI\NativeBankWindow.cs	2 · Inflação → juros: {0} (meta {1})
 NativeUI\NativeBankWindow.cs	3 · Juros → produção: {0}
 NativeUI\NativeBankButton.cs	<c=E8685E>Alerta: {0}.</c> Veja o diagnóstico na aba Ciclo.
+Diplomacia\Llm\Providers\OAuthLogin.cs	A Diplomacia IA já está conectada. Esta aba pode ser fechada.
 Diplomacia\UI\CouncilScreen.cs	A Mão
 Diplomacia\UI\CorrespondenceTab.cs	A carta está vazia.
 Diplomacia\UI\CorrespondenceTab.cs	A carta nova fica ligada à última carta deles que pedia resposta.
 Diplomacia\UI\CouncilScreen.cs	A chamada falhou: {0}. Use "Convocar de novo", à direita.
 Diplomacia\UI\CouncilScreen.cs	A chamada à API falhou: {0}
+Diplomacia\UI\ProvidersScreen.cs	A chave da compra libera a Diplomacia IA neste PC (até 3 PCs). Sem ela, todo o resto do mod funciona.
+Diplomacia\Licenca\License.cs	A chave já está ativa em {0} PCs (o limite é {1}). Libere um deles pelo próprio jogo daquele PC (Diplomacia IA → Licença → Liberar este PC). Se o PC não existe mais, fale com o suporte.
+Diplomacia\UI\ProvidersScreen.cs	A chave que aparece depois da compra (RPLN-...). Fica criptografada neste PC.
 NativeUI\NativeBankWindow.cs	A comparação entre o dinheiro e a produção aparece depois do próximo fim de turno.
 Diplomacia\UI\CorrespondenceTab.cs	A correspondência com esta nação, em ordem, e o campo para escrever. A carta leva o tempo de entrega da sua era.
+Diplomacia\Llm\Providers\ProviderTester.cs	A cota da assinatura acabou por agora. Ela volta sozinha; enquanto isso, o próximo provedor da lista assume.
 NativeUI\NativeBankWindow.cs	A decomposição aparece depois do próximo fim de turno.
 EconomyDiagnosis.cs	A dívida custa {0} por turno e empurra a inflação para cima ({1}). Equilibre a renda antes de mexer nos juros.
 NativeUI\NativeBankWindow.cs	A dívida paga os juros mais {0} de spread, menos a inflação. Saldo negativo também sobe a inflação.
@@ -37,6 +44,8 @@ Diplomacia\Council\CouncilEngine.cs	A glória pede obras e festas.
 NativeUI\NativeBankWindow.cs	A inflação anda {0:0}% por turno em direção ao rumo.
 NativeUI\NativeBankWindow.cs	A inflação está acima dos juros: o dinheiro parado perde valor a cada turno (já descontado da renda da barra do topo). Juros acima da inflação fazem o saldo render.
 NativeUI\NativeBankWindow.cs	A inflação que o modo automático tenta alcançar. Acima dela, a moeda perde valor mais rápido.
+Diplomacia\UI\ProvidersScreen.cs	A licença libera a Diplomacia IA: as nações pensam com a IA que você escolher, escrevem cartas e negociam. Vale em até 3 PCs.
+Diplomacia\UI\ProvidersScreen.cs	A licença …{0} não é conferida há mais de {1} dias.
 NativeUI\DiplomacyEconomyPanel.cs	A moeda deles vale mais: importar deles sai <b>caro</b>
 EconomyDiagnosis.cs	A produção cresce {0} acima do ritmo do dinheiro: os preços tendem a cair. Há espaço para juros mais baixos e mais crédito.
 NativeUI\NativeBankWindow.cs	A produção está crescendo {0} acima do ritmo do dinheiro, comparado ao resto do mundo: sobra oferta e os preços caem.
@@ -50,22 +59,38 @@ Diplomacia\UI\CouncilScreen.cs	A reunião não saiu: {0}. Use "Convocar de novo"
 Diplomacia\UI\CouncilScreen.cs	A reunião é escrita uma vez por turno, a partir do seu dossiê (só o que o seu reino sabe).
 NativeUI\DiplomacyTradePolicyPanel.cs	A rota deles desvia dos seus postos
 NativeUI\DiplomacyTradePolicyPanel.cs	A rota deles paga o pedágio · nenhuma desvia
+Diplomacia\UI\ProvidersScreen.cs	A área de transferência está vazia. Copie a chave na página da compra (Ctrl+C) e clique de novo.
+Diplomacia\UI\ProvidersScreen.cs	A área de transferência está vazia. Copie a chave no site do provedor (Ctrl+C) e clique de novo.
+Diplomacia\UI\ProvidersScreen.cs	Abre a página de download no navegador. Instale por cima: configurações, chaves e saves ficam.
+Diplomacia\UI\ProvidersScreen.cs	Abre a página oficial no navegador: lá você cria a chave ou vê o crédito da conta.
 Diplomacia\UI\MailScreen.cs	Abre a tela de diplomacia com essa nação, na aba Cartas: a conversa inteira, em ordem.
+Diplomacia\UI\ProvidersScreen.cs	Abre o navegador na página oficial do provedor. Depois de entrar, volte ao jogo: a conexão é feita sozinha (5 minutos no máximo).
 Diplomacia\UI\MailScreen.cs	Abre o painel de escrever, à direita, endereçado a quem mandou esta carta e ligado a ela.
+Diplomacia\UI\ProvidersScreen.cs	Abre o site do Realpolitik: comprar, ou recuperar a chave na página Download com o e-mail da compra e o número do recibo.
 NativeUI\NativeBankWindow.cs	Abreviação curta (até 4 letras), como R$. Use letras: a fonte do jogo não tem todos os símbolos.
+Diplomacia\UI\ProvidersScreen.cs	Abrir o site
+Diplomacia\UI\ProvidersScreen.cs	Abrir site
 Diplomacia\UI\MailScreen.cs	Aceitar cartas
 Diplomacia\Council\CouncilEngine.cs	Aceite: vale mais um amigo na fronteira.
 EconomyDiagnosis.cs	Acima de {0} por turno a população sente os preços: a meta de estabilidade de cada cidade cai {1}. {2}
+Diplomacia\UI\ProvidersScreen.cs	Agora: <c={0}>{1}</c> ({2}).
 Diplomacia\Council\CouncilBank.cs	Agricultura
 Diplomacia\UI\CouncilScreen.cs	Aguardando o turno
+Diplomacia\UI\ProvidersScreen.cs	Ainda não tem a chave, ou perdeu a sua?
 Diplomacia\UI\MailScreen.cs	Ainda viajando. Chega no turno {0}; a resposta, se vier, sai no turno seguinte.
 NativeUI\NativeBankWindow.cs	Ajustar juros
 Diplomacia\UI\MailScreen.cs	Aliança
 CentralBankWindow.cs	Alta
+Diplomacia\UI\ProvidersScreen.cs	Alto
 NativeUI\NativeBankWindow.cs	Alvo da produção
 NativeUI\NativeBankWindow.cs	Alvo ×{0}
 Diplomacia\Council\CouncilBank.cs	Anciã do Clã
 Diplomacia\Council\CouncilBank.cs	Ancião do Clã
+Diplomacia\UI\ProvidersScreen.cs	Ao chegar no teto, as chamadas param e a IA nativa assume. Com 16 impérios, um turno custa de centavos a dezenas de centavos, conforme o modelo.
+Diplomacia\UI\ProvidersScreen.cs	Apaga deste PC a chave ou o login deste provedor. Clique duas vezes para confirmar.
+Diplomacia\UI\ProvidersScreen.cs	Apagado deste PC.
+Diplomacia\UI\ProvidersScreen.cs	Apagar
+Diplomacia\UI\ProvidersScreen.cs	Apagar a chave
 NativeUI\NativeBankWindow.cs	Aplica o nome, o plural e o símbolo. Enter num campo também salva.
 NativeUI\TradePostWindow.cs	Aplicar
 NativeUI\TradePostWindow.cs	Aplicar a todos os postos
@@ -93,7 +118,11 @@ NativeUI\DiplomacyTradePolicyPanel.cs	As {0} rotas deles pagam · nenhuma desvia
 NativeUI\NativeBankWindow.cs	Assim o nome e o símbolo aparecem nos textos do jogo.
 Diplomacia\UI\MailScreen.cs	Assunto
 Diplomacia\UI\CorrespondenceTab.cs	Assunto (opcional)
+Diplomacia\UI\ProvidersScreen.cs	Ativada
+Diplomacia\UI\ProvidersScreen.cs	Ativada neste PC ({0} de {1}).
+Diplomacia\UI\ProvidersScreen.cs	Ativar
 NativeUI\NativeBankWindow.cs	Atual {0}
+Diplomacia\UI\ProvidersScreen.cs	Atualização
 Diplomacia\UI\CouncilScreen.cs	Até 8 por turno. Os ministros respondem com o que sabem do reino e mudam o apreço por você conforme o que ouvem.
 CentralBankWindow.cs	Automático
 NativeUI\NativeBankWindow.cs	Automático: o banco ajusta os juros sozinho para levar a inflação à meta.
@@ -101,8 +130,10 @@ Manual: você decide pelo controle abaixo.
 Clique para trocar.
 CentralBankWindow.cs	BANCO CENTRAL
 CentralBankWindow.cs	Baixa
+Diplomacia\UI\ProvidersScreen.cs	Baixar
 NativeUI\TradePostWindow.cs	Baixar o pedágio
 NativeUI\DiplomacyTradePolicyPanel.cs	Baixar o pedágio deles
+Diplomacia\UI\ProvidersScreen.cs	Baixo (padrão)
 CentralBankWindow.cs	Banco Central
 NativeUI\TradePostWindow.cs	Barradas
 Diplomacia\Council\CouncilBank.cs	Batedor-Mor
@@ -118,6 +149,7 @@ Trade\TradeGrievances.cs	Bloqueio comercial em {0}
 Diplomacia\Council\CouncilBank.cs	Braço Direito
 NativeUI\NativeBankWindow.cs	Cada ponto de juro real acima do neutro tira {0:0.#}% da produção (de ×{1} a ×{2}). Nas cidades, aparece como "Crédito" no detalhamento de indústria.
 NativeUI\DiplomacyTradePolicyPanel.cs	Calculando o efeito nas rotas deles…
+Diplomacia\UI\ProvidersScreen.cs	Cancelar
 Diplomacia\Council\CouncilBank.cs	Capelã-Mor
 Diplomacia\Council\CouncilBank.cs	Capelão-Mor
 Diplomacia\UI\CorrespondenceTab.cs	Carta do turno {0}
@@ -140,6 +172,16 @@ Diplomacia\Council\CouncilEngine.cs	Ceder agora convida mais exigências: recuse
 Diplomacia\Council\CouncilEngine.cs	Ceder custa menos que uma guerra; aceite e cobre gratidão depois.
 Diplomacia\UI\InterceptedLettersTab.cs	Chance de ler as cartas privadas que escrevem ou recebem:
 Diplomacia\Council\CouncilBank.cs	Chanceler
+Diplomacia\UI\ProvidersScreen.cs	Chave de API
+Diplomacia\UI\ProvidersScreen.cs	Chave de API: salva (…{0})
+Diplomacia\UI\ProvidersScreen.cs	Chave de licença
+Diplomacia\UI\ProvidersScreen.cs	Chave de licença: …{0}
+Diplomacia\Licenca\License.cs	Chave não encontrada. Confira se copiou inteira (está na página depois da compra).
+Diplomacia\Llm\Providers\ProviderTester.cs	Chave ou login recusado. Entre de novo ou cole a chave outra vez.
+Diplomacia\Llm\Providers\ProviderTester.cs	Chave recusada. Confira se colou a chave inteira e se ela está ativa no site do provedor.
+Diplomacia\UI\ProvidersScreen.cs	Chave salva (…{0}). Agora clique em Testar.
+Diplomacia\UI\ProvidersScreen.cs	Chave salva neste PC: …{0}
+Diplomacia\UI\ProvidersScreen.cs	Chave …{0}.
 Diplomacia\Council\CouncilBank.cs	Chefe Guerreira
 Diplomacia\Council\CouncilBank.cs	Chefe Guerreiro
 Diplomacia\Council\CouncilBank.cs	Chefe da Polícia Secreta
@@ -155,8 +197,19 @@ Diplomacia\Council\CouncilBank.cs	Ciência
 Diplomacia\UI\CouncilScreen.cs	Clique de novo para demitir. Outra pessoa assume a pasta; o resto do conselho sente o golpe.
 NativeUI\TradePostWindow.cs	Cobra mais desse império neste posto, por recurso transportado. Se pagar sair mais caro que desviar, a rota desvia e você não recebe nada.
 NativeUI\TradePostWindow.cs	Cobra menos desse império neste posto, por recurso transportado. Pedágio mais barato faz menos rotas desviarem.
+Diplomacia\UI\ProvidersScreen.cs	Codex não instalado
 Diplomacia\Council\CouncilEngine.cs	Cofre cheio é força na próxima crise: guarde.
+Diplomacia\UI\ProvidersScreen.cs	Colar
+Diplomacia\UI\ProvidersScreen.cs	Colar a chave copiada
+Diplomacia\UI\ProvidersScreen.cs	Colar a chave copiada e ativar
+Diplomacia\UI\ProvidersScreen.cs	Cole a chave da compra (RPLN-XXXXX-XXXXX-XXXXX-XXXXX) e tecle Enter para ativar neste PC. Ativar de novo no mesmo PC não gasta vaga.
+Diplomacia\UI\ProvidersScreen.cs	Cole a chave no campo e tecle Enter. Ela fica criptografada neste PC; a tela mostra só os 4 últimos caracteres.
+Diplomacia\Llm\Providers\ProviderTester.cs	Cole a chave primeiro.
+Diplomacia\UI\ProvidersScreen.cs	Cole ou digite a chave de licença e tecle Enter
+Diplomacia\UI\ProvidersScreen.cs	Cole ou digite a chave e tecle Enter
+Diplomacia\UI\ProvidersScreen.cs	Com erro
 Diplomacia\Council\CouncilEngine.cs	Comerciamos com {0} nação(ões); as rotas rendem.
+Diplomacia\UI\ProvidersScreen.cs	Como conseguir uma chave
 NativeUI\DiplomacyTradePolicyPanel.cs	Como esse império está tratado nos seus postos hoje. "Misto" quando você ajustou postos diferentes pela janela do Posto Comercial (visão Comercializar). "Preço próprio": um posto em que você pôs outro preço só para ele; os botões - e + daqui trocam o preço de todos os postos de uma vez.
 NativeUI\NativeBankWindow.cs	Como produção, inflação e juros se puxam no seu império: o diagnóstico do momento e o que fazer.
 Diplomacia\Council\CouncilEngine.cs	Como sempre previ: {0}
@@ -165,6 +218,14 @@ NativeUI\TradePostWindow.cs	Compra {0} · Vende {1}
 Diplomacia\UI\MailScreen.cs	Comunicados públicos
 Diplomacia\Council\CouncilBank.cs	Comércio
 NativeUI\TradePostWindow.cs	Comércio nessas rotas
+Diplomacia\UI\ProvidersScreen.cs	Conectado
+Diplomacia\Llm\Providers\CodexCli.cs	Conectado ao ChatGPT pelo Codex.
+Diplomacia\Llm\Providers\OAuthLogin.cs	Conectado ao OpenRouter.
+Diplomacia\Llm\Providers\ProviderTester.cs	Conectado: {0} respondeu em {1:0.0} s.
+Diplomacia\UI\ProvidersButtons.cs	Conecte a IA que faz as nações do computador pensarem, escreverem cartas e negociarem: login ou chave, modelo e limites.
+Diplomacia\UI\ProvidersScreen.cs	Conecte o PC à internet e clique em Verificar.
+Diplomacia\UI\ProvidersScreen.cs	Conferindo o login do Codex…
+Diplomacia\UI\ProvidersScreen.cs	Conferir a licença com o servidor
 Diplomacia\Council\CouncilBank.cs	Confessor Real
 Diplomacia\Council\CouncilBank.cs	Confessora Real
 Diplomacia\UI\CouncilScreen.cs	Confirmar
@@ -174,6 +235,8 @@ Diplomacia\Council\CouncilBank.cs	Conselheiro
 Diplomacia\UI\CouncilButton.cs	Conselho
 Diplomacia\UI\CouncilScreen.cs	Conselho fechado
 Diplomacia\UI\CouncilScreen.cs	Conselho:
+Diplomacia\UI\ProvidersScreen.cs	Consultando o servidor de licenças…
+Diplomacia\UI\ProvidersScreen.cs	Conta conectada
 NativeUI\NativeBankWindow.cs	Conta o ritmo, não o tamanho: a referência acompanha o império em ~15 turnos.
 Diplomacia\Council\CouncilBank.cs	Contador de Histórias
 Diplomacia\Council\CouncilBank.cs	Contadora de Histórias
@@ -219,10 +282,14 @@ Diplomacia\UI\MailScreen.cs	Declaração pública
 Diplomacia\UI\MailScreen.cs	Declarações públicas: todas as nações que conhecem quem escreveu leem.
 CentralBankWindow.cs	Deflação
 Diplomacia\UI\CouncilScreen.cs	Demitir
+Diplomacia\UI\ProvidersScreen.cs	Desativa a licença neste PC e devolve a vaga para usar em outro (até 3 liberações a cada 30 dias). Clique duas vezes para confirmar.
 Diplomacia\Council\CouncilEngine.cs	Desconfio da pressa deles: deixe esperar.
 CentralBankWindow.cs	Descontrolada
 NativeEffects.cs	Desemprego pelo crédito caro
 NativeUI\NativeBankWindow.cs	Desemprego {0}
+Diplomacia\UI\ProvidersScreen.cs	Desligada
+Diplomacia\UI\ProvidersScreen.cs	Desligada, as nações do computador jogam só com a IA nativa e nenhuma chamada sai do PC.
+Diplomacia\UI\ProvidersScreen.cs	Desligado
 NativeUI\TradePostWindow.cs	Desviam
 NativeUI\NativeBankWindow.cs	Diagnóstico: {0}
 Diplomacia\UI\CouncilScreen.cs	Diga ao conselho o que pensa, pergunte a um ministro pelo nome ou pela pasta, ou dê uma ordem…
@@ -230,6 +297,7 @@ NativeUI\NativeBankWindow.cs	Dinheiro e produção crescem no ritmo do resto do 
 NativeUI\DiplomacyEconomyPanel.cs	Dinheiro ganho por turno, cada um na sua moeda. A barra compara em valor real, já convertido pelo câmbio.
 NativeUI\NativeBankWindow.cs	Dinheiro novo por turno, em média dos últimos turnos.
 EconomyDiagnosis.cs	Dinheiro à frente da produção
+Diplomacia\IaModule.cs	Diplomacia IA
 Diplomacia\Council\CouncilBank.cs	Diretor da Academia
 Diplomacia\Council\CouncilBank.cs	Diretor de Inteligência
 Diplomacia\Council\CouncilBank.cs	Diretora da Academia
@@ -246,15 +314,22 @@ NativeUI\NativeBankWindow.cs	Efeito na produção
 NativeUI\DiplomacyTradePolicyPanel.cs	Ele ganha uma reclamação "Bloqueio comercial" contra você.
 Diplomacia\UI\CorrespondenceTab.cs	Eles esperam uma resposta sua. Responda no painel ao lado.
 EconomyDiagnosis.cs	Em dívida
+Diplomacia\UI\ProvidersScreen.cs	Em que língua as nações escrevem cartas, diários e o conselho.
 Diplomacia\UI\CorrespondenceTab.cs	Em resposta a
 Diplomacia\UI\MailScreen.cs	Em resposta à carta {0} do turno {1}{2}.
 Diplomacia\UI\MailScreen.cs	Em resposta à sua carta do turno {0}{1}.
 NativeUI\DiplomacyTradePolicyPanel.cs	Em todos os seus territórios, as rotas desse império pagam pedágio por turno (por recurso transportado), ou desviam se a volta sair mais barata.
+Diplomacia\UI\ProvidersScreen.cs	Em uso
 Diplomacia\Council\CouncilBank.cs	Emissária-Mor
 Diplomacia\Council\CouncilBank.cs	Emissário-Mor
 Diplomacia\UI\MailScreen.cs	Endereça o painel de escrever, à direita, a essa nação.
 Diplomacia\UI\MailScreen.cs	Enter quebra a linha. Até {0} palavras.
 Diplomacia\UI\CouncilScreen.cs	Enter quebra a linha. Até {0} palavras. Cada fala sua custa uma chamada à API.
+Diplomacia\UI\ProvidersScreen.cs	Entrar
+Diplomacia\UI\ProvidersScreen.cs	Entrar com a conta
+Diplomacia\UI\ProvidersScreen.cs	Entrar com a conta {0}
+Diplomacia\UI\ProvidersScreen.cs	Entrar de novo
+Diplomacia\Llm\Providers\ProviderTester.cs	Entre com a conta primeiro.
 Diplomacia\UI\MailScreen.cs	Entregue
 Diplomacia\UI\CorrespondenceTab.cs	Enviada
 Diplomacia\UI\CorrespondenceTab.cs	Enviada no turno {0}
@@ -270,6 +345,7 @@ Diplomacia\GameText.cs	Era Moderna
 Diplomacia\GameText.cs	Era Neolítica
 Diplomacia\GameText.cs	Era {0}
 CentralBankWindow.cs	Erosão do saldo
+Diplomacia\UI\ProvidersScreen.cs	Escolha onde as nações do computador pensam. Nada de editar arquivos.
 Diplomacia\UI\MailScreen.cs	Escolha para quem escrever.
 Diplomacia\UI\CorrespondenceTab.cs	Escreva a carta acima
 Diplomacia\UI\CouncilScreen.cs	Escreva acima
@@ -293,6 +369,8 @@ Diplomacia\UI\InterceptedLettersTab.cs	Espião
 Diplomacia\UI\InterceptedLettersTab.cs	Espiões fora
 Diplomacia\UI\InterceptedLettersTab.cs	Espiões seus em território de outra nação. Só eles leem cartas, e só enquanto ficam ocultos.
 Diplomacia\UI\MailScreen.cs	Esta carta fica ligada à original: as duas aparecem juntas em Respondidas.
+Diplomacia\Licenca\License.cs	Esta chave foi desativada.
+Diplomacia\Licenca\License.cs	Esta compra foi reembolsada; a chave não vale mais.
 Diplomacia\UI\CorrespondenceTab.cs	Esta nação não recebe cartas
 Diplomacia\Council\CouncilEngine.cs	Estabilidade em {0}%: as cidades estão em ordem.
 Diplomacia\Council\CouncilEngine.cs	Estabilidade em {0}%: o povo está inquieto. Evite guerras novas e cuide das cidades.
@@ -301,6 +379,8 @@ NativeUI\NativeBankWindow.cs	Estabilidade: {0} na meta das cidades
 Trade\TradeGrievances.cs	Estamos bloqueando ou cobrando pedágio das rotas comerciais {0} nos nossos postos comerciais.
 Diplomacia\Council\CouncilEngine.cs	Estamos gastando a influência mais rápido do que ela entra.
 Diplomacia\Council\CouncilEngine.cs	Estamos perdendo: proponha paz enquanto há o que salvar.
+Diplomacia\Licenca\License.cs	Este PC foi liberado. A vaga já pode ser usada em outro PC.
+Diplomacia\Licenca\License.cs	Este PC não está mais ativado nessa chave. Ative de novo.
 Diplomacia\Council\CouncilBank.cs	Estratega
 Diplomacia\Council\CouncilBank.cs	Estratego
 CentralBankWindow.cs	Estável
@@ -319,17 +399,23 @@ Diplomacia\UI\CouncilScreen.cs	Falar ao conselho
 Diplomacia\UI\CouncilScreen.cs	Falas
 Diplomacia\UI\CouncilScreen.cs	Falas acima de {0} palavras são cortadas.
 Diplomacia\UI\CouncilScreen.cs	Falhou
+Diplomacia\UI\ProvidersScreen.cs	Faz uma chamada mínima com o modelo escolhido e confere se a resposta vem em json. Custa frações de centavo (grátis nos modelos grátis).
+Diplomacia\UI\ProvidersScreen.cs	Fecha esta tela. O ESC também fecha. Tudo já fica salvo.
 Diplomacia\UI\CouncilScreen.cs	Fecha o conselho. O ESC e o botão do conselho também fecham.
 Diplomacia\UI\MailScreen.cs	Fecha o correio. O ESC e o botão do envelope também fecham.
+Diplomacia\UI\ProvidersScreen.cs	Fica criptografada neste PC (Windows, só o seu usuário). A tela mostra só os 4 últimos caracteres.
+Diplomacia\UI\ProvidersScreen.cs	Fila: {0}. Se um der erro, o próximo assume; se todos falharem, a IA nativa joga até um voltar.
 Diplomacia\UI\MailScreen.cs	Filtrar por nação
 Diplomacia\UI\MailScreen.cs	Filtrar por período
 Diplomacia\Council\CouncilBank.cs	Finanças
+Diplomacia\UI\ProvidersScreen.cs	Fora da fila: não é usado.
 NativeUI\DiplomacyEconomyPanel.cs	Força da moeda
 Diplomacia\Council\CouncilEngine.cs	Fronteiras calmas. Força total {0} em {1} unidade(s).
 Diplomacia\Council\CouncilBank.cs	Fé
 CentralBankWindow.cs	Ganho/perda de câmbio
 Diplomacia\Council\CouncilEngine.cs	Gastamos mais do que entra: cobre de quem nos deve, por exigência ou pedágio, e nada de presentes agora.
 Diplomacia\Council\CouncilEngine.cs	Gastamos mais do que entra: corte despesas e não mande presentes enquanto isso.
+Diplomacia\UI\ProvidersScreen.cs	Gasto nesta partida: US$ {0:0.00} de US$ {1:0.##} (teto).
 Diplomacia\Council\CouncilBank.cs	Governador das Províncias
 Diplomacia\Council\CouncilBank.cs	Governadora das Províncias
 Diplomacia\Council\CouncilBank.cs	Guardiã das Trocas
@@ -344,10 +430,14 @@ Diplomacia\Council\CouncilEngine.cs	Guerra com {0}: placar {1} contra {2}. Press
 Diplomacia\Council\CouncilEngine.cs	Guerra com {0}: placar {1} contra {2}. Segure as fronteiras e espere o erro deles.
 Diplomacia\Council\CouncilEngine.cs	Há espiões estrangeiros em {0}: o que se escreve em carta privada pode estar sendo lido.
 Diplomacia\Council\CouncilEngine.cs	Há proposta formal de {0} esperando você.
+Diplomacia\Llm\Providers\ProviderRouter.cs	IA: usando {0} ({1}).
+Diplomacia\Llm\Providers\ProviderRouter.cs	IA: voltou a usar {0}.
 CentralBankWindow.cs	IDENTIDADE DA MOEDA
 CentralBankWindow.cs	IMPÉRIO
 CentralBankWindow.cs	INFLAÇÃO
 CentralBankWindow.cs	INFLAÇÃO POR TURNO
+Diplomacia\UI\ProvidersScreen.cs	Idioma das cartas
+Diplomacia\UI\ProvidersScreen.cs	Igual à interface
 CentralBankWindow.cs	Império local não encontrado.
 CentralBankWindow.cs	Império {0}
 NativeUI\NativeBankWindow.cs	Indústria das cidades por turno, já com o efeito do crédito, em média dos últimos turnos.
@@ -366,6 +456,9 @@ NativeUI\NativeBankWindow.cs	Inflação {0}
 TextPatches.cs	Inflação {0}  ·  Juros {1}
 NativeUI\NativeBankWindow.cs	Inflação: {0}/turno
 Diplomacia\Council\CouncilEngine.cs	Influência {0} ({1} por turno).
+Diplomacia\UI\ProvidersScreen.cs	Instalar
+Diplomacia\UI\ProvidersScreen.cs	Instalar o Codex (app da OpenAI)
+Diplomacia\UI\ProvidersScreen.cs	Instale o Codex e volte aqui para entrar
 Diplomacia\Council\CouncilBank.cs	Intendente da Agricultura
 Diplomacia\Council\CouncilBank.cs	Intendente das Colheitas
 Diplomacia\Council\CouncilBank.cs	Intendente do Comércio
@@ -373,6 +466,8 @@ Diplomacia\Council\CouncilBank.cs	Intendente do Reino
 Diplomacia\UI\InterceptedLettersTab.cs	Interceptada
 Diplomacia\Council\CouncilBank.cs	Interior
 NativeUI\NativeBankWindow.cs	Inverte a ordem da lista.
+Diplomacia\UI\ProvidersScreen.cs	Isso não parece uma chave (curta demais).
+Diplomacia\Licenca\License.cs	Isso não parece uma chave. O formato é RPLN-XXXXX-XXXXX-XXXXX-XXXXX.
 Diplomacia\Council\CouncilEngine.cs	Isso é provocação: temos pretexto.
 Diplomacia\Council\CouncilEngine.cs	Isso é tributo disfarçado: exija o fim ou feche nossas rotas.
 CentralBankWindow.cs	JUROS
@@ -409,15 +504,28 @@ Diplomacia\Council\CouncilEngine.cs	Já mostramos força; uma paz agora guarda o
 Diplomacia\UI\CouncilScreen.cs	Lealdade {0} · ambição {1} · no cargo desde o turno {2}
 Diplomacia\UI\MailButton.cs	Leia e responda as cartas das nações, escreva para elas ou recuse a correspondência de alguém.
 Diplomacia\UI\MailScreen.cs	Leitores
-NativeUI\TradePostWindow.cs	Liberar
+Diplomacia\UI\ProvidersScreen.cs	Liberar
+Diplomacia\UI\ProvidersScreen.cs	Liberar este PC
+Diplomacia\UI\ProvidersScreen.cs	Licença
+Diplomacia\Licenca\License.cs	Licença apagada deste PC, mas sem conexão: a vaga continua ocupada no servidor. Se faltar vaga em outro PC, fale com o suporte.
+Diplomacia\Licenca\License.cs	Licença ativada neste PC ({0} de {1}). A Diplomacia IA está liberada.
+Diplomacia\Licenca\License.cs	Licença conferida com o servidor: tudo certo.
+Diplomacia\UI\ProvidersScreen.cs	Licença …{0} recusada pelo servidor.
 Diplomacia\UI\MailScreen.cs	Lida
 Diplomacia\UI\MailScreen.cs	Lida por {0}
 Diplomacia\UI\MailScreen.cs	Lida por {0} nação(ões) até agora.
 Diplomacia\UI\MailScreen.cs	Lidas
+Diplomacia\UI\ProvidersScreen.cs	Ligada
+Diplomacia\Llm\Providers\ProviderTester.cs	Limite de chamadas por minuto. Espere um pouco e teste de novo.
+Diplomacia\Licenca\License.cs	Limite de liberações atingido: no máximo 3 a cada 30 dias. Tente de novo mais tarde.
+Diplomacia\UI\ProvidersScreen.cs	Limite de nações que chamam a IA a cada turno. Com limite, as que pensaram há mais tempo vão primeiro. Menos nações = mais barato.
 NativeUI\DiplomacyTradePolicyPanel.cs	Livre
 NativeUI\DiplomacyTradePolicyPanel.cs	Livre em todos os seus postos
 NativeUI\DiplomacyTradePolicyPanel.cs	Livre em todos os {0} postos
 NativeUI\TradePostWindow.cs	Livre → Pedágio → Bloqueado
+Diplomacia\Llm\Providers\OAuthLogin.cs	Login cancelado.
+Diplomacia\Llm\Providers\ProviderTester.cs	Login recusado ou vencido. Entre de novo.
+Diplomacia\Llm\Providers\OAuthLogin.cs	Login recusado: {0}
 CentralBankWindow.cs	META DE INFLAÇÃO
 CentralBankWindow.cs	MOEDA
 NativeUI\DiplomacyTradePolicyPanel.cs	Mais barato, menos rotas desviam.
@@ -491,8 +599,15 @@ Diplomacia\Council\CouncilBank.cs	Ministro dos Cultos
 L.cs	Ministros
 Diplomacia\UI\CouncilScreen.cs	Ministros · {0}
 NativeUI\DiplomacyTradePolicyPanel.cs	Misto: {0} com pedágio, {1} bloqueados
+Diplomacia\UI\ProvidersScreen.cs	Modelo
+Diplomacia\UI\ProvidersScreen.cs	Modelos GLM da Z.ai. O GLM-4.7-Flash é grátis.
+Diplomacia\UI\ProvidersScreen.cs	Modelos GPT pela sua chave da plataforma da OpenAI (paga à parte do ChatGPT Plus).
+Diplomacia\UI\ProvidersScreen.cs	Modelos Gemini pela chave do Google AI Studio. Tem nível grátis, mas aí o Google usa os textos para treinar.
+Diplomacia\UI\ProvidersScreen.cs	Modelos Grok pela chave da xAI (console.x.ai).
 CentralBankWindow.cs	Moderada
 NativeUI\NativeBankWindow.cs	Modo automático
+Diplomacia\UI\ProvidersScreen.cs	Modo de desenvolvimento
+Diplomacia\UI\ProvidersScreen.cs	Modo de desenvolvimento: nesta máquina a Diplomacia IA funciona sem chave. Ativar aqui testa o fluxo do comprador.
 NativeUI\NativeBankWindow.cs	Modo dos juros
 NativeUI\NativeBankWindow.cs	Modo manual
 NativeUI\NativeBankWindow.cs	Modo: automático
@@ -503,10 +618,12 @@ NativeUI\DiplomacyEconomyPanel.cs	Moedas equivalentes
 Diplomacia\UI\MailScreen.cs	Mostra só as cartas trocadas com uma nação. Clique para passar à próxima; depois da última, volta a todas.
 Diplomacia\UI\CouncilScreen.cs	Mudanças no conselho
 NativeUI\TradePostWindow.cs	Mude com - e +.
+Diplomacia\UI\ProvidersScreen.cs	Máximo
 Diplomacia\Council\CouncilBank.cs	Mão
 Diplomacia\Council\CouncilBank.cs	Mão do Trono
 Diplomacia\UI\InterceptedLettersTab.cs	Na chegada
 Diplomacia\UI\MailScreen.cs	Na diplomacia
+Diplomacia\UI\ProvidersScreen.cs	Na fila
 Diplomacia\UI\InterceptedLettersTab.cs	Na saída
 Diplomacia\UI\MailScreen.cs	Nada por aqui
 Diplomacia\Council\CouncilEngine.cs	Nada urgente na pauta.
@@ -514,25 +631,31 @@ NativeUI\TradePostWindow.cs	Nas rotas daqui ele compra {0} e vende {1} recurso(s
 Diplomacia\UI\MailScreen.cs	Nação: todas
 Diplomacia\UI\MailScreen.cs	Nação: {0}
 Diplomacia\UI\MailScreen.cs	Nações
+Diplomacia\UI\ProvidersScreen.cs	Nações por turno
 Diplomacia\UI\MailScreen.cs	Nações que conhecem você e vão ler a declaração.
+Diplomacia\UI\ProvidersScreen.cs	Nações que pensam por turno
 Diplomacia\UI\MailScreen.cs	Nações que você conhece: escrever para elas ou recusar as cartas privadas delas.
 Diplomacia\UI\MailScreen.cs	Nações · {0} conhecidas
 Diplomacia\Council\CouncilEngine.cs	Negocie: um acordo vale mais que o pedágio.
 Diplomacia\UI\MailScreen.cs	Nenhum comunicado público
 Diplomacia\UI\InterceptedLettersTab.cs	Nenhum espião seu em território estrangeiro.
 NativeUI\TradePostWindow.cs	Nenhum império estrangeiro usa este posto
+Diplomacia\UI\ProvidersScreen.cs	Nenhum provedor configurado: as nações jogam com a IA nativa do jogo. Escolha um à esquerda; o mais fácil é o {0} (um login, sem chave).
+Diplomacia\Llm\Providers\ProviderRouter.cs	Nenhum provedor de IA respondeu ({0}). A IA nativa do jogo joga pelas nações até um deles voltar.
 Diplomacia\UI\MailScreen.cs	Nenhuma carta esperando resposta
 Diplomacia\UI\InterceptedLettersTab.cs	Nenhuma carta interceptada
 Diplomacia\UI\MailScreen.cs	Nenhuma carta lida ainda
 Diplomacia\UI\MailScreen.cs	Nenhuma carta nova
 Diplomacia\UI\MailButton.cs	Nenhuma carta nova.
 Diplomacia\UI\CorrespondenceTab.cs	Nenhuma carta trocada ainda
+Diplomacia\UI\ProvidersScreen.cs	Nenhuma licença neste PC.
 Diplomacia\UI\CouncilScreen.cs	Nenhuma reunião anterior
 NativeUI\DiplomacyTradePolicyPanel.cs	Nenhuma rota deles passa pelos seus territórios
 NativeUI\DiplomacyTradePolicyPanel.cs	Nenhuma rota deles passaria pelos seus territórios
 NativeUI\NativeBankWindow.cs	Nesse nível os juros não aquecem nem esfriam a economia.
 CentralBankWindow.cs	Neutro {0}
 Diplomacia\UI\CouncilScreen.cs	Ninguém respondeu
+Diplomacia\UI\ProvidersScreen.cs	No nível grátis do Gemini, o Google pode usar esses textos para treinar os modelos dele.
 NativeUI\TradePostWindow.cs	No último turno ele pagou {0} {1} somando todos os seus postos.
 CentralBankWindow.cs	Nome
 NativeUI\NativeBankWindow.cs	Nome da moeda
@@ -543,11 +666,16 @@ Diplomacia\Council\CouncilEngine.cs	Nossa força total é {0}. {1} não merece c
 Diplomacia\Council\CouncilEngine.cs	Nossos espiões leram {0} carta(s) alheia(s) nos últimos turnos. Use o que sabemos, mas sem revelar como sabemos.
 Diplomacia\UI\CorrespondenceTab.cs	Nova
 Diplomacia\UI\MailScreen.cs	Novas
+Diplomacia\UI\ProvidersScreen.cs	Não conectado
 Diplomacia\Council\CouncilEngine.cs	Não temos olhos em terra estrangeira: um espião na capital de um rival leria parte das cartas deles.
 Diplomacia\Council\CouncilEngine.cs	Não temos rotas de comércio com ninguém: um acordo econômico abriria mercados.
+Diplomacia\UI\ProvidersScreen.cs	Não usar
 CentralBankWindow.cs	Não use os caracteres % [ ] < > { }.
 Diplomacia\UI\CouncilScreen.cs	Números da pasta:
+Diplomacia\UI\ProvidersScreen.cs	O 1º é o principal. Se ele der qualquer erro (sem crédito, fora do ar, chave errada), o 2º assume por alguns minutos, e assim por diante. Se todos falharem, a IA nativa joga.
+Diplomacia\Llm\Providers\CodexCli.cs	O Codex não está instalado neste PC.
 CentralBankWindow.cs	O CurrencyMod fica desativado em partidas multiplayer.
+Diplomacia\Llm\Providers\OAuthLogin.cs	O OpenRouter não devolveu a chave.
 NativeUI\NativeBankWindow.cs	O banco anda {0:0}% da diferença por turno: os juros vão cair até {1}.
 NativeUI\NativeBankWindow.cs	O banco anda {0:0}% da diferença por turno: os juros vão subir até {1}.
 NativeUI\DiplomacyTradePolicyPanel.cs	O bloqueio barra 1 rota deles
@@ -564,15 +692,28 @@ Diplomacia\UI\MailScreen.cs	O correio abre quando a partida estiver carregada.
 Diplomacia\UI\MailScreen.cs	O destinatário já leu. Se ele responder, a carta chega pelo tempo de entrega da era dele.
 Diplomacia\UI\MailScreen.cs	O destinatário recusa a sua correspondência privada: a carta voltou sem ser lida.
 NativeUI\NativeBankWindow.cs	O dinheiro está crescendo {0} acima do ritmo da produção, comparado ao resto do mundo: sobra demanda e os preços sobem.
+Diplomacia\UI\ProvidersScreen.cs	O jogo confere sozinho a cada partida. Sem internet, a licença vale por {0} dias depois da última conferência boa.
+Diplomacia\Llm\Providers\CodexCli.cs	O login não deu certo.
+Diplomacia\UI\ProvidersScreen.cs	O modelo com que o mod foi calibrado. Chave paga, com desconto fora do horário de pico da China.
 CentralBankWindow.cs	O nome atual foi sorteado. Dê à sua moeda um nome digno do seu império.
+Diplomacia\Licenca\License.cs	O pagamento desta compra está em contestação; a chave fica suspensa até a contestação acabar.
+Diplomacia\Llm\Providers\OAuthLogin.cs	O provedor recusou o login ({0}). Tente entrar de novo.
+Diplomacia\Llm\Providers\ProviderTester.cs	O provedor recusou o pedido. O modelo "{0}" existe na sua conta? ({1})
 NativeUI\TradePostWindow.cs	O que cada rota paga por recurso transportado, por turno, quando você não definiu outro preço. Mude o preço de um império neste posto com − e + na linha dele, ou o preço dele em todos os postos na aba Comércio da diplomacia.
 Diplomacia\UI\CouncilScreen.cs	O que ele achou da sua fala: {0:+0;-0}. Agora: {1:+0;-0} (de -100 a 100).
+Diplomacia\UI\ProvidersScreen.cs	O que sai do PC: o dossiê de cada nação (o que ela vê no mapa, relações, cartas e memória) vai para {0}. Nada pessoal.
+Diplomacia\UI\ProvidersScreen.cs	O que sai do PC: só a chave e um nome do PC sem dado pessoal ({0}), para contar as ativações. A licença fica criptografada neste PC.
+Diplomacia\UI\ProvidersScreen.cs	O que sai do PC: só o dossiê de cada nação (o que ela vê no mapa, relações, cartas e memória) vai para o provedor em uso. Nada pessoal, nem o seu nome ou a sua conta Steam. Chaves e logins ficam criptografados neste PC, em BepInEx\config\credenciais.
 Diplomacia\UI\CouncilScreen.cs	O que você disse ao conselho. As reações vêm logo abaixo.
 Diplomacia\UI\CorrespondenceTab.cs	O que você exige (ultimato)
 Diplomacia\UI\MailScreen.cs	O que você exige no ultimato. O prazo fica no controle abaixo.
 NativeUI\NativeBankWindow.cs	O saldo rende juros reais (juros − inflação). Até cerca de {0:0} turnos de renda ({1} {2}) rende quase tudo; acima disso, cada vez menos. Os juros já entram na renda por turno da barra do topo.
+Diplomacia\Licenca\License.cs	O servidor de licenças respondeu com erro. Tente de novo em alguns minutos.
+Diplomacia\Llm\Providers\ProviderTester.cs	O servidor do provedor está com problema. Tente mais tarde.
+Diplomacia\Llm\Providers\CodexCli.cs	O tempo do login acabou. Tente de novo.
 Diplomacia\Council\CouncilEngine.cs	O ultimato de {0} contra nós venceu.
 Diplomacia\Council\CouncilBank.cs	Obras
+Diplomacia\UI\ProvidersScreen.cs	Offline · {0} dia(s)
 Diplomacia\Council\CouncilBank.cs	Olhos do Trono
 NativeUI\NativeBankWindow.cs	Ordena pela cotação: quanto 1 da sua moeda compra da moeda de cada império.
 NativeUI\NativeBankWindow.cs	Ordena pela inflação de cada império.
@@ -587,6 +728,8 @@ EconomyDiagnosis.cs	Os juros automáticos já estão no ponto da regra.
 NativeUI\NativeBankWindow.cs	Os juros já estão onde a regra quer: inflação e demanda equilibradas.
 Diplomacia\UI\CouncilScreen.cs	Os ministros chegam com a primeira reunião do turno.
 Diplomacia\UI\CouncilScreen.cs	Os ministros estão lendo os despachos do turno. A reunião aparece aqui em instantes.
+Diplomacia\UI\ProvidersScreen.cs	Os modelos que o seu plano libera. ★ = recomendado.
+Diplomacia\UI\ProvidersScreen.cs	Os provedores da fila estão sem chave ou login. Abra um deles à esquerda para conectar.
 Diplomacia\Council\CouncilEngine.cs	Os templos estão vazios de oferendas; um reino sem fé perde o rumo.
 Diplomacia\UI\CouncilButton.cs	Ouça a Mão e os ministros, responda a eles e demita quem não serve mais.
 NativeUI\DiplomacyEconomyPanel.cs	PIB estimado
@@ -616,6 +759,9 @@ NativeUI\TradePostWindow.cs	Pedágio: as rotas desse império continuam passando
 NativeUI\DiplomacyTradePolicyPanel.cs	Pedágio: {0} {1} por recurso
 NativeUI\DiplomacyTradePolicyPanel.cs	Pedágio: {0} {1} por recurso (padrão)
 NativeUI\TradePostWindow.cs	Pedágios recebidos
+Diplomacia\UI\ProvidersScreen.cs	Pega a chave da área de transferência (Ctrl+C na página da compra) e ativa neste PC. Precisa de internet.
+Diplomacia\UI\ProvidersScreen.cs	Pega a chave da área de transferência (Ctrl+C no site do provedor) e salva direto, sem mostrar.
+Diplomacia\UI\ProvidersScreen.cs	Pela assinatura não há gasto em dólar: o limite é a cota do seu plano. 
 Diplomacia\UI\CouncilScreen.cs	Pensando
 Diplomacia\UI\MailScreen.cs	Período: tudo
 CentralBankWindow.cs	Piloto automático: o banco central persegue a meta de inflação
@@ -623,9 +769,11 @@ CentralBankWindow.cs	Plural
 NativeUI\NativeBankWindow.cs	Política
 CentralBankWindow.cs	Política monetária
 CentralBankWindow.cs	Política monetária do seu império
+Diplomacia\UI\ProvidersScreen.cs	Posição na fila
 NativeUI\TradePostWindow.cs	Posto Comercial
 Diplomacia\UI\MailScreen.cs	Prazo do ultimato
 Diplomacia\UI\CorrespondenceTab.cs	Prazo: {0} turnos
+Diplomacia\UI\ProvidersScreen.cs	Precisa conferir (internet)
 Diplomacia\Council\CouncilBank.cs	Prefeita dos Celeiros
 Diplomacia\Council\CouncilBank.cs	Prefeita dos Mercados
 Diplomacia\Council\CouncilBank.cs	Prefeito dos Celeiros
@@ -648,6 +796,7 @@ EconomyDiagnosis.cs	Produção à frente do dinheiro
 NativeUI\TradePostWindow.cs	Proibido de passar por aqui. Sem outro caminho, a rota é destruída.
 Diplomacia\UI\CorrespondenceTab.cs	Pronta para enviar
 Diplomacia\UI\CouncilScreen.cs	Pronto para falar
+Diplomacia\Llm\Providers\OAuthLogin.cs	Pronto! Pode voltar ao jogo.
 NativeUI\NativeBankWindow.cs	Prévia
 Diplomacia\UI\MailScreen.cs	Pública
 NativeUI\TradePostWindow.cs	Quando vale
@@ -660,6 +809,7 @@ NativeUI\NativeBankWindow.cs	Quanto a pressão de demanda soma (ou tira) da infl
 Diplomacia\UI\CouncilScreen.cs	Quanto a reunião deste turno e as suas falas custaram na API até agora.
 NativeUI\TradePostWindow.cs	Quanto ele pagou a você no último turno, somando todos os seus postos.
 NativeUI\DiplomacyTradePolicyPanel.cs	Quanto esse império paga, por recurso transportado e por turno, para passar pelos seus postos com pedágio. Os botões mudam o preço em todos os postos; na janela do Posto Comercial (visão Comercializar) dá para pôr um preço só naquele posto.
+Diplomacia\UI\ProvidersScreen.cs	Quanto o modelo pensa antes de responder (DeepSeek, GLM e OpenRouter). Mais raciocínio = respostas melhores, mais caras e mais lentas.
 NativeUI\NativeBankWindow.cs	Quanto o seu saldo cresce (ou encolhe) por turno: juros menos inflação.
 NativeUI\NativeBankWindow.cs	Quanto os preços sobem por turno. A inflação corrói o dinheiro guardado e enfraquece o câmbio.
 NativeUI\DiplomacyEconomyPanel.cs	Quanto os preços sobem por turno. Aqui a barra favorece quem tem a inflação mais baixa.
@@ -673,6 +823,8 @@ Diplomacia\UI\MailScreen.cs	Quem escreveu espera uma resposta sua. Ficar em sil�
 Diplomacia\UI\CouncilScreen.cs	Quem são os seus ministros: traços, voz, credibilidade (os números da pasta) e o apreço por você. Aqui você demite quem não serve mais.
 Diplomacia\Council\CouncilBank.cs	Questor
 Diplomacia\Council\CouncilBank.cs	Questora
+Diplomacia\UI\ProvidersScreen.cs	Raciocínio
+Diplomacia\UI\ProvidersScreen.cs	Raciocínio do modelo
 NativeUI\TradePostWindow.cs	Recursos que ele compra e vende nas rotas que passam por aqui. Mais recursos, pedágio maior.
 Diplomacia\UI\MailScreen.cs	Recusada
 Diplomacia\UI\MailScreen.cs	Recusar cartas
@@ -691,10 +843,13 @@ NativeUI\NativeBankWindow.cs	Rendimento do saldo: {0}/turno
 Diplomacia\UI\MailScreen.cs	Responder
 Diplomacia\UI\MailScreen.cs	Responderam no turno {0}; a resposta chega no turno {1}.
 Diplomacia\UI\MailScreen.cs	Responderam no turno {0}; a resposta está nas suas cartas recebidas.
+Diplomacia\Llm\Providers\ProviderTester.cs	Respondeu, mas sem o json pedido. Escolha outro modelo. ({0})
 Diplomacia\UI\CorrespondenceTab.cs	Respondida
 Diplomacia\UI\MailScreen.cs	Respondidas
 Diplomacia\UI\MailScreen.cs	Resposta a caminho
 Diplomacia\UI\CorrespondenceTab.cs	Resposta à carta do turno {0}
+Diplomacia\UI\ProvidersScreen.cs	Resumo: o que está em uso agora, a fila de provedores e os limites da partida.
+Diplomacia\Llm\Providers\OAuthLogin.cs	Retorno do login inválido (state diferente).
 Diplomacia\UI\CouncilScreen.cs	Reunindo
 Diplomacia\UI\CouncilScreen.cs	Reunião do turno
 Diplomacia\UI\CouncilScreen.cs	Reunião do turno {0}
@@ -702,6 +857,7 @@ Diplomacia\UI\CouncilScreen.cs	Reunião do turno {0} · {1} ministro(s) falaram
 Diplomacia\UI\CouncilScreen.cs	Reunião feita
 Diplomacia\UI\CouncilScreen.cs	Reuniões anteriores
 Diplomacia\UI\CouncilScreen.cs	Reuniões anteriores · {0}
+Diplomacia\UI\ProvidersScreen.cs	Roda o login do próprio Codex: o navegador abre na página da OpenAI. Depois de entrar com a conta do ChatGPT, volte ao jogo. O login fica guardado no Codex.
 NativeUI\TradePostWindow.cs	Rotas aqui
 NativeUI\DiplomacyTradePolicyPanel.cs	Rotas comerciais desse império com terceiros que atravessam algum território seu. Só essas podem ser taxadas ou bloqueadas.
 NativeUI\TradePostWindow.cs	Rotas comerciais entre outros impérios que atravessam este território agora.
@@ -717,6 +873,8 @@ NativeUI\NativeBankWindow.cs	Rumo da inflação: {0}/turno
 CentralBankWindow.cs	SALDO
 CentralBankWindow.cs	SALDO (JURO REAL)
 Diplomacia\Council\CouncilEngine.cs	Saber é poder que não se rouba: invista nos sábios.
+Diplomacia\UI\ProvidersScreen.cs	Sair
+Diplomacia\UI\ProvidersScreen.cs	Sair desta conta
 NativeUI\NativeBankWindow.cs	Saldo {0}
 CentralBankWindow.cs	Saldo: <b>{0} {1}</b>
 NativeUI\NativeBankWindow.cs	Saldo: {0} {1}
@@ -728,10 +886,20 @@ NativeUI\DiplomacyTradePolicyPanel.cs	Se pagar sair mais caro que desviar, a rot
 Diplomacia\Council\CouncilBank.cs	Secretária de Estado
 Diplomacia\Council\CouncilBank.cs	Secretário de Estado
 CentralBankWindow.cs	Segura os preços
+Diplomacia\UI\ProvidersScreen.cs	Sem chave
+Diplomacia\Llm\Providers\ProviderTester.cs	Sem conexão com o provedor. Confira a internet.
+Diplomacia\Licenca\License.cs	Sem conexão com o servidor de licenças agora. A licença continua valendo pelo prazo offline.
+Diplomacia\Licenca\License.cs	Sem conexão com o servidor de licenças. Ativar precisa de internet; tente de novo.
+Diplomacia\UI\ProvidersScreen.cs	Sem conferir com o servidor há {0} dia(s); offline, ela vale por mais {1} dia(s).
 Diplomacia\UI\MailScreen.cs	Sem contatos
 Diplomacia\UI\CorrespondenceTab.cs	Sem correio
+Diplomacia\Llm\Providers\ProviderTester.cs	Sem crédito na conta. Adicione crédito no site do provedor.
+Diplomacia\UI\ProvidersScreen.cs	Sem ela, todo o resto do mod funciona (moeda, Banco Central, pedágios, 16 impérios) e as nações usam a IA nativa do jogo.
 Diplomacia\UI\InterceptedLettersTab.cs	Sem espião oculto em território estrangeiro, nenhuma carta é interceptada.
+Diplomacia\UI\ProvidersScreen.cs	Sem licença
+Diplomacia\UI\ProvidersScreen.cs	Sem licença ativa: as nações jogam com a IA nativa. Ative a chave em Licença, à esquerda.
 NativeUI\TradePostWindow.cs	Sem rotas aqui
+Diplomacia\UI\ProvidersScreen.cs	Sem teto
 Diplomacia\Council\CouncilBank.cs	Senescal
 Diplomacia\Council\CouncilBank.cs	Senhor dos Celeiros
 Diplomacia\Council\CouncilBank.cs	Senhora dos Celeiros
@@ -741,6 +909,9 @@ NativeUI\DiplomacyTradePolicyPanel.cs	Seus Postos Comerciais
 NativeUI\TradePostWindow.cs	Seus territórios
 Diplomacia\UI\CouncilScreen.cs	Simpatiza com {0}.
 Diplomacia\UI\CouncilScreen.cs	Simpatiza com {0}; desconfia de {1}.
+Diplomacia\UI\ProvidersScreen.cs	Site do Codex
+Diplomacia\UI\ProvidersScreen.cs	Site do Realpolitik
+Diplomacia\UI\ProvidersScreen.cs	Site do provedor
 Diplomacia\UI\CorrespondenceTab.cs	Situação
 NativeUI\TradePostWindow.cs	Situação neste posto
 NativeUI\DiplomacyTradePolicyPanel.cs	Situação nos seus postos
@@ -778,13 +949,22 @@ NativeUI\DiplomacyTradePolicyPanel.cs	Taxar
 NativeUI\DiplomacyTradePolicyPanel.cs	Taxar em todos os seus postos
 Diplomacia\Council\CouncilEngine.cs	Temos {0} espião(ões) em terra estrangeira, quietos por enquanto.
 Diplomacia\UI\CouncilScreen.cs	Tenta a reunião (ou a sua última fala) de novo.
+Diplomacia\Llm\Providers\CodexCli.cs	Termine o login no navegador que o Codex abriu.
+Diplomacia\Llm\Providers\OAuthLogin.cs	Termine o login no navegador.
 Diplomacia\Council\CouncilBank.cs	Tesoureira Real
 Diplomacia\Council\CouncilBank.cs	Tesoureira-Mor
 Diplomacia\Council\CouncilBank.cs	Tesoureiro Real
 Diplomacia\Council\CouncilBank.cs	Tesoureiro-Mor
 Diplomacia\Council\CouncilEngine.cs	Tesouro em {0} {1}, {2} por turno.
+Diplomacia\UI\ProvidersScreen.cs	Testando…
+Diplomacia\UI\ProvidersScreen.cs	Testar
+Diplomacia\UI\ProvidersScreen.cs	Testar conexão
+Diplomacia\UI\ProvidersScreen.cs	Testar conexão (conecte primeiro)
+Diplomacia\UI\ProvidersScreen.cs	Teto de gasto
+Diplomacia\UI\ProvidersScreen.cs	Teto de gasto por partida
 Diplomacia\UI\MailScreen.cs	Texto da carta
 Diplomacia\UI\CouncilScreen.cs	Tira o ministro do cargo e põe outra pessoa no lugar. Pede confirmação.
+Diplomacia\UI\ProvidersScreen.cs	Todas
 Diplomacia\UI\MailScreen.cs	Todas as cartas privadas e ultimatos que você já leu.
 Diplomacia\UI\InterceptedLettersTab.cs	Todas as cartas que os seus espiões já interceptaram nesta partida.
 Diplomacia\UI\MailScreen.cs	Todas as nações que conhecem quem escreveu leem. Serve de propaganda, aviso ou denúncia.
@@ -810,9 +990,11 @@ Diplomacia\UI\CorrespondenceTab.cs	Ultimato
 Diplomacia\UI\InterceptedLettersTab.cs	Ultimatos vão por enviado formal e declarações públicas todos leem: espião não intercepta.
 Diplomacia\Council\CouncilEngine.cs	Um acordo com eles abriria caminho.
 Trade\TradeGrievances.cs	Um império está bloqueando ou cobrando pedágio das rotas comerciais de outro nos seus postos comerciais.
+Diplomacia\UI\ProvidersScreen.cs	Um login só, e você usa DeepSeek, GPT, Gemini, GLM, Grok e outros com os créditos da sua conta no OpenRouter.
 Diplomacia\UI\CorrespondenceTab.cs	Um ultimato precisa de uma exigência.
 Diplomacia\UI\MailScreen.cs	Uma linha que resume a carta. Opcional.
 Diplomacia\Council\CouncilEngine.cs	Uma maravilha levaria o seu nome pelos séculos.
+Diplomacia\UI\ProvidersScreen.cs	Usa o Codex (app da OpenAI) instalado neste PC e a sua conta do ChatGPT: o uso sai da cota do Plus ou Pro, sem chave. No Plus, prefira o gpt-6-luna, que tem cota bem maior. O uso segue os termos da OpenAI.
 CentralBankWindow.cs	Usada pelo automático
 NativeUI\NativeBankWindow.cs	Usado nos valores: "Custa 500 Reais". Em branco, é deduzido do nome.
 NativeUI\TradePostWindow.cs	Vale na próxima ação
@@ -821,6 +1003,8 @@ NativeUI\NativeBankWindow.cs	Valor da sua moeda comparado à média do mundo (1,
 ▲ subiu desde o turno passado, ▼ caiu.
 Diplomacia\UI\MailScreen.cs	Vence no turno {0}
 Diplomacia\UI\MailScreen.cs	Venceu no turno {0}
+Diplomacia\UI\ProvidersScreen.cs	Verificar
+Diplomacia\UI\ProvidersScreen.cs	Versão {0} disponível (você tem a {1})
 CentralBankWindow.cs	Visão geral
 Diplomacia\UI\CorrespondenceTab.cs	Você
 Diplomacia\UI\MailScreen.cs	Você ainda não conhece nenhuma nação
@@ -837,8 +1021,10 @@ Diplomacia\UI\CouncilScreen.cs	Você responde à reunião deste turno. No próxi
 Diplomacia\UI\MailScreen.cs	Você · a todas as nações
 Diplomacia\UI\CouncilScreen.cs	Você: {0}
 Diplomacia\UI\CorrespondenceTab.cs	Vocês ainda não trocaram cartas. Escreva a primeira no painel ao lado.
+Diplomacia\UI\ProvidersScreen.cs	Voltar
 Diplomacia\UI\MailScreen.cs	Voltar a aceitar cartas
 Diplomacia\UI\CouncilScreen.cs	Voltar ao jogo
+Diplomacia\Llm\Providers\OAuthLogin.cs	Volte ao jogo e tente de novo.
 Diplomacia\UI\CouncilScreen.cs	Voz: {0}
 Diplomacia\Council\CouncilBank.cs	Xamã
 Diplomacia\UI\MailScreen.cs	a todos
@@ -863,6 +1049,7 @@ NativeUI\TradePostWindow.cs	calculando…
 Diplomacia\IaModule.cs	carta vazia
 Diplomacia\Council\CouncilBank.cs	cautelosa
 Diplomacia\Council\CouncilBank.cs	cauteloso
+Diplomacia\Llm\Providers\ProviderRouter.cs	chave ou login recusado
 Diplomacia\UI\MailScreen.cs	chegou no turno {0}
 Diplomacia\Council\CouncilBank.cs	cita os sábios antigos
 Diplomacia\Council\CouncilBank.cs	cita versos e intrigas
@@ -870,6 +1057,7 @@ Diplomacia\Council\CouncilBank.cs	cobra cada dívida
 Diplomacia\Council\CouncilBank.cs	conta lanças e cavalos
 Diplomacia\Council\CouncilBank.cs	conta moedas enquanto fala
 Diplomacia\Council\CouncilBank.cs	corta discursos e vai ao ponto
+Diplomacia\UI\ProvidersScreen.cs	crédito: US$ {0:0.00}
 Diplomacia\Council\CouncilEngine.cs	de dinheiro
 Diplomacia\Council\CouncilBank.cs	defende o trono com a vida
 Diplomacia\Council\CouncilBank.cs	defende os fracos
@@ -887,6 +1075,7 @@ NativeUI\NativeBankWindow.cs	dívida
 Diplomacia\UI\CouncilScreen.cs	e
 Diplomacia\Council\CouncilBank.cs	elogia o trono antes de pedir algo
 Diplomacia\GameText.cs	era desconhecida
+Diplomacia\Llm\Providers\ProviderRouter.cs	erro
 Diplomacia\UI\CouncilScreen.cs	erro desconhecido
 NativeUI\NativeBankWindow.cs	estabilidade alta
 NativeUI\NativeBankWindow.cs	estabilidade baixa
@@ -908,6 +1097,7 @@ Diplomacia\Council\CouncilBank.cs	gananciosa
 Diplomacia\Council\CouncilBank.cs	ganancioso
 Diplomacia\Council\CouncilBank.cs	generosa
 Diplomacia\Council\CouncilBank.cs	generoso
+Diplomacia\UI\ProvidersScreen.cs	grátis
 Diplomacia\Council\CouncilBank.cs	guarda os segredos do trono
 Diplomacia\Council\CouncilBank.cs	honesta
 Diplomacia\Council\CouncilBank.cs	honesto
@@ -924,12 +1114,14 @@ Diplomacia\Council\CouncilBank.cs	jurou servir e cumpre
 Diplomacia\Council\CouncilBank.cs	leal
 Diplomacia\Council\CouncilBank.cs	lembra cada desfeita
 Diplomacia\Council\CouncilBank.cs	lembra os feitos dos antepassados
+Diplomacia\Llm\Providers\ProviderRouter.cs	limite de chamadas por minuto
 Diplomacia\Council\CouncilBank.cs	mede riscos em voz alta
 Diplomacia\Delivery.cs	mensageiro
 Diplomacia\Delivery.cs	mensageiro a cavalo
 Diplomacia\Council\CouncilBank.cs	mira o próprio cargo acima de tudo
 Diplomacia\UI\InterceptedLettersTab.cs	média
 Diplomacia\Council\CouncilBank.cs	negocia até a última moeda
+Diplomacia\UI\ProvidersScreen.cs	nenhum provedor
 Diplomacia\UI\InterceptedLettersTab.cs	nenhuma
 Diplomacia\UI\CouncilScreen.cs	ninguém
 Diplomacia\Council\PlayerCouncil.cs	ninguém nessa pasta
@@ -954,6 +1146,7 @@ Diplomacia\Council\CouncilBank.cs	passional
 Diplomacia\Council\PlayerCouncil.cs	pasta desconhecida ({0})
 Diplomacia\Council\CouncilBank.cs	pede paz e esmola
 Diplomacia\Council\CouncilBank.cs	pede tempo e dados antes de opinar
+Diplomacia\Llm\Providers\ProviderRouter.cs	pedido recusado (modelo?)
 Diplomacia\Council\CouncilBank.cs	pensa nas colheitas
 Diplomacia\Council\CouncilBank.cs	pergunta sempre quanto rende
 Diplomacia\Council\CouncilBank.cs	pondera cada palavra
@@ -980,16 +1173,20 @@ NativeUI\TradePostWindow.cs	rota com {0} (sai das suas terras)
 Diplomacia\Delivery.cs	rádio
 Diplomacia\Council\CouncilBank.cs	sabe o preço de tudo
 Diplomacia\Council\CouncilBank.cs	se emociona com a glória do trono
+Diplomacia\Llm\Providers\ProviderRouter.cs	sem conexão
+Diplomacia\Llm\Providers\ProviderRouter.cs	sem crédito ou cota
 Diplomacia\IaModule.cs	sem partida
 Diplomacia\UI\InterceptedLettersTab.cs	sem poder agir (acordo com eles)
 Diplomacia\Council\PlayerCouncil.cs	sem reunião neste turno
 Diplomacia\Council\CouncilBank.cs	serve por dever
+Diplomacia\Llm\Providers\ProviderRouter.cs	servidor do provedor com erro
 Diplomacia\Council\CouncilBank.cs	sonha com um império maior
 Diplomacia\Council\CouncilBank.cs	sorri antes de discordar
 Diplomacia\Council\CouncilBank.cs	só fala em números
 Diplomacia\Delivery.cs	telégrafo
 Diplomacia\Council\CouncilBank.cs	teme a ira do céu
 Diplomacia\Council\CouncilBank.cs	teme espiões em todo canto
+Diplomacia\UI\ProvidersScreen.cs	testada no jogo {0}
 Diplomacia\Council\CouncilBank.cs	trata a guerra como aritmética
 Diplomacia\Council\CouncilBank.cs	trata vizinhos como vassalos futuros
 Diplomacia\UI\CorrespondenceTab.cs	turno {0}
@@ -1012,6 +1209,7 @@ Diplomacia\UI\CorrespondenceTab.cs	{0} cartas novas desta nação.
 Diplomacia\UI\MailButton.cs	{0} cartas novas.
 Diplomacia\Council\CouncilEngine.cs	{0} cidade(s) nossa(s) sob cerco: isso vem antes de qualquer outra coisa.
 Diplomacia\UI\CouncilScreen.cs	{0} com apreço por você
+Diplomacia\UI\ProvidersScreen.cs	{0} da fila: assume se os de cima derem erro.
 NativeUI\DiplomacyTradePolicyPanel.cs	{0} de {1} rotas deles pagam
 Diplomacia\UI\CouncilScreen.cs	{0} demitido; no lugar entra {1}
 NativeUI\TradePostWindow.cs	{0} desviam
@@ -1042,12 +1240,15 @@ Diplomacia\Council\CouncilEngine.cs	{0} é gente de palavra.
 Diplomacia\UI\InterceptedLettersTab.cs	{0}, em {1}, pegou a carta antes de chegar a quem ia receber.
 Diplomacia\UI\InterceptedLettersTab.cs	{0}, em {1}, pegou a carta quando saía de quem escreveu.
 Diplomacia\UI\CorrespondenceTab.cs	{0}/{1} palavras
+Diplomacia\UI\ProvidersScreen.cs	{0}: reserva
 Diplomacia\Council\CouncilEngine.cs	É pouco para o tamanho do reino.
 NativeUI\NativeBankWindow.cs	Índice de preços
 CentralBankWindow.cs	Índice de preços: {0}  ·  PIB estimado: {1}  ·  Estabilidade: {2}%
 CentralBankWindow.cs	ÚLTIMO FIM DE TURNO
+Diplomacia\UI\ProvidersScreen.cs	Último erro: {0}
 Diplomacia\UI\MailScreen.cs	Últimos 15 turnos
 Diplomacia\UI\MailScreen.cs	Últimos 30 turnos
 Diplomacia\UI\MailScreen.cs	Últimos 5 turnos
 CentralBankWindow.cs	▲ {0} no turno
 CentralBankWindow.cs	▼ {0} no turno
+Diplomacia\UI\ProvidersScreen.cs	★ = recomendado. O valor é uma estimativa por turno com 16 impérios, pelo preço oficial (o gasto real aparece no F10). "Testar conexão" traz a lista completa da sua conta.

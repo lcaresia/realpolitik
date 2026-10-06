@@ -11,6 +11,8 @@ namespace CurrencyMod
     {
         public const string PluginName = "CurrencyMod";
         public const string PluginVersion = "1.1.0";
+        /// <summary>Versão do produto (Realpolitik): instalador, loja e aviso de atualização. As DLLs têm a própria.</summary>
+        public const string ProductVersion = "1.0.0";
 
         internal static ManualLogSource Log;
         internal static ConfigEntry<KeyboardShortcut> ToggleWindowKey;
@@ -75,6 +77,7 @@ namespace CurrencyMod
 
             // As travas da IA nativa entram já com a tabela da geração anterior (ver NativeAiLocks.Carry).
             Diplomacia.NativeAiLocks.RestoreCarried();
+            Diplomacia.Licenca.License.Init();
             harmony = new Harmony(HarmonyId);
             ApplyPatches(log);
             host.AddComponent<CentralBankWindow>();
