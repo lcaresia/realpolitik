@@ -1,0 +1,20 @@
+Realpolitik: Living Nations for HUMANKIND - third-party components
+===================================================================
+
+Included unmodified, from the official BepInEx 5.4.23.5 x64 release:
+https://github.com/BepInEx/BepInEx/releases/tag/v5.4.23.5
+(BepInEx_win_x64_5.4.23.5.zip, sha256 82f9878551030f54657792c0740d9d51a09500eeae1fba21106b0c441e6732c4)
+
+- BepInEx 5.4.23.5 ............ MIT ........ licencas/BepInEx-LICENSE.txt
+  https://github.com/BepInEx/BepInEx
+- UnityDoorstop (winhttp.dll) .. LGPL-2.1 ... licencas/UnityDoorstop-LICENSE.txt
+  https://github.com/NeighTools/UnityDoorstop
+  You may replace winhttp.dll with your own build of UnityDoorstop.
+- HarmonyX 2.9.0 ............... MIT ........ licencas/HarmonyX-LICENSE.txt
+  https://github.com/BepInEx/HarmonyX
+- MonoMod 22.1.29.1 ............ MIT ........ licencas/MonoMod-LICENSE.txt
+  https://github.com/MonoMod/MonoMod
+- Mono.Cecil 0.10.4 ............ MIT ........ licencas/Mono.Cecil-LICENSE.txt
+  https://github.com/jbevain/cecil
+
+No files from HUMANKIND (Amplitude Studios / SEGA) are included.

@@ -1086,11 +1086,8 @@ namespace CurrencyMod.Diplomacia.UI
             bool update = License.UpdateAvailable;
             if (update)
             {
-                string game = License.GameVersion;
-                bool untested = !string.IsNullOrEmpty(License.LatestTestedGame) && !string.IsNullOrEmpty(game) && License.LatestTestedGame != game;
                 SetRowLabel(licenseUpdateRow,
-                    L.F("Versão {0} disponível (você tem a {1})", License.LatestVersion, Plugin.ProductVersion)
-                        + (untested ? $"  <c={Gold}>{L.F("testada no jogo {0}", License.LatestTestedGame)}</c>" : string.Empty),
+                    L.F("Versão {0} disponível (você tem a {1})", License.LatestVersion, Plugin.ProductVersion),
                     L.T("Atualização"),
                     (string.IsNullOrEmpty(License.LatestNotes) ? string.Empty : License.LatestNotes + "\n")
                         + L.T("Abre a página de download no navegador. Instale por cima: configurações, chaves e saves ficam."));

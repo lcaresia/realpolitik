@@ -1,0 +1,39 @@
+REALPOLITIK: LIVING NATIONS FOR HUMANKIND
+=========================================
+
+CONFIGURATION REQUISE
+- HUMANKIND sous Windows (Steam ou Epic), en solo.
+- Internet uniquement pour activer la licence et pour la Diplomatie IA.
+
+INSTALLER
+- Setup : lancez Realpolitik_Setup.exe. Il trouve le jeu et installe BepInEx si besoin.
+  Si Windows affiche « Windows a protégé votre ordinateur », cliquez sur « Informations
+  complémentaires » -> « Exécuter quand même ».
+- Manuel (zip) : fermez le jeu, extrayez le zip DANS le dossier du jeu (celui qui contient
+  Humankind.exe) et acceptez de fusionner le dossier BepInEx.
+
+ACTIVER
+1. Ouvrez le jeu -> menu principal -> Diplomatie IA -> Licence.
+2. Collez votre clé (RPLN-XXXXX-XXXXX-XXXXX-XXXXX) et cliquez sur Activer.
+   Valable sur 3 PC maximum. Pour changer de PC, utilisez « Libérer ce PC » sur l'ancien.
+3. Choisissez un fournisseur d'IA à gauche (le plus simple est OpenRouter : une connexion, sans clé).
+Sans licence, tout le reste fonctionne (monnaie, Banque centrale, péages, 16 empires) et les
+nations utilisent l'IA native du jeu.
+
+METTRE À JOUR
+Installez la nouvelle version par-dessus. Réglages, clés et sauvegardes sont conservés.
+
+DÉSINSTALLER
+Paramètres Windows -> Applications -> « Realpolitik: Living Nations for HUMANKIND ».
+Le désinstallateur demande s'il faut garder vos réglages et clés. Les sauvegardes ne sont jamais supprimées.
+
+STEAM DECK / LINUX
+Utilisez le zip. Dans Steam : HUMANKIND -> Propriétés -> Options de lancement :
+  WINEDLLOVERRIDES="winhttp=n,b" %command%
+
+PROBLÈMES
+- Le mod ne se charge pas : cherchez « CurrencyMod » et « Núcleo carregado » dans BepInEx\LogOutput.log.
+- L'antivirus a supprimé winhttp.dll : restaurez-le (c'est le chargeur de BepInEx) et ajoutez une exception.
+- Les sauvegardes de plus de 10 empires ne s'ouvrent qu'avec le mod installé.
+- Clé perdue : realpolitik-living-nations.pages.dev/download.html (e-mail de l'achat +
+  numéro du reçu Stripe).

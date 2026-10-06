@@ -1,0 +1,19 @@
+﻿REALPOLITIK: LIVING NATIONS FOR HUMANKIND - TERMOS
+
+O que você compra
+Uma licença única do Realpolitik: Living Nations, para uso pessoal e não comercial. A chave de licença ativa a Diplomacia IA em até 3 PCs ao mesmo tempo; você pode liberar um PC pelo próprio jogo (até 3 vezes a cada 30 dias). As atualizações são grátis: baixe qualquer versão na página de download com a sua chave.
+
+Reembolso
+Reembolso em até 7 dias após a compra, uma vez por cliente. Um pedido reembolsado ou contestado desativa a chave de licença.
+
+Custos da IA
+O preço cobre só o mod. A Diplomacia IA usa um provedor escolhido por você; qualquer cobrança de uso é entre você e esse provedor. Há um teto de gasto por partida.
+
+Mod não oficial
+Este é um mod não oficial, feito por fã, para HUMANKIND. Não tem vínculo nem aprovação da Amplitude Studios ou da SEGA. Você precisa ter o HUMANKIND. Só um jogador.
+
+Componentes de código aberto
+O mod vem com componentes de código aberto: BepInEx, HarmonyX, MonoMod e Mono.Cecil (MIT) e UnityDoorstop (LGPL-2.1). As licenças deles, na pasta "licencas", valem para esses componentes, inclusive o direito de modificá-los e fazer engenharia reversa como elas permitem.
+
+Sem garantia
+O mod é fornecido como está. Faça backup dos seus saves.

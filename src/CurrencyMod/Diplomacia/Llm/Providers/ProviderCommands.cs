@@ -44,13 +44,13 @@ namespace CurrencyMod.Diplomacia.Llm.Providers
                         MaxTokens = 50,
                         JsonMode = true,
                     };
-                    var fake = new Credential { Key = "sk-teste-chave-invalida-0000000000000000" };
+                    var fake = new Credential { Key = "teste-chave-invalida-0000000000000000" };
                     ChatResult result = ProviderRouter.SendWith(provider, request, 30, fake);
                     return $"{(result.Ok ? "ok?!" : "erro esperado")}: {result.Kind} · {ProviderTester.Explain(provider, result)} · ({result.Error})";
                 }
                 case "chave-falsa" when provider != null:
                     // Só testes da fila: grava uma chave que o provedor recusa (nunca uma chave de verdade por aqui).
-                    Credentials.Save(provider.Id, new Credential { Key = "sk-teste-chave-falsa-000000000000" });
+                    Credentials.Save(provider.Id, new Credential { Key = "teste-chave-falsa-000000000000" });
                     return $"ok: {provider.Id} com chave falsa (apague com 'ia provedor apagar {provider.Id}')";
                 case "apagar" when provider != null:
                     Credentials.Delete(provider.Id);
@@ -78,7 +78,7 @@ namespace CurrencyMod.Diplomacia.Llm.Providers
                         ChatUrl = "https://sem-rede.invalid/v1/chat/completions", Models = provider.Models, JsonObject = provider.JsonObject,
                     };
                     var request = new ChatRequest { Messages = { new ChatMessage("user", "{}") }, MaxTokens = 10, JsonMode = true };
-                    ChatResult result = ProviderRouter.SendWith(offline, request, 15, new Credential { Key = "sk-teste-0000000000000000" });
+                    ChatResult result = ProviderRouter.SendWith(offline, request, 15, new Credential { Key = "teste-chave-0000000000000000" });
                     return $"{result.Kind} · {ProviderTester.Explain(offline, result)} · ({result.Error})";
                 }
                 case "login-teste" when provider != null:
