@@ -1,0 +1,328 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Diplomacia IA</title>
+<style>
+  :root {
+    --bg: #14161a; --panel: #1c1f25; --panel2: #23272f; --line: #2f3440; --text: #e6e2d8; --muted: #9a9688;
+    --gold: #e3b65a; --gold2: #b8902f; --green: #6fbf73; --red: #e06c5f; --blue: #6aa6e0; --violet: #b48be0; --amber: #e0a84a;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; background: var(--bg); color: var(--text); font: 14px/1.45 "Segoe UI", system-ui, sans-serif; }
+  header { display: flex; align-items: center; gap: 18px; padding: 10px 18px; background: var(--panel); border-bottom: 1px solid var(--line); flex-wrap: wrap; }
+  header h1 { margin: 0; font-size: 17px; letter-spacing: .04em; color: var(--gold); font-weight: 600; }
+  .chip { padding: 2px 10px; border-radius: 999px; font-size: 12px; border: 1px solid var(--line); background: var(--panel2); white-space: nowrap; }
+  .chip.ok { color: var(--green); border-color: #35553a; }
+  .chip.warn { color: var(--amber); border-color: #5a4a2a; }
+  .chip.err { color: var(--red); border-color: #5c302b; }
+  .stat { color: var(--muted); font-size: 12.5px; white-space: nowrap; }
+  .stat b { color: var(--text); font-weight: 600; }
+  .layout { display: grid; grid-template-columns: 270px 1fr; height: calc(100% - 50px); }
+  aside { border-right: 1px solid var(--line); overflow-y: auto; background: #171a1f; }
+  .navsec { padding: 10px 14px 4px; font-size: 11px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
+  .nation { display: block; width: 100%; text-align: left; border: 0; background: transparent; color: var(--text); padding: 9px 14px; cursor: pointer; border-left: 3px solid transparent; font: inherit; }
+  .nation:hover { background: var(--panel); }
+  .nation.sel { background: var(--panel2); border-left-color: var(--gold); }
+  .nation .top { display: flex; align-items: center; gap: 8px; }
+  .nation .name { font-weight: 600; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .nation .sub { color: var(--muted); font-size: 12px; margin-left: 16px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: #555; flex: none; }
+  .dot.ok { background: var(--green); } .dot.busy { background: var(--amber); animation: pulse 1s infinite; } .dot.err { background: var(--red); }
+  @keyframes pulse { 50% { opacity: .35; } }
+  .handle { font-family: Consolas, monospace; font-size: 11.5px; color: var(--gold2); }
+  main { overflow-y: auto; padding: 16px 22px 40px; }
+  .tabs { display: flex; gap: 4px; flex-wrap: wrap; border-bottom: 1px solid var(--line); margin-bottom: 14px; }
+  .tab { border: 0; background: transparent; color: var(--muted); padding: 8px 12px; cursor: pointer; font: inherit; border-bottom: 2px solid transparent; }
+  .tab:hover { color: var(--text); }
+  .tab.sel { color: var(--gold); border-bottom-color: var(--gold); }
+  h2 { margin: 2px 0 4px; font-size: 20px; font-weight: 600; }
+  .lead { color: var(--muted); margin-bottom: 12px; }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; margin-bottom: 10px; }
+  .card .meta { color: var(--muted); font-size: 12px; margin-bottom: 6px; display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+  .card .subject { font-weight: 600; margin-bottom: 4px; }
+  .letter-text, .diary-text { white-space: pre-wrap; }
+  .badge { font-size: 11px; padding: 1px 8px; border-radius: 999px; border: 1px solid var(--line); }
+  .badge.privada { color: var(--blue); } .badge.publica { color: var(--violet); } .badge.ultimato { color: var(--red); }
+  .badge.transit { color: var(--amber); }
+  pre { white-space: pre-wrap; word-break: break-word; background: #101215; border: 1px solid var(--line); border-radius: 8px; padding: 12px; font: 12.5px/1.5 Consolas, monospace; color: #d6d2c4; margin: 0 0 12px; }
+  table { border-collapse: collapse; width: 100%; font-size: 13px; }
+  th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--muted); font-weight: 500; font-size: 12px; }
+  .bar { position: relative; width: 120px; height: 8px; background: #2a2e36; border-radius: 4px; overflow: hidden; display: inline-block; vertical-align: middle; }
+  .bar i { position: absolute; top: 0; bottom: 0; }
+  .num { font-family: Consolas, monospace; font-size: 12px; color: var(--muted); margin-left: 6px; }
+  .empty { color: var(--muted); padding: 18px 0; }
+  .err-text { color: var(--red); white-space: pre-wrap; }
+  .warn-text { color: var(--amber); }
+  form .row { display: flex; gap: 12px; margin-bottom: 10px; flex-wrap: wrap; }
+  label { display: flex; flex-direction: column; gap: 4px; color: var(--muted); font-size: 12px; }
+  input, select, textarea { background: #101215; color: var(--text); border: 1px solid var(--line); border-radius: 6px; padding: 7px 9px; font: inherit; }
+  textarea { width: 100%; min-height: 200px; resize: vertical; }
+  button.primary { background: var(--gold); color: #1a1408; border: 0; border-radius: 6px; padding: 8px 16px; font-weight: 600; cursor: pointer; font: inherit; }
+  button.ghost { background: transparent; color: var(--gold); border: 1px solid var(--gold2); border-radius: 6px; padding: 6px 12px; cursor: pointer; font: inherit; }
+  .feedback { margin-left: 10px; color: var(--green); }
+  .traits span { display: inline-block; margin: 0 6px 6px 0; padding: 2px 9px; border-radius: 999px; background: var(--panel2); border: 1px solid var(--line); font-size: 12.5px; }
+  details summary { cursor: pointer; color: var(--gold); margin: 6px 0; }
+  .events div { font-family: Consolas, monospace; font-size: 12px; padding: 3px 0; border-bottom: 1px solid #22262d; }
+  .toggle { display: flex; flex-direction: row; align-items: center; gap: 6px; color: var(--muted); font-size: 12.5px; cursor: pointer; margin-left: auto; }
+  body:not(.backstage) .backstage-only { display: none; }
+  .badge.nova { color: var(--green); border-color: #35553a; }
+  .letter-actions { margin-top: 8px; }
+  .status-line { font-size: 12px; color: var(--muted); }
+  @media (max-width: 760px) { .layout { grid-template-columns: 1fr; } aside { max-height: 230px; border-right: 0; border-bottom: 1px solid var(--line); } }
+</style>
+</head>
+<body>
+<header>
+  <h1>Diplomacia IA</h1>
+  <span id="status" class="chip">carregando…</span>
+  <span class="stat">Turno <b id="turn">–</b></span>
+  <span class="stat">Gasto <b id="cost">–</b></span>
+  <span class="stat">Chamadas <b id="calls">–</b></span>
+  <span class="stat">Cache <b id="cache">–</b></span>
+  <span class="stat">Pensando <b id="busy">–</b></span>
+  <label class="toggle" title="Bastidores: diários secretos, cartas entre as IAs e cartas ainda a caminho. Desligue para jogar sem spoiler."><input type="checkbox" id="backstage"> Bastidores</label>
+</header>
+<div class="layout">
+  <aside>
+    <div class="navsec">Você</div>
+    <button class="nation" data-global="inbox"><div class="top"><span class="name">Sua correspondência</span><span id="newCount" class="badge transit" style="display:none"></span></div><div class="sub">cartas que chegaram e as que você mandou</div></button>
+    <button class="nation" data-global="write"><div class="top"><span class="name">Escrever carta</span></div><div class="sub">você → uma nação</div></button>
+    <div class="backstage-only">
+      <div class="navsec">Bastidores</div>
+      <button class="nation" data-global="mail"><div class="top"><span class="name">Correio do mundo</span></div><div class="sub">todas as cartas, inclusive a caminho</div></button>
+      <button class="nation" data-global="events"><div class="top"><span class="name">Eventos</span></div><div class="sub">o que o mod fez</div></button>
+      <div class="navsec">Nações</div>
+      <div id="nations"></div>
+    </div>
+  </aside>
+  <main id="main"></main>
+</div>
+<script>
+const TOKEN = "__TOKEN__";
+let state = null, version = -1, view = { global: "inbox", nation: null, tab: "diario", replyTo: null, replySubject: "" }, detail = {}, detailVersion = {};
+let backstage = true;
+try { backstage = localStorage.getItem("dia.backstage") !== "0"; } catch (e) { }
+const $ = s => document.querySelector(s);
+const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const money = v => "US$ " + (v || 0).toFixed(v < 1 ? 4 : 2);
+const nationName = i => { if (i === -1) return "Todos (pública)"; const n = state && state.nations.find(x => x.index === i); return n ? n.name : "Nação " + i; };
+const handleOf = i => i === -1 ? "todos" : "E" + i;
+
+async function poll() {
+  try {
+    const r = await fetch("/api/state", { cache: "no-store" });
+    const s = await r.json();
+    if (s.version !== version) { state = s; version = s.version; renderHeader(); renderNations(); renderMain(false); }
+    if (view.nation !== null) await loadDetail(view.nation);
+  } catch (e) {
+    $("#status").className = "chip err"; $("#status").textContent = "jogo fechado ou mod recarregando";
+  }
+  setTimeout(poll, 2500);
+}
+
+async function loadDetail(i) {
+  const n = state && state.nations.find(x => x.index === i);
+  if (!n || detailVersion[i] === n.detailVersion) return;
+  try {
+    const r = await fetch("/api/detail?e=" + i, { cache: "no-store" });
+    detail[i] = await r.json(); detailVersion[i] = n.detailVersion;
+    if (["persona", "dossie", "prompt", "resposta", "chamadas"].includes(view.tab)) renderMain(true);
+  } catch (e) { }
+}
+
+function renderHeader() {
+  const st = $("#status");
+  st.className = "chip " + (state.statusLevel || "");
+  st.textContent = state.status;
+  st.title = state.statusDetail || "";
+  $("#turn").textContent = state.turn >= 0 ? state.turn : "–";
+  $("#cost").textContent = money(state.cost) + (state.cap ? " / " + money(state.cap) : "");
+  $("#calls").textContent = state.calls;
+  const prompt = state.promptTokens || 0;
+  $("#cache").textContent = prompt ? Math.round(100 * state.cacheHitTokens / prompt) + "%" : "–";
+  $("#busy").textContent = state.inFlight;
+}
+
+function renderNations() {
+  const box = $("#nations");
+  box.innerHTML = state.nations.map(n => {
+    const dot = n.state === "pensando" ? "busy" : n.state === "erro" ? "err" : n.state === "ok" ? "ok" : "";
+    const sel = view.nation === n.index ? " sel" : "";
+    return `<button class="nation${sel}" data-nation="${n.index}">
+      <div class="top"><span class="dot ${dot}"></span><span class="name">${esc(n.name)}</span><span class="handle">${handleOf(n.index)}</span></div>
+      <div class="sub">${n.isHuman ? "você · " : ""}${esc(n.culture || "")}${n.era ? " · " + esc(n.era) : ""}</div></button>`;
+  }).join("");
+  document.querySelectorAll("[data-global]").forEach(b => b.classList.toggle("sel", view.nation === null && view.global === b.dataset.global));
+}
+
+function applyBackstage() {
+  document.body.classList.toggle("backstage", backstage);
+  $("#backstage").checked = backstage;
+  if (!backstage && (view.nation !== null || view.global === "mail" || view.global === "events")) { view.nation = null; view.global = "inbox"; }
+}
+$("#backstage").addEventListener("change", e => {
+  backstage = e.target.checked;
+  try { localStorage.setItem("dia.backstage", backstage ? "1" : "0"); } catch (err) { }
+  applyBackstage(); renderNations(); renderMain(false);
+});
+applyBackstage();
+
+document.addEventListener("click", e => {
+  const reply = e.target.closest("[data-reply]");
+  if (reply) {
+    view.global = "write"; view.nation = null; view.replyTo = +reply.dataset.reply; view.replySubject = reply.dataset.subject || "";
+    $("#main").innerHTML = ""; renderNations(); renderMain(false); return;
+  }
+  const g = e.target.closest("[data-global]");
+  if (g) { view.global = g.dataset.global; view.nation = null; renderNations(); renderMain(false); return; }
+  const n = e.target.closest("[data-nation]");
+  if (n) { view.nation = +n.dataset.nation; renderNations(); renderMain(false); loadDetail(view.nation); return; }
+  const t = e.target.closest("[data-tab]");
+  if (t) { view.tab = t.dataset.tab; renderMain(false); }
+});
+
+function renderMain(fromDetail) {
+  if (!state) return;
+  const main = $("#main");
+  if (fromDetail && document.activeElement && main.contains(document.activeElement) && document.activeElement.tagName !== "BUTTON") return;
+  updateNewCount();
+  if (view.nation === null) {
+    if (view.global === "write") { if (!main.querySelector("#letterForm")) main.innerHTML = writeView(); return; }
+    if (view.global === "inbox") { main.innerHTML = inboxView(); return; }
+    main.innerHTML = view.global === "events" ? eventsView() : mailView(state.letters, "Correio do mundo", "Todas as cartas trocadas, inclusive entre as IAs. As que estão a caminho chegam no turno indicado.");
+    return;
+  }
+  const n = state.nations.find(x => x.index === view.nation);
+  if (!n) { main.innerHTML = '<div class="empty">Nação não encontrada.</div>'; return; }
+  const tabs = [["diario", "Diário"], ["cartas", "Cartas"], ["acoes", "Ações"], ["sentimentos", "Sentimentos"], ["memoria", "Memória"], ["persona", "Persona"], ["dossie", "Dossiê"], ["prompt", "Prompt"], ["resposta", "Resposta"], ["chamadas", "Chamadas"]];
+  let html = `<h2>${esc(n.name)} <span class="handle">${handleOf(n.index)}</span></h2>
+    <div class="lead">${n.isHuman ? "Você. " : ""}${esc(n.leader || "")}${n.leader ? " · " : ""}${esc(n.culture || "")} · ${esc(n.era || "")}${n.lastTurn >= 0 ? " · última decisão no turno " + n.lastTurn : " · ainda não decidiu"}${n.error ? ' · <span class="err-text">' + esc(n.error) + "</span>" : ""}</div>
+    <div class="tabs">${tabs.map(([k, l]) => `<button class="tab${view.tab === k ? " sel" : ""}" data-tab="${k}">${l}</button>`).join("")}</div>`;
+  html += nationTab(n);
+  main.innerHTML = html;
+}
+
+function nationTab(n) {
+  const d = detail[n.index] || {};
+  switch (view.tab) {
+    case "diario":
+      return n.diary.length ? n.diary.slice().reverse().map(x => `<div class="card"><div class="meta">Turno ${x.turn}</div><div class="diary-text">${esc(x.text)}</div></div>`).join("") : '<div class="empty">Diário vazio.</div>';
+    case "cartas":
+      return mailView(state.letters.filter(l => l.from === n.index || l.to === n.index || (l.to === -1 && l.from !== n.index)), null, null);
+    case "acoes":
+      return n.actions.length ? `<table><tr><th>Turno</th><th>Ação</th><th>Resumo</th><th>Situação</th></tr>${n.actions.slice().reverse().map(a => `<tr><td>${a.turn}</td><td>${esc(a.name)}</td><td>${esc(a.summary)}<details><summary>json</summary><pre>${esc(a.json)}</pre></details></td><td class="warn-text">${esc(a.status)}</td></tr>`).join("")}</table>` : '<div class="empty">Nenhuma ação ainda.</div>';
+    case "sentimentos":
+      return n.feelings.length ? `<table><tr><th>Sobre</th><th>Afeição</th><th>Confiança</th><th>Medo</th><th>Raiva</th><th>Motivo</th></tr>${n.feelings.map(f => `<tr><td>${esc(nationName(f.other))} <span class="handle">${handleOf(f.other)}</span></td><td>${bar(f.affection, true)}</td><td>${bar(f.trust, true)}</td><td>${bar(f.fear, false)}</td><td>${bar(f.anger, false)}</td><td>${esc(f.reason || "")}<div class="num">turno ${f.turn}</div></td></tr>`).join("")}</table>` : '<div class="empty">Sem sentimentos registrados.</div>';
+    case "memoria":
+      return n.notes.length ? n.notes.slice().reverse().map(x => `<div class="card"><div class="meta">Turno ${x.turn}${x.about >= 0 ? " · sobre " + esc(nationName(x.about)) : ""}</div>${esc(x.text)}</div>`).join("") : '<div class="empty">Sem memórias ainda.</div>';
+    case "persona":
+      return `<div class="card"><div class="subject">${esc(n.leader || "?")}</div><div class="traits">${(n.traits || []).map(t => `<span>${esc(t)}</span>`).join("")}</div>${n.quirk ? `<div>${esc(n.quirk)}</div>` : ""}</div>${d.persona ? `<pre>${esc(d.persona)}</pre>` : ""}`;
+    case "dossie":
+      return d.dossier ? `<div class="lead">Turno ${d.turn}. Exatamente o que esta nação sabe.</div><pre>${esc(d.dossier)}</pre>` : '<div class="empty">Ainda sem dossiê.</div>';
+    case "prompt":
+      return d.system ? `<details><summary>Mensagem de sistema (regras + persona)</summary><pre>${esc(d.system)}</pre></details><div class="lead">Mensagem do turno</div><pre>${esc(d.user)}</pre>` : '<div class="empty">Ainda sem prompt.</div>';
+    case "resposta":
+      return d.raw || d.reasoning ? `<div class="lead">Resposta (json)</div><pre>${esc(pretty(d.raw))}</pre>${d.reasoning ? `<details><summary>Raciocínio do modelo</summary><pre>${esc(d.reasoning)}</pre></details>` : ""}${d.errors && d.errors.length ? `<div class="err-text">${esc(d.errors.join("\n"))}</div>` : ""}${d.warnings && d.warnings.length ? `<div class="warn-text">Avisos: ${esc(d.warnings.join("; "))}</div>` : ""}` : '<div class="empty">Ainda sem resposta.</div>';
+    case "chamadas":
+      return d.calls && d.calls.length ? `<table><tr><th>Turno</th><th>Tent.</th><th>Tempo</th><th>Entrada (cache)</th><th>Saída (raciocínio)</th><th>Custo</th><th>Resultado</th></tr>${d.calls.slice().reverse().map(c => `<tr><td>${c.turn}</td><td>${c.attempt}</td><td>${c.seconds.toFixed(1)} s</td><td>${c.prompt} (${c.hit})</td><td>${c.completion} (${c.reasoning})</td><td>${money(c.cost)}</td><td>${c.ok ? (c.errors ? '<span class="warn-text">' + esc(c.errors) + "</span>" : "ok") : '<span class="err-text">' + esc(c.error) + "</span>"}</td></tr>`).join("")}</table>` : '<div class="empty">Nenhuma chamada ainda.</div>';
+  }
+  return "";
+}
+
+function bar(v, signed) {
+  v = v || 0;
+  const color = signed ? (v >= 0 ? "var(--green)" : "var(--red)") : "var(--amber)";
+  const style = signed ? (v >= 0 ? `left:50%;width:${v / 2}%` : `right:50%;width:${-v / 2}%`) : `left:0;width:${v}%`;
+  return `<span class="bar"><i style="${style};background:${color}"></i></span><span class="num">${v}</span>`;
+}
+
+function pretty(s) { try { return JSON.stringify(JSON.parse(s), null, 2); } catch (e) { return s || ""; } }
+
+function mailView(letters, title, lead) {
+  let html = title ? `<h2>${esc(title)}</h2><div class="lead">${esc(lead)}</div>` : "";
+  if (!letters.length) return html + '<div class="empty">Nenhuma carta.</div>';
+  return html + letters.slice().reverse().map(l => {
+    const transit = l.deliverTurn > state.turn ? `<span class="badge transit">a caminho · chega no turno ${l.deliverTurn}</span>` : "";
+    const caught = l.interceptedBy >= 0 ? `<span class="badge ultimato">interceptada por ${esc(nationName(l.interceptedBy))} no turno ${l.interceptedTurn} (${esc(l.interceptedVia || "")}${l.interceptedSpy ? ", " + esc(l.interceptedSpy) : ""})</span>` : "";
+    return `<div class="card"><div class="meta"><b>${esc(nationName(l.from))}</b> → <b>${esc(nationName(l.to))}</b>
+      <span class="badge ${esc(l.type)}">${esc(l.type)}</span> <span>enviada no turno ${l.sentTurn}</span> ${transit} ${caught}</div>
+      ${l.subject ? `<div class="subject">${esc(l.subject)}</div>` : ""}
+      ${l.demand ? `<div class="warn-text">Exigência: ${esc(l.demand)} (prazo: ${l.deadline} turnos)</div>` : ""}
+      <div class="letter-text">${esc(l.text)}</div></div>`;
+  }).join("");
+}
+
+// Só o que chega ao jogador: sorteada e não interceptada no caminho.
+const isForPlayer = l => l.from !== state.playerIndex && (l.to === state.playerIndex || l.to === -1) && l.checked !== false && !(l.interceptedBy >= 0);
+
+function updateNewCount() {
+  const fresh = state.letters.filter(l => isForPlayer(l) && l.deliverTurn === state.turn).length;
+  const badge = $("#newCount");
+  badge.style.display = fresh ? "" : "none";
+  badge.textContent = fresh + (fresh === 1 ? " nova" : " novas");
+}
+
+function inboxView() {
+  const p = state.playerIndex;
+  const received = state.letters.filter(l => isForPlayer(l) && l.deliverTurn <= state.turn).slice().reverse();
+  const sent = state.letters.filter(l => l.from === p).slice().reverse();
+  let html = `<h2>Sua correspondência</h2><div class="lead">Só o que já chegou até você. As respostas das nações saem no turno seguinte à chegada da sua carta e levam o tempo de entrega da era delas.</div>`;
+  html += `<h3 class="navsec" style="padding-left:0">Recebidas</h3>`;
+  html += received.length ? received.map(l => {
+    const fresh = l.deliverTurn === state.turn ? `<span class="badge nova">nova</span>` : "";
+    return `<div class="card"><div class="meta"><b>${esc(nationName(l.from))}</b> <span class="handle">${handleOf(l.from)}</span>
+      <span class="badge ${esc(l.type)}">${esc(l.type)}</span> <span>chegou no turno ${l.deliverTurn}</span> ${fresh}</div>
+      ${l.subject ? `<div class="subject">${esc(l.subject)}</div>` : ""}
+      ${l.demand ? `<div class="warn-text">Exigência: ${esc(l.demand)} (prazo: ${l.deadline} turnos, vence no turno ${l.sentTurn + l.deadline})</div>` : ""}
+      <div class="letter-text">${esc(l.text)}</div>
+      <div class="letter-actions"><button class="ghost" data-reply="${l.from}" data-subject="${esc(l.subject ? "Re: " + l.subject : "")}">Responder</button></div></div>`;
+  }).join("") : '<div class="empty">Nenhuma carta chegou ainda.</div>';
+  html += `<h3 class="navsec" style="padding-left:0;margin-top:18px">Enviadas</h3>`;
+  html += sent.length ? sent.map(l => {
+    let status;
+    if (l.rejectedBy && l.rejectedBy.length) status = "recusada: eles não aceitam sua correspondência";
+    else if (l.deliverTurn > state.turn) status = `a caminho · chega no turno ${l.deliverTurn}`;
+    else if (l.to !== -1 && l.readBy && l.readBy.includes(l.to)) status = `entregue no turno ${l.deliverTurn} · lida`;
+    else status = `entregue no turno ${l.deliverTurn}`;
+    return `<div class="card"><div class="meta">para <b>${esc(nationName(l.to))}</b> <span class="badge ${esc(l.type)}">${esc(l.type)}</span> <span>enviada no turno ${l.sentTurn}</span></div>
+      ${l.subject ? `<div class="subject">${esc(l.subject)}</div>` : ""}
+      <div class="letter-text">${esc(l.text)}</div><div class="status-line">${esc(status)}</div></div>`;
+  }).join("") : '<div class="empty">Você ainda não escreveu.</div>';
+  return html;
+}
+
+function eventsView() {
+  return `<h2>Eventos</h2><div class="lead">O que o mod fez, do mais recente ao mais antigo.</div><div class="events">${state.events.slice().reverse().map(e => `<div>${esc(e)}</div>`).join("") || '<div class="empty">Nada ainda.</div>'}</div>`;
+}
+
+function writeView() {
+  const ais = state.nations.filter(n => !n.isHuman);
+  return `<h2>Escrever carta</h2><div class="lead">Debug da fase 1: a carta sai de você (${esc(nationName(state.playerIndex))}) e chega no próximo turno; a nação responde no turno seguinte. Por enquanto, a resposta aparece aqui no visualizador.</div>
+  <form id="letterForm" class="card" onsubmit="sendLetter(event)">
+    <div class="row">
+      <label>Para<select id="lTo">${ais.map(n => `<option value="${n.index}"${view.replyTo === n.index ? " selected" : ""}>${esc(n.name)} (${handleOf(n.index)})</option>`).join("")}<option value="-1">Todos (declaração pública)</option></select></label>
+      <label>Tipo<select id="lType"><option value="privada">Privada</option><option value="publica">Pública</option><option value="ultimato">Ultimato</option></select></label>
+      <label style="flex:1">Assunto<input id="lSubject" maxlength="120" value="${esc(view.replySubject || "")}"></label>
+    </div>
+    <div class="row"><label style="flex:1">Exigência (só ultimato)<input id="lDemand" maxlength="300"></label><label>Prazo (turnos)<input id="lDeadline" type="number" min="1" max="30" value="3" style="width:90px"></label></div>
+    <label>Texto<textarea id="lText" placeholder="Escreva como o líder da sua nação…"></textarea></label>
+    <div style="margin-top:10px"><button class="primary" type="submit">Enviar</button><span id="lFeedback" class="feedback"></span></div>
+  </form>`;
+}
+
+async function sendLetter(e) {
+  e.preventDefault();
+  const body = { para: +$("#lTo").value, tipo: $("#lType").value, assunto: $("#lSubject").value, texto: $("#lText").value, exigencia: $("#lDemand").value, prazo_turnos: +$("#lDeadline").value };
+  if (!body.texto.trim()) { $("#lFeedback").textContent = "Escreva o texto."; return; }
+  const r = await fetch("/api/carta", { method: "POST", headers: { "Content-Type": "application/json", "X-Token": TOKEN }, body: JSON.stringify(body) });
+  $("#lFeedback").textContent = r.ok ? "Enviada. Chega no próximo turno." : "Falhou (" + r.status + ").";
+  if (r.ok) { $("#lText").value = ""; $("#lSubject").value = ""; $("#lDemand").value = ""; view.replyTo = null; view.replySubject = ""; }
+}
+
+poll();
+</script>
+</body>
+</html>

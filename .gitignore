@@ -1,0 +1,32 @@
+# Segredos: nunca versionar
+.env
+.env.*
+*.key
+credenciais/
+
+# Código do jogo descompilado (direitos da SEGA/Amplitude; regenerável com ilspycmd)
+decompiled/
+
+# Saídas de build e pacotes gerados
+bin/
+obj/
+dist/
+release/
+*.user
+.vs/
+
+# Kit de desenvolvimento: canal de comandos e capturas (centenas de MB)
+dev/
+
+# ia-bench: dados capturados das partidas e resultados gerados
+tools/ia-bench/corpus/
+tools/ia-bench/resultados/
+
+# Zips grandes (originais guardados nos backups em Documentos)
+Missing project files.zip
+site/design-pack/*.zip
+site-cd/.thumbnail
+
+# Sistema
+Thumbs.db
+desktop.ini

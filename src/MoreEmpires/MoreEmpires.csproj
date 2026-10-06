@@ -1,0 +1,75 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    MoreEmpires: plugin Harmony separado que permite até 16 impérios maiores em qualquer tamanho de mapa
+    e sorteia os pontos de nascimento. Não depende do CurrencyMod.
+
+    Compilar (só compila, NÃO instala):
+      "C:\Program Files\dotnet\dotnet.exe" build _Modding\src\MoreEmpires -c Release
+    Compilar e instalar em BepInEx\plugins\MoreEmpires\ (exige reiniciar o jogo):
+      "C:\Program Files\dotnet\dotnet.exe" build _Modding\src\MoreEmpires -c Release -p:Deploy=true
+      (ou _Modding\tools\instalar-moreempires.ps1)
+  -->
+
+  <PropertyGroup>
+    <TargetFramework>net472</TargetFramework>
+    <AssemblyName>MoreEmpires</AssemblyName>
+    <RootNamespace>MoreEmpires</RootNamespace>
+    <LangVersion>latest</LangVersion>
+    <Nullable>disable</Nullable>
+    <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
+    <GameDir>$(MSBuildThisFileDirectory)..\..\..\</GameDir>
+    <ManagedDir>$(GameDir)Humankind_Data\Managed\</ManagedDir>
+    <BepInExDir>$(GameDir)BepInEx\</BepInExDir>
+    <!-- A cópia para o BepInEx fica DESLIGADA por padrão: um plugin não testado não pode atrapalhar o próximo início do jogo. -->
+    <Deploy Condition="'$(Deploy)' == ''">false</Deploy>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Testes offline (console .NET 8) ficam em Tests\ e não entram na DLL do plugin. -->
+    <Compile Remove="Tests\**" />
+    <None Remove="Tests\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3" PrivateAssets="all" />
+    <!-- Torna membros internal/private do jogo acessíveis em tempo de compilação (mesmo padrão do CurrencyMod). -->
+    <PackageReference Include="Krafs.Publicizer" Version="2.2.1" PrivateAssets="all" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Publicize Include="Amplitude.Mercury.Firstpass" />
+    <Publicize Include="Amplitude.Framework" />
+    <Publicize Include="Amplitude.UI" />
+    <Publicize Include="Assembly-CSharp" />
+    <Publicize Include="Amplitude.Mercury.WorldGenerator" />
+    <Publicize Include="Amplitude.Mercury.Terrain" />
+    <Publicize Include="Amplitude.Mercury.Data" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="BepInEx"><HintPath>$(BepInExDir)core\BepInEx.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="0Harmony"><HintPath>$(BepInExDir)core\0Harmony.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="UnityEngine"><HintPath>$(ManagedDir)UnityEngine.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="UnityEngine.CoreModule"><HintPath>$(ManagedDir)UnityEngine.CoreModule.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="UnityEngine.ScreenCaptureModule"><HintPath>$(ManagedDir)UnityEngine.ScreenCaptureModule.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="Amplitude"><HintPath>$(ManagedDir)Amplitude.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="Amplitude.IO"><HintPath>$(ManagedDir)Amplitude.IO.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="Amplitude.Framework"><HintPath>$(ManagedDir)Amplitude.Framework.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="Amplitude.Mercury.Firstpass"><HintPath>$(ManagedDir)Amplitude.Mercury.Firstpass.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="Amplitude.Mercury.Data"><HintPath>$(ManagedDir)Amplitude.Mercury.Data.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="Amplitude.Mercury.WorldGenerator"><HintPath>$(ManagedDir)Amplitude.Mercury.WorldGenerator.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="Amplitude.Mercury.Terrain"><HintPath>$(ManagedDir)Amplitude.Mercury.Terrain.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="Amplitude.UI"><HintPath>$(ManagedDir)Amplitude.UI.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="Assembly-CSharp"><HintPath>$(ManagedDir)Assembly-CSharp.dll</HintPath><Private>false</Private></Reference>
+    <!-- Base das definições de dados do jogo: só para compilar Databases.GetDatabase<T>(). -->
+    <Reference Include="Sirenix.Serialization"><HintPath>$(ManagedDir)Sirenix.Serialization.dll</HintPath><Private>false</Private></Reference>
+  </ItemGroup>
+
+  <!-- dotnet build ... -p:Deploy=true copia a DLL para BepInEx\plugins\MoreEmpires\ (exige reiniciar o jogo). -->
+  <Target Name="DeployToBepInEx" AfterTargets="Build" Condition="'$(Deploy)' == 'true'">
+    <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(BepInExDir)plugins\MoreEmpires\" />
+    <Message Importance="high" Text="MoreEmpires instalado em $(BepInExDir)plugins\MoreEmpires\ (reinicie o jogo)." />
+  </Target>
+
+</Project>

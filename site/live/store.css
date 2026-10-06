@@ -1,0 +1,29 @@
+body{margin:0;background:#0c1522;color:#f1ead9;font:17px/1.7 Mulish,system-ui,sans-serif}
+a{color:#e2c172} a:hover{color:#f1ead9}
+*{box-sizing:border-box}
+header{border-bottom:1px solid rgba(226,193,114,.18);background:rgba(12,21,34,.94)}
+header div{max-width:820px;margin:0 auto;padding:14px 20px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+header a.b{text-decoration:none;font:700 15px Cinzel,serif;letter-spacing:.14em}
+main{max-width:820px;margin:0 auto;padding:56px 20px 80px}
+h1{font:600 clamp(34px,6vw,52px)/1.1 Fraunces,serif;margin:0 0 8px}
+h2{font:700 18px Cinzel,serif;color:#e2c172;letter-spacing:.06em;margin:40px 0 8px}
+p,li{color:#cfd6e2} .note{font-size:14px;color:#aab5c8}
+.key{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:10px 0 6px}
+.key code{font:700 clamp(16px,3.4vw,22px) ui-monospace,Consolas,monospace;letter-spacing:.06em;color:#f1ead9;background:rgba(8,16,30,.7);border:1px solid rgba(226,193,114,.45);padding:12px 16px;word-break:break-all}
+.btn,button{display:inline-block;background:#c4245e;color:#fff;border:0;font:800 13px Mulish,sans-serif;letter-spacing:.1em;text-transform:uppercase;padding:12px 18px;border-radius:3px;cursor:pointer;text-decoration:none}
+.btn:hover,button:hover{filter:brightness(1.15);color:#fff}
+button.ghost{background:transparent;border:1px solid rgba(226,193,114,.45);color:#e2c172}
+input{font:600 16px Mulish,sans-serif;padding:12px 14px;background:rgba(8,16,30,.7);color:#f1ead9;border:1px solid rgba(226,193,114,.35);border-radius:3px;min-width:0;flex:1 1 260px}
+input:focus{outline:2px solid #e2c172;outline-offset:1px}
+form{display:flex;gap:10px;flex-wrap:wrap;margin:12px 0}
+.card{border:1px solid rgba(226,193,114,.35);background:rgba(8,16,30,.55);padding:20px 22px;margin:16px 0}
+.card .tag{font:800 11px Mulish;letter-spacing:.14em;text-transform:uppercase;color:#e2c172}
+.card .ver{font:600 30px Fraunces,serif;margin:2px 0}
+.card .btn{margin-top:10px}
+details{margin-top:12px} summary{cursor:pointer;color:#e2c172}
+.msg{min-height:1.7em} .msg.err{color:#ff9db8}
+.spin{display:inline-block;width:14px;height:14px;border:2px solid rgba(226,193,114,.3);border-top-color:#e2c172;border-radius:50%;animation:s 1s linear infinite;vertical-align:-2px;margin-right:8px}
+@keyframes s{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){.spin{animation:none}}
+footer{border-top:1px solid rgba(255,255,255,.08);background:#070d16;font-size:13px;color:#aab5c8}
+footer div{max-width:820px;margin:0 auto;padding:28px 20px}
