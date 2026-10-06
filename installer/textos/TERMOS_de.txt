@@ -1,0 +1,19 @@
+﻿REALPOLITIK: LIVING NATIONS FOR HUMANKIND - BEDINGUNGEN
+
+Was du kaufst
+Eine einmalige Lizenz für Realpolitik: Living Nations zur persönlichen, nicht kommerziellen Nutzung. Der Lizenzschlüssel aktiviert die KI-Diplomatie auf bis zu 3 PCs gleichzeitig; du kannst einen PC im Spiel freigeben (bis zu 3-mal alle 30 Tage). Updates sind kostenlos: Lade jede Version mit deinem Schlüssel auf der Download-Seite herunter.
+
+Erstattungen
+Erstattung innerhalb von 7 Tagen nach dem Kauf, einmal pro Kunde. Eine erstattete oder angefochtene Bestellung deaktiviert ihren Lizenzschlüssel.
+
+KI-Kosten
+Der Preis deckt nur die Mod ab. Die KI-Diplomatie nutzt einen Anbieter deiner Wahl; etwaige Nutzungsgebühren betreffen nur dich und diesen Anbieter. Eine Ausgabengrenze pro Partie ist eingebaut.
+
+Inoffizielle Mod
+Dies ist eine inoffizielle Fan-Mod für HUMANKIND. Sie steht in keiner Verbindung zu Amplitude Studios oder SEGA und wird von ihnen nicht unterstützt. Du brauchst dein eigenes HUMANKIND. Nur Einzelspieler.
+
+Open-Source-Komponenten
+Die Mod enthält Open-Source-Komponenten: BepInEx, HarmonyX, MonoMod und Mono.Cecil (MIT) sowie UnityDoorstop (LGPL-2.1). Ihre Lizenzen im Ordner „licencas" gelten für diese Komponenten, einschließlich deines Rechts, sie im Rahmen dieser Lizenzen zu verändern und zurückzuentwickeln.
+
+Keine Gewährleistung
+Die Mod wird ohne Gewähr bereitgestellt. Sichere deine Spielstände.

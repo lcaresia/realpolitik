@@ -1,0 +1,38 @@
+REALPOLITIK: LIVING NATIONS FOR HUMANKIND
+=========================================
+
+REQUIREMENTS
+- HUMANKIND on Windows (Steam or Epic), single-player.
+- Internet only to activate the license and for AI Diplomacy.
+
+INSTALL
+- Setup: run Realpolitik_Setup.exe. It finds the game and installs BepInEx if needed.
+  If Windows shows "Windows protected your PC", click "More info" -> "Run anyway".
+- Manual (zip): close the game, extract the zip INTO the game folder (the one with
+  Humankind.exe) and accept merging the BepInEx folder.
+
+ACTIVATE
+1. Open the game -> main menu -> AI Diplomacy -> License.
+2. Paste your key (RPLN-XXXXX-XXXXX-XXXXX-XXXXX) and click Activate.
+   Valid on up to 3 PCs. To move to another PC, use "Release this PC" on the old one.
+3. Pick an AI provider on the left (OpenRouter is the easiest: one login, no key).
+Without a license everything else works (currency, Central Bank, tolls, 16 empires)
+and nations use the game's native AI.
+
+UPDATE
+Install the new version over the old one. Settings, keys and saves are kept.
+
+UNINSTALL
+Windows Settings -> Apps -> "Realpolitik: Living Nations for HUMANKIND".
+The uninstaller asks whether to keep your settings and keys. Saves are never deleted.
+
+STEAM DECK / LINUX
+Use the zip. In Steam: HUMANKIND -> Properties -> Launch options:
+  WINEDLLOVERRIDES="winhttp=n,b" %command%
+
+PROBLEMS
+- The mod doesn't load: look for "CurrencyMod" and "Núcleo carregado" in BepInEx\LogOutput.log.
+- Your antivirus removed winhttp.dll: restore it (it is the BepInEx loader) and add an exception.
+- Saves with more than 10 empires only open with the mod installed.
+- Lost your key: realpolitik-living-nations.pages.dev/download.html (purchase e-mail +
+  Stripe receipt number).
