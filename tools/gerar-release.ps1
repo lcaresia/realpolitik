@@ -57,6 +57,29 @@ foreach ($p in $projects.Keys) {
     if (-not (Test-Path (Join-Path $o $projects[$p]))) { throw "Saída não encontrada: $p" }
 }
 
+# ---------------- 2b. ofuscar o núcleo (Obfuscar; regras em installer\obfuscar.xml) ----------------
+Step 'Ofuscando o CurrencyMod.dll'
+$obfExe = Join-Path $installer 'vendor\obfuscar\Obfuscar.Console.exe'
+if (-not (Test-Path $obfExe)) { throw "Obfuscar não encontrado em $obfExe (pacote NuGet obfuscar 2.2.50, pasta tools\)." }
+$managed = Join-Path (Split-Path $mod -Parent) 'Humankind_Data\Managed'
+$bepRef = Join-Path $build 'bepinex-ref'
+Expand-Archive $bepZip $bepRef
+$obfIn = Join-Path $build 'CurrencyMod'
+$obfOut = Join-Path $build 'CurrencyMod-ofuscado'
+$obfCfg = Join-Path $build 'obfuscar.xml'
+$cfgText = (Get-Content (Join-Path $installer 'obfuscar.xml') -Raw).Replace('{IN}', $obfIn).Replace('{OUT}', $obfOut).Replace('{MANAGED}', $managed).Replace('{BEPINEX}', (Join-Path $bepRef 'BepInEx\core'))
+[IO.File]::WriteAllText($obfCfg, $cfgText, (New-Object Text.UTF8Encoding($false)))
+$obfLog = & $obfExe $obfCfg 2>&1
+if ($LASTEXITCODE -ne 0) { $obfLog | Select-Object -Last 15 | Write-Host; throw 'Falha no Obfuscar' }
+& powershell -ExecutionPolicy Bypass -File (Join-Path $installer 'conferir-ofuscacao.ps1') -Original (Join-Path $obfIn 'CurrencyMod.dll') `
+    -Ofuscada (Join-Path $obfOut 'CurrencyMod.dll') -Cecil (Join-Path $bepRef 'BepInEx\core\Mono.Cecil.dll')
+if ($LASTEXITCODE -ne 0) { throw 'A conferência da ofuscação falhou (algo que precisa do nome foi renomeado).' }
+# O mapa (nome original -> ofuscado) fica só neste PC: serve para ler logs de erro de compradores. Nunca vai no pacote.
+$maps = Join-Path $dist "mapas\$Versao"
+New-Item -ItemType Directory -Force $maps | Out-Null
+Copy-Item (Join-Path $obfOut 'Mapping.xml') (Join-Path $maps 'CurrencyMod-Mapping.xml') -Force
+Copy-Item (Join-Path $obfOut 'CurrencyMod.dll') (Join-Path $obfIn 'CurrencyMod.dll') -Force
+
 # ---------------- 3. montar o staging ----------------
 Step 'Montando o staging'
 function Put([string]$from, [string]$rel) {
@@ -104,6 +127,7 @@ $bepExpected = @('bepinex\.doorstop_version', 'bepinex\doorstop_config.ini', 'be
       'MonoMod.RuntimeDetour.dll', 'MonoMod.RuntimeDetour.xml', 'MonoMod.Utils.dll', 'MonoMod.Utils.xml' | ForEach-Object { "bepinex\BepInEx\core\$_" })
 $allowed += $bepExpected
 $present = Get-ChildItem $stage -Recurse -File -Force | Where-Object { $_.FullName -notlike "$build\*" } | ForEach-Object { $_.FullName.Substring($stage.Length + 1) }
+if ($present | Where-Object { $_ -match '(?i)mapping' }) { throw 'O mapa da ofuscação entrou no staging' }
 $extra = $present | Where-Object { $allowed -notcontains $_ }
 $missing = $allowed | Where-Object { $present -notcontains $_ }
 if ($extra) { throw "Arquivo fora da lista branca: $($extra -join ', ')" }

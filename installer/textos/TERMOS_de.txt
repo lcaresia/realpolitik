@@ -12,6 +12,9 @@ Der Preis deckt nur die Mod ab. Die KI-Diplomatie nutzt einen Anbieter deiner Wa
 Inoffizielle Mod
 Dies ist eine inoffizielle Fan-Mod für HUMANKIND. Sie steht in keiner Verbindung zu Amplitude Studios oder SEGA und wird von ihnen nicht unterstützt. Du brauchst dein eigenes HUMANKIND. Nur Einzelspieler.
 
+Proprietärer Code
+Der eigene Code und die eigenen Inhalte der Mod (alles außer den Open-Source-Komponenten unten) sind proprietär. Du darfst sie nicht kopieren, weitergeben, weiterverkaufen, verändern oder dekompilieren, außer wo das Gesetz es ausdrücklich erlaubt.
+
 Open-Source-Komponenten
 Die Mod enthält Open-Source-Komponenten: BepInEx, HarmonyX, MonoMod und Mono.Cecil (MIT) sowie UnityDoorstop (LGPL-2.1). Ihre Lizenzen im Ordner „licencas" gelten für diese Komponenten, einschließlich deines Rechts, sie im Rahmen dieser Lizenzen zu verändern und zurückzuentwickeln.
 

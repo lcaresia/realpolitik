@@ -49,7 +49,7 @@ namespace CurrencyMod.Diplomacia.Licenca
     /// </summary>
     internal sealed class WorkerLicenseProvider : ILicenseProvider
     {
-        internal const string BaseUrl = "https://realpolitik-loja.lcaresia.workers.dev";
+        internal static readonly string BaseUrl = "https://realpolitik-loja.lcaresia.workers.dev";
         private const int TimeoutSeconds = 20;
 
         public LicenseReply Activate(string key, string instanceName) =>

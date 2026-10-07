@@ -12,6 +12,9 @@ O preço cobre só o mod. A Diplomacia IA usa um provedor escolhido por você; q
 Mod não oficial
 Este é um mod não oficial, feito por fã, para HUMANKIND. Não tem vínculo nem aprovação da Amplitude Studios ou da SEGA. Você precisa ter o HUMANKIND. Só um jogador.
 
+Código proprietário
+O código e o conteúdo próprios do mod (tudo menos os componentes de código aberto abaixo) são proprietários. Não copie, compartilhe, revenda, modifique nem descompile, exceto quando a lei permitir expressamente.
+
 Componentes de código aberto
 O mod vem com componentes de código aberto: BepInEx, HarmonyX, MonoMod e Mono.Cecil (MIT) e UnityDoorstop (LGPL-2.1). As licenças deles, na pasta "licencas", valem para esses componentes, inclusive o direito de modificá-los e fazer engenharia reversa como elas permitem.
 

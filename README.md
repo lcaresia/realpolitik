@@ -121,7 +121,7 @@ ilspycmd -p -o _Modding\decompiled\<Assembly> -r Humankind_Data\Managed Humankin
    - o `Realpolitik_<versão>_manual.zip`;
    - o `MANIFEST.txt` e o `SHA256SUMS.txt`.
 
-   O script compila sem tocar no jogo e monta um staging com **lista branca** de arquivos. Ele faz a **trava de
+   O script compila sem tocar no jogo, **ofusca o núcleo** (Obfuscar; regras em `installer\obfuscar.xml`, conferidas por `installer\conferir-ofuscacao.ps1`; o mapa de nomes fica em `dist\mapas\`) e monta um staging com **lista branca** de arquivos. Ele faz a **trava de
    segredos**: chaves, valores do `.env` e caminhos desta máquina, procurados até dentro das DLLs. Falha alto em
    qualquer problema. `-TestarTrava` prova que a trava funciona.
 3. Testes: `installer\testes\testar-instalador.ps1 -Versao X -Teste T1..T11`, sempre com o backup antes e a restauração
