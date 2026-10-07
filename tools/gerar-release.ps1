@@ -12,7 +12,9 @@
 # BepInEx\config, .env, credenciais ou da instalação do jogo: só compila do código e copia de _Modding\installer.
 param(
     [Parameter(Mandatory = $true)][string]$Versao,
-    [string]$Certificado
+    [string]$Certificado,
+    # Só para testar a trava: planta um .env falso e uma "chave" sk_live_ no staging; a geração TEM que falhar.
+    [switch]$TestarTrava
 )
 $ErrorActionPreference = 'Stop'
 $mod = Split-Path $PSScriptRoot -Parent
@@ -145,6 +147,10 @@ function Test-Secrets([string]$root) {
         }
     }
     return $problems | Select-Object -Unique
+}
+if ($TestarTrava) {
+    [IO.File]::WriteAllText((Join-Path $stage 'docs\.env'), 'FAKE=1')
+    [IO.File]::AppendAllText((Join-Path $stage 'docs\THIRD-PARTY.txt'), "`r`nsk_live_TESTE1234567890")
 }
 $found = Test-Secrets $stage
 if ($found) { throw "TRAVA DE SEGREDOS: $($found -join ' | ')" }

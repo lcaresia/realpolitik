@@ -593,7 +593,8 @@ end;
 function InitializeUninstall: Boolean;
 begin
   Result := WaitGameClosed;
-  KeepSettings := True;
+  // Silencioso mantém tudo, a não ser com /APAGARTUDO (suporte e testes).
+  KeepSettings := Pos('/APAGARTUDO', Uppercase(GetCmdTail)) = 0;
   if Result and not UninstallSilent then
     KeepSettings := MsgBox(CustomMessage('KeepSettings'), mbConfirmation, MB_YESNO) = IDYES;
   Log('Desinstalar · manter configurações: ' + IntToStr(Ord(KeepSettings)));
@@ -636,6 +637,21 @@ begin
   Log('BepInEx removido (tinha sido instalado pelo Realpolitik e não sobrou outro plugin).');
 end;
 
+procedure CleanupAfterExit(Dir: String);
+var
+  Code: Integer;
+  Cmd: String;
+begin
+  Cmd := '/C ping 127.0.0.1 -n 5 > nul';
+  Cmd := Cmd + ' & rd "' + Dir + 'BepInEx\Realpolitik\licencas"';
+  Cmd := Cmd + ' & rd "' + Dir + 'BepInEx\Realpolitik"';
+  Cmd := Cmd + ' & rd "' + Dir + 'BepInEx\plugins"';
+  Cmd := Cmd + ' & rd "' + Dir + 'BepInEx\config"';
+  Cmd := Cmd + ' & rd "' + Dir + 'BepInEx"';
+  if Exec(ExpandConstant('{cmd}'), Cmd, '', SW_HIDE, ewNoWait, Code) then
+    Log('Limpeza das pastas vazias agendada.');
+end;
+
 procedure CurUninstallStepChanged(CurUninstallStep: TUninstallStep);
 var
   Dir: String;
@@ -671,4 +687,7 @@ begin
     Log('BepInEx mantido (não foi instalado pelo Realpolitik).');
   RemoveDir(Dir + 'BepInEx\Realpolitik\licencas');
   RemoveDir(Dir + 'BepInEx\Realpolitik');
+  // Os arquivos do próprio desinstalador (BepInEx\Realpolitik) só saem depois deste passo, então as pastas de cima
+  // ainda não estão vazias. Agenda a remoção para logo depois: "rd" sem /s só apaga pasta VAZIA (nunca conteúdo).
+  CleanupAfterExit(Dir);
 end;
