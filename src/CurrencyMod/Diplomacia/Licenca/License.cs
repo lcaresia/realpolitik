@@ -476,7 +476,7 @@ namespace CurrencyMod.Diplomacia.Licenca
                     return null;
                 case "activated":
                     isError = false;
-                    return L.F("Licença ativada neste PC ({0} de {1}). A Diplomacia IA está liberada.", usage, limit);
+                    return L.F("Licença ativada neste PC ({0} de {1}). A IA do Realpolitik está liberada.", usage, limit);
                 case "valid":
                     isError = false;
                     return L.T("Licença conferida com o servidor: tudo certo.");
@@ -499,7 +499,7 @@ namespace CurrencyMod.Diplomacia.Licenca
                 case "instance_not_found":
                     return L.T("Este PC não está mais ativado nessa chave. Ative de novo.");
                 case "limit_reached":
-                    return L.F("A chave já está ativa em {0} PCs (o limite é {1}). Libere um deles pelo próprio jogo daquele PC (Diplomacia IA → Licença → Liberar este PC). Se o PC não existe mais, fale com o suporte.", usage < 0 ? 3 : usage, limit < 0 ? 3 : limit);
+                    return L.F("A chave já está ativa em {0} PCs (o limite é {1}). Libere um deles pelo próprio jogo daquele PC (Realpolitik → Licença → Liberar este PC). Se o PC não existe mais, fale com o suporte.", usage < 0 ? 3 : usage, limit < 0 ? 3 : limit);
                 case "deactivation_limit":
                     return L.T("Limite de liberações atingido: no máximo 3 a cada 30 dias. Tente de novo mais tarde.");
                 case "offline_activate":
@@ -507,7 +507,7 @@ namespace CurrencyMod.Diplomacia.Licenca
                 case "offline":
                     return LicenseValid
                         ? L.T("Sem conexão com o servidor de licenças agora. A licença continua valendo pelo prazo offline.")
-                        : L.T("Sem conexão com o servidor de licenças. A Diplomacia IA volta assim que a licença for conferida.");
+                        : L.T("Sem conexão com o servidor de licenças. A IA do Realpolitik volta assim que a licença for conferida.");
                 default:
                     return L.T("O servidor de licenças respondeu com erro. Tente de novo em alguns minutos.");
             }

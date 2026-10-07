@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
@@ -260,7 +260,7 @@ namespace CurrencyMod.Diplomacia
             {
                 Amplitude.Mercury.UI.MessageModalWindow.ShowMessage(new Amplitude.Mercury.UI.MessageModalWindow.Message
                 {
-                    Title = L.T("Diplomacia IA"),
+                    Title = L.T("Realpolitik"),
                     Description = text,
                     Buttons = new[]
                     {
@@ -337,7 +337,7 @@ namespace CurrencyMod.Diplomacia
             }
             if (!Licenca.License.AllowsAi)
             {
-                SetStatus("sem licença", "err", "Diplomacia IA sem licença ativa neste PC (tela Diplomacia IA → Licença): " + Licenca.License.Describe());
+                SetStatus("sem licença", "err", "IA do Realpolitik sem licença ativa neste PC (tela Realpolitik → Licença): " + Licenca.License.Describe());
                 return;
             }
             if (!Llm.Providers.ProviderRouter.AnyReady)
