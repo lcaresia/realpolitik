@@ -26,18 +26,22 @@
 <main>
 <h1>Install</h1>
 <h2>Requirements</h2>
-<p>Windows &middot; HUMANKIND on Steam &middot; single-player. Epic: not tested yet. Mac and Xbox / Game Pass: not supported. Steam Deck: experimental.</p>
+<p>Windows &middot; HUMANKIND on Steam or Epic &middot; single-player. Steam Deck through the manual zip. Mac and Xbox / Game Pass: not supported.</p>
 <h2>1. Download</h2>
-<p>Right after purchase, the confirmation page shows your license key and the download. Later, get any version on the <a href="download.html">download page</a> with your key, or from the game: when an update is out, the mod shows it in the main menu with a download button.</p>
-<h2>2. Copy into the game folder</h2>
-<p>Unzip into your HUMANKIND folder on Steam (Steam &rarr; right-click HUMANKIND &rarr; Manage &rarr; Browse local files). An installer is in preparation.</p>
-<p class="note">If Windows SmartScreen warns about the installer once it ships, choose &ldquo;More info&rdquo; &rarr; &ldquo;Run anyway&rdquo;.</p>
-<h2>3. Pick your AI</h2>
-<p>In the main menu, open AI Diplomacy. Sign in with OpenRouter or paste a key (DeepSeek, OpenAI, Gemini, GLM, xAI), set your spending cap, and start a game.</p>
-<h2>Steam Deck (experimental)</h2>
-<p>Use the zip install and add the launch option the mod's readme provides. Untested; feedback welcome.</p>
+<p>Right after purchase, the confirmation page shows your license key and the download. Later, get any version on the <a href="download.html">download page</a> with your key, or from the game: when an update is out, the mod shows it in AI Diplomacy &rarr; License with a download button.</p>
+<h2>2. Run the installer</h2>
+<p>Close HUMANKIND and run <b>Realpolitik_Setup.exe</b>. It finds the game on Steam or Epic, installs BepInEx if it is missing, and keeps any BepInEx or mods you already have. Your settings, keys and saves are never touched.</p>
+<p class="note">Windows may show &ldquo;Windows protected your PC&rdquo; for new apps. Click &ldquo;More info&rdquo; &rarr; &ldquo;Run anyway&rdquo;. If Windows blocks it without that option (Smart App Control), use the manual zip below.</p>
+<h2>3. Activate your key</h2>
+<p>Open the game &rarr; main menu &rarr; <b>AI Diplomacy</b> &rarr; <b>License</b>. Paste your key and click <b>Activate</b>. It works on up to 3 PCs; to move to another PC, click &ldquo;Release this PC&rdquo; on the old one.</p>
+<h2>4. Pick your AI</h2>
+<p>Still in AI Diplomacy, sign in with OpenRouter or paste a key (DeepSeek, OpenAI, Gemini, GLM, xAI), set your spending cap, and start a game.</p>
+<h2>Manual zip</h2>
+<p>Close the game and extract the zip <i>into</i> the HUMANKIND folder (the one with Humankind.exe; on Steam: right-click HUMANKIND &rarr; Manage &rarr; Browse local files). Accept merging the BepInEx folder.</p>
+<h2>Steam Deck</h2>
+<p>Use the manual zip, then in Steam set HUMANKIND &rarr; Properties &rarr; Launch options to <code>WINEDLLOVERRIDES="winhttp=n,b" %command%</code>.</p>
 <h2>Uninstall</h2>
-<p>Delete the two mod folders listed in the readme. Your saves keep opening without the mod, except saves with more than 10 empires, which need MoreEmpires.</p>
+<p>Windows Settings &rarr; Apps &rarr; &ldquo;Realpolitik: Living Nations for HUMANKIND&rdquo;. It asks whether to keep your settings and keys. Saves keep opening without the mod, except saves with more than 10 empires, which need MoreEmpires.</p>
 </main>
 <footer><div>Unofficial fan-made mod. Not affiliated with or endorsed by Amplitude Studios or SEGA. HUMANKIND is a trademark of its respective owners.</div></footer>
 </body>
