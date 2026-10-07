@@ -80,7 +80,7 @@ propósito.
    com `.env`, `*.key`, `credenciais/` ou `_Modding/dev/`. Também: `-Listar`, `-Remover <versão>`,
    `-NaoMarcarComoUltima` (beta), `-JogoQuebrado <versões do jogo>` (vira `brokenOn` no `/api/version`).
    Testado com uma versão falsa: página, download e sha256 conferem; link adulterado ou com prazo esticado é recusado.
-4. **Recibo da Stripe ligado** (Configurações → E-mails de clientes → "Pagamentos bem-sucedidos"). Sem e-mail próprio,
+4. ~~**Recibo da Stripe ligado**~~ (2026-10-07) (Configurações → E-mails de clientes → "Pagamentos bem-sucedidos"). Sem e-mail próprio,
    a chave aparece só na página "obrigado" (com copiar e "salvar em .txt"); quem perder recupera em `download.html`
    com o e-mail da compra + o número do recibo que a Stripe manda (`POST /api/recover`). Grátis e sem domínio.
    E-mail próprio (Resend, precisa de domínio) fica opcional: `RESEND_API_KEY` + `LOJA_MAIL_FROM` no `.env`, deploy.
