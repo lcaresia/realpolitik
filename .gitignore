@@ -30,3 +30,6 @@ site-cd/.thumbnail
 # Sistema
 Thumbs.db
 desktop.ini
+
+# Obfuscar (baixado do NuGet: obfuscar 2.2.50; ver tools\gerar-release.ps1)
+installer/vendor/obfuscar/

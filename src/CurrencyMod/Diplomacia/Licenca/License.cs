@@ -61,8 +61,8 @@ namespace CurrencyMod.Diplomacia.Licenca
     internal static class License
     {
         internal const int OfflineDays = 14;
-        internal const string SiteUrl = "https://realpolitik-living-nations.pages.dev/";
-        internal const string DownloadPage = SiteUrl + "download.html";
+        internal static readonly string SiteUrl = "https://realpolitik-living-nations.pages.dev/";
+        internal static readonly string DownloadPage = SiteUrl + "download.html";
 
         private static readonly object Gate = new object();
         private static readonly byte[] Entropy = Encoding.UTF8.GetBytes("Realpolitik.Licenca.v1");

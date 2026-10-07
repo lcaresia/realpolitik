@@ -4,8 +4,8 @@
 
 | Arquivo | Tamanho | SHA-256 |
 |---|---|---|
-| `Realpolitik_Setup_1.0.0.exe` | 3,7 MB | `2816032d015a123c27a98027d8d6dd16b1272dcd6fe5c0bf4ef9857c1906379d` |
-| `Realpolitik_1.0.0_manual.zip` | 1,2 MB | `0ca839ddafdebf6eba6432cfc779b3b8c9da6a94c4eac5bf28117aba406a3d23` |
+| `Realpolitik_Setup_1.0.0.exe` | 3,7 MB | `09da4a955be0930f17ab47d47dd3c2f90312e8dbbc16f34436831fa07363720d` |
+| `Realpolitik_1.0.0_manual.zip` | 1,3 MB | `149b57453b3ad2e65b9b2cd8cc6c06066f53e90665cc9f21eb44251f32b3f178` |
 
 - Gerados por `tools\gerar-release.ps1 -Versao 1.0.0` em `dist\1.0.0\`, junto com `MANIFEST.txt` (45 arquivos, cada um
   com tamanho e sha256) e `SHA256SUMS.txt`.
@@ -45,6 +45,27 @@ o DeepSeek está conectado e os 597 arquivos de log da IA voltaram.
    isso nunca apareceu. **Todo comprador teria recebido o mod quebrado.** Correção: só recarrega se o arquivo existir.
 2. **"Apagar tudo" deixava a pasta `BepInEx` vazia.** Os arquivos do desinstalador só saem depois do último passo do
    código. Correção: o desinstalador agenda `rd` (só apaga pasta vazia) para logo depois de terminar.
+
+## Proteção do código (adicionada depois dos testes acima)
+
+- **Ofuscação.** O `CurrencyMod.dll` é ofuscado pelo Obfuscar 2.2.50 dentro do `gerar-release.ps1`, com as regras em
+  `installer\obfuscar.xml`.
+  - Renomeia 507 tipos internos e criptografa todos os textos: os prompts, as mensagens e os endereços da loja.
+  - Mantém os nomes que o carregador, o Harmony, a Unity, os saves em JSON e a DPAPI precisam.
+  - `installer\conferir-ofuscacao.ps1` roda a cada geração e falha se algo que precisa do nome mudou: os 96 métodos de
+    patch com os mesmos parâmetros, o ModEntry, as mensagens da Unity, os campos dos tipos salvos e o P/Invoke.
+  - O mapa de nomes fica só no PC do dono, em `dist\mapas\<versão>\`, e serve para ler logs de erro de compradores.
+- **Testes no jogo com a DLL ofuscada:**
+  - 79 patches aplicados, 0 com falha;
+  - partida de 16 impérios com um turno completo de IA (15 nações e o conselho, respostas entendidas);
+  - **save antigo** (Teste16, turno 102, criado sem ofuscação) carregou com a moeda e a memória das nações intactas, e o
+    turno da IA funcionou;
+  - Banco Central abre.
+  - Custo das chamadas de teste: US$ 0,06. Foram acidentais, porque o save carregado tinha o DeepSeek configurado.
+- **Termos.** Nova seção "Código proprietário" no instalador (5 idiomas) e no site: proíbe copiar, redistribuir,
+  revender, modificar e descompilar o código do mod, mantendo os direitos das licenças de código aberto.
+- O T1–T13 acima rodou com a DLL sem ofuscação. A ofuscação só muda os nomes internos do núcleo: os arquivos, os
+  caminhos e o instalador são os mesmos.
 
 ## Riscos conhecidos
 
