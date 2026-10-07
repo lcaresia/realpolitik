@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -212,9 +212,9 @@ namespace CurrencyMod.Diplomacia.Llm.Providers
         private static void Reply(NetworkStream stream, bool? ok)
         {
             string title = ok == true ? L.T("Pronto! Pode voltar ao jogo.") : ok == false ? L.T("O login não deu certo.") : "";
-            string text = ok == true ? L.T("A Diplomacia IA já está conectada. Esta aba pode ser fechada.")
+            string text = ok == true ? L.T("O Realpolitik já está conectado. Esta aba pode ser fechada.")
                 : ok == false ? L.T("Volte ao jogo e tente de novo.") : "";
-            string html = ok == null ? "" : "<!doctype html><html><head><meta charset=\"utf-8\"><title>Humankind AI Diplomacy</title>"
+            string html = ok == null ? "" : "<!doctype html><html><head><meta charset=\"utf-8\"><title>Realpolitik: Living Nations</title>"
                 + "<style>body{background:#14161c;color:#e8dcc0;font-family:Georgia,serif;display:flex;align-items:center;justify-content:center;height:100vh;margin:0}"
                 + "div{text-align:center;max-width:32em;padding:0 16px}h1{color:#ffe095;font-weight:normal}</style></head><body><div><h1>"
                 + WebUtility.HtmlEncode(title) + "</h1><p>" + WebUtility.HtmlEncode(text) + "</p></div></body></html>";

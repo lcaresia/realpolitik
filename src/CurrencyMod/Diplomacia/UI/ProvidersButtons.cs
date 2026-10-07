@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq;
 using Amplitude.Mercury.UI;
 using Amplitude.Mercury.UI.Helpers;
@@ -12,7 +12,7 @@ using B = CurrencyMod.NativeUI.NativeBankWindow;
 namespace CurrencyMod.Diplomacia.UI
 {
     /// <summary>
-    /// Entradas da tela Diplomacia IA: um botão no menu principal (clone de "Meu Perfil", depois de "Cenários") e outro
+    /// Entradas da tela Realpolitik: um botão no menu principal (clone de "Meu Perfil", depois de "Cenários") e outro
     /// no menu de pausa da partida (clone de "Configurações", logo abaixo dele). Pelo menu de pausa, a coluna do menu
     /// some enquanto a tela está aberta e volta ao fechar, como nas Configurações do jogo.
     /// </summary>
@@ -158,8 +158,8 @@ namespace CurrencyMod.Diplomacia.UI
                 {
                     continue;
                 }
-                B.SetLabel(button.transform, string.Empty, L.T("Diplomacia IA"));
-                B.Tip(button.transform, string.Empty, L.T("Diplomacia IA"),
+                B.SetLabel(button.transform, string.Empty, L.T("Realpolitik"));
+                B.Tip(button.transform, string.Empty, L.T("Realpolitik"),
                     L.T("Conecte a IA que faz as nações do computador pensarem, escreverem cartas e negociarem: login ou chave, modelo e limites."));
             }
             if (mainButton != null)

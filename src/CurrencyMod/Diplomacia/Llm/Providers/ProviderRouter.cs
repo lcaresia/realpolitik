@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
@@ -106,7 +106,7 @@ namespace CurrencyMod.Diplomacia.Llm.Providers
             List<ProviderDef> ready = Ready();
             if (ready.Count == 0)
             {
-                return Chain().Count == 0 ? "nenhum provedor configurado (tela Diplomacia IA)" : "sem chave/login nos provedores da fila";
+                return Chain().Count == 0 ? "nenhum provedor configurado (tela Realpolitik)" : "sem chave/login nos provedores da fila";
             }
             ProviderDef current = Current;
             string rest = ready.Count > 1 ? " · reserva: " + string.Join(", ", ready.Where(p => p != current).Select(p => p.Name)) : string.Empty;
@@ -119,12 +119,12 @@ namespace CurrencyMod.Diplomacia.Llm.Providers
             // Sem licença, nenhuma decisão, carta ou conselho chama a IA (o "Testar conexão" usa o SendWith e continua livre).
             if (!Licenca.License.AllowsAi)
             {
-                return new ChatResult { Ok = false, Kind = ErrorKind.Auth, Error = "sem licença (tela Diplomacia IA → Licença)" };
+                return new ChatResult { Ok = false, Kind = ErrorKind.Auth, Error = "sem licença (tela Realpolitik → Licença)" };
             }
             List<ProviderDef> ready = Ready();
             if (ready.Count == 0)
             {
-                return new ChatResult { Ok = false, Kind = ErrorKind.Auth, Error = "nenhum provedor com chave ou login (tela Diplomacia IA)" };
+                return new ChatResult { Ok = false, Kind = ErrorKind.Auth, Error = "nenhum provedor com chave ou login (tela Realpolitik)" };
             }
             DateTime now = DateTime.UtcNow;
             // Quem está de fora por erro recente vai para o fim, mas ainda é tentado se todos estiverem de fora.

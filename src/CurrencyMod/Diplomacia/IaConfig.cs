@@ -1,4 +1,4 @@
-﻿using BepInEx.Configuration;
+using BepInEx.Configuration;
 using UnityEngine;
 
 namespace CurrencyMod.Diplomacia
@@ -47,7 +47,7 @@ namespace CurrencyMod.Diplomacia
 
         internal static ConfigEntry<bool> ExpansionInOldSaves;
 
-        // [IA.Provedores]: editados pela tela Diplomacia IA. Chaves e tokens NUNCA ficam no .cfg.
+        // [IA.Provedores]: editados pela tela Realpolitik. Chaves e tokens NUNCA ficam no .cfg.
         internal static ConfigEntry<string> ProviderOrder;
         internal static readonly System.Collections.Generic.Dictionary<string, ConfigEntry<string>> ProviderModels =
             new System.Collections.Generic.Dictionary<string, ConfigEntry<string>>();
@@ -87,7 +87,7 @@ namespace CurrencyMod.Diplomacia
                     "Language the AI nations write in (letters, diaries, council) / Idioma em que as nações escrevem: Auto (same as the mod interface / o mesmo da interface), pt, en, es, fr, de.",
                     new AcceptableValueList<string>("Auto", "pt", "en", "es", "fr", "de")));
             Model = config.Bind(S, "Modelo", "deepseek-flash",
-                "Antigo: o modelo agora é escolhido por provedor na tela Diplomacia IA ([IA.Provedores] Modelo_<provedor>). Um valor diferente do padrão é levado uma vez para Modelo_deepseek.");
+                "Antigo: o modelo agora é escolhido por provedor na tela Realpolitik ([IA.Provedores] Modelo_<provedor>). Um valor diferente do padrão é levado uma vez para Modelo_deepseek.");
             Reasoning = config.Bind(S, "Raciocinio", "low",
                 new ConfigDescription("Quanto o modelo pensa antes de responder. desligado = sem raciocínio (mais barato); low/high/max = cada vez mais raciocínio (mais caro e mais lento).",
                     new AcceptableValueList<string>("desligado", "low", "high", "max")));
@@ -160,7 +160,7 @@ namespace CurrencyMod.Diplomacia
         {
             const string P = "IA.Provedores";
             ProviderOrder = config.Bind(P, "Ordem", "",
-                "AI providers in use, in order: the first is the main one; on any error the next one is used. Edit it in the AI Diplomacy screen. / Provedores em uso, em ordem: o primeiro é o principal; se der erro, passa para o próximo. Ex.: openrouter,deepseek. Vazio = DeepSeek, se houver chave.");
+                "AI providers in use, in order: the first is the main one; on any error the next one is used. Edit it in the Realpolitik screen. / Provedores em uso, em ordem: o primeiro é o principal; se der erro, passa para o próximo. Ex.: openrouter,deepseek. Vazio = DeepSeek, se houver chave.");
             foreach (Llm.Providers.ProviderDef provider in Llm.Providers.ProviderCatalog.All)
             {
                 ProviderModels[provider.Id] = config.Bind(P, "Modelo_" + provider.Id, provider.Recommended?.Id ?? "",

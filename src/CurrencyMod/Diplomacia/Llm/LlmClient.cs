@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -245,8 +245,8 @@ namespace CurrencyMod.Diplomacia.Llm
             if (provider?.Id == "openrouter")
             {
                 // Identificação do app no OpenRouter (opcional; aparece no painel do jogador).
-                http.Headers["X-OpenRouter-Title"] = "Humankind AI Diplomacy";
-                http.Headers["X-Title"] = "Humankind AI Diplomacy";
+                http.Headers["X-OpenRouter-Title"] = "Realpolitik: Living Nations";
+                http.Headers["X-Title"] = "Realpolitik: Living Nations";
             }
             http.UserAgent = "HumankindAIDiplomacy/1.0";
             http.Timeout = timeoutSeconds * 1000;

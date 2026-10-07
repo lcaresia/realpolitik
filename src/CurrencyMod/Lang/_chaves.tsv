@@ -24,14 +24,14 @@ Diplomacia\UI\ProvidersScreen.cs	1º: principal
 NativeUI\NativeBankWindow.cs	2 · Inflação → juros: {0} (meta {1})
 NativeUI\NativeBankWindow.cs	3 · Juros → produção: {0}
 NativeUI\NativeBankButton.cs	<c=E8685E>Alerta: {0}.</c> Veja o diagnóstico na aba Ciclo.
-Diplomacia\Llm\Providers\OAuthLogin.cs	A Diplomacia IA já está conectada. Esta aba pode ser fechada.
+Diplomacia\Llm\Providers\OAuthLogin.cs	O Realpolitik já está conectado. Esta aba pode ser fechada.
 Diplomacia\UI\CouncilScreen.cs	A Mão
 Diplomacia\UI\CorrespondenceTab.cs	A carta está vazia.
 Diplomacia\UI\CorrespondenceTab.cs	A carta nova fica ligada à última carta deles que pedia resposta.
 Diplomacia\UI\CouncilScreen.cs	A chamada falhou: {0}. Use "Convocar de novo", à direita.
 Diplomacia\UI\CouncilScreen.cs	A chamada à API falhou: {0}
-Diplomacia\UI\ProvidersScreen.cs	A chave da compra libera a Diplomacia IA neste PC (até 3 PCs). Sem ela, todo o resto do mod funciona.
-Diplomacia\Licenca\License.cs	A chave já está ativa em {0} PCs (o limite é {1}). Libere um deles pelo próprio jogo daquele PC (Diplomacia IA → Licença → Liberar este PC). Se o PC não existe mais, fale com o suporte.
+Diplomacia\UI\ProvidersScreen.cs	A chave da compra libera a IA do Realpolitik neste PC (até 3 PCs). Sem ela, todo o resto do mod funciona.
+Diplomacia\Licenca\License.cs	A chave já está ativa em {0} PCs (o limite é {1}). Libere um deles pelo próprio jogo daquele PC (Realpolitik → Licença → Liberar este PC). Se o PC não existe mais, fale com o suporte.
 Diplomacia\UI\ProvidersScreen.cs	A chave que aparece depois da compra (RPLN-...). Fica criptografada neste PC.
 NativeUI\NativeBankWindow.cs	A comparação entre o dinheiro e a produção aparece depois do próximo fim de turno.
 Diplomacia\UI\CorrespondenceTab.cs	A correspondência com esta nação, em ordem, e o campo para escrever. A carta leva o tempo de entrega da sua era.
@@ -297,7 +297,8 @@ NativeUI\NativeBankWindow.cs	Dinheiro e produção crescem no ritmo do resto do 
 NativeUI\DiplomacyEconomyPanel.cs	Dinheiro ganho por turno, cada um na sua moeda. A barra compara em valor real, já convertido pelo câmbio.
 NativeUI\NativeBankWindow.cs	Dinheiro novo por turno, em média dos últimos turnos.
 EconomyDiagnosis.cs	Dinheiro à frente da produção
-Diplomacia\IaModule.cs	Diplomacia IA
+Diplomacia\IaModule.cs	Realpolitik
+Diplomacia\UI\ProvidersScreen.cs	IA das nações
 Diplomacia\Council\CouncilBank.cs	Diretor da Academia
 Diplomacia\Council\CouncilBank.cs	Diretor de Inteligência
 Diplomacia\Council\CouncilBank.cs	Diretora da Academia
@@ -508,7 +509,7 @@ Diplomacia\UI\ProvidersScreen.cs	Liberar
 Diplomacia\UI\ProvidersScreen.cs	Liberar este PC
 Diplomacia\UI\ProvidersScreen.cs	Licença
 Diplomacia\Licenca\License.cs	Licença apagada deste PC, mas sem conexão: a vaga continua ocupada no servidor. Se faltar vaga em outro PC, fale com o suporte.
-Diplomacia\Licenca\License.cs	Licença ativada neste PC ({0} de {1}). A Diplomacia IA está liberada.
+Diplomacia\Licenca\License.cs	Licença ativada neste PC ({0} de {1}). A IA do Realpolitik está liberada.
 Diplomacia\Licenca\License.cs	Licença conferida com o servidor: tudo certo.
 Diplomacia\UI\ProvidersScreen.cs	Licença …{0} recusada pelo servidor.
 Diplomacia\UI\MailScreen.cs	Lida
@@ -607,7 +608,7 @@ Diplomacia\UI\ProvidersScreen.cs	Modelos Grok pela chave da xAI (console.x.ai).
 CentralBankWindow.cs	Moderada
 NativeUI\NativeBankWindow.cs	Modo automático
 Diplomacia\UI\ProvidersScreen.cs	Modo de desenvolvimento
-Diplomacia\UI\ProvidersScreen.cs	Modo de desenvolvimento: nesta máquina a Diplomacia IA funciona sem chave. Ativar aqui testa o fluxo do comprador.
+Diplomacia\UI\ProvidersScreen.cs	Modo de desenvolvimento: nesta máquina a IA do Realpolitik funciona sem chave. Ativar aqui testa o fluxo do comprador.
 NativeUI\NativeBankWindow.cs	Modo dos juros
 NativeUI\NativeBankWindow.cs	Modo manual
 NativeUI\NativeBankWindow.cs	Modo: automático

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
@@ -755,7 +755,7 @@ namespace CurrencyMod.Diplomacia.UI
 
         private void Refresh()
         {
-            titleLabel.Text = L.T("Diplomacia IA");
+            titleLabel.Text = L.T("Realpolitik");
             descriptionLabel.Text = L.T("Escolha onde as nações do computador pensam. Nada de editar arquivos.");
             // Os mesmos textos do botão das Configurações: "Menu principal" fora da partida, "Voltar" no menu de pausa.
             bool inGame = CentralBankWindow.IsInGame;
@@ -800,7 +800,7 @@ namespace CurrencyMod.Diplomacia.UI
                     string chip = LicenseChip(out string chipColor);
                     B.SetLabel(item, string.Empty, $"{L.T("Licença")}\n<c={chipColor}>{chip}</c>");
                     B.Tip(item, string.Empty, L.T("Licença"),
-                        L.T("A chave da compra libera a Diplomacia IA neste PC (até 3 PCs). Sem ela, todo o resto do mod funciona."));
+                        L.T("A chave da compra libera a IA do Realpolitik neste PC (até 3 PCs). Sem ela, todo o resto do mod funciona."));
                     continue;
                 }
                 string name = provider == null ? L.T("Em uso") : provider.Name;
@@ -964,7 +964,7 @@ namespace CurrencyMod.Diplomacia.UI
             }
             introLabel.Text = intro;
 
-            SetRowLabel(enabledRow, L.T("Diplomacia IA"), L.T("Diplomacia IA"),
+            SetRowLabel(enabledRow, L.T("IA das nações"), L.T("IA das nações"),
                 L.T("Desligada, as nações do computador jogam só com a IA nativa e nenhuma chamada sai do PC."));
             bool subscription = current != null && current.Subscription;
             SetRowLabel(capRow, L.T("Teto de gasto por partida"), L.T("Teto de gasto"),
@@ -1040,7 +1040,7 @@ namespace CurrencyMod.Diplomacia.UI
             if (current == null)
             {
                 state = License.DevMode
-                    ? $"<c={Gold}>{L.T("Modo de desenvolvimento: nesta máquina a Diplomacia IA funciona sem chave. Ativar aqui testa o fluxo do comprador.")}</c>"
+                    ? $"<c={Gold}>{L.T("Modo de desenvolvimento: nesta máquina a IA do Realpolitik funciona sem chave. Ativar aqui testa o fluxo do comprador.")}</c>"
                     : L.T("Cole a chave da compra e clique em Ativar. Sem ela, todo o resto do mod funciona e as nações usam a IA nativa do jogo.");
             }
             else if (current.Problem != null)
@@ -1053,7 +1053,7 @@ namespace CurrencyMod.Diplomacia.UI
             }
             else
             {
-                state = $"<c={Green}>{L.F("Ativada neste PC ({0} de {1}).", current.Usage, current.Limit)}</c> " + L.T("A Diplomacia IA está liberada.");
+                state = $"<c={Green}>{L.F("Ativada neste PC ({0} de {1}).", current.Usage, current.Limit)}</c> " + L.T("A IA do Realpolitik está liberada.");
                 if (License.IsStale(current))
                 {
                     state += " " + L.F("Sem conferir com o servidor há {0} dia(s); offline, ela vale por mais {1} dia(s).",
@@ -1580,7 +1580,7 @@ namespace CurrencyMod.Diplomacia.UI
             }
             catch (Exception ex)
             {
-                Plugin.Log.LogWarning($"Remoção da tela Diplomacia IA: {ex.Message}");
+                Plugin.Log.LogWarning($"Remoção da tela Realpolitik: {ex.Message}");
             }
             window.gameObject.SetActive(false);
             Destroy(window.gameObject);
