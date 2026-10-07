@@ -260,7 +260,7 @@
 
 <div style="background:#070d16;border-top:1px solid rgba(255,255,255,.08)">
   <div style="max-width:1180px;margin:0 auto;padding:36px 20px;font-size:13px;line-height:1.7;color:#aab5c8">
-    <div style="display:flex;gap:20px;flex-wrap:wrap;margin-bottom:16px"><a href="privacy.html">{{ t.fPriv }}</a><a href="terms.html">{{ t.fTerms }}</a><a href="changelog.html">Changelog</a><a href="install.html">{{ t.fInst }}</a><a href="mailto:CONTACT_EMAIL_PLACEHOLDER">{{ t.fContact }}</a></div>
+    <div style="display:flex;gap:20px;flex-wrap:wrap;margin-bottom:16px"><a href="privacy.html">{{ t.fPriv }}</a><a href="terms.html">{{ t.fTerms }}</a><a href="changelog.html">Changelog</a><a href="install.html">{{ t.fInst }}</a><a href="mailto:lucascarezia@gmail.com">{{ t.fContact }}</a></div>
     Unofficial fan-made mod. Not affiliated with or endorsed by Amplitude Studios or SEGA. HUMANKIND is a trademark of its respective owners.
   </div>
 </div>
@@ -282,8 +282,8 @@ class Component extends DCLogic {
   renderVals() {
     const s = this.state, L = s.lang, t = Component.T[L], set = o => () => this.setState(o);
     const dec = v => L === 'en' ? v : v.replace('.', ',');
-    // Until Stripe activates the account, the Worker can't open a checkout and the visitor sees "store opens soon".
-    const soon = () => alert(L === 'pt' ? 'A loja abre em breve: o pagamento ainda não está ativo.' : 'The store opens soon: checkout is not live yet.');
+    // If the Worker or Stripe can't open a checkout, say so and point to support.
+    const soon = () => alert(L === 'pt' ? 'Não consegui abrir o pagamento agora. Tente de novo em instantes ou escreva para lucascarezia@gmail.com.' : 'Checkout could not be opened right now. Please try again in a moment or write to lucascarezia@gmail.com.');
     const buy = () => { if (this.buying) return; this.buying = true; fetch(Component.STORE_API + '/api/checkout', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ lang: L }) }).then(r => r.ok ? r.json() : null).then(j => { if (j && j.url) location.href = j.url; else soon(); }).catch(soon).finally(() => { this.buying = false; }); };
     const mult = Math.max(.75, Math.min(1.05, 1 - .05 * (s.rate - 1)));
     const infl = Math.max(-1, .5 + (1 - s.rate) * .4);

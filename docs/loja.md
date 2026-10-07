@@ -72,8 +72,8 @@ propósito.
 
 ## Antes de vender (checklist)
 
-1. **Stripe:** concluir a ativação da conta (hoje `charges_enabled=false`) e ligar cartões em
-   Configurações → Métodos de pagamento. Sem isso o checkout responde "No valid payment method types".
+1. ~~**Stripe:**~~ conta ativada em 2026-10-07 (`charges_enabled=true`, `card_payments=active`); checkout live conferido.
+   (Se um dia voltar "No valid payment method types", conferir Configurações → Métodos de pagamento.)
 2. ~~R2~~ ligado em 2026-10-06 (bucket `realpolitik-releases`).
 3. **Primeira versão:** `loja\tools\publicar-versao.ps1 -Versao 1.0.0 -Arquivo <zip ou exe> -Notas "..." -JogoTestado 1.31.4836`.
    Sobe o arquivo, grava sha256/tamanho/data no `releases/manifest.json` e marca como mais recente. O script recusa zip
@@ -84,7 +84,7 @@ propósito.
    a chave aparece só na página "obrigado" (com copiar e "salvar em .txt"); quem perder recupera em `download.html`
    com o e-mail da compra + o número do recibo que a Stripe manda (`POST /api/recover`). Grátis e sem domínio.
    E-mail próprio (Resend, precisa de domínio) fica opcional: `RESEND_API_KEY` + `LOJA_MAIL_FROM` no `.env`, deploy.
-5. **Contato:** trocar `CONTACT_EMAIL_PLACEHOLDER` no site.
+5. ~~**Contato:**~~ lucascarezia@gmail.com no rodapé e na privacidade (2026-10-07).
 6. **Impostos:** você é o vendedor. VAT da UE e do Reino Unido valem desde a 1ª venda (OSS não-UE); Stripe Tax
    (0,5%/venda) calcula, mas o cadastro e o recolhimento são seus; IR no Brasil. Falar com um contador. Para ligar o
    cálculo no checkout: `STRIPE_AUTOMATIC_TAX=true` no deploy (e cadastrar os registros na Stripe Tax antes).
