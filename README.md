@@ -113,9 +113,28 @@ ilspycmd -p -o _Modding\decompiled\<Assembly> -r Humankind_Data\Managed Humankin
 - Comandos de dev: `ia status`, `ia dossie <n>`, `ia agora [n]`, `ia carta <n> <texto>`... em `_Modding\dev\cmd.txt`.
 - Detalhes: `docs\diplomacia-ia.md`. Design: `docs\design-diplomacia-ia.md`.
 
-## Distribuir
-`powershell -ExecutionPolicy Bypass -File _Modding\tools\empacotar.ps1` gera `_Modding\dist\HumankindMod_<versão>.zip`
-(carregador + núcleo + LEIA-ME), compilando sem instalar. Instruções para quem recebe: `docs\instalacao.md`.
+## Gerar uma versão (venda)
+1. Ajuste `Plugin.ProductVersion` em `src\CurrencyMod\Plugin.cs`. Ele precisa bater com a versão, porque o aviso de
+   atualização do jogo usa esse número.
+2. `powershell -ExecutionPolicy Bypass -File _Modding\tools\gerar-release.ps1 -Versao 1.0.1` gera em `dist\<versão>\`:
+   - o `Realpolitik_Setup_<versão>.exe` (Inno Setup, `installer\Realpolitik.iss`);
+   - o `Realpolitik_<versão>_manual.zip`;
+   - o `MANIFEST.txt` e o `SHA256SUMS.txt`.
+
+   O script compila sem tocar no jogo e monta um staging com **lista branca** de arquivos. Ele faz a **trava de
+   segredos**: chaves, valores do `.env` e caminhos desta máquina, procurados até dentro das DLLs. Falha alto em
+   qualquer problema. `-TestarTrava` prova que a trava funciona.
+3. Testes: `installer\testes\testar-instalador.ps1 -Versao X -Teste T1..T11`, sempre com o backup antes e a restauração
+   conferida depois. Roteiro e resultados de 1.0.0: `docs\relatorios\instalador-1.0.0.md`.
+4. Envie o Setup à Microsoft (`docs\envio-microsoft.md`).
+5. Publique na loja (`loja\tools\publicar-versao.ps1`) e crie a tag `vX.Y.Z` no Git.
+
+Peças do instalador:
+- `installer\textos\`: leia-me e termos em 5 idiomas e o `THIRD-PARTY.txt`;
+- `installer\vendor\`: o zip oficial do BepInEx e as licenças;
+- `installer\art\`: ícone e imagens, gerados por `gerar-arte.ps1`.
+
+O antigo `tools\empacotar.ps1` (zip simples, sem BepInEx) foi substituído pelo `gerar-release.ps1`.
 
 ## Backups
 Ficam em `Documentos\HumankindModding\backups\` (fora da pasta da Steam).

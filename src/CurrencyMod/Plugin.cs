@@ -23,8 +23,13 @@ namespace CurrencyMod
 
         internal static void BindConfig(ConfigFile config)
         {
-            // Relê o .cfg a cada recarga do núcleo: edições feitas com o jogo aberto passam a valer.
-            config.Reload();
+            // Relê o .cfg a cada recarga do núcleo: edições feitas com o jogo aberto passam a valer. Na primeira vez que o
+            // jogo abre (instalação nova) o arquivo ainda não existe e o Reload daria FileNotFoundException: os Bind
+            // abaixo criam o .cfg com os padrões.
+            if (System.IO.File.Exists(config.ConfigFilePath))
+            {
+                config.Reload();
+            }
             L.Bind(config);
             ToggleWindowKey = config.Bind("Interface", "AtalhoBancoCentral", new KeyboardShortcut(KeyCode.F8),
                 "Tecla que abre/fecha a janela do Banco Central.");
