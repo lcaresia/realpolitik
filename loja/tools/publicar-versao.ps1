@@ -67,6 +67,8 @@ if ($Versao -notmatch '^\d+\.\d+\.\d+(-[0-9A-Za-z.]+)?$') { throw "Versão invá
 $full = (Resolve-Path $Arquivo).Path
 $name = [IO.Path]::GetFileName($full)
 if ($name -notmatch '^[\w.\-]+$') { throw "Nome de arquivo com caracteres estranhos: $name" }
+# Regra do dono (2026-10-07): a loja recebe só o instalador. O zip manual fica em dist\<versão>\, nunca sobe.
+if ($name -notmatch '^Realpolitik_Setup_.+\.exe$') { throw "Na loja sobe só o Realpolitik_Setup_<versão>.exe (recebido: $name)." }
 
 # Trava de segurança: zip não pode levar segredos.
 if ($name -like '*.zip') {

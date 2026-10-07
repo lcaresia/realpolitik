@@ -75,7 +75,9 @@ propósito.
 1. ~~**Stripe:**~~ conta ativada em 2026-10-07 (`charges_enabled=true`, `card_payments=active`); checkout live conferido.
    (Se um dia voltar "No valid payment method types", conferir Configurações → Métodos de pagamento.)
 2. ~~R2~~ ligado em 2026-10-06 (bucket `realpolitik-releases`).
-3. **Primeira versão:** `loja\tools\publicar-versao.ps1 -Versao 1.0.0 -Arquivo <zip ou exe> -Notas "..." -JogoTestado 1.31.4836`.
+3. **Primeira versão:** `loja\tools\publicar-versao.ps1 -Versao 1.0.0 -Arquivo <Realpolitik_Setup_X.exe> -Notas "..." -JogoTestado 1.31.4836`.
+   **Regra: na loja sobe só o `Realpolitik_Setup_<versão>.exe`.** O zip manual fica só em `dist\<versão>\`; o script
+   recusa qualquer outro arquivo.
    Sobe o arquivo, grava sha256/tamanho/data no `releases/manifest.json` e marca como mais recente. O script recusa zip
    com `.env`, `*.key`, `credenciais/` ou `_Modding/dev/`. Também: `-Listar`, `-Remover <versão>`,
    `-NaoMarcarComoUltima` (beta), `-JogoQuebrado <versões do jogo>` (vira `brokenOn` no `/api/version`).
