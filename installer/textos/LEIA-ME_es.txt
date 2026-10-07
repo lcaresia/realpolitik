@@ -3,7 +3,7 @@ REALPOLITIK: LIVING NATIONS FOR HUMANKIND
 
 REQUISITOS
 - HUMANKIND en Windows (Steam o Epic), un jugador.
-- Internet solo para activar la licencia y para la Diplomacia IA.
+- Internet solo para activar la licencia y para la IA de Realpolitik.
 
 INSTALAR
 - Setup: ejecuta Realpolitik_Setup.exe. Encuentra el juego e instala BepInEx si falta.
@@ -13,7 +13,7 @@ INSTALAR
   Humankind.exe) y acepta combinar la carpeta BepInEx.
 
 ACTIVAR
-1. Abre el juego -> menú principal -> Diplomacia IA -> Licencia.
+1. Abre el juego -> menú principal -> Realpolitik -> Licencia.
 2. Pega tu clave (RPLN-XXXXX-XXXXX-XXXXX-XXXXX) y haz clic en Activar.
    Válida en hasta 3 PC. Para cambiar de PC, usa "Liberar este PC" en el antiguo.
 3. Elige un proveedor de IA a la izquierda (el más fácil es OpenRouter: un inicio de sesión, sin clave).
