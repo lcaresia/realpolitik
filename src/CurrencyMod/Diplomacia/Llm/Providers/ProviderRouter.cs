@@ -62,7 +62,8 @@ namespace CurrencyMod.Diplomacia.Llm.Providers
         /// <summary>Tem chave ou login. O Codex não guarda nada no mod: vale o login feito no próprio Codex.</summary>
         internal static bool HasAccess(ProviderDef provider)
         {
-            return provider.Format == WireFormat.CodexCli ? CodexCli.Ready : Credentials.Has(provider.Id);
+            // O modelo local não tem chave: se o servidor não estiver de pé, a chamada falha e a fila passa ao próximo.
+            return provider.Format == WireFormat.CodexCli ? CodexCli.Ready : provider.Local || Credentials.Has(provider.Id);
         }
 
         internal static bool AnyReady => Ready().Count > 0;
@@ -70,6 +71,10 @@ namespace CurrencyMod.Diplomacia.Llm.Providers
         internal static string ModelFor(ProviderDef provider)
         {
             string model = IaConfig.ProviderModels.TryGetValue(provider.Id, out var entry) ? entry.Value?.Trim() : null;
+            if (string.IsNullOrEmpty(model) && provider.Local)
+            {
+                return LocalLlm.FirstModel(provider) ?? string.Empty;
+            }
             return string.IsNullOrEmpty(model) ? provider.Recommended?.Id : model;
         }
 
@@ -180,6 +185,17 @@ namespace CurrencyMod.Diplomacia.Llm.Providers
                     ReasoningEffort = request.ReasoningEffort,
                     JsonMode = request.JsonMode,
                 }, provider, timeoutSeconds);
+            }
+            if (provider.Local)
+            {
+                LocalLlm.Apply(provider);
+                if (string.IsNullOrEmpty(request.Model) && string.IsNullOrEmpty(ModelFor(provider)))
+                {
+                    // Ainda não sabemos o modelo (nunca listou): procura o servidor e falha esta chamada, a fila segue.
+                    LocalLlm.Probe(provider, force: true);
+                    return new ChatResult { Ok = false, Kind = ErrorKind.Network, ProviderId = provider.Id, Error = "servidor local sem modelo (ou fora do ar)" };
+                }
+                credential = new Credential();
             }
             credential = credential ?? Credentials.Get(provider.Id);
             if (credential == null)

@@ -110,8 +110,11 @@ namespace CurrencyMod.Diplomacia.UI
             Instance = this;
         }
 
+        private Action<Amplitude.UI.Interactables.IUITextField, string> bodyChanged;
+
         private void Update()
         {
+            NativeUIKit.EnsureTextChange(bodyField, bodyChanged ?? (bodyChanged = (f, t) => { if (feedbackIsError) { feedback = null; } nextRefresh = 0; }));
             if (Time.unscaledTime < nextCheck)
             {
                 return;
@@ -278,6 +281,7 @@ namespace CurrencyMod.Diplomacia.UI
             {
                 Destroy(stash);
             }
+            ClearPanelTooltips();
             BuildCompose();
             emptyCard = listTable.InstantiateChild(cardSample, "EmptyCard").transform;
             B.SetVisible(cardSample, false);
@@ -285,6 +289,26 @@ namespace CurrencyMod.Diplomacia.UI
             built = true;
             Active = false;
             Plugin.Log.LogInfo("Aba de cartas da diplomacia montada.");
+        }
+
+        /// <summary>Os cartões clonados da lista de cidades trazem tooltips de cidade: limpa todos (só os do painel nosso).</summary>
+        private void ClearPanelTooltips()
+        {
+            foreach (UITooltip tooltip in panel.GetComponentsInChildren<UITooltip>(true))
+            {
+                if (tooltip == null)
+                {
+                    continue;
+                }
+                try
+                {
+                    tooltip.Unbind(preserveTooltipClass: false);
+                    tooltip.Message = string.Empty;
+                }
+                catch (Exception)
+                {
+                }
+            }
         }
 
         /// <summary>Cinco abas em vez de quatro: os espaçadores das pontas encolhem para a fileira caber nos 1176 px.</summary>
@@ -438,7 +462,7 @@ namespace CurrencyMod.Diplomacia.UI
                 demandField = demandItem.GetComponent<UITextField>();
                 bodyItem = CloneField(fieldDonor, "BodyField", 300f, true, 4000, L.T("Escreva sua carta…"));
                 bodyField = bodyItem.GetComponent<UITextField>();
-                bodyField.TextChange += (field, text) => nextRefresh = 0;
+                // TextChange é ligado em Update (EnsureTextChange), depois que o campo carrega.
             }
             Transform sliderDonor = DevTools.FindByPath(SliderDonor);
             if (sliderDonor != null)
@@ -466,6 +490,7 @@ namespace CurrencyMod.Diplomacia.UI
                     controlUi.X = sampleUi.Width - 160f;
                 }
                 deadlineSlider = deadlineItem.Find("Slider").GetComponent<UISlider>();
+                NativeUIKit.Tip(deadlineItem, L.T("Prazo do ultimato"), L.T("Turnos que a nação tem para cumprir a exigência, contados a partir do envio."));
                 deadlineSlider.Min = 1f;
                 deadlineSlider.Max = 10f;
                 deadlineSlider.Step = 1f;
@@ -498,6 +523,10 @@ namespace CurrencyMod.Diplomacia.UI
                 field.multiline = true;
                 field.OnMultilineChanged(false, true);
             }
+            NativeUIKit.Tip(item, name == "BodyField" ? L.T("Texto da carta") : name == "SubjectField" ? L.T("Assunto") : L.T("Exigência"),
+                name == "BodyField" ? L.F("Enter quebra a linha. Até {0} palavras.", IaConfig.PlayerLetterMaxWords.Value)
+                : name == "SubjectField" ? L.T("Uma linha que resume a carta. Opcional.")
+                : L.T("O que você exige no ultimato. O prazo fica no controle abaixo."));
             return item;
         }
 

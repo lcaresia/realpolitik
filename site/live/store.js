@@ -104,6 +104,7 @@ window.RP = (function () {
     (kids || []).forEach(function (c) { if (c) e.appendChild(c); });
     return e;
   }
+  function track(n, d) { try { if (window.umami) window.umami.track(n, d); } catch (e) {} }
   function fmtSize(b) { return b ? (b / 1048576).toFixed(1) + ' MB' : ''; }
   function renderDownloads(box, j) {
     box.innerHTML = '';
@@ -115,11 +116,11 @@ window.RP = (function () {
       el('div', { 'class': 'ver', text: 'v' + latest.version }),
       el('div', { 'class': 'note', text: [latest.date, latest.testedGame ? t.tested + ' ' + latest.testedGame : '', fmtSize(latest.size)].filter(Boolean).join(' · ') }),
       latest.notes ? el('p', { text: latest.notes }) : null,
-      el('a', { 'class': 'btn', href: latest.url, text: '↓ ' + latest.file })
+      el('a', { 'class': 'btn', href: latest.url, 'data-umami-event': 'download_click', 'data-umami-event-version': latest.version, text: '↓ ' + latest.file })
     ]));
     var rest = vs.filter(function (v) { return v !== latest; });
     if (rest.length) {
-      var ul = el('ul', {}, rest.map(function (v) { return el('li', {}, [el('a', { href: v.url, text: 'v' + v.version + ' — ' + v.file }), el('span', { 'class': 'note', text: '  ' + [v.date, fmtSize(v.size)].filter(Boolean).join(' · ') })]); }));
+      var ul = el('ul', {}, rest.map(function (v) { return el('li', {}, [el('a', { href: v.url, 'data-umami-event': 'download_click', 'data-umami-event-version': v.version, text: 'v' + v.version + ' — ' + v.file }), el('span', { 'class': 'note', text: '  ' + [v.date, fmtSize(v.size)].filter(Boolean).join(' · ') })]); }));
       box.appendChild(el('details', {}, [el('summary', { text: t.older }), ul]));
     }
   }
@@ -135,5 +136,5 @@ window.RP = (function () {
     document.querySelectorAll('[data-t]').forEach(function (n) { n.textContent = t[n.getAttribute('data-t')]; });
     document.querySelectorAll('[data-ph]').forEach(function (n) { n.setAttribute('placeholder', t[n.getAttribute('data-ph')]); });
   }
-  return { api: api, t: t, lang: lang, el: el, renderDownloads: renderDownloads, errorText: errorText, fillText: fillText };
+  return { track: track, api: api, t: t, lang: lang, el: el, renderDownloads: renderDownloads, errorText: errorText, fillText: fillText };
 })();

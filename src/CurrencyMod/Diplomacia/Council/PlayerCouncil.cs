@@ -47,6 +47,8 @@ namespace CurrencyMod.Diplomacia.Council
         public List<CouncilExchange> Exchanges = new List<CouncilExchange>();
         /// <summary>Demissões e contratações feitas durante a reunião (entram na próxima resposta).</summary>
         public List<string> Notes = new List<string>();
+        /// <summary>As mesmas notas no idioma da interface (as de cima seguem em português para a IA).</summary>
+        public List<string> NotesUi = new List<string>();
         public bool Seen;
         public double CostUsd;
     }
@@ -282,6 +284,9 @@ namespace CurrencyMod.Diplomacia.Council
                 return "erro: " + L.F("pasta desconhecida ({0})", string.Join(", ", CouncilBank.Portfolios));
             }
             IaNation nation = world.Ensure(module.PlayerIndex);
+            Minister former = nation.Council.FirstOrDefault(m => m.Portfolio == portfolio);
+            int formerEra = capture.Empire(module.PlayerIndex)?.EraIndex ?? 0;
+            string formerUi = former != null ? CouncilBank.TitleUi(former.Portfolio, formerEra, former.Gender) + " " + former.Name : "?";
             string result = CouncilEngine.Fire(world, nation, capture, portfolio, module.CurrentTurn);
             if (result == null)
             {
@@ -289,7 +294,13 @@ namespace CurrencyMod.Diplomacia.Council
             }
             Minister newcomer = nation.Council.FirstOrDefault(m => m.Portfolio == portfolio);
             int era = capture.Empire(module.PlayerIndex)?.EraIndex ?? 0;
-            Meeting(world, module.CurrentTurn)?.Notes.Add(result + (newcomer != null ? $" (ficha do novo: {Card(newcomer, era, capture)})" : string.Empty));
+            CouncilMeeting noted = Meeting(world, module.CurrentTurn);
+            if (noted != null)
+            {
+                noted.Notes.Add(result + (newcomer != null ? $" (ficha do novo: {Card(newcomer, era, capture)})" : string.Empty));
+                noted.NotesUi.Add(L.F("Demissão de {0}; no lugar entra {1}", formerUi, newcomer?.Name ?? L.T("ninguém"))
+                    + (newcomer != null ? " (" + L.F("ficha do novo: {0}", CardUi(newcomer, era)) + ")" : string.Empty));
+            }
             IaModule.Runtime.Event("Conselho do jogador: " + result + ".");
             module.MarkDirty();
             return "ok: " + result;
@@ -819,6 +830,22 @@ namespace CurrencyMod.Diplomacia.Council
                 }
             }
             return text.ToString();
+        }
+
+        /// <summary>A ficha curta no idioma da interface (a Card, em português, segue para a IA).</summary>
+        internal static string CardUi(Minister minister, int era)
+        {
+            var parts = new List<string>
+            {
+                CouncilBank.TitleUi(minister.Portfolio, era, minister.Gender) + " " + minister.Name,
+                L.F("Traços: {0}", string.Join(", ", minister.Traits.Select(CouncilBank.TraitUi))),
+            };
+            if (!string.IsNullOrWhiteSpace(minister.Voice))
+            {
+                parts.Add(L.F("Voz: {0}", L.T(minister.Voice))); // voz: do banco padrão, marcado com L.N
+            }
+            parts.Add(L.F("Credibilidade {0}", minister.Credibility));
+            return string.Join(" · ", parts);
         }
 
         /// <summary>Ficha curta de um ministro (título, nome, traços, voz e números).</summary>

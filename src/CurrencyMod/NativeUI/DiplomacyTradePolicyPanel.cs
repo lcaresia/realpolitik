@@ -22,10 +22,10 @@ namespace CurrencyMod.NativeUI
         private const string PanelName = "CurrencyMod_TradePolicyPanel";
         private const float Left = 24f;      // relativo a Content (x 372 na tela): alinha com "Seus Recursos"
         private const float Width = 540f;
-        private const float TitleTop = 248f;
-        private const float BoxTop = 280f;
-        private const float BoxHeight = 146f;
-        private const float PriceTop = 76f;
+        private const float TitleTop = 180f;
+        private const float BoxTop = 212f;
+        private const float BoxHeight = 122f;
+        private const float PriceTop = 68f;
         private const float PriceButtonWidth = 30f;
         private const float ButtonWidth = 160f;
         private const float ButtonHeight = 30f;
@@ -66,9 +66,33 @@ namespace CurrencyMod.NativeUI
                 {
                     return;
                 }
-                if (root == null && !Build(screen.transform))
+                if (root == null)
                 {
-                    return;
+                    // A busca do doador varre a tela inteira: só com a aba Comércio aberta, e se falhar espera 2 s.
+                    if (screen.currentMode != DiplomaticScreenMode.Trade)
+                    {
+                        return;
+                    }
+                    bool built;
+                    try
+                    {
+                        built = Build(screen.transform);
+                    }
+                    catch
+                    {
+                        foreach (Transform part in parts)
+                        {
+                            NativeUIKit.Dispose(part);
+                        }
+                        parts.Clear();
+                        root = null;
+                        throw;
+                    }
+                    if (!built)
+                    {
+                        nextUpdate = Time.unscaledTime + 2f;
+                        return;
+                    }
                 }
                 Refresh();
                 failed = false;
@@ -114,20 +138,23 @@ namespace CurrencyMod.NativeUI
 
             Transform smallCaps = mySide.Find("MyStrategicsLabel");
             info = Part(smallCaps, "Info");
-            NativeUIKit.Place(info, Left, BoxTop + 4, Width, 30);
+            NativeUIKit.Place(info, Left, BoxTop + 2, Width, 30);
             NativeUIKit.Align(info, HorizontalAlignment.Center);
+            NoGrow(info);
+            Brighten(info);
 
             float buttonsLeft = Left + (Width - (3 * ButtonWidth + 2 * ButtonGap)) / 2f;
             for (int i = 0; i < 3; i++)
             {
                 Transform button = Part(toggleDonor, "Mode" + i);
-                NativeUIKit.Place(button, buttonsLeft + i * (ButtonWidth + ButtonGap), BoxTop + 38, ButtonWidth, ButtonHeight);
+                NativeUIKit.Place(button, buttonsLeft + i * (ButtonWidth + ButtonGap), BoxTop + 34, ButtonWidth, ButtonHeight);
                 UILabel label = NativeUIKit.Label(button);
                 label.AutoAdjustWidth = false;
                 label.Alignment = new Alignment(HorizontalAlignment.Center, VerticalAlignment.Center);
                 label.Text = L.T(ModeLabels[i]); // ModeLabels: marcados com L.N
                 // O rótulo ajustava a largura do botão ao texto: com o ajuste desligado, posiciona de novo.
-                NativeUIKit.Place(button, buttonsLeft + i * (ButtonWidth + ButtonGap), BoxTop + 38, ButtonWidth, ButtonHeight);
+                NativeUIKit.Place(button, buttonsLeft + i * (ButtonWidth + ButtonGap), BoxTop + 34, ButtonWidth, ButtonHeight);
+                FitLabel(label, ButtonWidth);
                 buttons[i] = button.GetComponent<UIToggle>();
                 int index = i;
                 buttons[i].Switch += (source, state) => Button_Switch(index);
@@ -150,11 +177,49 @@ namespace CurrencyMod.NativeUI
             priceUp = PriceButton(toggleDonor, "PriceUp", "+", upLeft, +1);
 
             footer = Part(smallCaps, "Footer");
-            NativeUIKit.Place(footer, Left, BoxTop + 110, Width, 30);
+            NativeUIKit.Place(footer, Left, BoxTop + 92, Width, 26);
             NativeUIKit.Align(footer, HorizontalAlignment.Center);
+            NoGrow(footer);
+            Brighten(footer);
+            Brighten(priceLabel);
 
             Plugin.Log.LogInfo("Bloco de postos comerciais criado na aba Comércio da diplomacia.");
             return true;
+        }
+
+        /// <summary>Linha de texto de largura fixa que corta com reticências (o doador crescia para os dois lados e saía da caixa).</summary>
+        /// <summary>As linhas do bloco ficam sobre o mapa: o doador vem a 50% de opacidade e perde a leitura.</summary>
+        private static void Brighten(Transform target)
+        {
+            UILabel label = NativeUIKit.Label(target);
+            if (label != null)
+            {
+                label.Color = new Color(1f, 1f, 1f, 0.92f);
+            }
+        }
+
+        private static void NoGrow(Transform target)
+        {
+            UILabel label = NativeUIKit.Label(target);
+            if (label != null)
+            {
+                label.AutoAdjustWidth = false;
+                label.AutoTruncate = true;
+            }
+        }
+
+        /// <summary>
+        /// O botão doador tem largura automática de 65 a 80: o texto continuava centrado nessa faixa (e não no botão
+        /// de verdade), então "+" caía fora do botão e "Livre" ficava à esquerda. Faixa = largura do botão e texto de novo.
+        /// </summary>
+        private static void FitLabel(UILabel label, float width)
+        {
+            label.AutoAdjustWidthMin = width;
+            label.AutoAdjustWidthMax = width;
+            label.AutoAdjustWidth = false;
+            string text = label.Text;
+            label.Text = string.Empty;
+            label.Text = text;
         }
 
         /// <summary>− ou + do preço geral: o mesmo botão da tabela de comércio, usado como botão (volta a desligado no clique).</summary>
@@ -167,6 +232,7 @@ namespace CurrencyMod.NativeUI
             label.Alignment = new Alignment(HorizontalAlignment.Center, VerticalAlignment.Center);
             label.Text = text;
             NativeUIKit.Place(button, left, BoxTop + PriceTop + 2f, PriceButtonWidth, 26f);
+            FitLabel(label, PriceButtonWidth);
             UIToggle toggle = button.GetComponent<UIToggle>();
             toggle.Switch += (source, state) =>
             {

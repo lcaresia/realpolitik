@@ -377,6 +377,77 @@ namespace CurrencyMod
                 currency.ExchangeValue = Clamp(currency.ExchangeValue / exchangeGeoMean, EconomyConfig.ExchangeMin.Value, EconomyConfig.ExchangeMax.Value);
                 currency.PushHistory(turn);
             }
+            RecordTrade(world, turn);
+        }
+
+        /// <summary>
+        /// Livro do Banco Central: grava um movimento de dinheiro no turno atual, só se algum dos lados for um jogador humano
+        /// (os eventos entre IAs não aparecem em tela e só engordariam o save). Quem chama já tem o CurrencyManager.Lock.
+        /// </summary>
+        internal static void RecordMoney(CurrencyWorld world, int from, int to, double paid, double gain, int kind)
+        {
+            Sandbox sandbox = SandboxManager.Sandbox;
+            if (sandbox == null || world == null)
+            {
+                return;
+            }
+            if (!IsHuman(from) && !IsHuman(to))
+            {
+                return;
+            }
+            world.RecordMoney(sandbox.Turn, from, to, paid, gain, kind);
+        }
+
+        private static bool IsHuman(int empireIndex)
+        {
+            return empireIndex >= 0 && empireIndex < Sandbox.NumberOfMajorEmpires && Sandbox.MajorEmpires[empireIndex] != null
+                && Sandbox.MajorEmpires[empireIndex].IsControlledByHuman;
+        }
+
+        /// <summary>
+        /// Grava as compras de recursos por rota deste turno (quem compra de quem e quanto paga por turno), para o gráfico de
+        /// importação e exportação do Banco Central. Roda na thread do sandbox, no fim do turno.
+        /// </summary>
+        private static void RecordTrade(CurrencyWorld world, int turn)
+        {
+            try
+            {
+                TradePoint point = world.PointFor(turn);
+                point.Flows.Clear();
+                point.Money.RemoveAll(m => m.Kind == MoneyKind.Upkeep);
+                int majors = Sandbox.NumberOfMajorEmpires;
+                TradeController controller = Sandbox.TradeController;
+                if (controller != null)
+                {
+                    foreach (ExternalTradeRelation relation in controller.ExternalTradeRelations)
+                    {
+                        if (relation == null || relation.TradeRoadStatus != Amplitude.Mercury.Interop.TradeRoadStatus.Active)
+                        {
+                            continue;
+                        }
+                        foreach (ExternalTradeExchange exchange in new[] { relation.LeftTradeExchange.Entity, relation.RightTradeExchange.Entity })
+                        {
+                            Empire buyer = exchange?.BuyerEmpire.Entity;
+                            Empire seller = exchange?.SellerEmpire.Entity;
+                            if (buyer == null || seller == null || buyer.Index >= majors || seller.Index >= majors)
+                            {
+                                continue;
+                            }
+                            int goods = (int)(float)exchange.NumberOfDifferentResourceTraded.Value;
+                            double value = (float)exchange.TradeUpkeepAfterResourceDiversification.Value;
+                            if ((goods > 0 || value > 0) && (IsHuman(buyer.Index) || IsHuman(seller.Index)))
+                            {
+                                point.Flows.Add(new TradeFlow { Buyer = buyer.Index, Seller = seller.Index, Value = Math.Round(value, 2), Goods = goods });
+                                point.Money.Add(new MoneyFlow { From = buyer.Index, To = seller.Index, Paid = Math.Round(value, 2), Gain = 0, Kind = MoneyKind.Upkeep });
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Plugin.Log.LogWarning($"Comércio do turno não gravado: {ex.Message}");
+            }
         }
 
         private static double TargetInflation(MajorEmpire empire, EmpireCurrency currency)

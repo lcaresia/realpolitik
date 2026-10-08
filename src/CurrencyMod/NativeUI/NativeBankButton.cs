@@ -38,6 +38,8 @@ namespace CurrencyMod.NativeUI
 
         public static bool Exists => instance != null && instance.button != null;
 
+        private float nextWindowTry;
+
         private void Awake()
         {
             instance = this;
@@ -56,17 +58,19 @@ namespace CurrencyMod.NativeUI
             }
 
             // O botão aceso acompanha a janela aberta.
-            if (NativeBankWindow.Instance == null)
+            if (NativeBankWindow.Instance == null && Time.unscaledTime >= nextWindowTry)
             {
+                // Tenta uma vez por segundo (a doadora ou o grupo podem ainda não estar prontos) e, se a montagem estourar
+                // (uma atualização do jogo mexendo na tela de Configurações), espera 30 s em vez de desligar o botão.
+                nextWindowTry = Time.unscaledTime + 1f;
                 try
                 {
                     NativeBankWindow.Create();
                 }
                 catch (Exception ex)
                 {
-                    Plugin.Log.LogError($"Falha ao criar a janela nativa: {ex}");
-                    enabled = false;
-                    return;
+                    Plugin.Log.LogError($"Falha ao criar a tela do Banco Central: {ex}");
+                    nextWindowTry = Time.unscaledTime + 30f;
                 }
             }
 

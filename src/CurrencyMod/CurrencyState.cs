@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using Newtonsoft.Json;
 
 namespace CurrencyMod
@@ -10,6 +12,49 @@ namespace CurrencyMod
         public double ExchangeValue;
         public double InflationRate;
         public double InterestRate;
+    }
+
+    /// <summary>Uma compra de recursos por rota comercial num turno: o comprador paga a manutenção ao vendedor (na moeda do comprador).</summary>
+    public class TradeFlow
+    {
+        public int Buyer;
+        public int Seller;
+        public double Value;
+        public int Goods;
+    }
+
+    /// <summary>
+    /// Dinheiro que passou de um império para outro num turno. Paid sai do caixa de From (na moeda dele); Gain entra no de To
+    /// (na moeda dele, já convertido). Kind: ver MoneyKind.
+    /// </summary>
+    public class MoneyFlow
+    {
+        public int From;
+        public int To;
+        public double Paid;
+        public double Gain;
+        public int Kind;
+    }
+
+    public static class MoneyKind
+    {
+        /// <summary>Compra de recursos: o comprador paga na hora e o vendedor ganha uma parte, uma vez só.</summary>
+        public const int Resources = 0;
+        /// <summary>Manutenção das rotas comerciais, por turno, paga pelo comprador (não vai para o vendedor).</summary>
+        public const int Upkeep = 1;
+        /// <summary>Pedágio dos postos: por turno, do dono da rota para o dono do posto.</summary>
+        public const int Toll = 2;
+        /// <summary>Presentes, exigências, rendição e outras transferências entre impérios.</summary>
+        public const int Other = 3;
+    }
+
+    /// <summary>Fluxos comerciais ativos de um turno (só quem tem recurso comprado; o histórico é esparso).</summary>
+    public class TradePoint
+    {
+        public int Turn;
+        public List<TradeFlow> Flows = new List<TradeFlow>();
+        /// <summary>O dinheiro que mudou de mãos entre impérios neste turno (esparso).</summary>
+        public List<MoneyFlow> Money = new List<MoneyFlow>();
     }
 
     /// <summary>Estado monetário de um império. Taxas são por turno (0.01 = 1%).</summary>
@@ -112,6 +157,41 @@ namespace CurrencyMod
         /// <summary>Preço geral de pedágio de cada dono para cada império (o preço de cada posto fica na TradeRule).</summary>
         public List<TollPrice> TollPrices = new List<TollPrice>();
         public int LastTradeTurn = -1;
+        /// <summary>Histórico do comércio entre impérios (últimos MaxTradeHistory turnos), gravado no fim de cada turno.</summary>
+        public List<TradePoint> TradeHistory = new List<TradePoint>();
+        public const int MaxTradeHistory = 60;
+
+        /// <summary>O ponto do turno (cria se não houver). Quem chama já tem o CurrencyManager.Lock.</summary>
+        public TradePoint PointFor(int turn)
+        {
+            TradeHistory = TradeHistory ?? new List<TradePoint>();
+            foreach (TradePoint known in TradeHistory)
+            {
+                if (known.Turn == turn)
+                {
+                    return known;
+                }
+            }
+            var point = new TradePoint { Turn = turn };
+            TradeHistory.Add(point);
+            TradeHistory.Sort((a, b) => a.Turn.CompareTo(b.Turn));
+            if (TradeHistory.Count > MaxTradeHistory)
+            {
+                TradeHistory.RemoveRange(0, TradeHistory.Count - MaxTradeHistory);
+            }
+            return point;
+        }
+
+        public void RecordMoney(int turn, int from, int to, double paid, double gain, int kind)
+        {
+            if (double.IsNaN(paid) || double.IsNaN(gain) || double.IsInfinity(paid) || double.IsInfinity(gain) || (paid <= 0 && gain <= 0))
+            {
+                return;
+            }
+            // Duas casas bastam (o livro entra no JSON do save).
+            TradePoint point = PointFor(turn);
+            point.Money.Add(new MoneyFlow { From = from, To = to, Paid = Math.Round(paid, 2), Gain = Math.Round(gain, 2), Kind = kind });
+        }
 
         public EmpireCurrency Get(int empireIndex)
         {
@@ -153,6 +233,23 @@ namespace CurrencyMod
                 world.TradeIncidents = world.TradeIncidents ?? new List<TradeIncident>();
                 world.LastTolls = world.LastTolls ?? new List<TollRecord>();
                 world.TollPrices = world.TollPrices ?? new List<TollPrice>();
+                world.TradeHistory = world.TradeHistory ?? new List<TradePoint>();
+                // Saves gravados antes do livro de dinheiro tinham só os Flows: a manutenção deles vira movimento de dinheiro.
+                foreach (TradePoint point in world.TradeHistory)
+                {
+                    point.Flows = point.Flows ?? new List<TradeFlow>();
+                    point.Money = point.Money ?? new List<MoneyFlow>();
+                    if (!point.Money.Any(m => m.Kind == MoneyKind.Upkeep))
+                    {
+                        foreach (TradeFlow flow in point.Flows)
+                        {
+                            if (flow.Value > 0)
+                            {
+                                point.Money.Add(new MoneyFlow { From = flow.Buyer, To = flow.Seller, Paid = flow.Value, Gain = 0, Kind = MoneyKind.Upkeep });
+                            }
+                        }
+                    }
+                }
                 world.Version = CurrentVersion;
             }
             return world;

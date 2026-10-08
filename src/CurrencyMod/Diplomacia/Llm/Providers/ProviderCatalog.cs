@@ -63,6 +63,8 @@ namespace CurrencyMod.Diplomacia.Llm.Providers
         public bool OffPeak;
         /// <summary>Usa a cota da assinatura do jogador: custo em dólar é zero.</summary>
         public bool Subscription;
+        /// <summary>Servidor no próprio PC (Ollama, LM Studio...): sem chave, sem custo; o endereço vem de LocalLlm.</summary>
+        public bool Local;
 
         internal bool Visible => true;
 
@@ -177,6 +179,15 @@ namespace CurrencyMod.Diplomacia.Llm.Providers
                     M("grok-4.20-0309-non-reasoning", 0.20, 1.25, 2.50),
                 },
             },
+            new ProviderDef
+            {
+                // Qualquer servidor chat/completions local. O endereço é resolvido por LocalLlm.Apply a cada uso.
+                Id = LocalLlm.Id, Name = "Ollama / LM Studio", Local = true, AcceptsKey = false, JsonObject = false,
+                ChatUrl = "http://localhost:11434/v1/chat/completions",
+                ModelsUrl = "http://localhost:11434/v1/models",
+                KeyUrl = "https://ollama.com/download",
+                Host = "localhost",
+            },
         };
 
         /// <summary>Sugerido para quem acabou de instalar.</summary>
@@ -192,7 +203,7 @@ namespace CurrencyMod.Diplomacia.Llm.Providers
             {
                 return custom;
             }
-            if (provider.Subscription)
+            if (provider.Subscription || provider.Local)
             {
                 return new ModelDef { Id = model };
             }

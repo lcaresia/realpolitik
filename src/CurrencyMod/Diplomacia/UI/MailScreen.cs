@@ -43,10 +43,10 @@ namespace CurrencyMod.Diplomacia.UI
         private const float RightX = 1470f;
         private const float RightWidth = 420f;
         private const float RightHeight = 830f;
-        private const float ListWidth = 902f;
+        private const float ListWidth = 928f; // os cartões ficam 26 px dentro da lista e 34 px mais estreitos: alinham com a linha divisória
         /// <summary>A lista termina acima da barra de controle (que fica por cima da tela cheia até x≈560).</summary>
         private const float ListHeight = 756f;
-        private const float ComposeListWidth = 372f;
+        private const float ComposeListWidth = 398f;
         private const float ComposeListHeight = 720f;
         /// <summary>Cartas recebidas mais antigas que isso saem de "A responder" (ninguém responde carta de 20 turnos atrás).</summary>
         private const int AnswerWindowTurns = 20;
@@ -279,7 +279,7 @@ namespace CurrencyMod.Diplomacia.UI
             NativeUIKit.Place(sectionTitleLabel.transform, 64f, 132f, 560f, 18f);
             NativeUIKit.Place(center.Find("Divider"), 64f, 158f, CenterWidth - 128f, 1f);
             Transform container = center.Find("GroupsContainer");
-            NativeUIKit.Place(container, 64f, 170f, ListWidth, ListHeight);
+            NativeUIKit.Place(container, 38f, 170f, ListWidth, ListHeight);
             Transform letters = Instantiate(citiesList.gameObject, container).transform;
             letters.name = "Letters";
             PrepareList(letters, ListWidth, ListHeight, out listTable, out cardSample);
@@ -288,7 +288,7 @@ namespace CurrencyMod.Diplomacia.UI
             NativeUIKit.Place(composeTitleLabel.transform, 24f, 30f, RightWidth - 48f, 18f);
             NativeUIKit.Place(rightPanel.Find("Divider"), 24f, 56f, RightWidth - 48f, 1f);
             Transform composeContainer = rightPanel.Find("GroupsContainer");
-            NativeUIKit.Place(composeContainer, 20f, 70f, ComposeListWidth + 8f, ComposeListHeight);
+            NativeUIKit.Place(composeContainer, -2f, 70f, ComposeListWidth + 8f, ComposeListHeight);
             Transform compose = Instantiate(citiesList.gameObject, composeContainer).transform;
             compose.name = "ComposeList";
             PrepareList(compose, ComposeListWidth + 8f, ComposeListHeight, out composeTable, out composeSample);
@@ -442,7 +442,7 @@ namespace CurrencyMod.Diplomacia.UI
                 demandField = demandItem.GetComponent<UITextField>();
                 bodyItem = CloneField(fieldDonor, "BodyField", 300f, multiline: true, maxChars: 4000, hint: L.T("Escreva sua carta como o líder do seu povo…"));
                 bodyField = bodyItem.GetComponent<UITextField>();
-                bodyField.TextChange += (field, text) => nextRefresh = 0;
+                // TextChange é ligado em Update (EnsureTextChange), depois que o campo carrega.
             }
             else
             {
@@ -658,6 +658,7 @@ namespace CurrencyMod.Diplomacia.UI
         }
 
         private float openedAt;
+        private bool wasShown;
 
         internal void SelectSection(Section section)
         {
@@ -708,8 +709,16 @@ namespace CurrencyMod.Diplomacia.UI
 
         // ---------------- Conteúdo ----------------
 
+        private Action<Amplitude.UI.Interactables.IUITextField, string> bodyChanged;
+
         private void Update()
         {
+            NativeUIKit.EnsureTextChange(bodyField, bodyChanged ?? (bodyChanged = (f, t) => nextRefresh = 0));
+            if (wasShown && !Shown)
+            {
+                NativeUIKit.ReleaseTextFocus(); // o jogo escondeu a tela sem passar por SetOpen
+            }
+            wasShown = Shown;
             if (pendingOpen && LoadingState == Amplitude.UI.Windows.LoadingState.Loaded)
             {
                 SetOpen(true);

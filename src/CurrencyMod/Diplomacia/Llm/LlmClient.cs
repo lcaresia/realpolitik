@@ -89,6 +89,11 @@ namespace CurrencyMod.Diplomacia.Llm
         internal static ChatResult Send(ChatRequest request, ProviderDef provider, string bearer, int timeoutSeconds, int transportRetries = 2)
         {
             ChatResult result = null;
+            if (provider.Local)
+            {
+                // Conexão recusada = servidor fechado: tentar de novo só atrasa a fila. Timeout de modelo lento também não repete.
+                transportRetries = 0;
+            }
             for (int attempt = 0; attempt <= transportRetries; attempt++)
             {
                 result = SendOnce(request, provider, bearer, timeoutSeconds);

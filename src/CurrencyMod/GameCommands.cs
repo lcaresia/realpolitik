@@ -173,6 +173,8 @@ namespace CurrencyMod
                     return SpawnCamp(rest);
                 case "camera":
                     return CenterCamera(rest);
+                case "zoom":
+                    return SetZoom(rest);
                 case "rendicao":
                     return Surrender(rest);
                 case "congresso":
@@ -559,9 +561,27 @@ namespace CurrencyMod
             return $"ok: {string.Join(" → ", steps)} postada(s) para E{local} na guerra com E{other}";
         }
 
+        /// <summary>"jogo zoom 0..1": ajusta o zoom da câmera (1 = visão estratégica) sem a roda do mouse.</summary>
+        private static string SetZoom(string args)
+        {
+            var camera = Amplitude.Mercury.Presentation.Presentation.PresentationCameraController;
+            if (camera == null || !float.TryParse((args ?? string.Empty).Trim(), System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out float value))
+            {
+                return "uso: jogo zoom 0..1 (com partida aberta; 1 = visão estratégica)";
+            }
+            const System.Reflection.BindingFlags flags = System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Public;
+            object mover = typeof(Amplitude.Mercury.Presentation.PresentationCameraController).GetField("mercuryCameraMover", flags)?.GetValue(camera);
+            var field = typeof(AbstractMercuryCameraMover).GetField("abscissa", flags);
+            if (mover == null || field == null)
+            {
+                return "erro: não achei o controle de zoom da câmera";
+            }
+            field.SetValue(mover, UnityEngine.Mathf.Clamp01(value));
+            return $"zoom em {value:0.00}";
+        }
+
         /// <summary>
-        /// "jogo camera T#|tile": centraliza a câmera num território (centro administrativo ou centro visual) ou num tile,
-        /// como o jogo faz ao clicar numa notificação. Serve para tirar prints de onde as coisas acontecem.
+        /// "jogo camera T#|tile": centraliza a câmera num território (centro administrativo ou centro visual) ou num tile.
         /// </summary>
         private static string CenterCamera(string args)
         {

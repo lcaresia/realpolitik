@@ -55,6 +55,19 @@ namespace CurrencyMod.Diplomacia.Llm.Providers
                 outcome.Message = provider.AcceptsKey ? L.T("Cole a chave primeiro.") : L.T("Entre com a conta primeiro.");
                 return;
             }
+            if (provider.Local)
+            {
+                if (!FetchModels(provider))
+                {
+                    outcome.Message = L.F("Nenhum servidor de modelo local respondeu em {0}. Abra o Ollama ou o LM Studio e tente de novo.", LocalLlm.Base);
+                    return;
+                }
+                if (string.IsNullOrEmpty(ProviderRouter.ModelFor(provider)))
+                {
+                    outcome.Message = L.T("O servidor local não tem nenhum modelo. Baixe um (ex.: ollama pull qwen3:14b).");
+                    return;
+                }
+            }
             var request = new ChatRequest
             {
                 Messages = new List<ChatMessage>
@@ -114,7 +127,8 @@ namespace CurrencyMod.Diplomacia.Llm.Providers
                 case ErrorKind.Server:
                     return L.T("O servidor do provedor está com problema. Tente mais tarde.");
                 case ErrorKind.Network:
-                    return L.T("Sem conexão com o provedor. Confira a internet.");
+                    return provider.Local ? L.F("Nenhum servidor de modelo local respondeu em {0}. Abra o Ollama ou o LM Studio e tente de novo.", LocalLlm.Base)
+                        : L.T("Sem conexão com o provedor. Confira a internet.");
                 default:
                     return Clip(chat.Error, 120);
             }
@@ -130,16 +144,20 @@ namespace CurrencyMod.Diplomacia.Llm.Providers
         }
 
         /// <summary>Busca a lista de modelos (GET, sem custo). No OpenRouter, também guarda o preço de cada um.</summary>
-        internal static void FetchModels(ProviderDef provider)
+        internal static bool FetchModels(ProviderDef provider, bool quick = false)
         {
+            if (provider.Local)
+            {
+                LocalLlm.Apply(provider);
+            }
             if (string.IsNullOrEmpty(provider.ModelsUrl))
             {
-                return;
+                return false;
             }
             try
             {
-                string bearer = provider.Id == "openrouter" ? null : Credentials.Get(provider.Id)?.Bearer;
-                HttpWebRequest http = LlmClient.CreateRequest(provider, provider.ModelsUrl, "GET", bearer, 30);
+                string bearer = provider.Id == "openrouter" || provider.Local ? null : Credentials.Get(provider.Id)?.Bearer;
+                HttpWebRequest http = LlmClient.CreateRequest(provider, provider.ModelsUrl, "GET", bearer, quick ? 3 : 30);
                 http.Accept = "application/json";
                 JObject root;
                 using (var response = (HttpWebResponse)http.GetResponse())
@@ -177,10 +195,12 @@ namespace CurrencyMod.Diplomacia.Llm.Providers
                 {
                     FetchedModels[provider.Id] = ids;
                 }
+                return true;
             }
             catch (Exception ex)
             {
                 Plugin.Log.LogInfo($"[IA] Lista de modelos de {provider.Name} indisponível: {ex.GetType().Name}");
+                return false;
             }
         }
 

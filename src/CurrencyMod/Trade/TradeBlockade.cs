@@ -632,6 +632,7 @@ namespace CurrencyMod
                     owner.DepartmentOfTheTreasury.GainMoney((FixedPoint)(float)record.ReceivedByOwner);
                 });
                 world.LastTolls.Add(record);
+                EconomySimulation.RecordMoney(world, record.Payer, record.Owner, record.PaidByPayer, record.ReceivedByOwner, MoneyKind.Toll);
                 TradePolicy.AddIncident(world, record.Owner, record.Payer);
                 Plugin.Log.LogInfo($"Pedágio: império {record.Payer} pagou {record.PaidByPayer} ao império {record.Owner} ({record.Routes} rota(s)).");
             }

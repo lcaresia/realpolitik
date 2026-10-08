@@ -1293,14 +1293,26 @@ namespace CurrencyMod.Diplomacia
             {
                 return "erro: sem partida";
             }
+            // "[Assunto] texto": assunto e tipo opcionais ("[Assunto|publica] texto" faz a carta pública).
+            string devSubject = "Carta de teste";
+            string devType = "privada";
+            string devText = text ?? string.Empty;
+            if (devText.TrimStart().StartsWith("[") && devText.IndexOf(']') > 0)
+            {
+                string head = devText.TrimStart().Substring(1, devText.TrimStart().IndexOf(']') - 1);
+                devText = devText.TrimStart().Substring(devText.TrimStart().IndexOf(']') + 1);
+                string[] hp = head.Split('|');
+                devSubject = hp[0].Trim();
+                if (hp.Length > 1 && hp[1].Trim().StartsWith("p", StringComparison.OrdinalIgnoreCase)) { devType = "publica"; }
+            }
             var letter = new Letter
             {
                 Id = World.NextLetterId++,
                 From = from,
                 To = playerIndex,
-                Type = "privada",
-                Subject = "Carta de teste",
-                Text = string.IsNullOrWhiteSpace(text) ? "Carta de teste." : text.Trim(),
+                Type = devType,
+                Subject = devSubject,
+                Text = string.IsNullOrWhiteSpace(devText) ? "Carta de teste." : devText.Trim(),
                 ExpectsReply = true,
                 SentTurn = currentTurn,
                 DeliverTurn = currentTurn,

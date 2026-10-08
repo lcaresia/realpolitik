@@ -179,6 +179,12 @@ namespace CurrencyMod
                 lock (CurrencyManager.Lock)
                 {
                     rate = world.Rate(payer, receiver);
+                    // Livro do Banco Central: quem pagou, quem ganhou e quanto (cada um na sua moeda).
+                    double totalReceived = context.Received.Where(r => r.Key != payer).Sum(r => r.Value);
+                    double netPaid = Math.Max(0, context.Paid[payer] - (context.Received.TryGetValue(payer, out double back) ? back : 0));
+                    double paidShare = totalReceived > 0 ? netPaid * (received.Value / totalReceived) : 0;
+                    EconomySimulation.RecordMoney(world, payer, receiver, paidShare, received.Value * rate,
+                        context.Source != null && context.Source.StartsWith("TradeController") ? MoneyKind.Resources : MoneyKind.Other);
                 }
                 double adjustment = received.Value * (rate - 1.0);
                 if (Math.Abs(adjustment) < 0.001)

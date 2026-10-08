@@ -78,6 +78,7 @@ namespace CurrencyMod.Diplomacia.UI
         // Linhas da seção atual (recriadas ao trocar de seção).
         private readonly List<Transform> rows = new List<Transform>();
         private readonly Dictionary<Transform, float> rowHeights = new Dictionary<Transform, float>();
+        private readonly HashSet<Transform> textRows = new HashSet<Transform>();
         private UILabel introLabel;
         private UILabel privacyLabel;
         private Row queueRow;
@@ -457,6 +458,7 @@ namespace CurrencyMod.Diplomacia.UI
             }
             rows.Clear();
             rowHeights.Clear();
+            textRows.Clear();
             introLabel = null;
             privacyLabel = null;
             queueRow = accountRow = keyRow = pasteRow = modelRow = testRow = siteRow = deleteRow = null;
@@ -603,11 +605,12 @@ namespace CurrencyMod.Diplomacia.UI
             root.name = "Text" + rows.Count;
             NativeUIKit.Place(root, RowsLeft, y, RowWidth, height);
             UILabel label = root.GetComponent<UILabel>();
-            label.AutoAdjustHeight = false;
+            label.AutoAdjustHeight = true;
             label.AutoAdjustWidth = false;
             label.WordWrap = true;
             label.Alignment = new Alignment(HorizontalAlignment.Left, VerticalAlignment.Top);
             root.GetComponent<UITransform>().VisibleSelf = true;
+            textRows.Add(root); // a altura vem do texto (o do Codex e o do modelo local passam de 60 px)
             rows.Add(root);
             rowHeights[root] = height;
             y += height + RowGap;
@@ -726,7 +729,14 @@ namespace CurrencyMod.Diplomacia.UI
                 {
                     ui.Y = y;
                 }
-                y += (rowHeights.TryGetValue(row, out float h) ? h : RowHeight) + RowGap;
+                float height = rowHeights.TryGetValue(row, out float h) ? h : RowHeight;
+                if (textRows.Contains(row))
+                {
+                    UILabel text = row.GetComponent<UILabel>();
+                    text.AdjustSizesIfNecessary();
+                    height = Math.Max(height, ui.Height);
+                }
+                y += height + RowGap;
             }
         }
 
@@ -838,6 +848,12 @@ namespace CurrencyMod.Diplomacia.UI
                 color = position >= 0 ? Red : Grey;
                 return L.T("Codex não instalado") + place;
             }
+            if (provider.Local && LocalLlm.Reachable != true)
+            {
+                // Ainda sem procurar (null) não vale "Conectado": a procura começa quando a seção abre.
+                color = position >= 0 ? Red : Grey;
+                return (LocalLlm.Reachable == false ? L.T("Sem servidor") : L.T("Não conectado")) + place;
+            }
             if (!ProviderRouter.HasAccess(provider))
             {
                 color = position >= 0 ? Red : Grey;
@@ -874,6 +890,7 @@ namespace CurrencyMod.Diplomacia.UI
                 case "en": return n + (n == 1 ? "st" : n == 2 ? "nd" : n == 3 ? "rd" : "th");
                 case "fr": return n == 1 ? "1er" : n + "e";
                 case "de": return n + ".";
+                case "es": return n + ".º";
                 default: return n + "º";
             }
         }
@@ -888,6 +905,7 @@ namespace CurrencyMod.Diplomacia.UI
                 case "gemini": return L.T("Modelos Gemini pela chave do Google AI Studio. Tem nível grátis, mas aí o Google usa os textos para treinar.");
                 case "zai": return L.T("Modelos GLM da Z.ai. O GLM-4.7-Flash é grátis.");
                 case "xai": return L.T("Modelos Grok pela chave da xAI (console.x.ai).");
+                case "local": return L.T("Roda a IA no seu próprio PC (Ollama, LM Studio, llama.cpp): grátis e privado, sem chave. O mod procura o servidor sozinho. Precisa de um modelo bom em JSON (a partir de ~14B) e de contexto de 24 mil tokens ou mais (no Ollama: OLLAMA_CONTEXT_LENGTH=32768). Em placa fraca, use poucas nações e ChamadasParalelas=1.");
                 case "codex": return L.T("Usa o Codex (app da OpenAI) instalado neste PC e a sua conta do ChatGPT: o uso sai da cota do Plus ou Pro, sem chave. No Plus, prefira o gpt-6-luna, que tem cota bem maior. O uso segue os termos da OpenAI.");
                 default: return provider.Name;
             }
@@ -1080,7 +1098,7 @@ namespace CurrencyMod.Diplomacia.UI
             bool armed = Time.unscaledTime < deleteArmedUntil;
             SetRowLabel(licenseReleaseRow, L.T("Liberar este PC"), L.T("Liberar este PC"),
                 L.T("Desativa a licença neste PC e devolve a vaga para usar em outro (até 3 liberações a cada 30 dias). Clique duas vezes para confirmar."));
-            B.SetLabel(licenseReleaseRow.Button.transform, string.Empty, armed ? L.T("Confirmar") : L.T("Liberar"));
+            B.SetLabel(licenseReleaseRow.Button.transform, string.Empty, armed ? L.T("Confirmar") : L.T("Liberar PC"));
             B.SetVisible(licenseReleaseRow.Root, has);
 
             bool update = License.UpdateAvailable;
@@ -1111,10 +1129,7 @@ namespace CurrencyMod.Diplomacia.UI
 
         private void ActivateLicense(string text)
         {
-            if (keyField != null)
-            {
-                keyField.ReplaceText(string.Empty);
-            }
+            // O campo mantém a chave até o resultado: sem internet, o comprador não precisa colar de novo.
             NativeUIKit.ReleaseTextFocus();
             feedback = null;
             License.ClearOutcome();
@@ -1126,11 +1141,13 @@ namespace CurrencyMod.Diplomacia.UI
         private void ActivateFromFieldOrClipboard()
         {
             string text = keyField != null ? keyField.Text : null;
+            bool fromClipboard = false;
             if (string.IsNullOrWhiteSpace(text))
             {
                 try
                 {
                     text = GUIUtility.systemCopyBuffer;
+                    fromClipboard = true;
                 }
                 catch (Exception)
                 {
@@ -1142,7 +1159,21 @@ namespace CurrencyMod.Diplomacia.UI
                 SetFeedback(L.T("Cole a chave no campo (Ctrl+V) ou copie a chave na página da compra e clique de novo."), true);
                 return;
             }
-            ActivateLicense(text.Trim().Split('\n')[0]);
+            string candidate = text.Trim().Split('\n')[0];
+            if (fromClipboard && !LooksLikeLicenseKey(candidate))
+            {
+                // A área de transferência pode ter qualquer coisa (senha, e-mail): só sai daqui o que tem cara de chave.
+                SetFeedback(L.T("O que está copiado não parece uma chave de licença. Copie a chave do e-mail da compra."), true);
+                return;
+            }
+            ActivateLicense(candidate);
+        }
+
+        /// <summary>RPLN-XXXXX-XXXXX-XXXXX-XXXXX; o servidor também aceita minúsculas, espaços e sem traços.</summary>
+        private static bool LooksLikeLicenseKey(string text)
+        {
+            string compact = new string(text.Where(char.IsLetterOrDigit).ToArray()).ToUpperInvariant();
+            return compact.Length == 24 && compact.StartsWith("RPLN", StringComparison.Ordinal);
         }
 
         private void ReleaseLicense()
@@ -1216,7 +1247,7 @@ namespace CurrencyMod.Diplomacia.UI
             {
                 choices.Add(C(ModelText(provider, id), id));
             }
-            if (!choices.Any(c => c.Value == selected))
+            if (!string.IsNullOrEmpty(selected) && !choices.Any(c => c.Value == selected))
             {
                 choices.Insert(0, C(ModelText(provider, selected), selected));
             }
@@ -1232,6 +1263,10 @@ namespace CurrencyMod.Diplomacia.UI
             if (provider.Subscription)
             {
                 return name + star;
+            }
+            if (provider.Local)
+            {
+                return name + " · " + L.T("grátis");
             }
             double turn = Pricing.TurnEstimate(provider, id);
             string price = turn < 0 ? string.Empty : turn == 0 ? " · " + L.T("grátis") : " · $" + turn.ToString(turn < 0.1 ? "0.000" : "0.00", CultureInfo.InvariantCulture);
@@ -1254,6 +1289,10 @@ namespace CurrencyMod.Diplomacia.UI
             Credential credential = Credentials.Get(provider.Id);
             bool has = ProviderRouter.HasAccess(provider);
             bool codex = provider.Format == WireFormat.CodexCli;
+            if (provider.Local)
+            {
+                LocalLlm.Probe(provider); // procura o servidor e a lista de modelos (no máximo a cada 20 s)
+            }
             string state = StateText(provider, chain, out string color);
             sectionTitleLabel.Text = provider.Name;
             // O estado (Conectado, Sem chave, posição na fila) fica no botão da esquerda, em cores fortes.
@@ -1300,10 +1339,12 @@ namespace CurrencyMod.Diplomacia.UI
                 isLogin ? L.T("Sair") : L.T("Apagar"), L.T("Apaga deste PC a chave ou o login deste provedor. Clique duas vezes para confirmar."));
             B.SetLabel(deleteRow.Button.transform, string.Empty, armed ? L.T("Confirmar") : isLogin ? L.T("Sair") : L.T("Apagar"));
             // O login do Codex é do Codex (o jogador sai por ele): aqui não tem o que apagar.
-            B.SetVisible(deleteRow.Root, has && !codex);
+            B.SetVisible(deleteRow.Root, has && !codex && !provider.Local);
 
             string extra = provider.Id == "gemini" ? " " + L.T("No nível grátis do Gemini, o Google pode usar esses textos para treinar os modelos dele.") : string.Empty;
-            privacyLabel.Text = L.F("O que sai do PC: o dossiê de cada nação (o que ela vê no mapa, relações, cartas e memória) vai para {0}. Nada pessoal.", provider.Host) + extra
+            privacyLabel.Text = (provider.Local
+                ? L.F("Nada sai do PC por este provedor: o dossiê de cada nação vai só para o servidor em {0} ({1}).", provider.Host, LocalLlm.Base)
+                : L.F("O que sai do PC: o dossiê de cada nação (o que ela vê no mapa, relações, cartas e memória) vai para {0}. Nada pessoal.", L.T(provider.Host))) + extra
                 + (feedback != null ? "\n" + $"<c={(feedbackError ? Red : Green)}>{feedback}</c>" : string.Empty);
         }
 
@@ -1412,17 +1453,25 @@ namespace CurrencyMod.Diplomacia.UI
         private void SaveKey(ProviderDef provider, string text)
         {
             string key = (text ?? string.Empty).Trim();
-            if (keyField != null)
-            {
-                keyField.ReplaceText(string.Empty);
-            }
             NativeUIKit.ReleaseTextFocus();
             if (key.Length < 12)
             {
                 SetFeedback(L.T("Isso não parece uma chave (curta demais)."), true);
                 return;
             }
-            Credentials.Save(provider.Id, new Credential { Key = key });
+            try
+            {
+                Credentials.Save(provider.Id, new Credential { Key = key });
+            }
+            catch (Exception ex)
+            {
+                SetFeedback(L.F("Não consegui salvar a chave: {0}", ex.Message), true);
+                return; // o campo mantém o texto para tentar de novo
+            }
+            if (keyField != null)
+            {
+                keyField.ReplaceText(string.Empty);
+            }
             AutoQueue(provider);
             ProviderRouter.ResetHealth();
             SetFeedback(L.F("Chave salva (…{0}). Agora clique em Testar.", key.Substring(key.Length - 4)), false);
@@ -1445,7 +1494,13 @@ namespace CurrencyMod.Diplomacia.UI
                 SetFeedback(L.T("A área de transferência está vazia. Copie a chave no site do provedor (Ctrl+C) e clique de novo."), true);
                 return;
             }
-            SaveKey(provider, text.Trim().Split('\n')[0]);
+            string key = text.Trim().Split('\n')[0].Trim();
+            if (key.Length < 12 || key.Length > 300 || key.Any(char.IsWhiteSpace))
+            {
+                SetFeedback(L.T("O que está copiado não parece uma chave. Copie só a chave no site do provedor e clique de novo."), true);
+                return;
+            }
+            SaveKey(provider, key);
         }
 
         private void DeleteCredential(ProviderDef provider)
