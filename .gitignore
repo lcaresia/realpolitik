@@ -52,5 +52,16 @@ docs/prompt-pacote-instalacao.md
 Thumbs.db
 desktop.ini
 
-# Obfuscar (baixado do NuGet: obfuscar 2.2.50; ver tools\gerar-release.ps1)
+
+# Loja e venda (o mod virou gratuito em 2026-10-08): ficam só neste PC, para desligar a loja que ainda está no ar
+loja/
+docs/loja.md
+docs/integracao-licenca.md
+docs/pesquisa-instalador-exe.md
+docs/prompt-pesquisa-instalador-exe.md
+docs/prompt-instalador.md
+docs/prompt-landing-page.md
+docs/divulgacao/
+
+# Obfuscar (não usado desde que o mod virou código aberto; pasta antiga, se existir)
 installer/vendor/obfuscar/

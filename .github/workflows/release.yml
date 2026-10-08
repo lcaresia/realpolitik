@@ -1,0 +1,80 @@
+# Builds the whole mod from source on GitHub's servers: Loader, core, MoreEmpires and the Inno Setup installer.
+# - every push / pull request: build + upload the files as a workflow artifact (to check that main always builds);
+# - a tag vX.Y.Z: the same build, published as a GitHub Release with a build provenance attestation, so anyone can
+#   verify the Setup.exe came from this exact commit (gh attestation verify <file> --repo lcaresia/realpolitik).
+name: release
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  id-token: write
+  attestations: write
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      # The .csproj files expect the repo to sit in <game>\_Modding.
+      - uses: actions/checkout@v4
+        with:
+          path: game/_Modding
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Install Inno Setup
+        run: choco install innosetup --no-progress -y
+
+      - name: Reference assemblies (metadata only) + BepInEx core
+        shell: pwsh
+        run: ./game/_Modding/tools/ci/preparar-referencias.ps1
+
+      - name: Version
+        id: version
+        shell: pwsh
+        run: |
+          $plugin = Get-Content game/_Modding/src/CurrencyMod/Plugin.cs -Raw
+          $product = [regex]::Match($plugin, 'ProductVersion\s*=\s*"([^"]+)"').Groups[1].Value
+          if ($env:GITHUB_REF_TYPE -eq 'tag') {
+            $v = $env:GITHUB_REF_NAME.TrimStart('v')
+            if ($v.Split('-')[0] -ne $product) { throw "Tag $env:GITHUB_REF_NAME does not match Plugin.ProductVersion $product" }
+          } else {
+            $v = "$product-ci.$env:GITHUB_RUN_NUMBER"
+          }
+          "value=$v" >> $env:GITHUB_OUTPUT
+
+      - name: Build (compile, whitelist, secret gate, Setup, zip)
+        shell: powershell
+        run: powershell -ExecutionPolicy Bypass -File game/_Modding/tools/gerar-release.ps1 -Versao ${{ steps.version.outputs.value }}
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Realpolitik_${{ steps.version.outputs.value }}
+          path: game/_Modding/dist/${{ steps.version.outputs.value }}/*
+
+      - name: Attest build provenance
+        if: github.ref_type == 'tag'
+        continue-on-error: true
+        uses: actions/attest-build-provenance@v2
+        with:
+          subject-path: game/_Modding/dist/${{ steps.version.outputs.value }}/Realpolitik_Setup_*.exe
+
+      - name: Publish GitHub Release
+        if: github.ref_type == 'tag'
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $v = '${{ steps.version.outputs.value }}'
+          $dir = "game/_Modding/dist/$v"
+          $ghArgs = @("v$v", "$dir/Realpolitik_Setup_$v.exe", "$dir/Realpolitik_${v}_manual.zip", "$dir/SHA256SUMS.txt",
+            '--repo', $env:GITHUB_REPOSITORY, '--title', "Realpolitik $v", '--generate-notes')
+          if ($v -match '-') { $ghArgs += '--prerelease' }
+          gh release create @ghArgs

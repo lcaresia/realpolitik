@@ -1,9 +1,11 @@
 REALPOLITIK: LIVING NATIONS FOR HUMANKIND
 =========================================
 
+Kostenlos und Open Source (MIT-Lizenz): github.com/lcaresia/realpolitik
+
 VORAUSSETZUNGEN
 - HUMANKIND unter Windows (Steam oder Epic), Einzelspieler.
-- Internet nur zum Aktivieren der Lizenz und für die Realpolitik-KI.
+- Internet nur für die KI-Anbieter von Realpolitik.
 
 INSTALLIEREN
 - Setup: Starte Realpolitik_Setup.exe. Es findet das Spiel und installiert BepInEx, falls nötig.
@@ -12,16 +14,17 @@ INSTALLIEREN
 - Manuell (zip): Schließe das Spiel, entpacke das Zip IN den Spielordner (der mit
   Humankind.exe) und bestätige das Zusammenführen des Ordners BepInEx.
 
-AKTIVIEREN
-1. Spiel öffnen -> Hauptmenü -> Realpolitik -> Lizenz.
-2. Füge deinen Schlüssel ein (RPLN-XXXXX-XXXXX-XXXXX-XXXXX) und klicke auf Aktivieren.
-   Gültig auf bis zu 3 PCs. Zum PC-Wechsel nutze "Diesen PC freigeben" auf dem alten.
-3. Wähle links einen KI-Anbieter (am einfachsten OpenRouter: ein Login, kein Schlüssel).
-Ohne Lizenz funktioniert der Rest (Währung, Zentralbank, Zölle, 16 Imperien), und die
+KI EINRICHTEN
+1. Spiel öffnen -> Hauptmenü -> Realpolitik.
+2. Wähle links einen KI-Anbieter (am einfachsten OpenRouter: ein Login, kein Schlüssel).
+   Du kannst auch einen API-Schlüssel (DeepSeek, OpenAI, Gemini...), ChatGPT über Codex
+   oder ein lokales Modell (Ollama / LM Studio) nutzen.
+Ohne Anbieter funktioniert der Rest (Währung, Zentralbank, Zölle, 16 Imperien), und die
 Nationen nutzen die native KI des Spiels.
 
 AKTUALISIEREN
-Installiere die neue Version über die alte. Einstellungen, Schlüssel und Spielstände bleiben erhalten.
+Lade die neue Version unter github.com/lcaresia/realpolitik/releases herunter und installiere
+sie über die alte. Einstellungen, Schlüssel und Spielstände bleiben erhalten.
 
 DEINSTALLIEREN
 Windows-Einstellungen -> Apps -> "Realpolitik: Living Nations for HUMANKIND".
@@ -35,5 +38,5 @@ PROBLEME
 - Die Mod lädt nicht: Suche in BepInEx\LogOutput.log nach "CurrencyMod" und "Núcleo carregado".
 - Der Virenscanner hat winhttp.dll gelöscht: Stelle sie wieder her (BepInEx-Lader) und lege eine Ausnahme an.
 - Spielstände mit mehr als 10 Imperien öffnen sich nur mit installierter Mod.
-- Schlüssel verloren: realpolitik-living-nations.pages.dev/download.html (Kauf-E-Mail +
-  Stripe-Belegnummer).
+- Andere Probleme: Eröffne ein Issue unter github.com/lcaresia/realpolitik/issues (häng
+  BepInEx\LogOutput.log an).

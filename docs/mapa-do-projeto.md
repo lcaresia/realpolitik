@@ -26,8 +26,6 @@ Mods de código para Humankind via BepInEx 5 + Harmony. Single-player.
 | `research\provedores-ia.md` | Pesquisa dos provedores de IA: endereços, preços, json, erros, logins e o que depende de aprovação. | Sim |
 | `docs\pedidos-provedores.md` | Rascunho (em inglês) da política de privacidade para o site do produto. | Sim |
 | `research\` | Pesquisas no código do jogo: UI nativa, crise/negociação, Diplomacia IA (viabilidade, relógios nativos, dossiê, correio em tela cheia e aba na diplomacia). | Sim |
-| `src\CurrencyMod\Diplomacia\Licenca\` | **Licença**: a chave da compra libera a Diplomacia IA. A seção "Licença" fica na tela Diplomacia IA. O modo dev (pasta `_Modding\dev`) funciona sem chave. Doc: `docs\diplomacia-ia.md` §16. | Sim |
-| `loja\` | **Loja própria** (Stripe + Cloudflare Worker/D1/R2): checkout, chaves de licença, downloads. Deploy `loja\tools\deploy-loja.ps1`, teste `loja\tools\testar-loja.ps1`. Doc: `docs\loja.md`; integração no jogo: `docs\integracao-licenca.md`. Segredos só no `.env`. | Sim |
 | `decompiled\` | Código do jogo descompilado (regenerável com `ilspycmd`). | Não |
 | `dev\` | Canal de comandos e capturas de tela do kit de desenvolvimento. | Não |
 
@@ -127,7 +125,7 @@ ilspycmd -p -o _Modding\decompiled\<Assembly> -r Humankind_Data\Managed Humankin
 3. Testes: `installer\testes\testar-instalador.ps1 -Versao X -Teste T1..T11`, sempre com o backup antes e a restauração
    conferida depois. Roteiro e resultados de 1.0.0: `docs\relatorios\instalador-1.0.0.md`.
 4. Envie o Setup à Microsoft (`docs\envio-microsoft.md`).
-5. Publique na loja (`loja\tools\publicar-versao.ps1`) e crie a tag `vX.Y.Z` no Git.
+5. Crie a tag `vX.Y.Z` e envie (`git push origin vX.Y.Z`): a GitHub Action `release` compila tudo e publica o Setup em Releases.
 
 Peças do instalador:
 - `installer\textos\`: leia-me e termos em 5 idiomas e o `THIRD-PARTY.txt`;

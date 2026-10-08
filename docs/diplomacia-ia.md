@@ -1213,60 +1213,7 @@ roda), no pacote vendido, assumindo o risco de política: a OpenAI pede aprovaç
   Credit; 401/sem login → Auth (força conferir o login de novo); tempo esgotado mata o processo.
 - **Custo em dólar:** zero (cota do plano). Plus: o gpt-6-luna tem cota bem maior que os Sol (ver
   `research\provedores-ia.md`).
-## 16. Licença (`Licenca\`, 2026-10-06)
+## 16. Licença (removida em 2026-10-08)
 
-A chave da compra libera **só a Diplomacia IA**. Sem licença, o `ProviderRouter.Send` recusa toda chamada (decisões,
-cartas, conselho), o `IaModule` mostra "sem licença" e solta as travas da IA nativa, igual a quando não há provedor. O
-"Testar conexão" de um provedor continua livre. Não é DRM: é prova de compra. Backend: o Worker da loja
-(`docs\loja.md`, `docs\integracao-licenca.md`).
-
-### 16.1 Arquivos
-- `Licenca\LicenseProvider.cs`: `ILicenseProvider` (Activate, Validate, Deactivate, DownloadCode, LatestVersion),
-  `WorkerLicenseProvider` (HTTP no Worker, sem segredo no cliente) e `OfflineLicenseProvider` (só para testes).
-- `Licenca\License.cs`: o estado, gravado com DPAPI em `BepInEx\config\credenciais\licenca.dat` (chave, instância,
-  última validação boa, uso, recusa). Também traz os textos, a comparação de versões e os comandos.
-- `UI\ProvidersScreen.cs`: seção **Licença**, a primeira da coluna da esquerda. Sem licença, a tela abre nela.
-  - Sem licença: campo da chave + **Ativar**. O botão usa o texto do campo ou, com o campo vazio, a área de
-    transferência. Enter no campo também ativa.
-  - Com licença: o estado ("Ativada neste PC (1 de 3)") + **Liberar este PC** (dois cliques).
-  - A linha **Versão X disponível → Baixar** só aparece se o `GET /api/version` trouxer uma versão maior que
-    `Plugin.ProductVersion`. Baixar pede um código de uso único e abre `download.html#t=<código>`.
-
-### 16.2 Regras
-- **Validação:** ao carregar o núcleo, ao entrar numa partida e ao abrir a seção (no máximo a cada 10 minutos), em
-  segundo plano.
-- **Offline / Worker fora / 5xx / 429:** vale a última validação boa por **14 dias** (`License.OfflineDays`).
-- **Desliga na hora** se o servidor responder `invalid_key`, `refunded`, `disputed`, `revoked` ou
-  `instance_not_found`. A recusa fica gravada e aparece na tela; ativar de novo resolve quando der.
-- **Nome do PC:** `PC-` + 8 hex do SHA-256 de `realpolitik|MachineName`. É estável e não tem dado pessoal; ativar de
-  novo com o mesmo nome não gasta vaga.
-- **Log:** só os 4 últimos caracteres da chave.
-- **Modo dev:** na máquina com a pasta `_Modding\dev`, a IA funciona sem chave. Não existe opção de .cfg para isso,
-  de propósito. O pacote de venda não leva `_Modding`.
-
-### 16.3 Comandos (`ia licenca ...`)
-`status` · `ativar CHAVE` · `validar` · `liberar` · `versao` · `baixar`. Só na máquina de dev:
-- `dev off|on`: simula um comprador;
-- `offline on|off`: servidor de licenças "fora do ar";
-- `envelhecer N`: recua a última validação em N dias.
-
-### 16.4 Pedido de teste (sem pagar)
-`_Modding\loja\tools\pedido-teste.ps1`. A chave vai para `dev\out\chave-teste.txt` e nunca é impressa.
-- `-Criar`: cria uma compra falsa assinada.
-- `-Ocupar N`: ativa a chave em N PCs falsos.
-- `-Reembolsar`: manda o reembolso.
-- `-Apagar`: apaga tudo do D1. Rode sempre no fim.
-
-### 16.5 Testes (2026-10-06, servidor real, Teste16 com 16 impérios e menu principal)
-Todos passaram:
-- Chave mal formatada: recusada sem rede.
-- Chave inventada: "Chave não encontrada".
-- Chave de teste: ativada 1 de 3. A IA passa de "sem licença" (travas soltas) para "ativa" (travas de volta).
-- Servidor simulado fora do ar:
-  - com validação de 10 dias atrás: continua valendo, com o selo "Offline · 4 dia(s)";
-  - com 15 dias: desliga.
-- Ao reiniciar o jogo com internet: validou sozinha e voltou a valer.
-- Liberar este PC: a tela volta ao campo + Ativar.
-- Três PCs falsos ocupando as vagas: ativar aqui mostra a mensagem do limite.
-- Reembolso assinado: a próxima validação recusa ("Recusada") e a IA desliga.
-- Pedido de teste apagado no fim.
+O mod passou a ser gratuito e de código aberto (MIT). A chave de licença, o servidor de licenças e a loja foram
+removidos do código: a Diplomacia IA funciona para todos que configurarem um provedor na tela Realpolitik.
