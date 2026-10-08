@@ -364,7 +364,7 @@ Diplomacia\UI\MailScreen.cs	Escrita no turno {0}; chega no turno {1}.
 Diplomacia\UI\MailScreen.cs	Escrita no turno {0}; chegou no turno {1}.
 Diplomacia\UI\InterceptedLettersTab.cs	Escrita no turno {0}; seu espião pegou no turno {1}. Ela não chegou a quem era endereçada.
 Diplomacia\UI\CouncilScreen.cs	Espere a reunião
-Diplomacia\UI\CouncilScreen.cs	Espere a reunião começar
+Diplomacia\UI\CouncilScreen.cs	Aguarde a reunião
 Diplomacia\Council\CouncilBank.cs	Espionagem
 Diplomacia\UI\InterceptedLettersTab.cs	Espião
 Diplomacia\UI\InterceptedLettersTab.cs	Espiões fora

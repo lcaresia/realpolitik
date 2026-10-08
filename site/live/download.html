@@ -10,6 +10,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700&family=Fraunces:opsz,wght@9..144,600&family=Mulish:wght@400;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="store.css">
+<script defer src="https://cloud.umami.is/script.js" data-website-id="94b2eaf2-74db-4f6b-a85e-c10ef7b3573b" data-exclude-search="true"></script>
 </head>
 <body>
 <header><div><a class="b" href="index.html">REALPOLITIK</a><a href="index.html" data-t="back"></a></div></header>
@@ -41,7 +42,7 @@
   var $ = function (id) { return document.getElementById(id); };
   function show(j) {
     $('msg').className = 'msg'; $('msg').textContent = '';
-    if (j._status === 200 || j._status === 503) { RP.renderDownloads($('dl'), j); return true; }
+    if (j._status === 200 || j._status === 503) { RP.track('download_list_shown'); RP.renderDownloads($('dl'), j); return true; }
     $('msg').className = 'msg err'; $('msg').textContent = RP.errorText(j); return false;
   }
   // Opened from the game or an email: /download.html#t=CODE (one-time, never sent to the server as part of the URL).
@@ -54,14 +55,14 @@
   }
   $('keyForm').onsubmit = function (e) {
     e.preventDefault();
-    var k = $('keyIn').value.trim(); if (!k) return;
+    var k = $('keyIn').value.trim(); if (!k) return; RP.track('download_key_lookup');
     $('msg').innerHTML = '<span class="spin"></span>';
     RP.api('POST', '/api/download/list', { key: k }).then(show);
   };
   // Lost key: purchase email + receipt number from Stripe's own receipt email.
   $('recForm').onsubmit = function (e) {
     e.preventDefault();
-    var em = $('mailIn').value.trim(), rc = $('recIn').value.trim(); if (!em || !rc) return;
+    var em = $('mailIn').value.trim(), rc = $('recIn').value.trim(); if (!em || !rc) return; RP.track('download_recover_request');
     $('recMsg').className = 'msg'; $('recMsg').innerHTML = '<span class="spin"></span>';
     RP.api('POST', '/api/recover', { email: em, receipt: rc }).then(function (j) {
       if (j._status !== 200) { $('recMsg').className = 'msg err'; $('recMsg').textContent = RP.errorText(j); return; }

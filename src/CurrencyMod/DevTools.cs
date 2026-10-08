@@ -74,6 +74,20 @@ namespace CurrencyMod
                             Write(line, $"ok (assíncrono): {file}");
                         }
                         return;
+                    case "rec":
+                        // rec <nome> <segundos> [fps]: grava quadros (jpg) em dev\out\rec_<nome>\ com o tempo do jogo travado
+                        // em fps constante (Time.captureFramerate): o resultado é um vídeo liso, mesmo que a captura seja lenta.
+                        {
+                            string[] ra = args.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+                            if (instance == null || ra.Length < 2 || !float.TryParse(ra[1], System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out float secs))
+                            {
+                                Write(line, "uso: rec <nome> <segundos> [fps]");
+                                return;
+                            }
+                            int recFps = ra.Length > 2 && int.TryParse(ra[2], out int f) ? f : 30;
+                            instance.StartCoroutine(instance.RecordFrames(line, ra[0], secs, recFps));
+                            return;
+                        }
                     case "find":
                         Write(line, FindLabels(args));
                         return;
@@ -279,6 +293,30 @@ namespace CurrencyMod
             {
                 Destroy(texture);
             }
+        }
+
+        private IEnumerator RecordFrames(string command, string name, float seconds, int fps)
+        {
+            string dir = Path.Combine(OutDir, "rec_" + Sanitize(name));
+            Directory.CreateDirectory(dir);
+            int total = Mathf.Max(1, Mathf.RoundToInt(seconds * fps));
+            int previous = Time.captureFramerate;
+            Time.captureFramerate = fps;
+            for (int i = 0; i < total; i++)
+            {
+                yield return new WaitForEndOfFrame();
+                Texture2D texture = ScreenCapture.CaptureScreenshotAsTexture();
+                try
+                {
+                    File.WriteAllBytes(Path.Combine(dir, $"f{i:D5}.jpg"), texture.EncodeToJPG(95));
+                }
+                finally
+                {
+                    Destroy(texture);
+                }
+            }
+            Time.captureFramerate = previous;
+            Write(command, $"ok: {total} quadros a {fps} fps em {dir}");
         }
 
         // ---------------- Raio-x da interface ----------------

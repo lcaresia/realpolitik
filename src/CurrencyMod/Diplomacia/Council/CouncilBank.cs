@@ -60,13 +60,24 @@ namespace CurrencyMod.Diplomacia.Council
         /// Só para a extração das traduções: as formas femininas que o Feminine produz a partir dos títulos acima (o
         /// TitleUi traduz o título já no feminino). Mudou um título ou um par do Feminine: atualize esta lista.
         /// </summary>
+        /// <summary>Erros técnicos fixos (em português, vão para o log e para a IA): a tela os mostra com L.T.</summary>
+        internal static readonly string[] ErrorKeys =
+        {
+            L.N("resposta vazia"), L.N("resposta cortada por ficar longa demais"), L.N("resposta inválida depois de todas as tentativas"),
+            L.N("sem licença (tela Realpolitik → Licença)"), L.N("nenhum provedor com chave ou login (tela Realpolitik)"),
+            L.N("servidor local sem modelo (ou fora do ar)"), L.N("sem chave ou login"), L.N("Codex: tempo esgotado"),
+            L.N("OpenAI (pelo Codex, com a sua conta do ChatGPT)"),
+            L.N("json inválido: {0}"), L.N("falha ao montar o dossiê: {0}"), L.N("pasta do Codex: {0}"), L.N("resposta sem choices[0].message"),
+            L.N("sem a foto do turno"), L.N("falta a fala da Mão (\"mao\")"), L.N("faltam as falas (\"falas\")"),
+        };
+
         internal static readonly string[] FeminineTitleKeys =
         {
             L.N("Primeira Conselheira"), L.N("Mensageira-Mor"), L.N("Emissária-Mor"), L.N("Secretária de Estado"),
             L.N("Ministra das Relações Exteriores"), L.N("Chefe Guerreira"), L.N("Mestra de Armas"), L.N("Estratega"), L.N("Ministra da Guerra"),
             L.N("Ministra da Defesa"), L.N("Guardiã das Trocas"), L.N("Tesoureira Real"), L.N("Questora"), L.N("Tesoureira-Mor"),
             L.N("Ministra da Fazenda"), L.N("Ministra da Economia"), L.N("Guardiã dos Celeiros"), L.N("Senhora dos Celeiros"), L.N("Prefeita dos Celeiros"),
-            L.N("Ministra da Agricultura"), L.N("Mestra Construtor"), L.N("Arquiteta Real"), L.N("Mestra de Obras"), L.N("Ministra das Obras Públicas"),
+            L.N("Ministra da Agricultura"), L.N("Mestra Construtora"), L.N("Arquiteta Real"), L.N("Mestra de Obras"), L.N("Ministra das Obras Públicas"),
             L.N("Ministra da Infraestrutura"), L.N("Mestra das Trocas"), L.N("Mestra das Caravanas"), L.N("Prefeita dos Mercados"), L.N("Mestra das Guildas"),
             L.N("Ministra do Comércio"), L.N("Ministra do Comércio Exterior"), L.N("Guardiã do Saber"), L.N("Mestra da Academia"), L.N("Mestra dos Estudos"),
             L.N("Diretora da Academia"), L.N("Ministra da Instrução"), L.N("Ministra da Ciência"), L.N("Suma Sacerdotisa"), L.N("Capelã-Mor"),
@@ -92,11 +103,31 @@ namespace CurrencyMod.Diplomacia.Council
         /// <summary>Traço para a tela (os traços do banco padrão estão marcados com L.N; os editados à mão ficam como estão).</summary>
         internal static string TraitUi(string trait) => L.T(trait);
 
+        /// <summary>
+        /// Erro técnico para a tela: o texto em português segue para a IA (ela lê "Sua resposta tem um problema: …"), então a
+        /// tradução só entra aqui. Os erros com detalhe ("json inválido: …") traduzem o prefixo e mantêm o resto.
+        /// </summary>
+        internal static string ErrorUi(string error)
+        {
+            if (string.IsNullOrEmpty(error))
+            {
+                return error;
+            }
+            foreach (string prefix in new[] { "json inválido: ", "falha ao montar o dossiê: ", "pasta do Codex: " })
+            {
+                if (error.StartsWith(prefix, StringComparison.Ordinal))
+                {
+                    return L.F(prefix + "{0}", error.Substring(prefix.Length));
+                }
+            }
+            return L.T(error);
+        }
+
         private static string Feminine(string title)
         {
             string[,] pairs =
             {
-                { "Primeiro Conselheiro", "Primeira Conselheira" }, { "Conselheiro", "Conselheira" }, { "Ministro", "Ministra" },
+                { "Mestre Construtor", "Mestra Construtora" },                 { "Primeiro Conselheiro", "Primeira Conselheira" }, { "Conselheiro", "Conselheira" }, { "Ministro", "Ministra" },
                 { "Mestre", "Mestra" }, { "Tesoureiro", "Tesoureira" }, { "Guardião", "Guardiã" }, { "Secretário", "Secretária" },
                 { "Sumo Sacerdote", "Suma Sacerdotisa" }, { "Senhor", "Senhora" }, { "Diretor", "Diretora" }, { "Arquiteto", "Arquiteta" },
                 { "Escriba-Mor", "Escriba-Mor" }, { "Mensageiro", "Mensageira" }, { "Emissário", "Emissária" }, { "Capelão-Mor", "Capelã-Mor" },
@@ -132,11 +163,19 @@ namespace CurrencyMod.Diplomacia.Council
                     List<Personality> fromFile = JsonConvert.DeserializeObject<List<Personality>>(File.ReadAllText(FilePath));
                     if (fromFile != null && fromFile.Count >= Portfolios.Length)
                     {
+                        foreach (Personality entry in fromFile)
+                        {
+                            entry.Traits = entry.Traits ?? new List<string>();
+                        }
                         loaded = fromFile;
                         return loaded;
                     }
                 }
                 Directory.CreateDirectory(Path.GetDirectoryName(FilePath));
+                if (File.Exists(FilePath))
+                {
+                    File.Copy(FilePath, FilePath + ".bak", true); // arquivo editado à mão e curto demais: não perde o trabalho
+                }
                 File.WriteAllText(FilePath, JsonConvert.SerializeObject(Defaults(), Formatting.Indented));
             }
             catch (Exception ex)

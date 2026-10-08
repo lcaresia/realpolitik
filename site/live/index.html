@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <script src="./support.js"></script>
+<script defer src="https://cloud.umami.is/script.js" data-website-id="94b2eaf2-74db-4f6b-a85e-c10ef7b3573b"></script>
 </head>
 <body>
 <x-dc>
@@ -20,9 +21,9 @@
   <div style="max-width:1180px;margin:0 auto;padding:10px 20px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
     <a href="#top" style="text-decoration:none;font:700 15px Cinzel,serif;letter-spacing:.14em;color:#e2c172">REALPOLITIK</a>
     <div style="display:flex;gap:14px;align-items:center;flex-wrap:wrap">
-      <a href="#how" style="text-decoration:none;font-size:13px;color:#cfd6e2;font-weight:700">{{ t.nHow }}</a>
-      <a href="#cost" style="text-decoration:none;font-size:13px;color:#cfd6e2;font-weight:700">{{ t.nCost }}</a>
-      <a href="#faq" style="text-decoration:none;font-size:13px;color:#cfd6e2;font-weight:700">FAQ</a>
+      <a data-umami-event="nav_how" href="#how" style="text-decoration:none;font-size:13px;color:#cfd6e2;font-weight:700">{{ t.nHow }}</a>
+      <a data-umami-event="nav_cost" href="#cost" style="text-decoration:none;font-size:13px;color:#cfd6e2;font-weight:700">{{ t.nCost }}</a>
+      <a data-umami-event="nav_faq" href="#faq" style="text-decoration:none;font-size:13px;color:#cfd6e2;font-weight:700">FAQ</a>
       <div style="display:flex;border:1px solid rgba(226,193,114,.3)" role="group" aria-label="Language">
         <sc-for list="{{ langBtns }}" as="b" hint-placeholder-count="5"><button onClick="{{ b.on }}" aria-pressed="{{ b.sel }}" style="border:0;cursor:pointer;padding:7px 9px;font:800 11px Mulish;letter-spacing:.08em;background:{{ b.bg }};color:{{ b.fg }}">{{ b.l }}</button></sc-for>
       </div>
@@ -44,7 +45,7 @@
     <p style="font-size:clamp(17px,2.2vw,21px);line-height:1.5;color:#cfd6e2;max-width:42ch;margin:0 auto">{{ t.sub }}</p>
     <div style="display:flex;gap:12px;justify-content:center;margin-top:30px;flex-wrap:wrap">
       <button onClick="{{ buy }}" style="background:linear-gradient(180deg,#d93c72,#c4245e);color:#fff;border:0;font:800 14px Mulish;letter-spacing:.12em;text-transform:uppercase;padding:17px 28px;border-radius:3px;cursor:pointer;box-shadow:0 14px 34px -14px #c4245e" style-hover="filter:brightness(1.12);transform:translateY(-1px)">{{ t.buy }}</button>
-      <a href="#clips" style="color:#f1ead9;text-decoration:none;border:1px solid rgba(226,193,114,.55);font:800 14px Mulish;letter-spacing:.12em;text-transform:uppercase;padding:17px 24px;border-radius:3px" style-hover="border-color:#e2c172">▶ {{ t.watch }}</a>
+      <a data-umami-event="hero_see_clips" href="#clips" style="color:#f1ead9;text-decoration:none;border:1px solid rgba(226,193,114,.55);font:800 14px Mulish;letter-spacing:.12em;text-transform:uppercase;padding:17px 24px;border-radius:3px" style-hover="border-color:#e2c172">▶ {{ t.watch }}</a>
     </div>
     <div style="margin-top:20px;font-size:13px;letter-spacing:.05em;color:#aab5c8">{{ t.meta }}</div>
   </div>
@@ -260,7 +261,7 @@
 
 <div style="background:#070d16;border-top:1px solid rgba(255,255,255,.08)">
   <div style="max-width:1180px;margin:0 auto;padding:36px 20px;font-size:13px;line-height:1.7;color:#aab5c8">
-    <div style="display:flex;gap:20px;flex-wrap:wrap;margin-bottom:16px"><a href="privacy.html">{{ t.fPriv }}</a><a href="terms.html">{{ t.fTerms }}</a><a href="changelog.html">Changelog</a><a href="install.html">{{ t.fInst }}</a><a href="mailto:lucascarezia@gmail.com">{{ t.fContact }}</a></div>
+    <div style="display:flex;gap:20px;flex-wrap:wrap;margin-bottom:16px"><a data-umami-event="footer_privacy" href="privacy.html">{{ t.fPriv }}</a><a data-umami-event="footer_terms" href="terms.html">{{ t.fTerms }}</a><a data-umami-event="footer_changelog" href="changelog.html">Changelog</a><a data-umami-event="footer_install" href="install.html">{{ t.fInst }}</a><a data-umami-event="click_youtube" href="https://www.youtube.com/channel/UCE_HXaK_TOsfRCsKjWrf6cA" target="_blank" rel="noopener">YouTube</a><a data-umami-event="click_contact" href="mailto:lucascarezia@gmail.com">{{ t.fContact }}</a></div>
     Unofficial fan-made mod. Not affiliated with or endorsed by Amplitude Studios or SEGA. HUMANKIND is a trademark of its respective owners.
   </div>
 </div>
@@ -278,44 +279,46 @@ class Component extends DCLogic {
     if (!l) l = (navigator.language || 'en').slice(0, 2);
     if (Component.T[l]) this.setState({ lang: l });
   }
-  setLang(l) { try { localStorage.setItem('rp-lang', l); } catch (e) {} document.documentElement.lang = l; this.setState({ lang: l }); }
+  track(n, d) { try { if (window.umami) window.umami.track(n, d); } catch (e) {} }
+  setLang(l) { this.track("lang_change", { lang: l }); try { localStorage.setItem('rp-lang', l); } catch (e) {} document.documentElement.lang = l; this.setState({ lang: l }); }
   renderVals() {
     const s = this.state, L = s.lang, t = Component.T[L], set = o => () => this.setState(o);
     const dec = v => L === 'en' ? v : v.replace('.', ',');
     // If the Worker or Stripe can't open a checkout, say so and point to support.
     const soon = () => alert(L === 'pt' ? 'Não consegui abrir o pagamento agora. Tente de novo em instantes ou escreva para lucascarezia@gmail.com.' : 'Checkout could not be opened right now. Please try again in a moment or write to lucascarezia@gmail.com.');
-    const buy = () => { if (this.buying) return; this.buying = true; fetch(Component.STORE_API + '/api/checkout', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ lang: L }) }).then(r => r.ok ? r.json() : null).then(j => { if (j && j.url) location.href = j.url; else soon(); }).catch(soon).finally(() => { this.buying = false; }); };
+    const buy = () => { if (this.buying) return; this.buying = true; this.track("checkout_click", { lang: L }); fetch(Component.STORE_API + '/api/checkout', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ lang: L }) }).then(r => r.ok ? r.json() : null).then(j => { if (j && j.url) { this.track("checkout_redirect"); location.href = j.url; } else { this.track("checkout_error"); soon(); } }).catch(soon).finally(() => { this.buying = false; }); };
     const mult = Math.max(.75, Math.min(1.05, 1 - .05 * (s.rate - 1)));
     const infl = Math.max(-1, .5 + (1 - s.rate) * .4);
     let pays = 0, det = 0, inc = 0;
     if (s.mode === 'free') pays = 4; else if (s.mode === 'block') det = 4;
     else [1, 2, 3, 5].forEach(c => { if (s.price <= c) { pays++; inc += s.price; } else det++; });
-    const modes = [['free', t.tFree], ['toll', t.tToll], ['block', t.tBlock]].map(([k, l]) => ({ l, on: set({ mode: k }), bg: s.mode === k ? '#c4245e' : 'rgba(8,16,30,.6)', bc: s.mode === k ? '#c4245e' : 'rgba(226,193,114,.35)' }));
+    const modes = [['free', t.tFree], ['toll', t.tToll], ['block', t.tBlock]].map(([k, l]) => ({ l, on: () => { this.track('calc_toll_mode', { mode: k }); this.setState({ mode: k }); }, bg: s.mode === k ? '#c4245e' : 'rgba(8,16,30,.6)', bc: s.mode === k ? '#c4245e' : 'rgba(226,193,114,.35)' }));
     const P = [[t.pDs, .13, 1], ['OpenAI gpt-5-nano ' + t.est, .064, 0], ['Gemini 2.5 Flash-Lite ' + t.est, .074, 0], ['GLM-4.7-FlashX ' + t.est, .069, 0], ['GLM-4.7-Flash ' + t.est, 0, 0]];
     const e = s.emp, shape = e <= 10 ? .03 * e / 10 : .03 + (e - 10) * (.10 / 6);
     const pr = P[s.prov], pt = pr[1] * shape / .13;
     const money = v => v === 0 ? t.free : 'US$ ' + dec(v < 1 ? v.toFixed(3) : v.toFixed(2));
-    const tabs = t.clips.split('|').map((l, i) => ({ l, sel: s.clip === i ? 'true' : 'false', on: set({ clip: i }), bc: s.clip === i ? '#e2c172' : 'rgba(226,193,114,.3)', bg: s.clip === i ? 'rgba(226,193,114,.14)' : 'transparent', fg: s.clip === i ? '#e2c172' : '#cfd6e2' }));
+    const tabs = t.clips.split('|').map((l, i) => ({ l, sel: s.clip === i ? 'true' : 'false', on: () => { this.track('clip_tab', { clip: ['two-faces', 'war', 'intercepted'][i] }); this.setState({ clip: i }); }, bc: s.clip === i ? '#e2c172' : 'rgba(226,193,114,.3)', bg: s.clip === i ? 'rgba(226,193,114,.14)' : 'transparent', fg: s.clip === i ? '#e2c172' : '#cfd6e2' }));
     const ids = ['two-faces', 'war', 'intercepted'], cl = L === 'pt' ? 'pt' : 'en';
     const split = x => x.split('||').map(r => r.split('|'));
+    const calc = k => { this._c = this._c || {}; if (!this._c[k]) { this._c[k] = 1; this.track('calc_use', { control: k }); } };
     return {
       t, buy,
       langBtns: ['en', 'pt', 'es', 'fr', 'de'].map(l => ({ l: l.toUpperCase(), sel: L === l ? 'true' : 'false', bg: L === l ? '#e2c172' : 'transparent', fg: L === l ? '#0c1522' : '#cfd6e2', on: () => this.setLang(l) })),
-      sealOpen: s.open, sealClosed: !s.open, shake: s.open ? 'rpShake .4s 1' : 'none', breakSeal: set({ open: true }),
+      sealOpen: s.open, sealClosed: !s.open, shake: s.open ? 'rpShake .4s 1' : 'none', breakSeal: () => { this.track("seal_open"); this.setState({ open: true }); },
       clipTabs: tabs, clipSrc: 'clip-embed.html?c=' + ids[s.clip] + '&lang=' + cl, clipTitle: t.clips.split('|')[s.clip], spyTab: s.clip === 2,
       actions: split(t.acts).map(a => ({ k: a[0], t: a[1] })),
       actionKinds: split(t.kindList).map(g => ({ h: g[0], b: g[1] })),
-      rateLabel: dec(s.rate.toFixed(1)) + '%', rate: s.rate, setRate: ev => this.setState({ rate: +ev.target.value }),
+      rateLabel: dec(s.rate.toFixed(1)) + '%', rate: s.rate, setRate: ev => { calc('rate'); this.setState({ rate: +ev.target.value }); },
       prodMult: '×' + dec(mult.toFixed(2)), inflLabel: dec(infl.toFixed(1)) + '%',
-      tollModes: modes, price: s.price, priceLabel: s.mode === 'toll' ? s.price + ' ' + t.gold : '–', setPrice: ev => this.setState({ price: +ev.target.value, mode: 'toll' }),
+      tollModes: modes, price: s.price, priceLabel: s.mode === 'toll' ? s.price + ' ' + t.gold : '–', setPrice: ev => { calc('price'); this.setState({ price: +ev.target.value, mode: 'toll' }); },
       preview: pays + ' ' + t.pay + ' · ' + det + ' ' + t.detour, income: inc ? inc + ' / ' + t.turnLc : '0',
-      providers: P.map((p, i) => ({ n: p[0], i })), setProv: ev => this.setState({ prov: +ev.target.value }),
-      empires: e, setEmp: ev => this.setState({ emp: +ev.target.value }), turns: s.turns, setTurns: ev => this.setState({ turns: +ev.target.value }),
+      providers: P.map((p, i) => ({ n: p[0], i })), setProv: ev => { calc('provider'); this.setState({ prov: +ev.target.value }); },
+      empires: e, setEmp: ev => { calc('empires'); this.setState({ emp: +ev.target.value }); }, turns: s.turns, setTurns: ev => { calc('turns'); this.setState({ turns: +ev.target.value }); },
       perTurn: money(pt), total: money(pt * s.turns),
       capLine: pt === 0 ? t.capNone : t.cap1 + ' ' + Math.floor(5 / pt) + ' ' + t.cap2,
       provNote: pr[2] ? t.measured : t.estimate,
       steps: split(t.stepList).map((x, i) => ({ n: i + 1, h: x[0], b: x[1] })),
-      faq: split(t.faqList).map((q, i) => ({ q: q[0], a: q[1], open: s.faq === i + 1 ? 'true' : 'false', sign: s.faq === i + 1 ? '–' : '+', disp: s.faq === i + 1 ? 'block' : 'none', toggle: () => this.setState(st => ({ faq: st.faq === i + 1 ? 0 : i + 1 })) }))
+      faq: split(t.faqList).map((q, i) => ({ q: q[0], a: q[1], open: s.faq === i + 1 ? 'true' : 'false', sign: s.faq === i + 1 ? '–' : '+', disp: s.faq === i + 1 ? 'block' : 'none', toggle: () => { this.track('faq_toggle', { q: i + 1 }); this.setState(st => ({ faq: st.faq === i + 1 ? 0 : i + 1 })); } }))
     };
   }
   static T = {

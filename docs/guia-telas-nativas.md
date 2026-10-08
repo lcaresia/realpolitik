@@ -28,6 +28,7 @@ Só mudanças no **carregador** pedem reinício do jogo.
 |---|---|
 | `reload` | Força recarga do núcleo. |
 | `screenshot <nome>` | Salva `dev\out\<nome>.png` (1920×1080, inclui a UI). |
+| `rec <nome> <segundos> [fps]` | **Grava vídeo**: salva quadros `dev\out\rec_<nome>\f00000.jpg…` (1920×1080, com a UI) com o tempo do jogo travado em `fps` (padrão 30; `Time.captureFramerate`), então o vídeo sai liso mesmo com a captura lenta. Junte com ffmpeg (ver `docs\gravar-video-do-jogo.md`). |
 | `find <texto>` | Acha rótulos (`UILabel`) cujo texto visível contém o texto; mostra caminho e chave de localização. |
 | `tree [visible\|all] [raiz]` | Árvore de objetos com componentes, retângulo na tela, estilos e textos. `all` inclui amostras escondidas. |
 | `inspect <caminho> [profundidade]` | Dump detalhado: propriedades úteis e **todos os campos serializados**, mostrando para qual filho cada um aponta. |
@@ -37,7 +38,7 @@ Só mudanças no **carregador** pedem reinício do jogo.
 | `texdump <caminho>` | Exporta a textura de uma imagem para PNG e mede os canais (usado para entender os ícones SDF). |
 | `layout <caminho>` | Diagnóstico de um `UILayout` (carregado? ativo? visível?). |
 | `styles [filtro]` | Lista os nomes de estilo da UI. |
-| `nbank open\|close\|tab N\|scroll inicio\|fim` | Controla a janela nativa do Banco Central (abas 0 a 3: Câmbio, Política, Ciclo, Sua moeda). `scroll` rola a lista para conferir os cartões de baixo nas capturas. |
+| `nbank open\|close\|tab N\|scroll inicio\|fim` | Controla a tela cheia do Banco Central (seções 0 a 4: Câmbio, Comércio, Política, Ciclo, Sua moeda; `nbank fake` inventa um histórico de comércio para testar a tela, `nbank ledger` lista no log o último ponto gravado). `scroll` rola a lista para conferir os cartões de baixo nas capturas. |
 | `hover <caminho>` / `hover off` | Abre o tooltip nativo de um elemento como se o mouse estivesse em cima (`UITooltipManager.Instance.OnTooltipHovered`). Serve para capturar tooltips sem mexer no mouse. `hover off` fecha também o balão do mouse de verdade (`CurrentlyHoveredTooltip`): o cursor parado em cima de algo (ex.: a "Atitude" no topo da diplomacia) cobria metade da aba Crise nos prints. O jogo só abre outro quando o cursor entra num elemento de novo. |
 | `click <caminho>` | O mesmo que um clique num toggle ou botão do jogo, pelo responder dele (`UIToggleResponder.TrySwitchState`, `UIButtonResponder.OnLeftClick`), sem mexer no mouse. Ex.: `click _CrisisGroup/Table/DemandsGroup/DemandsToggle` abre a seção recolhida "Exigências deles" da aba Crise (as seções são sanfona: abrir uma fecha a outra). Em botão de ação ("Exigir tudo", "Aceitar exigências"), a ação acontece de verdade. |
 | `jogo detalhe industria\|estabilidade\|dinheiro [n]` | Pede ao jogo o detalhamento nativo (o mesmo do tooltip) da n-ésima cidade do jogador ou do dinheiro do império e grava as linhas como o jogo as monta. A resposta chega numa entrada própria do `result.txt`. |
@@ -422,3 +423,27 @@ plano: `PostMessage(MainWindowHandle, WM_KEYDOWN/WM_KEYUP, vk, 1 | scan<<16)` pa
 0x1B/0x01) e `WM_CHAR` (0x102) para digitar. Com `jogo foco <caminho do campo>` antes, dá para testar campo de texto,
 atalhos e ESC do começo ao fim (testado em 2026-10-05: "ola" entrou no campo; F8 bloqueado no campo; foco solto ao
 fechar o correio; F8 e ESC voltaram).
+
+## Revisão geral da interface (2026-10-07): lições
+- **Nunca use `show InternationalScreen`/`show` em telas cheias do jogo para "abrir a diplomacia".** Deixa a câmera em visão estratégica,
+  esconde os banners e a diplomacia não abre mais até reiniciar o jogo. O caminho certo é `jogo interacao diplomacia E#` (E# tem de ser
+  uma nação que o jogador conhece; veja `jogo crises` para saber quais) e depois `jogo interacao aba comercio|tratados|crise`; a aba
+  Cartas é `click CurrencyMod_LettersTab`.
+- **`jogo zoom 0..1`** ajusta o zoom da câmera sem a roda do mouse (0 = chão, 1 = visão estratégica). Com a visão estratégica o HUD some.
+- **Botão clonado com largura mudada:** o rótulo do botão doador tem largura automática de 65 a 80 e o texto continua centrado nessa
+  faixa, não no botão (o "+" caía fora, "Livre" ficava à esquerda). Depois de `Place`, iguale `AutoAdjustWidthMin/Max` à largura do botão
+  e reaplique o texto (`FitLabel` em `DiplomacyTradePolicyPanel.cs`).
+- **Conteúdo clonado dentro de um painel nativo é cortado pelo retângulo do painel** (a aba Comércio tem `Content` de 370 px de altura:
+  `PanelsGroup/_TradePanel/Content`); confira a altura útil antes de empilhar blocos.
+- **Textos longos em linha única** (frase de câmbio do painel Economia, título do cartão "Aguarde a reunião") quebram ou truncam em inglês/alemão:
+  reserve 2 linhas ou use frases curtas, e confira também nos outros idiomas.
+
+## Banco Central em tela cheia (2026-10-07)
+O Banco Central deixou de ser janela lateral e virou **tela cheia**, como o Correio (`NativeUI\NativeBankWindow.cs`):
+- **Moldura:** clone da `SystemSettingsScreen` (coluna da esquerda com as 4 seções Câmbio/Política/Ciclo/Sua moeda, painel central, painel da direita "Visão geral"), registrada no `InGameFullscreenGroup`; listas de cartões vindas da janela de cidades (`MailScreen.PrepareList`). O botão do banco na barra, ESC e abrir outra tela continuam fechando (`ExclusiveWindows`). Abre/fecha com `WindowsUtils.ShowWindow/HideWindow`.
+- **Painel da direita:** resumo (saldo, inflação, juros, câmbio), diagnóstico, "Sua posição no mundo" e "Ranking das moedas" com barras (peças da diplomacia: `_NegociationGroup/_MyMoral/Gauge`, `Label`, `MoneyGroup/Labels/Stock`).
+- **Gráfico de histórico** (`NativeUI\BankChart.cs`): linhas, grade, área e referência tracejada desenhadas numa `Texture2D` RGBA32 de 1700×420 (as últimas 60 rodadas de `EmpireCurrency.History`; câmbio na aba Câmbio, juros × inflação em Política e Ciclo). **Armadilha:** a imagem clonada do chip (`PopCount/Picto`) usa o material `DistanceField` (ícone SDF): mostra só o alfa, em branco e com borda dura. Para textura colorida, `image.Material = new UIMaterialId("Default")`.
+- **Chips extras** num cartão: `ExtraChip(top, n)` clona o chip `PopCount` na `StatsTable`; `MakeTextCard` faz o cartão de texto com várias linhas (técnica da aba Ciclo) em qualquer lista.
+- **Teste:** `nbank open`, `nbank tab 0..3`, `idioma de|fr|es|en|Auto` + `reload` (os títulos fixos só trocam quando a tela é recriada).
+- **Seção Comércio (dinheiro que você ganha e paga a cada império):** `NativeUI\NativeBankTrade.cs` (classe parcial do `NativeBankWindow`) e `NativeBankChartHover.cs`. O livro é `CurrencyWorld.TradeHistory` (60 turnos, esparso): cada `TradePoint` tem `Money` (`MoneyFlow {From, To, Paid, Gain, Kind}`: Paid sai do caixa de From na moeda dele, Gain entra no de To na moeda dele) e `Flows` (`TradeFlow`, só para contar recursos). Quem grava: compras de recursos e presentes em `TransferConversion.Settle` (o comprador paga na hora e o vendedor ganha uma parte, UMA VEZ; o jogo não paga o vendedor por turno), manutenção das rotas em `EconomySimulation.RecordTrade` (por turno, só o comprador paga, não vai para ninguém) e pedágios em `TradeBlockade.CollectTolls`. A tela soma só o que envolve o jogador e mostra médias (cartões: 10 turnos; linhas do gráfico: média móvel de 5). As barras por país são o chip do jogo (`StatsTable/PopCount`) clonado no cartão, com largura proporcional e a cor do fundo (`UISquircleImage.Color`) trocada. **Balão do gráfico:** a imagem é interativa e `UpdateChartHover` converte `UIInteractivityManager.GetMousePosition` (espaço da interface) no turno sob o cursor e refaz o texto do balão nativo. **Barras clonadas da diplomacia:** `NativeUIKit.StyleGauge` põe cor fixa no preenchimento (vem na cor do estado de moral da sessão) e esconde o separador e o `DeltaGroup` (marca no meio). Teste: `nbank fake` (histórico inventado), `nbank ledger` (último ponto no log). Hover real do mouse: `SetCursorPos` sobre a janela do jogo (ela pode estar em outro monitor: use `ClientToScreen` e escale por 1920/largura do cliente).
+- **Revisão de código (2026-10-07):** o painel Economia limpa `rows` ao reconstruir; botão do banco não se desliga mais; `TradePostWindow.SetOpen(-1)` não cria a janela só para fechar; gráfico pinta fora do `CurrencyManager.Lock`; Enter na aba Sua moeda religa `TextValidation` quando o responder do campo muda (`HookCurrencyFields`), igual à tela de provedores; linhas de texto da tela de provedores crescem com o texto.

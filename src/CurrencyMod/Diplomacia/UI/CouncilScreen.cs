@@ -40,10 +40,10 @@ namespace CurrencyMod.Diplomacia.UI
         private const float RightX = 1470f;
         private const float RightWidth = 420f;
         private const float RightHeight = 830f;
-        private const float ListWidth = 902f;
+        private const float ListWidth = 928f; // os cartões ficam 26 px dentro da lista e 34 px mais estreitos: alinham com a linha divisória
         /// <summary>A lista termina acima da barra de controle (que fica por cima da tela cheia até x≈560).</summary>
         private const float ListHeight = 756f;
-        private const float SideListWidth = 372f;
+        private const float SideListWidth = 398f;
         private const float SideListHeight = 720f;
 
         internal static CouncilScreen Instance;
@@ -73,6 +73,7 @@ namespace CurrencyMod.Diplomacia.UI
         private float nextRefresh;
         private bool pendingOpen;
         private float openedAt;
+        private bool wasShown;
 
         private readonly List<Row> rows = new List<Row>();
         private Transform speakCard;
@@ -188,7 +189,7 @@ namespace CurrencyMod.Diplomacia.UI
             NativeUIKit.Place(sectionTitleLabel.transform, 64f, 132f, 560f, 18f);
             NativeUIKit.Place(center.Find("Divider"), 64f, 158f, CenterWidth - 128f, 1f);
             Transform container = center.Find("GroupsContainer");
-            NativeUIKit.Place(container, 64f, 170f, ListWidth, ListHeight);
+            NativeUIKit.Place(container, 38f, 170f, ListWidth, ListHeight);
             Transform list = Instantiate(citiesList.gameObject, container).transform;
             list.name = "Speeches";
             MailScreen.PrepareList(list, ListWidth, ListHeight, out listTable, out cardSample);
@@ -197,7 +198,7 @@ namespace CurrencyMod.Diplomacia.UI
             NativeUIKit.Place(sideTitleLabel.transform, 24f, 30f, RightWidth - 48f, 18f);
             NativeUIKit.Place(rightPanel.Find("Divider"), 24f, 56f, RightWidth - 48f, 1f);
             Transform sideContainer = rightPanel.Find("GroupsContainer");
-            NativeUIKit.Place(sideContainer, 20f, 70f, SideListWidth + 8f, SideListHeight);
+            NativeUIKit.Place(sideContainer, -2f, 70f, SideListWidth + 8f, SideListHeight);
             Transform side = Instantiate(citiesList.gameObject, sideContainer).transform;
             side.name = "SpeakList";
             MailScreen.PrepareList(side, SideListWidth + 8f, SideListHeight, out sideTable, out sideSample);
@@ -297,7 +298,7 @@ namespace CurrencyMod.Diplomacia.UI
                 field.actionOnFocus = UITextFieldFocusAction.PlaceCaretAtCursor;
                 field.multiline = true;
                 field.OnMultilineChanged(false, true);
-                field.TextChange += (f, text) => nextRefresh = 0;
+                // TextChange é ligado em Update (EnsureTextChange), depois que o campo carrega.
                 NativeUIKit.Tip(fieldItem, L.T("Falar ao conselho"), L.F("Enter quebra a linha. Até {0} palavras. Cada fala sua custa uma chamada à API.", PlayerCouncil.MaxPlayerWords));
             }
             else
@@ -363,7 +364,7 @@ namespace CurrencyMod.Diplomacia.UI
             bool listening = PlayerCouncil.Thinking && ready || (meeting?.Exchanges.Any(e => e.Status == "pensando") ?? false);
             Transform sendTop = sendCard.Find("Table/Top");
             int words = field != null ? DecisionParser.Words(field.Text) : 0;
-            string title = feedback ?? (listening ? L.T("O conselho está ouvindo…") : !ready ? L.T("Espere a reunião começar") : words == 0 ? L.T("Escreva acima") : L.T("Pronto para falar"));
+            string title = feedback ?? (listening ? L.T("O conselho está ouvindo…") : !ready ? L.T("Aguarde a reunião") : words == 0 ? L.T("Escreva acima") : L.T("Pronto para falar"));
             if (!listening && feedback == L.T("O conselho está ouvindo…"))
             {
                 feedback = null;
@@ -398,7 +399,7 @@ namespace CurrencyMod.Diplomacia.UI
                 B.HideOutputs(stateTop);
                 string error = meeting.Error ?? meeting.Exchanges.Select(e => e.Error).LastOrDefault(e => e != null);
                 B.Tip(stateTop, "StatsTable/PopCount", L.T("Custo"), L.T("Quanto a reunião deste turno e as suas falas custaram na API até agora."));
-                B.Tip(stateTop, "TitleGroup/Title", L.T("Situação"), failed ? L.F("A chamada à API falhou: {0}", error ?? "?") : L.T("A reunião é escrita uma vez por turno, a partir do seu dossiê (só o que o seu reino sabe)."));
+                B.Tip(stateTop, "TitleGroup/Title", L.T("Situação"), failed ? L.F("A chamada à API falhou: {0}", error != null ? CouncilBank.ErrorUi(error) : "?") : L.T("A reunião é escrita uma vez por turno, a partir do seu dossiê (só o que o seu reino sabe)."));
                 B.Tip(retryButton.transform, string.Empty, L.T("Convocar de novo"), L.T("Tenta a reunião (ou a sua última fala) de novo."));
             }
 
@@ -466,8 +467,16 @@ namespace CurrencyMod.Diplomacia.UI
             base.PreUnload();
         }
 
+        private Action<Amplitude.UI.Interactables.IUITextField, string> fieldChanged;
+
         private void Update()
         {
+            NativeUIKit.EnsureTextChange(field, fieldChanged ?? (fieldChanged = (f, t) => { if (feedbackIsError) { feedback = null; } nextRefresh = 0; }));
+            if (wasShown && !Shown)
+            {
+                NativeUIKit.ReleaseTextFocus(); // o jogo escondeu a tela sem passar por SetOpen
+            }
+            wasShown = Shown;
             if (pendingOpen && LoadingState == Amplitude.UI.Windows.LoadingState.Loaded)
             {
                 SetOpen(true);
@@ -587,7 +596,7 @@ namespace CurrencyMod.Diplomacia.UI
                 string chip = meeting == null || meeting.Status == "pensando" ? L.T("Reunindo") : $"<c={Red}>" + L.T("Falhou") + "</c>";
                 string text = meeting == null || meeting.Status == "pensando"
                     ? L.T("Os ministros estão lendo os despachos do turno. A reunião aparece aqui em instantes.")
-                    : L.F("A reunião não saiu: {0}. Use \"Convocar de novo\", à direita.", MailScreen.Escape(meeting.Error ?? L.T("erro desconhecido")));
+                    : L.F("A reunião não saiu: {0}. Use \"Convocar de novo\", à direita.", MailScreen.Escape(meeting.Error != null ? CouncilBank.ErrorUi(meeting.Error) : L.T("erro desconhecido")));
                 FillNotice(rows[0], meeting == null || meeting.Status == "pensando" ? L.T("O conselho está se reunindo…") : L.T("A reunião falhou"), chip, text);
                 return;
             }
@@ -619,12 +628,12 @@ namespace CurrencyMod.Diplomacia.UI
                 {
                     FillNotice(rows[index++], exchange.Status == "erro" ? L.T("Ninguém respondeu") : L.T("O conselho está ouvindo…"),
                         exchange.Status == "erro" ? $"<c={Red}>" + L.T("Falhou") + "</c>" : L.T("Pensando"),
-                        exchange.Status == "erro" ? L.F("A chamada falhou: {0}. Use \"Convocar de novo\", à direita.", MailScreen.Escape(exchange.Error ?? "?")) : null);
+                        exchange.Status == "erro" ? L.F("A chamada falhou: {0}. Use \"Convocar de novo\", à direita.", MailScreen.Escape(exchange.Error != null ? CouncilBank.ErrorUi(exchange.Error) : "?")) : null);
                 }
             }
             if (meeting.Notes.Count > 0)
             {
-                FillNotice(rows[index++], L.T("Mudanças no conselho"), $"{meeting.Notes.Count}", string.Join("\n", meeting.Notes.Select(n => "• " + MailScreen.Escape(n))));
+                FillNotice(rows[index++], L.T("Mudanças no conselho"), $"{meeting.Notes.Count}", string.Join("\n", (meeting.NotesUi != null && meeting.NotesUi.Count == meeting.Notes.Count ? meeting.NotesUi : meeting.Notes).Select(n => "• " + MailScreen.Escape(n))));
             }
         }
 
@@ -729,6 +738,7 @@ namespace CurrencyMod.Diplomacia.UI
                 B.SetButtonText(row.Button, confirming ? L.T("Confirmar") : L.T("Demitir"));
                 MailScreen.FitTitle(top, row.Button.GetComponent<UITransform>().Width + 20f);
                 B.HideOutputs(top);
+                B.Tip(top, "StatsTable/PopCount", PortfolioName(minister.Portfolio), MailScreen.Escape(TraitsUi(minister)));
                 B.Tip(top, "StatsTable/Fortification", L.T("Credibilidade"), L.T("Sobe e desce com os números da pasta dele no jogo."));
                 B.Tip(top, "StatsTable/ExtensionsCount", L.T("Apreço por você"), L.F("{0:+0;-0}, de -100 a 100. Lealdade {1}, ambição {2}.", minister.Affection, minister.Loyalty, minister.Ambition));
                 B.Tip(row.Button.transform, string.Empty, confirming ? L.T("Confirmar a demissão") : L.T("Demitir"),
@@ -873,7 +883,7 @@ namespace CurrencyMod.Diplomacia.UI
             if (result.StartsWith("ok") && oldName != null)
             {
                 Minister newcomer = nation.Council.FirstOrDefault(m => m.Portfolio == portfolio);
-                SetFeedback(L.F("{0} demitido; no lugar entra {1}", oldName, newcomer?.Name ?? L.T("ninguém")), false);
+                SetFeedback(L.F("Demissão de {0}; no lugar entra {1}", oldName, newcomer?.Name ?? L.T("ninguém")), false);
                 return;
             }
             SetFeedback(result.Replace("ok: ", string.Empty).Replace("erro: ", string.Empty), !result.StartsWith("ok"));

@@ -80,3 +80,11 @@ Técnico: tudo em função do frame (sem Math.random, Date.now, CSS transition/@
 Antes de codar: confirme a direção A com 3 frames-chave (0s, 19s, 57s) nos dois formatos e o storyboard
 com os tempos recalculados pelo áudio real. Depois do render: contact sheet a cada 1s, dos dois masters.
 ```
+
+## Vocabulário de parâmetros (adotado)
+
+Easing: smooth `power2.out`, snappy `power4.out`, bouncy `back.out` (carimbos), dramatic `expo.out` (reveals hero),
+dreamy `sine.inOut` (ambient idle). Durações: 0,2 s energia (whips, slams), 0,4 s padrão, 0,6 s e 1-2 s nos holds
+das cartas. Câmera: push-in 4-8% nas cartas, parallax 2-3 planos no mosaico, rack focus no diário (carta nítida ->
+diário nítido). Áudio reativo: sub-bass -> pulso de escala do lacre/carimbo; agudo -> brilho do lacre.
+Skill reutilizável com isso tudo: `~/.claude/skills/motion-director-br`.

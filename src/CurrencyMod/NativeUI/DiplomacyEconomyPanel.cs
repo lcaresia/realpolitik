@@ -20,7 +20,7 @@ namespace CurrencyMod.NativeUI
         private const float PanelWidth = 756f;
         private const float GaugeWidth = 256f;
         private const float GaugeInnerWidth = 252f;
-        private const float RowsTop = 104f;
+        private const float RowsTop = 120f;
 
         private class Row
         {
@@ -42,7 +42,7 @@ namespace CurrencyMod.NativeUI
 
         private void Update()
         {
-            if (failed || Time.unscaledTime < nextUpdate)
+            if (Time.unscaledTime < nextUpdate)
             {
                 return;
             }
@@ -62,19 +62,26 @@ namespace CurrencyMod.NativeUI
                 }
                 if (panel == null)
                 {
+                    rows.Clear();
                     Build(screen.transform);
                 }
                 Refresh();
+                failed = false;
             }
             catch (Exception ex)
             {
+                if (!failed)
+                {
+                    Plugin.Log.LogError($"Painel de economia na diplomacia: {ex}");
+                }
                 failed = true;
-                Plugin.Log.LogError($"Painel de economia na diplomacia: {ex}");
+                nextUpdate = Time.unscaledTime + 5f;
             }
         }
 
         private void Build(Transform screen)
         {
+            rows.Clear();
             Transform group = screen.Find("PanelsGroup/_RelationsPanel/_DefaultGroup");
             Transform relations = group.Find("_MyRelations");
             Transform boxDonor = relations.Find("Scrollview");
@@ -109,23 +116,23 @@ namespace CurrencyMod.NativeUI
             }
 
             title = NativeUIKit.Clone(titleDonor, panel, "Title");
-            NativeUIKit.Place(title, 0, 8, PanelWidth, 32);
+            NativeUIKit.Place(title, 0, 4, PanelWidth, 32);
             NativeUIKit.Align(title, HorizontalAlignment.Center);
             NativeUIKit.Label(title).Color = new Color(1f, 0.875f, 0.584f); // dourado dos títulos de seção
 
             // A frase de estado ajusta a própria altura; aqui a altura é fixa.
             subtitle = NativeUIKit.Clone(sentenceDonor, panel, "Subtitle");
             NativeUIKit.Label(subtitle).AutoAdjustHeight = false;
-            NativeUIKit.Place(subtitle, 20, 46, PanelWidth - 40, 26);
+            NativeUIKit.Place(subtitle, 20, 44, PanelWidth - 40, 44); // cabe 2 linhas (a frase de câmbio é longa)
             NativeUIKit.Align(subtitle, HorizontalAlignment.Center);
 
             // Cabeçalhos das colunas, alinhados aos valores de cada lado.
             float columnWidth = (PanelWidth - GaugeWidth) / 2f - 34f;
             headerMine = NativeUIKit.Clone(smallCapsDonor, panel, "HeaderMine");
-            NativeUIKit.Place(headerMine, 20, 78, columnWidth, 18);
+            NativeUIKit.Place(headerMine, 20, 94, columnWidth, 18);
             NativeUIKit.Align(headerMine, HorizontalAlignment.Right);
             headerTheirs = NativeUIKit.Clone(smallCapsDonor, panel, "HeaderTheirs");
-            NativeUIKit.Place(headerTheirs, PanelWidth - 20 - columnWidth, 78, columnWidth, 18);
+            NativeUIKit.Place(headerTheirs, PanelWidth - 20 - columnWidth, 94, columnWidth, 18);
             NativeUIKit.Align(headerTheirs, HorizontalAlignment.Left);
 
             for (int i = 0; i < metricCount; i++)
@@ -166,7 +173,7 @@ namespace CurrencyMod.NativeUI
             }
             int me = game.LocalEmpireInfo.EmpireIndex;
             int other = Snapshots.DiplomaticCursorSnapshot.PresentationData.OtherEmpireIndex;
-            bool valid = other >= 0 && other < game.NumberOfMajorEmpires && other != me;
+            bool valid = other >= 0 && other < game.NumberOfMajorEmpires && other < game.EmpireInfo.Length && me < game.EmpireInfo.Length && other != me;
             NativeUIKit.SetVisible(panel, valid);
             if (!valid)
             {
@@ -246,6 +253,7 @@ namespace CurrencyMod.NativeUI
             NativeUIKit.SetText(row.Right, theirsText);
             if (row.ValueGroup != null)
             {
+                NativeUIKit.StyleGauge(row.ValueGroup, new Color(0.89f, 0.78f, 0.54f, 1f));
                 // A parte preenchida vinha ancorada a 50% da barra: solta e define a largura.
                 UITransform ui = row.ValueGroup.GetComponent<UITransform>();
                 float width = Mathf.Clamp((float)share, 0.02f, 0.98f) * GaugeInnerWidth;

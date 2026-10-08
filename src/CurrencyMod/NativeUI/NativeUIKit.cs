@@ -61,6 +61,57 @@ namespace CurrencyMod.NativeUI
             ui.Y = top;
         }
 
+        /// <summary>
+        /// Barra de comparação clonada da diplomacia: o preenchimento (Mask/Value) vem na cor do estado de moral da tela de origem
+        /// (muda conforme a sessão: carmim, rosa...) e o separador fica no meio. Cor explícita e sem separador.
+        /// </summary>
+        public static void StyleGauge(Transform valueGroup, Color fill)
+        {
+            if (valueGroup == null)
+            {
+                return;
+            }
+            Transform value = valueGroup.Find("Mask/Value");
+            UISquircleImage image = value != null ? value.GetComponent<UISquircleImage>() : null;
+            if (image != null && image.Color != fill)
+            {
+                image.Color = fill;
+            }
+            Transform separator = valueGroup.Find("Separator");
+            if (separator != null)
+            {
+                NativeBankWindow.SetVisible(separator, false);
+            }
+            // A marca de variação (DeltaGroup) fica no meio da barra, com 6 px: é o "antes e depois" da moral na diplomacia.
+            Transform delta = valueGroup.parent != null ? valueGroup.parent.Find("DeltaGroup") : null;
+            if (delta != null)
+            {
+                NativeBankWindow.SetVisible(delta, false);
+            }
+        }
+
+        private static readonly System.Collections.Generic.Dictionary<UITextField, object> hookedFields = new System.Collections.Generic.Dictionary<UITextField, object>();
+
+        /// <summary>
+        /// O campo cria o responder (quem dispara TextChange) ao carregar, depois de clonado: a assinatura feita antes se perde.
+        /// Chame a cada quadro; religa o evento sempre que o responder muda.
+        /// </summary>
+        public static void EnsureTextChange(UITextField field, System.Action<IUITextField, string> handler)
+        {
+            object responder = field != null ? field.TextFieldResponder : null;
+            if (responder == null)
+            {
+                return;
+            }
+            if (hookedFields.TryGetValue(field, out object current) && ReferenceEquals(current, responder))
+            {
+                return;
+            }
+            field.TextChange -= handler;
+            field.TextChange += handler;
+            hookedFields[field] = responder;
+        }
+
         public static void DestroyChildren(Transform parent)
         {
             for (int i = parent.childCount - 1; i >= 0; i--)

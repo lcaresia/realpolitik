@@ -195,6 +195,10 @@ namespace CurrencyMod.NativeUI
         /// <summary>Abre a janela num território (ou fecha, com -1).</summary>
         internal static void SetOpen(int territory)
         {
+            if (territory < 0 && Instance == null)
+            {
+                return; // fechar nunca cria a janela
+            }
             if (Instance == null)
             {
                 Create();

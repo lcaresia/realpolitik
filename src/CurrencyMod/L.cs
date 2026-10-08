@@ -35,6 +35,9 @@ namespace CurrencyMod
         /// <summary>Idioma em uso: pt, en, es, fr ou de.</summary>
         internal static string Code => code;
 
+        /// <summary>Dois-pontos do idioma: o francês leva espaço antes (" : ").</summary>
+        internal static string Colon => code == "fr" ? " : " : ": ";
+
         /// <summary>Cultura dos números e datas no idioma em uso (vírgula decimal em pt, es, fr, de; ponto em en).</summary>
         internal static CultureInfo Culture => culture;
 

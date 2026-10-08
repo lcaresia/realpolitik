@@ -55,6 +55,7 @@ namespace CurrencyMod.Diplomacia
         internal static ConfigEntry<int> FailoverMinutes;
 
         internal static ConfigEntry<string> CodexPath;
+        internal static ConfigEntry<string> LocalUrl;
 
         internal static ConfigEntry<KeyboardShortcut> ViewerKey;
         internal static ConfigEntry<int> ViewerPort;
@@ -175,6 +176,8 @@ namespace CurrencyMod.Diplomacia
                 "Sobrescreve a tabela de preços (US$ por milhão de tokens: cache/entrada/saída). Formato: provedor/modelo=0.006/0.30/1.20; outro/modelo=...");
             FailoverMinutes = config.Bind(P, "MinutosForaAposErro", 10,
                 "Depois de um erro, o provedor fica de fora por estes minutos e o próximo da lista assume. Depois, o principal é tentado de novo.");
+            LocalUrl = config.Bind(P, "EnderecoLocal", "",
+                "Endereço do servidor do provedor Modelo local (Ollama, LM Studio, llama.cpp...), ex.: http://localhost:11434/v1 ou 192.168.0.5:1234. Vazio = procura sozinho nas portas padrão (11434, 1234, 8080).");
             CodexPath = config.Bind(P, "CodexCaminho", "",
                 "Caminho do codex.exe, para o provedor ChatGPT (Codex). Vazio = procura sozinho (app do Codex em %LOCALAPPDATA%\\OpenAI\\Codex e o PATH).");
         }
