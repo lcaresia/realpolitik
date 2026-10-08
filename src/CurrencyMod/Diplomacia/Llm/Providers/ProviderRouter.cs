@@ -121,11 +121,6 @@ namespace CurrencyMod.Diplomacia.Llm.Providers
         /// <summary>Thread de trabalho: manda pelo primeiro provedor que responder.</summary>
         internal static ChatResult Send(ChatRequest request, int timeoutSeconds)
         {
-            // Sem licença, nenhuma decisão, carta ou conselho chama a IA (o "Testar conexão" usa o SendWith e continua livre).
-            if (!Licenca.License.AllowsAi)
-            {
-                return new ChatResult { Ok = false, Kind = ErrorKind.Auth, Error = "sem licença (tela Realpolitik → Licença)" };
-            }
             List<ProviderDef> ready = Ready();
             if (ready.Count == 0)
             {

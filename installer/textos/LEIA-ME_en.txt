@@ -1,9 +1,11 @@
 REALPOLITIK: LIVING NATIONS FOR HUMANKIND
 =========================================
 
+Free and open source (MIT License): github.com/lcaresia/realpolitik
+
 REQUIREMENTS
 - HUMANKIND on Windows (Steam or Epic), single-player.
-- Internet only to activate the license and for Realpolitik's AI.
+- Internet only for Realpolitik's AI providers.
 
 INSTALL
 - Setup: run Realpolitik_Setup.exe. It finds the game and installs BepInEx if needed.
@@ -11,16 +13,17 @@ INSTALL
 - Manual (zip): close the game, extract the zip INTO the game folder (the one with
   Humankind.exe) and accept merging the BepInEx folder.
 
-ACTIVATE
-1. Open the game -> main menu -> Realpolitik -> License.
-2. Paste your key (RPLN-XXXXX-XXXXX-XXXXX-XXXXX) and click Activate.
-   Valid on up to 3 PCs. To move to another PC, use "Release this PC" on the old one.
-3. Pick an AI provider on the left (OpenRouter is the easiest: one login, no key).
-Without a license everything else works (currency, Central Bank, tolls, 16 empires)
+SET UP THE AI
+1. Open the game -> main menu -> Realpolitik.
+2. Pick an AI provider on the left (OpenRouter is the easiest: one login, no key).
+   You can also use an API key (DeepSeek, OpenAI, Gemini...), ChatGPT via Codex
+   or a local model (Ollama / LM Studio).
+Without a provider everything else works (currency, Central Bank, tolls, 16 empires)
 and nations use the game's native AI.
 
 UPDATE
-Install the new version over the old one. Settings, keys and saves are kept.
+Download the new version from github.com/lcaresia/realpolitik/releases and install it
+over the old one. Settings, keys and saves are kept.
 
 UNINSTALL
 Windows Settings -> Apps -> "Realpolitik: Living Nations for HUMANKIND".
@@ -34,5 +37,5 @@ PROBLEMS
 - The mod doesn't load: look for "CurrencyMod" and "Núcleo carregado" in BepInEx\LogOutput.log.
 - Your antivirus removed winhttp.dll: restore it (it is the BepInEx loader) and add an exception.
 - Saves with more than 10 empires only open with the mod installed.
-- Lost your key: realpolitik-living-nations.pages.dev/download.html (purchase e-mail +
-  Stripe receipt number).
+- Anything else: open an issue at github.com/lcaresia/realpolitik/issues (attach
+  BepInEx\LogOutput.log).

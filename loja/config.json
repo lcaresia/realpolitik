@@ -1,8 +1,0 @@
-{
-    "d1_id":  "755000eb-59aa-477f-9104-1627342b7c56",
-    "stripe_live_product_id":  "prod_VOSVNpdRz3IQwU",
-    "stripe_live_price_id":  "price_1UNfaJHCcl4Z5STpoIBnbzLj",
-    "stripe_live_webhook_id":  "we_1UNfaKHCcl4Z5STpff9GGQVI",
-    "worker_url":  "https://realpolitik-loja.lcaresia.workers.dev",
-    "stripe_mode":  "live"
-}

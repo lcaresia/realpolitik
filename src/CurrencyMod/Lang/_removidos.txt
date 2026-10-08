@@ -1,24 +1,200 @@
-[en] Inflação {0}º menor
-[en] Moeda {0}º de {1}
-[en] Média dos últimos {0} turnos, em {1}.
-[en] O que você ganhou dele menos o que pagou a ele ou por rotas com ele, por turno (média dos últimos {0} turnos), em {1}. Verde: você ganha mais do que paga.
-[en] Recursos: compra {0} · vende {1}
-[en] {0} demitido; no lugar entra {1}
-[es] Inflação {0}º menor
-[es] Moeda {0}º de {1}
-[es] Média dos últimos {0} turnos, em {1}.
-[es] O que você ganhou dele menos o que pagou a ele ou por rotas com ele, por turno (média dos últimos {0} turnos), em {1}. Verde: você ganha mais do que paga.
-[es] Recursos: compra {0} · vende {1}
-[es] {0} demitido; no lugar entra {1}
-[fr] Inflação {0}º menor
-[fr] Moeda {0}º de {1}
-[fr] Média dos últimos {0} turnos, em {1}.
-[fr] O que você ganhou dele menos o que pagou a ele ou por rotas com ele, por turno (média dos últimos {0} turnos), em {1}. Verde: você ganha mais do que paga.
-[fr] Recursos: compra {0} · vende {1}
-[fr] {0} demitido; no lugar entra {1}
-[de] Inflação {0}º menor
-[de] Moeda {0}º de {1}
-[de] Média dos últimos {0} turnos, em {1}.
-[de] O que você ganhou dele menos o que pagou a ele ou por rotas com ele, por turno (média dos últimos {0} turnos), em {1}. Verde: você ganha mais do que paga.
-[de] Recursos: compra {0} · vende {1}
-[de] {0} demitido; no lugar entra {1}
+[en] A IA do Realpolitik está liberada.
+[en] A chave da compra (RPLN-XXXXX-XXXXX-XXXXX-XXXXX). Enter também ativa. Ativar de novo no mesmo PC não gasta vaga.
+[en] A chave da compra libera a IA do Realpolitik neste PC (até 3 PCs). Sem ela, todo o resto do mod funciona.
+[en] A chave já está ativa em {0} PCs (o limite é {1}). Libere um deles pelo próprio jogo daquele PC (Realpolitik → Licença → Liberar este PC). Se o PC não existe mais, fale com o suporte.
+[en] A chave que aparece depois da compra (RPLN-...). Fica criptografada neste PC.
+[en] A licença …{0} não é conferida há mais de {1} dias.
+[en] Abre a página de download no navegador. Instale por cima: configurações, chaves e saves ficam.
+[en] Ativa a chave digitada no campo (ou a copiada, se o campo estiver vazio). Precisa de internet.
+[en] Ativada
+[en] Ativada neste PC ({0} de {1}).
+[en] Ativar
+[en] Ativar neste PC
+[en] Atualização
+[en] Baixar
+[en] Chave de licença
+[en] Chave não encontrada. Confira se copiou inteira (está na página depois da compra).
+[en] Cole a chave da compra e clique em Ativar. Sem ela, todo o resto do mod funciona e as nações usam a IA nativa do jogo.
+[en] Cole a chave no campo (Ctrl+V) ou copie a chave na página da compra e clique de novo.
+[en] Cole ou digite a chave de licença e tecle Enter
+[en] Conecte o PC à internet; ela é conferida sozinha.
+[en] Consultando o servidor de licenças…
+[en] Desativa a licença neste PC e devolve a vaga para usar em outro (até 3 liberações a cada 30 dias). Clique duas vezes para confirmar.
+[en] Esta chave foi desativada.
+[en] Esta compra foi reembolsada; a chave não vale mais.
+[en] Este PC foi liberado. A vaga já pode ser usada em outro PC.
+[en] Este PC não está mais ativado nessa chave. Ative de novo.
+[en] Isso não parece uma chave. O formato é RPLN-XXXXX-XXXXX-XXXXX-XXXXX.
+[en] Liberar PC
+[en] Liberar este PC
+[en] Licença
+[en] Licença apagada deste PC, mas sem conexão: a vaga continua ocupada no servidor. Se faltar vaga em outro PC, fale com o suporte.
+[en] Licença ativada neste PC ({0} de {1}). A IA do Realpolitik está liberada.
+[en] Licença conferida com o servidor: tudo certo.
+[en] Licença …{0} recusada pelo servidor.
+[en] Limite de liberações atingido: no máximo 3 a cada 30 dias. Tente de novo mais tarde.
+[en] Modo de desenvolvimento
+[en] Modo de desenvolvimento: nesta máquina a IA do Realpolitik funciona sem chave. Ativar aqui testa o fluxo do comprador.
+[en] O pagamento desta compra está em contestação; a chave fica suspensa até a contestação acabar.
+[en] O que está copiado não parece uma chave de licença. Copie a chave do e-mail da compra.
+[en] O servidor de licenças respondeu com erro. Tente de novo em alguns minutos.
+[en] Offline · {0} dia(s)
+[en] Precisa conferir
+[en] Sem conexão com o servidor de licenças agora. A licença continua valendo pelo prazo offline.
+[en] Sem conexão com o servidor de licenças. A IA do Realpolitik volta assim que a licença for conferida.
+[en] Sem conexão com o servidor de licenças. Ativar precisa de internet; tente de novo.
+[en] Sem conferir com o servidor há {0} dia(s); offline, ela vale por mais {1} dia(s).
+[en] Sem licença
+[en] Sem licença ativa: as nações jogam com a IA nativa. Ative a chave em Licença, à esquerda.
+[en] Vale em até 3 PCs. Só a chave e um nome do PC sem dado pessoal saem daqui.
+[en] Versão {0} disponível (você tem a {1})
+[es] A IA do Realpolitik está liberada.
+[es] A chave da compra (RPLN-XXXXX-XXXXX-XXXXX-XXXXX). Enter também ativa. Ativar de novo no mesmo PC não gasta vaga.
+[es] A chave da compra libera a IA do Realpolitik neste PC (até 3 PCs). Sem ela, todo o resto do mod funciona.
+[es] A chave já está ativa em {0} PCs (o limite é {1}). Libere um deles pelo próprio jogo daquele PC (Realpolitik → Licença → Liberar este PC). Se o PC não existe mais, fale com o suporte.
+[es] A chave que aparece depois da compra (RPLN-...). Fica criptografada neste PC.
+[es] A licença …{0} não é conferida há mais de {1} dias.
+[es] Abre a página de download no navegador. Instale por cima: configurações, chaves e saves ficam.
+[es] Ativa a chave digitada no campo (ou a copiada, se o campo estiver vazio). Precisa de internet.
+[es] Ativada
+[es] Ativada neste PC ({0} de {1}).
+[es] Ativar
+[es] Ativar neste PC
+[es] Atualização
+[es] Baixar
+[es] Chave de licença
+[es] Chave não encontrada. Confira se copiou inteira (está na página depois da compra).
+[es] Cole a chave da compra e clique em Ativar. Sem ela, todo o resto do mod funciona e as nações usam a IA nativa do jogo.
+[es] Cole a chave no campo (Ctrl+V) ou copie a chave na página da compra e clique de novo.
+[es] Cole ou digite a chave de licença e tecle Enter
+[es] Conecte o PC à internet; ela é conferida sozinha.
+[es] Consultando o servidor de licenças…
+[es] Desativa a licença neste PC e devolve a vaga para usar em outro (até 3 liberações a cada 30 dias). Clique duas vezes para confirmar.
+[es] Esta chave foi desativada.
+[es] Esta compra foi reembolsada; a chave não vale mais.
+[es] Este PC foi liberado. A vaga já pode ser usada em outro PC.
+[es] Este PC não está mais ativado nessa chave. Ative de novo.
+[es] Isso não parece uma chave. O formato é RPLN-XXXXX-XXXXX-XXXXX-XXXXX.
+[es] Liberar PC
+[es] Liberar este PC
+[es] Licença
+[es] Licença apagada deste PC, mas sem conexão: a vaga continua ocupada no servidor. Se faltar vaga em outro PC, fale com o suporte.
+[es] Licença ativada neste PC ({0} de {1}). A IA do Realpolitik está liberada.
+[es] Licença conferida com o servidor: tudo certo.
+[es] Licença …{0} recusada pelo servidor.
+[es] Limite de liberações atingido: no máximo 3 a cada 30 dias. Tente de novo mais tarde.
+[es] Modo de desenvolvimento
+[es] Modo de desenvolvimento: nesta máquina a IA do Realpolitik funciona sem chave. Ativar aqui testa o fluxo do comprador.
+[es] O pagamento desta compra está em contestação; a chave fica suspensa até a contestação acabar.
+[es] O que está copiado não parece uma chave de licença. Copie a chave do e-mail da compra.
+[es] O servidor de licenças respondeu com erro. Tente de novo em alguns minutos.
+[es] Offline · {0} dia(s)
+[es] Precisa conferir
+[es] Sem conexão com o servidor de licenças agora. A licença continua valendo pelo prazo offline.
+[es] Sem conexão com o servidor de licenças. A IA do Realpolitik volta assim que a licença for conferida.
+[es] Sem conexão com o servidor de licenças. Ativar precisa de internet; tente de novo.
+[es] Sem conferir com o servidor há {0} dia(s); offline, ela vale por mais {1} dia(s).
+[es] Sem licença
+[es] Sem licença ativa: as nações jogam com a IA nativa. Ative a chave em Licença, à esquerda.
+[es] Vale em até 3 PCs. Só a chave e um nome do PC sem dado pessoal saem daqui.
+[es] Versão {0} disponível (você tem a {1})
+[fr] A IA do Realpolitik está liberada.
+[fr] A chave da compra (RPLN-XXXXX-XXXXX-XXXXX-XXXXX). Enter também ativa. Ativar de novo no mesmo PC não gasta vaga.
+[fr] A chave da compra libera a IA do Realpolitik neste PC (até 3 PCs). Sem ela, todo o resto do mod funciona.
+[fr] A chave já está ativa em {0} PCs (o limite é {1}). Libere um deles pelo próprio jogo daquele PC (Realpolitik → Licença → Liberar este PC). Se o PC não existe mais, fale com o suporte.
+[fr] A chave que aparece depois da compra (RPLN-...). Fica criptografada neste PC.
+[fr] A licença …{0} não é conferida há mais de {1} dias.
+[fr] Abre a página de download no navegador. Instale por cima: configurações, chaves e saves ficam.
+[fr] Ativa a chave digitada no campo (ou a copiada, se o campo estiver vazio). Precisa de internet.
+[fr] Ativada
+[fr] Ativada neste PC ({0} de {1}).
+[fr] Ativar
+[fr] Ativar neste PC
+[fr] Atualização
+[fr] Baixar
+[fr] Chave de licença
+[fr] Chave não encontrada. Confira se copiou inteira (está na página depois da compra).
+[fr] Cole a chave da compra e clique em Ativar. Sem ela, todo o resto do mod funciona e as nações usam a IA nativa do jogo.
+[fr] Cole a chave no campo (Ctrl+V) ou copie a chave na página da compra e clique de novo.
+[fr] Cole ou digite a chave de licença e tecle Enter
+[fr] Conecte o PC à internet; ela é conferida sozinha.
+[fr] Consultando o servidor de licenças…
+[fr] Desativa a licença neste PC e devolve a vaga para usar em outro (até 3 liberações a cada 30 dias). Clique duas vezes para confirmar.
+[fr] Esta chave foi desativada.
+[fr] Esta compra foi reembolsada; a chave não vale mais.
+[fr] Este PC foi liberado. A vaga já pode ser usada em outro PC.
+[fr] Este PC não está mais ativado nessa chave. Ative de novo.
+[fr] Isso não parece uma chave. O formato é RPLN-XXXXX-XXXXX-XXXXX-XXXXX.
+[fr] Liberar PC
+[fr] Liberar este PC
+[fr] Licença
+[fr] Licença apagada deste PC, mas sem conexão: a vaga continua ocupada no servidor. Se faltar vaga em outro PC, fale com o suporte.
+[fr] Licença ativada neste PC ({0} de {1}). A IA do Realpolitik está liberada.
+[fr] Licença conferida com o servidor: tudo certo.
+[fr] Licença …{0} recusada pelo servidor.
+[fr] Limite de liberações atingido: no máximo 3 a cada 30 dias. Tente de novo mais tarde.
+[fr] Modo de desenvolvimento
+[fr] Modo de desenvolvimento: nesta máquina a IA do Realpolitik funciona sem chave. Ativar aqui testa o fluxo do comprador.
+[fr] O pagamento desta compra está em contestação; a chave fica suspensa até a contestação acabar.
+[fr] O que está copiado não parece uma chave de licença. Copie a chave do e-mail da compra.
+[fr] O servidor de licenças respondeu com erro. Tente de novo em alguns minutos.
+[fr] Offline · {0} dia(s)
+[fr] Precisa conferir
+[fr] Sem conexão com o servidor de licenças agora. A licença continua valendo pelo prazo offline.
+[fr] Sem conexão com o servidor de licenças. A IA do Realpolitik volta assim que a licença for conferida.
+[fr] Sem conexão com o servidor de licenças. Ativar precisa de internet; tente de novo.
+[fr] Sem conferir com o servidor há {0} dia(s); offline, ela vale por mais {1} dia(s).
+[fr] Sem licença
+[fr] Sem licença ativa: as nações jogam com a IA nativa. Ative a chave em Licença, à esquerda.
+[fr] Vale em até 3 PCs. Só a chave e um nome do PC sem dado pessoal saem daqui.
+[fr] Versão {0} disponível (você tem a {1})
+[de] A IA do Realpolitik está liberada.
+[de] A chave da compra (RPLN-XXXXX-XXXXX-XXXXX-XXXXX). Enter também ativa. Ativar de novo no mesmo PC não gasta vaga.
+[de] A chave da compra libera a IA do Realpolitik neste PC (até 3 PCs). Sem ela, todo o resto do mod funciona.
+[de] A chave já está ativa em {0} PCs (o limite é {1}). Libere um deles pelo próprio jogo daquele PC (Realpolitik → Licença → Liberar este PC). Se o PC não existe mais, fale com o suporte.
+[de] A chave que aparece depois da compra (RPLN-...). Fica criptografada neste PC.
+[de] A licença …{0} não é conferida há mais de {1} dias.
+[de] Abre a página de download no navegador. Instale por cima: configurações, chaves e saves ficam.
+[de] Ativa a chave digitada no campo (ou a copiada, se o campo estiver vazio). Precisa de internet.
+[de] Ativada
+[de] Ativada neste PC ({0} de {1}).
+[de] Ativar
+[de] Ativar neste PC
+[de] Atualização
+[de] Baixar
+[de] Chave de licença
+[de] Chave não encontrada. Confira se copiou inteira (está na página depois da compra).
+[de] Cole a chave da compra e clique em Ativar. Sem ela, todo o resto do mod funciona e as nações usam a IA nativa do jogo.
+[de] Cole a chave no campo (Ctrl+V) ou copie a chave na página da compra e clique de novo.
+[de] Cole ou digite a chave de licença e tecle Enter
+[de] Conecte o PC à internet; ela é conferida sozinha.
+[de] Consultando o servidor de licenças…
+[de] Desativa a licença neste PC e devolve a vaga para usar em outro (até 3 liberações a cada 30 dias). Clique duas vezes para confirmar.
+[de] Esta chave foi desativada.
+[de] Esta compra foi reembolsada; a chave não vale mais.
+[de] Este PC foi liberado. A vaga já pode ser usada em outro PC.
+[de] Este PC não está mais ativado nessa chave. Ative de novo.
+[de] Isso não parece uma chave. O formato é RPLN-XXXXX-XXXXX-XXXXX-XXXXX.
+[de] Liberar PC
+[de] Liberar este PC
+[de] Licença
+[de] Licença apagada deste PC, mas sem conexão: a vaga continua ocupada no servidor. Se faltar vaga em outro PC, fale com o suporte.
+[de] Licença ativada neste PC ({0} de {1}). A IA do Realpolitik está liberada.
+[de] Licença conferida com o servidor: tudo certo.
+[de] Licença …{0} recusada pelo servidor.
+[de] Limite de liberações atingido: no máximo 3 a cada 30 dias. Tente de novo mais tarde.
+[de] Modo de desenvolvimento
+[de] Modo de desenvolvimento: nesta máquina a IA do Realpolitik funciona sem chave. Ativar aqui testa o fluxo do comprador.
+[de] O pagamento desta compra está em contestação; a chave fica suspensa até a contestação acabar.
+[de] O que está copiado não parece uma chave de licença. Copie a chave do e-mail da compra.
+[de] O servidor de licenças respondeu com erro. Tente de novo em alguns minutos.
+[de] Offline · {0} dia(s)
+[de] Precisa conferir
+[de] Sem conexão com o servidor de licenças agora. A licença continua valendo pelo prazo offline.
+[de] Sem conexão com o servidor de licenças. A IA do Realpolitik volta assim que a licença for conferida.
+[de] Sem conexão com o servidor de licenças. Ativar precisa de internet; tente de novo.
+[de] Sem conferir com o servidor há {0} dia(s); offline, ela vale por mais {1} dia(s).
+[de] Sem licença
+[de] Sem licença ativa: as nações jogam com a IA nativa. Ative a chave em Licença, à esquerda.
+[de] Vale em até 3 PCs. Só a chave e um nome do PC sem dado pessoal saem daqui.
+[de] Versão {0} disponível (você tem a {1})

@@ -1,9 +1,11 @@
 REALPOLITIK: LIVING NATIONS FOR HUMANKIND
 =========================================
 
+Gratis y de código abierto (licencia MIT): github.com/lcaresia/realpolitik
+
 REQUISITOS
 - HUMANKIND en Windows (Steam o Epic), un jugador.
-- Internet solo para activar la licencia y para la IA de Realpolitik.
+- Internet solo para los proveedores de IA de Realpolitik.
 
 INSTALAR
 - Setup: ejecuta Realpolitik_Setup.exe. Encuentra el juego e instala BepInEx si falta.
@@ -12,16 +14,17 @@ INSTALAR
 - Manual (zip): cierra el juego, extrae el zip DENTRO de la carpeta del juego (la que tiene
   Humankind.exe) y acepta combinar la carpeta BepInEx.
 
-ACTIVAR
-1. Abre el juego -> menú principal -> Realpolitik -> Licencia.
-2. Pega tu clave (RPLN-XXXXX-XXXXX-XXXXX-XXXXX) y haz clic en Activar.
-   Válida en hasta 3 PC. Para cambiar de PC, usa "Liberar este PC" en el antiguo.
-3. Elige un proveedor de IA a la izquierda (el más fácil es OpenRouter: un inicio de sesión, sin clave).
-Sin licencia todo lo demás funciona (moneda, Banco Central, peajes, 16 imperios) y las
+CONFIGURAR LA IA
+1. Abre el juego -> menú principal -> Realpolitik.
+2. Elige un proveedor de IA a la izquierda (el más fácil es OpenRouter: un inicio de sesión, sin clave).
+   También puedes usar una clave de API (DeepSeek, OpenAI, Gemini...), ChatGPT a través
+   de Codex o un modelo local (Ollama / LM Studio).
+Sin proveedor todo lo demás funciona (moneda, Banco Central, peajes, 16 imperios) y las
 naciones usan la IA nativa del juego.
 
 ACTUALIZAR
-Instala la versión nueva encima. La configuración, las claves y las partidas se mantienen.
+Descarga la versión nueva en github.com/lcaresia/realpolitik/releases e instálala encima.
+La configuración, las claves y las partidas se mantienen.
 
 DESINSTALAR
 Configuración de Windows -> Aplicaciones -> "Realpolitik: Living Nations for HUMANKIND".
@@ -35,5 +38,5 @@ PROBLEMAS
 - El mod no carga: busca "CurrencyMod" y "Núcleo carregado" en BepInEx\LogOutput.log.
 - El antivirus borró winhttp.dll: restáuralo (es el cargador de BepInEx) y añade una excepción.
 - Las partidas con más de 10 imperios solo se abren con el mod instalado.
-- Perdiste la clave: realpolitik-living-nations.pages.dev/download.html (correo de la compra +
-  número del recibo de Stripe).
+- Otro problema: abre un issue en github.com/lcaresia/realpolitik/issues (adjunta
+  BepInEx\LogOutput.log).

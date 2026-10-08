@@ -36,8 +36,8 @@ AppName={#AppName}
 AppVersion={#Versao}
 AppVerName={#AppName} {#Versao}
 AppPublisher=Realpolitik
-AppPublisherURL=https://realpolitik-living-nations.pages.dev/
-AppSupportURL=https://realpolitik-living-nations.pages.dev/
+AppPublisherURL=https://github.com/lcaresia/realpolitik
+AppSupportURL=https://github.com/lcaresia/realpolitik/issues
 VersionInfoVersion={#VersaoNum}
 VersionInfoProductName={#AppName}
 VersionInfoDescription={#AppName} Setup
@@ -153,16 +153,16 @@ pt.OpenGame=Abrir o HUMANKIND agora
 es.OpenGame=Abrir HUMANKIND ahora
 fr.OpenGame=Lancer HUMANKIND maintenant
 de.OpenGame=HUMANKIND jetzt starten
-en.OpenGuide=Read the quick guide (activate the license in Realpolitik -> License)
-pt.OpenGuide=Ler o guia rápido (ative a licença em Realpolitik -> Licença)
-es.OpenGuide=Leer la guía rápida (activa la licencia en Realpolitik -> Licencia)
-fr.OpenGuide=Lire le guide rapide (activez la licence dans Realpolitik -> Licence)
-de.OpenGuide=Kurzanleitung lesen (Lizenz unter Realpolitik -> Lizenz aktivieren)
-en.KeepSettings=Keep your Realpolitik settings and keys (AI providers and license) on this PC?%n%nYes: reinstalling later brings everything back.%nNo: deletes them (if you are moving to another PC, release this PC in the game first).%n%nSaves are never deleted.
-pt.KeepSettings=Manter as configurações e chaves do Realpolitik (provedores de IA e licença) neste PC?%n%nSim: ao reinstalar, tudo volta.%nNão: apaga tudo (se for trocar de PC, libere este PC no jogo antes).%n%nOs saves nunca são apagados.
-es.KeepSettings=¿Conservar la configuración y las claves de Realpolitik (proveedores de IA y licencia) en este PC?%n%nSí: al reinstalar, todo vuelve.%nNo: se borran (si vas a cambiar de PC, libera este PC en el juego antes).%n%nLas partidas nunca se borran.
-fr.KeepSettings=Conserver les réglages et clés de Realpolitik (fournisseurs d'IA et licence) sur ce PC ?%n%nOui : tout revient si vous réinstallez.%nNon : ils sont supprimés (si vous changez de PC, libérez d'abord ce PC dans le jeu).%n%nLes sauvegardes ne sont jamais supprimées.
-de.KeepSettings=Realpolitik-Einstellungen und -Schlüssel (KI-Anbieter und Lizenz) auf diesem PC behalten?%n%nJa: Bei einer Neuinstallation ist alles wieder da.%nNein: Sie werden gelöscht (beim PC-Wechsel zuerst diesen PC im Spiel freigeben).%n%nSpielstände werden nie gelöscht.
+en.OpenGuide=Read the quick guide
+pt.OpenGuide=Ler o guia rápido
+es.OpenGuide=Leer la guía rápida
+fr.OpenGuide=Lire le guide rapide
+de.OpenGuide=Kurzanleitung lesen
+en.KeepSettings=Keep your Realpolitik settings and keys (AI providers) on this PC?%n%nYes: reinstalling later brings everything back.%nNo: deletes them.%n%nSaves are never deleted.
+pt.KeepSettings=Manter as configurações e chaves do Realpolitik (provedores de IA) neste PC?%n%nSim: ao reinstalar, tudo volta.%nNão: apaga tudo.%n%nOs saves nunca são apagados.
+es.KeepSettings=¿Conservar la configuración y las claves de Realpolitik (proveedores de IA) en este PC?%n%nSí: al reinstalar, todo vuelve.%nNo: se borran.%n%nLas partidas nunca se borran.
+fr.KeepSettings=Conserver les réglages et clés de Realpolitik (fournisseurs d'IA) sur ce PC ?%n%nOui : tout revient si vous réinstallez.%nNon : ils sont supprimés.%n%nLes sauvegardes ne sont jamais supprimées.
+de.KeepSettings=Realpolitik-Einstellungen und -Schlüssel (KI-Anbieter) auf diesem PC behalten?%n%nJa: Bei einer Neuinstallation ist alles wieder da.%nNein: Sie werden gelöscht.%n%nSpielstände werden nie gelöscht.
 
 [Tasks]
 Name: "moreempires"; Description: "{cm:TaskMoreEmpires}"; GroupDescription: "{cm:TaskMoreEmpiresNote}"

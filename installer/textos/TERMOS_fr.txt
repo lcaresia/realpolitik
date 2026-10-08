@@ -1,22 +1,38 @@
 ﻿REALPOLITIK: LIVING NATIONS FOR HUMANKIND - CONDITIONS
 
-Ce que vous achetez
-Une licence unique de Realpolitik: Living Nations, pour un usage personnel et non commercial. La clé de licence active la Diplomatie IA sur 3 PC maximum à la fois ; vous pouvez libérer un PC depuis le jeu (jusqu'à 3 fois tous les 30 jours). Les mises à jour sont gratuites : téléchargez n'importe quelle version sur la page de téléchargement avec votre clé.
-
-Remboursements
-Remboursement dans les 7 jours suivant l'achat, une fois par client. Une commande remboursée ou contestée désactive sa clé de licence.
-
-Coûts de l'IA
-Le prix couvre uniquement le mod. La Diplomatie IA utilise un fournisseur de votre choix ; les frais d'utilisation éventuels concernent uniquement vous et ce fournisseur. Un plafond de dépenses par partie est intégré.
+Gratuit et open source
+Realpolitik: Living Nations est gratuit et open source, publié sous licence MIT (texte complet ci-dessous, en anglais, qui fait foi). Vous pouvez l'utiliser, le copier, le modifier et le partager. Code source et versions : github.com/lcaresia/realpolitik
 
 Mod non officiel
-Ceci est un mod non officiel créé par un fan pour HUMANKIND. Il n'est ni affilié ni approuvé par Amplitude Studios ou SEGA. Vous devez posséder HUMANKIND. Solo uniquement.
+Ceci est un mod non officiel créé par un fan pour HUMANKIND. Il n'est ni affilié ni approuvé par Amplitude Studios ou SEGA. Vous devez posséder HUMANKIND. Solo uniquement. Utilisez-le à vos risques et périls et sauvegardez vos parties.
 
-Code propriétaire
-Le code et le contenu propres au mod (tout sauf les composants open source ci-dessous) sont propriétaires. Ne les copiez pas, ne les partagez pas, ne les revendez pas, ne les modifiez pas et ne les décompilez pas, sauf lorsque la loi l'autorise expressément.
+Fournisseurs d'IA
+La Diplomatie IA utilise un fournisseur d'IA que vous choisissez et configurez avec votre propre compte, connexion ou clé d'API (ou un modèle local sur votre PC). Ce sont des services tiers : leurs conditions et leurs tarifs s'appliquent, et les frais d'utilisation éventuels concernent uniquement vous et ce fournisseur. Un plafond de dépenses par partie est intégré.
+
+Vos données
+Seul le dossier de chaque nation (l'état du jeu qu'elle connaît : carte, relations, lettres et mémoire) est envoyé, et uniquement au fournisseur d'IA utilisé. Rien d'autre ne quitte votre PC, et le mod n'a aucune télémétrie. Les clés et connexions sont stockées chiffrées sur ce PC avec DPAPI de Windows, dans BepInEx\config\credenciais.
 
 Composants open source
-Le mod inclut des composants open source : BepInEx, HarmonyX, MonoMod et Mono.Cecil (MIT) et UnityDoorstop (LGPL-2.1). Leurs licences, dans le dossier « licencas », s'appliquent à ces composants, y compris votre droit de les modifier et de les rétro-concevoir dans la mesure permise par ces licences.
+Le mod inclut des composants open source : BepInEx, HarmonyX, MonoMod et Mono.Cecil (MIT) et UnityDoorstop (LGPL-2.1). Leurs licences, dans le dossier « licencas », s'appliquent à ces composants.
 
-Aucune garantie
-Le mod est fourni tel quel. Sauvegardez vos parties.
+MIT License
+
+Copyright (c) 2026 lcaresia
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.

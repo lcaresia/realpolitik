@@ -1,22 +1,38 @@
 ﻿REALPOLITIK: LIVING NATIONS FOR HUMANKIND - TERMS
 
-What you buy
-A one-time license for Realpolitik: Living Nations, for your personal, non-commercial use. The license key activates AI Diplomacy on up to 3 PCs at a time; you can release a PC from the game (up to 3 times every 30 days). Updates are free: download any version from the download page with your key.
-
-Refunds
-Refunds within 7 days of purchase, once per customer. A refunded or disputed order disables its license key.
-
-AI costs
-The price covers the mod only. AI Diplomacy uses a provider you choose; any usage fees are between you and that provider. A spending cap per game is built in.
+Free and open source
+Realpolitik: Living Nations is free and open source, released under the MIT License (full text below). You may use, copy, modify and share it. Source code and releases: github.com/lcaresia/realpolitik
 
 Unofficial mod
-This is an unofficial fan-made mod for HUMANKIND. It is not affiliated with or endorsed by Amplitude Studios or SEGA. You need your own copy of HUMANKIND. Single-player only.
+This is an unofficial fan-made mod for HUMANKIND. It is not affiliated with or endorsed by Amplitude Studios or SEGA. You need your own copy of HUMANKIND. Single-player only. Use it at your own risk and keep backups of your saves.
 
-Proprietary code
-The mod's own code and content (everything except the open-source components below) are proprietary. Do not copy, share, resell, modify or decompile them, except where the law expressly allows it.
+AI providers
+AI Diplomacy uses an AI provider you choose and set up with your own account, sign-in or API key (or a local model on your PC). These are third-party services: their terms and prices apply, and any usage fees are between you and that provider. A spending cap per game is built in.
+
+Your data
+Only each nation's dossier (the game state it knows: map, relations, letters and memory) is sent, and only to the AI provider in use. Nothing else leaves your PC, and the mod has no telemetry. Keys and sign-ins are stored encrypted on this PC with Windows DPAPI, in BepInEx\config\credenciais.
 
 Open-source components
-The mod ships with open-source components: BepInEx, HarmonyX, MonoMod and Mono.Cecil (MIT) and UnityDoorstop (LGPL-2.1). Their licenses, in the "licencas" folder, apply to those components, including your right to modify and reverse-engineer them as those licenses allow.
+The mod ships with open-source components: BepInEx, HarmonyX, MonoMod and Mono.Cecil (MIT) and UnityDoorstop (LGPL-2.1). Their licenses, in the "licencas" folder, apply to those components.
 
-No warranty
-The mod is provided as is. Keep backups of your saves.
+MIT License
+
+Copyright (c) 2026 lcaresia
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
