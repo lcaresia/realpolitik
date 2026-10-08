@@ -1,6 +1,7 @@
 # Segredos: nunca versionar
 .env
 .env.*
+!.env.example
 *.key
 credenciais/
 
@@ -15,8 +16,9 @@ release/
 *.user
 .vs/
 
-# Kit de desenvolvimento: canal de comandos e capturas (centenas de MB)
-dev/
+# Kit de desenvolvimento: canal de comandos e capturas (centenas de MB). Só a pasta da raiz;
+# tools/dev/ (scripts) é versionada.
+/dev/
 
 # ia-bench: dados capturados das partidas e resultados gerados
 tools/ia-bench/corpus/
@@ -25,7 +27,26 @@ tools/ia-bench/resultados/
 # Zips grandes (originais guardados nos backups em Documentos)
 Missing project files.zip
 site/design-pack/*.zip
-site-cd/.thumbnail
+
+# Rascunhos e cópias que ficam só nesta máquina (o site publicado é site/live/)
+site-cd/
+site/directions/
+site/design-pack/
+site/_backup_before_umami/
+site/assets/perfil/*.png
+
+# Vídeo de divulgação: renders, músicas e capturas (1+ GB)
+docs/divulgacao/video-60s/_backup/
+docs/divulgacao/video-60s/build/
+docs/divulgacao/video-60s/build_v/
+docs/divulgacao/video-60s/musica/
+docs/divulgacao/video-60s/prints/
+docs/divulgacao/video-60s/voz-teste/
+docs/divulgacao/video-60s/youtube/
+
+# Docs obsoletos (substituídos por integracao-licenca.md e prompt-instalador.md)
+docs/integracao-licenca-lemon.md
+docs/prompt-pacote-instalacao.md
 
 # Sistema
 Thumbs.db
