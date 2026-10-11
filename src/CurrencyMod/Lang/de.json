@@ -1796,5 +1796,11 @@
   "Ambição": "Ehrgeiz",
   "De 0 a 100, com que começa no cargo. Pesa quanto a opinião conta no conselho; depois sobe e desce com os números da pasta.": "0 bis 100, der Startwert im Amt. Bestimmt, wie viel die Meinung im Rat zählt; steigt und fällt danach mit den Zahlen des Ressorts.",
   "De 0 a 100. Sobe quando você segue os conselhos; ministros orgulhosos ou rancorosos perdem lealdade quando são contrariados.": "0 bis 100. Steigt, wenn du dem Rat folgst; stolze oder nachtragende Minister verlieren Loyalität, wenn man ihnen widerspricht.",
-  "De 0 a 100. Quanto quer subir: pesa no tom das falas e cresce quando um colega é demitido.": "0 bis 100. Wie sehr jemand aufsteigen will: prägt den Ton und wächst, wenn ein Kollege entlassen wird."
+  "De 0 a 100. Quanto quer subir: pesa no tom das falas e cresce quando um colega é demitido.": "0 bis 100. Wie sehr jemand aufsteigen will: prägt den Ton und wächst, wenn ein Kollege entlassen wird.",
+  "{0}/turno de juros": "{0}/Runde Zinsen",
+  "eleição aberta": "Wahl offen",
+  "eleição em {0} turno(s)": "Wahl in {0} Runde(n)",
+  "até o turno {0}": "bis Runde {0}",
+  "O presidente põe pautas em votação; os outros sugerem. Mandato de {0} turnos, até o turno {1}; no fim há eleição, com 1 voto por membro (empate mantém o atual).": "Der Präsident stellt Anträge zur Abstimmung; die anderen schlagen vor. Amtszeit {0} Runden, bis Runde {1}; danach Wahl, 1 Stimme pro Mitglied (bei Gleichstand bleibt der Amtsinhaber).",
+  "Este império já tomou esta decisão. Se você escolher diferente, ele não vai gostar e vai abrir uma queixa contra você.": "Dieses Reich hat diese Entscheidung bereits getroffen. Entscheidest du anders, gefällt ihm das nicht und es erhebt eine Beschwerde gegen dich."
 }

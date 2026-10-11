@@ -435,4 +435,36 @@ namespace CurrencyMod
             }
         }
     }
+
+    /// <summary>
+    /// Negative lines of the money breakdown (route upkeep, army upkeep, debt interest...) in red, the positive ones as the
+    /// game writes them (melhorias-jogando item 21).
+    /// </summary>
+    [HarmonyPatch(typeof(PropertyBreakdownWorker), "FillOutput")]
+    internal static class MoneyBreakdownColorPatch
+    {
+        private static void Postfix(ref PropertyBreakdownWorker __instance, PropertyBreakdownOutput output)
+        {
+            try
+            {
+                if (!NativeEffects.Enabled || output?.Lines == null || __instance.EvaluatedPropertyName.ToString() != NativeEffects.MoneyProperty)
+                {
+                    return;
+                }
+                for (int i = 0; i < output.Lines.Count; i++)
+                {
+                    PropertyBreakdownOutput.PropertyBreakdownLine line = output.Lines[i];
+                    if (line.Gain < 0 && !string.IsNullOrEmpty(line.Line) && !line.Line.StartsWith("<c="))
+                    {
+                        line.Line = $"<c={TextPatches.NegativeColor}>{line.Line}</c>";
+                        output.Lines[i] = line;
+                    }
+                }
+            }
+            catch (Exception)
+            {
+                // Colour is cosmetic: never break the tooltip.
+            }
+        }
+    }
 }

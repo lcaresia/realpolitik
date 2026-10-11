@@ -661,7 +661,7 @@ namespace CurrencyMod.Diplomacy.UI
             }
             if (titleLabel != null)
             {
-                titleLabel.Text = L.F("Correspondência com {0}", GameText.InlineUi(them?.Culture ?? DossierBuilder.Name(capture, other)));
+                titleLabel.Text = L.F("Correspondência com {0}", MailScreen.NationAndLeader(capture, other, inline: true));
             }
 
             List<Letter> letters = AiModule.World.Letters

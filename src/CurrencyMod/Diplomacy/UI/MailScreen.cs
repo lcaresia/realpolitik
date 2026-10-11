@@ -894,7 +894,7 @@ namespace CurrencyMod.Diplomacy.UI
             {
                 return;
             }
-            string nation = nationFilter < 0 ? L.T("Nação: todas") : L.F("Nação: {0}", capture.Empire(nationFilter)?.Culture ?? DossierBuilder.Name(capture, nationFilter));
+            string nation = nationFilter < 0 ? L.T("Nação: todas") : L.F("Nação: {0}", NationAndLeader(capture, nationFilter));
             PlaceHeaderButton(periodFilterButton, L.T(PeriodNames[periodFilter]), CenterWidth - 64f);
             float periodWidth = periodFilterButton.GetComponent<UITransform>().Width;
             PlaceHeaderButton(nationFilterButton, nation, CenterWidth - 64f - periodWidth - 8f);
@@ -1394,7 +1394,7 @@ namespace CurrencyMod.Diplomacy.UI
             }
             else if (them != null)
             {
-                B.SetLabel(top, "TitleGroup/Title", L.F("Para: {0}", them.Culture));
+                B.SetLabel(top, "TitleGroup/Title", L.F("Para: {0}", NationAndLeader(capture, composeTo)));
                 B.SetChip(top, "StatsTable/PopCount", L.F("Chega no turno {0}", arrives));
                 B.SetChip(top, "StatsTable/Fortification", RelationChip(capture.Empire(me)?.RelationWith(composeTo)));
                 B.HideChild(top, "StatsTable/ExtensionsCount");
@@ -1530,7 +1530,7 @@ namespace CurrencyMod.Diplomacy.UI
                 int received = inbox.Count(l => l.From == empire);
                 int sent = outbox.Count(l => l.To == empire);
                 Transform top = row.Card.Find("Table/Top");
-                B.SetLabel(top, "TitleGroup/Title", (them?.Culture ?? DossierBuilder.Name(capture, empire)) + (them?.Leader != null ? " · " + them.Leader : string.Empty));
+                B.SetLabel(top, "TitleGroup/Title", NationAndLeader(capture, empire));
                 B.SetChip(top, "StatsTable/PopCount", RelationChip(capture.Empire(me)?.RelationWith(empire)));
                 B.SetChip(top, "StatsTable/Fortification", (received == 1 ? L.T("1 recebida") : L.F("{0} recebidas", received)) + " · " + (sent == 1 ? L.T("1 enviada") : L.F("{0} enviadas", sent)));
                 B.SetVisible(top.Find("StatsTable/ExtensionsCount"), blocked);
@@ -1589,7 +1589,7 @@ namespace CurrencyMod.Diplomacy.UI
                 B.SetChip(top, "StatsTable/PopCount", L.F("{0} membros", group.Members.Count));
                 B.SetChip(top, "StatsTable/Fortification", unread > 0 ? $"<c={Green}>" + L.F("{0} nova(s)", unread) + "</c>" : L.F("{0} mensagem(ns)", messages.Count));
                 B.SetVisible(top.Find("StatsTable/ExtensionsCount"), true);
-                B.SetChip(top, "StatsTable/ExtensionsCount", group.Creator == me ? L.T("Criado por você") : L.F("Criado por {0}", GameText.InlineUi(capture.Empire(group.Creator)?.Culture ?? "E" + group.Creator)));
+                B.SetChip(top, "StatsTable/ExtensionsCount", group.Creator == me ? L.T("Criado por você") : L.F("Criado por {0}", NationAndLeader(capture, group.Creator, inline: true)));
                 B.HideOutputs(top);
                 B.SetVisible(row.WriteButton.transform, true);
                 B.SetButtonText(row.WriteButton, L.T("Escrever"));

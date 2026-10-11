@@ -1090,8 +1090,8 @@ namespace CurrencyMod.Diplomacy.UI
         /// <summary>"Likes X; distrusts Y." from the minister's sympathies, or null when there are none.</summary>
         private static string SympathyLine(Minister minister, WorldCapture capture)
         {
-            var likes = minister.Sympathies.Where(p => p.Value > 0).Select(p => capture.Empire(p.Key)?.Culture ?? "E" + p.Key).ToList();
-            var dislikes = minister.Sympathies.Where(p => p.Value < 0).Select(p => capture.Empire(p.Key)?.Culture ?? "E" + p.Key).ToList();
+            var likes = minister.Sympathies.Where(p => p.Value > 0).Select(p => MailScreen.NationAndLeader(capture, p.Key, inline: true)).ToList();
+            var dislikes = minister.Sympathies.Where(p => p.Value < 0).Select(p => MailScreen.NationAndLeader(capture, p.Key, inline: true)).ToList();
             if (likes.Count == 0 && dislikes.Count == 0)
             {
                 return null;

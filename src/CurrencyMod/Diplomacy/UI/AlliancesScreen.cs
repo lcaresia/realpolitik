@@ -586,8 +586,20 @@ namespace CurrencyMod.Diplomacy.UI
             CapturedEmpire empire = view.Capture.Empire(member);
             Transform top = Top(row);
             Title(row, member == view.Me ? L.F("{0} (você)", Esc(MailScreen.NationAndLeader(view.Capture, member))) : Esc(MailScreen.NationAndLeader(view.Capture, member)));
-            string role = member == bloc.President ? $"<c={Gold}>" + L.T("Presidente") + "</c>" : member == bloc.Founder ? L.T("Fundador") : L.T("Membro");
-            Chip(top, 0, role, L.T("Papel"), L.T("O presidente põe pautas em votação; os outros sugerem."));
+            if (member == bloc.President)
+            {
+                // The term's end on the president's own card (melhorias-jogando item 27).
+                int left = bloc.TermEnds - view.Turn;
+                string term = bloc.ElectionOpened >= 0 ? L.T("eleição aberta")
+                    : left <= 3 ? L.F("eleição em {0} turno(s)", Math.Max(0, left))
+                    : L.F("até o turno {0}", bloc.TermEnds);
+                Chip(top, 0, $"<c={Gold}>" + L.T("Presidente") + " · " + term + "</c>", L.T("Mandato"),
+                    L.F("O presidente põe pautas em votação; os outros sugerem. Mandato de {0} turnos, até o turno {1}; no fim há eleição, com 1 voto por membro (empate mantém o atual).", Bloc.TermTurns, bloc.TermEnds));
+            }
+            else
+            {
+                Chip(top, 0, member == bloc.Founder ? L.T("Fundador") : L.T("Membro"), L.T("Papel"), L.T("O presidente põe pautas em votação; os outros sugerem."));
+            }
             Chip(top, 1, empire != null ? L.F("Fama {0}", Math.Round(empire.Fame)) : null, L.T("Fama"), L.F("{0}º lugar em fama.", empire?.FameRank ?? 0));
             Chip(top, 2, empire != null ? L.F("Força {0}", Math.Round(empire.MilitaryStrength)) : null, L.T("Força militar"), L.F("{0} unidades.", empire?.UnitCount ?? 0));
             Chip(top, 3, empire != null ? (empire.EraName ?? L.F("Era {0}", empire.EraIndex + 1)) : null, L.T("Era"), L.F("{0} cidade(s), {1} território(s).", empire?.Cities.Count ?? 0, empire?.TerritoryCount ?? 0));
@@ -1053,7 +1065,7 @@ namespace CurrencyMod.Diplomacy.UI
                 Row row = sideRows[2 + i];
                 top = Top(row);
                 Bloc other = BlocEngine.Of(view.World, empire);
-                Title(row, Esc(view.Capture.Empire(empire)?.Culture ?? "E" + empire));
+                Title(row, Esc(MailScreen.NationAndLeader(view.Capture, empire)));
                 Chip(top, 0, other != null ? L.F("Em {0}", Esc(other.Name)) : view.Capture.Empire(view.Me)?.RelationWith(empire)?.AtWar == true ? $"<c={Red}>" + L.T("Em guerra") + "</c>" : L.T("Livre"),
                     L.T("Situação"), L.T("Quem já está num bloco não pode aceitar (um bloco por nação)."));
                 Chip(top, 1, null, null, null);
@@ -1427,7 +1439,7 @@ namespace CurrencyMod.Diplomacy.UI
         private static string Who(View view, int empire) => empire == view.Me ? L.T("você") : Esc(MailScreen.NationAndLeader(view.Capture, empire, inline: true));
 
         /// <summary>Only the people ("Os Han"), or "você".</summary>
-        private static string Short(View view, int empire) => empire == view.Me ? L.T("você") : Esc(GameText.InlineUi(view.Capture.Empire(empire)?.Culture ?? "E" + empire));
+        private static string Short(View view, int empire) => empire == view.Me ? L.T("você") : Esc(MailScreen.NationAndLeader(view.Capture, empire, inline: true));
 
         // ---------------- Button badge ----------------
 

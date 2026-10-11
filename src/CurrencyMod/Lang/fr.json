@@ -1796,5 +1796,11 @@
   "Ambição": "Ambition",
   "De 0 a 100, com que começa no cargo. Pesa quanto a opinião conta no conselho; depois sobe e desce com os números da pasta.": "De 0 à 100, la valeur de départ. Détermine le poids de l'avis au conseil ; ensuite monte et descend avec les chiffres du portefeuille.",
   "De 0 a 100. Sobe quando você segue os conselhos; ministros orgulhosos ou rancorosos perdem lealdade quando são contrariados.": "De 0 à 100. Monte quand vous suivez les conseils ; les ministres orgueilleux ou rancuniers perdent en loyauté quand on les contredit.",
-  "De 0 a 100. Quanto quer subir: pesa no tom das falas e cresce quando um colega é demitido.": "De 0 à 100. L'envie de monter : colore le ton des discours et grandit quand un collègue est renvoyé."
+  "De 0 a 100. Quanto quer subir: pesa no tom das falas e cresce quando um colega é demitido.": "De 0 à 100. L'envie de monter : colore le ton des discours et grandit quand un collègue est renvoyé.",
+  "{0}/turno de juros": "{0}/tour d'intérêts",
+  "eleição aberta": "élection ouverte",
+  "eleição em {0} turno(s)": "élection dans {0} tour(s)",
+  "até o turno {0}": "jusqu'au tour {0}",
+  "O presidente põe pautas em votação; os outros sugerem. Mandato de {0} turnos, até o turno {1}; no fim há eleição, com 1 voto por membro (empate mantém o atual).": "Le président met les motions au vote ; les autres suggèrent. Mandat de {0} tours, jusqu'au tour {1} ; ensuite une élection, 1 voix par membre (l'égalité garde le sortant).",
+  "Este império já tomou esta decisão. Se você escolher diferente, ele não vai gostar e vai abrir uma queixa contra você.": "Cet empire a déjà fait ce choix. Si vous choisissez autrement, il n'appréciera pas et ouvrira un grief contre vous."
 }

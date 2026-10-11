@@ -417,7 +417,7 @@ namespace CurrencyMod.Diplomacy.UI
             foreach (CapturedSpy spy in abroad.Take(6))
             {
                 Espionage.SpyWeight weight = Espionage.Weigh(capture, AiModule.World, spy);
-                string nation = capture.Empire(spy.TerritoryOwner)?.Culture ?? DossierBuilder.Name(capture, spy.TerritoryOwner);
+                string nation = MailScreen.NationAndLeader(capture, spy.TerritoryOwner);
                 string state = weight != null ? (weight.Mission == "presença" ? L.T("observando") : MissionUi(weight.Mission))
                     : spy.Hidden ? L.T("sem poder agir (acordo com eles)") : L.T("descoberto");
                 string danger = spy.HostileDetection > 0 && spy.TurnsBeforeRevealed != int.MaxValue ? L.F(", revelado em ~{0} turno(s)", spy.TurnsBeforeRevealed) : string.Empty;
@@ -433,7 +433,7 @@ namespace CurrencyMod.Diplomacy.UI
                 InterceptRisk risk = Espionage.Risks(capture, AiModule.World, end, -1, -1).FirstOrDefault(r => r.Empire == me);
                 if (risk != null)
                 {
-                    string nation = capture.Empire(end)?.Culture ?? DossierBuilder.Name(capture, end);
+                    string nation = MailScreen.NationAndLeader(capture, end);
                     reach.Add($"{MailScreen.Escape(nation)} <c={Gold}>" + LevelUi(risk.Chance) + "</c> " + L.F("({0:0}% por carta)", risk.Chance * 100));
                 }
             }
@@ -474,8 +474,8 @@ namespace CurrencyMod.Diplomacy.UI
         {
             row.Letter = letter;
             Transform top = row.Card.Find("Table/Top");
-            string from = capture.Empire(letter.From)?.Culture ?? DossierBuilder.Name(capture, letter.From);
-            string to = capture.Empire(letter.To)?.Culture ?? DossierBuilder.Name(capture, letter.To);
+            string from = MailScreen.NationAndLeader(capture, letter.From);
+            string to = MailScreen.NationAndLeader(capture, letter.To);
             B.SetLabel(top, "TitleGroup/Title", $"{from} → {to}");
             if (!letter.InterceptorRead)
             {

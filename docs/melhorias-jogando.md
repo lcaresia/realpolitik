@@ -680,3 +680,24 @@ No cartão do membro, o chip "Presidente" não diz quando o mandato acaba.
 - **Ligações:** o dossiê das IAs também deveria dizer o fim do mandato, para elas fazerem campanha ou votarem cedo.
   Conferir se o BlocDossier já diz.
 - **Tamanho:** muito pequeno.
+
+### 28. BUG: a interface inteira fica transparente "do nada"
+
+Toda a interface (barra do topo, botões) aparece quase invisível sobre o mapa, como no meio do fade de abertura de uma
+tela cheia, e fica assim.
+
+- **Hipótese principal:** as nossas telas cheias (Correio, Conselho, Alianças, Banco, Provedores, Posto comercial) abrem
+  com `WindowsUtils.ShowWindow`, e o gerenciador de janelas do jogo esmaece o HUD enquanto uma tela cheia está aberta.
+  Se a janela é destruída ou recriada sem passar por `HideWindow`, o jogo nunca recebe o "fechou" e o HUD fica no meio
+  do fade. Isso acontece:
+  - na recarga a quente do núcleo com uma tela nossa aberta (houve muitas recargas hoje com o jogo aberto);
+  - quando `ExclusiveWindows.Interrupted` fecha uma tela no mesmo quadro em que outra abre.
+- **Hipóteses secundárias:** o próprio jogo (o bug conhecido do fade da tela de diplomacia) ou dois `ShowWindow` seguidos.
+- **Correção provável:**
+  - em `PreUnload`/`OnDestroy` de cada tela nossa, se `Shown`, chamar `HideWindow` antes de morrer;
+  - um vigia no Update (no botão da barra, que sobrevive) que, sem nenhuma tela cheia aberta e com o HUD esmaecido por mais
+    de 1 s, restaura a opacidade;
+  - um comando de dev (`game hud reset`) para destravar na hora.
+- **Para confirmar:** perguntar ao Lucas se aconteceu logo depois de uma instalação minha. Se ocorrer de novo, rodar
+  `game ui` (árvore da interface) e ver qual grupo está com alfa baixo.
+- **Contorno até a correção:** abrir e fechar qualquer tela cheia (Correio, Diplomacia) costuma terminar o fade.

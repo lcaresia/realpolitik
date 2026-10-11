@@ -2042,7 +2042,7 @@ namespace CurrencyMod.NativeUI
                 double rate = world.Rate(localIndex, other.EmpireIndex);
                 // Rate trend for you: green ▲ = your money buys more of their currency than last turn.
                 double previousRate = other.PreviousExchangeValue > 0 ? mine.PreviousExchangeValue / other.PreviousExchangeValue : rate;
-                SetLabel(top, "TitleGroup/Title", $"{ShortEmpireName(other.EmpireIndex)} · {other.Name}");
+                SetLabel(top, "TitleGroup/Title", $"{NationAndLeaderName(other.EmpireIndex)} · {other.Name}");
                 SetChip(top, "StatsTable/PopCount", $"1 {mine.Symbol} = {Format.Rate(rate)} {other.Symbol}{TrendMark(rate - previousRate)}");
                 SetChip(top, "StatsTable/Fortification", L.F("Inflação {0}", Format.Percent(other.InflationRate)));
                 SetChip(top, "StatsTable/ExtensionsCount", L.F("Juros {0}", Format.Percent(other.InterestRate)));
@@ -2088,6 +2088,15 @@ namespace CurrencyMod.NativeUI
             int open = name.LastIndexOf('(');
             int close = name.LastIndexOf(')');
             return open >= 0 && close > open ? name.Substring(open + 1, close - open - 1) : name;
+        }
+
+        /// <summary>"Rainha Zenóbia (Os Cartagineses)" becomes "Os Cartagineses · Rainha Zenóbia" (card titles).</summary>
+        internal static string NationAndLeaderName(int empireIndex)
+        {
+            string name = CentralBankWindow.EmpireName(empireIndex);
+            int open = name.LastIndexOf('(');
+            int close = name.LastIndexOf(')');
+            return open > 0 && close > open ? name.Substring(open + 1, close - open - 1) + " · " + name.Substring(0, open).Trim() : name;
         }
 
         internal static void SetVisible(Transform target, bool visible)

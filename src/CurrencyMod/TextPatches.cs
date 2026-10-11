@@ -97,7 +97,18 @@ namespace CurrencyMod
                     UILabel label = NetLabel(__instance);
                     if (label != null && !label.Text.Contains(line))
                     {
-                        label.Text = label.Text + "\n" + line;
+                        // The balance interest of the next end of turn, even when it is below the half point the game's
+                        // breakdown drops (melhorias-jogando item 21), and the per-turn income in red when negative.
+                        var sandbox = Amplitude.Mercury.Sandbox.SandboxManager.Sandbox;
+                        Amplitude.Mercury.Simulation.MajorEmpire me = sandbox != null ? Amplitude.Mercury.Sandbox.Sandbox.MajorEmpires[sandbox.LocalEmpireIndex] : null;
+                        string text = label.Text;
+                        if (me != null && (float)NativeEffects.DisplayedMoneyNet(me) < 0 && !text.StartsWith("<c="))
+                        {
+                            text = $"<c={NegativeColor}>{text}</c>";
+                        }
+                        double interest = me != null ? NativeEffects.ProjectedInterest(me) : 0;
+                        string interestPart = Math.Abs(interest) >= 0.05 ? "  ·  " + L.F("{0}/turno de juros", Format.SignedMoney(interest)) : string.Empty;
+                        label.Text = text + "\n" + line + interestPart;
                     }
                 }
                 catch (Exception ex)
@@ -106,6 +117,9 @@ namespace CurrencyMod
                 }
             }
         }
+
+        /// <summary>Negative money in the native tooltips (the mod's usual red).</summary>
+        internal const string NegativeColor = "E8685E";
 
         /// <summary>Updates the cached texts of the local currency. Called on the main thread.</summary>
         internal static void RefreshLocalCache(EmpireCurrency mine)

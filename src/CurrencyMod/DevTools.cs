@@ -133,6 +133,12 @@ namespace CurrencyMod
                     case "windows":
                         Write(line, ListWindows());
                         return;
+                    case "cameras":
+                        Write(line, ListCameras());
+                        return;
+                    case "resolution":
+                        Write(line, SetResolution(args));
+                        return;
                     case "styles":
                         Write(line, ListStyles(args));
                         return;
@@ -759,6 +765,51 @@ namespace CurrencyMod
             }
             Amplitude.Mercury.UI.Helpers.WindowsUtils.UpdateWindowVisibility(window, show);
             return $"ok: {(show ? "opened" : "closed")} {type.Name}";
+        }
+
+        /// <summary>
+        /// Every camera and UI view with what decides the draw order and blending (depth, clear flags, target texture,
+        /// culling mask, post effects on the GameObject). Compare a healthy game with a broken one (e.g. the interface
+        /// turning transparent, melhorias-jogando item 28).
+        /// </summary>
+        /// <summary>"resolution WxH [window|full|exclusive]" (no argument: shows it). Recreates the screen buffers, as
+        /// the player changing the video settings does.</summary>
+        private static string SetResolution(string args)
+        {
+            string[] parts = (args ?? string.Empty).Split(new[] { ' ' }, System.StringSplitOptions.RemoveEmptyEntries);
+            if (parts.Length == 0)
+            {
+                return $"{Screen.width}x{Screen.height} {Screen.fullScreenMode} refresh {Screen.currentResolution.refreshRate}";
+            }
+            string[] size = parts[0].ToLowerInvariant().Split('x');
+            if (size.Length != 2 || !int.TryParse(size[0], out int width) || !int.TryParse(size[1], out int height))
+            {
+                return "error: use resolution WxH [window|full|exclusive]";
+            }
+            FullScreenMode mode = parts.Length < 2 ? Screen.fullScreenMode
+                : parts[1] == "window" ? FullScreenMode.Windowed : parts[1] == "exclusive" ? FullScreenMode.ExclusiveFullScreen : FullScreenMode.FullScreenWindow;
+            Screen.SetResolution(width, height, mode);
+            return $"ok: {width}x{height} {mode}";
+        }
+
+        private static string ListCameras()
+        {
+            var text = new StringBuilder();
+            foreach (Camera camera in Resources.FindObjectsOfTypeAll<Camera>().OrderBy(c => c.depth))
+            {
+                if (camera == null || camera.gameObject.scene.name == null)
+                {
+                    continue;
+                }
+                string components = string.Join(",", camera.GetComponents<Component>().Where(c => c != null && !(c is Transform) && !(c is Camera)).Select(c => c.GetType().Name + (c is Behaviour b && !b.enabled ? "(off)" : string.Empty)));
+                text.AppendLine($"{(camera.enabled && camera.gameObject.activeInHierarchy ? "[on] " : "[off]")} {camera.name} depth={camera.depth} clear={camera.clearFlags} bg={camera.backgroundColor} target={(camera.targetTexture != null ? camera.targetTexture.name + " " + camera.targetTexture.width + "x" + camera.targetTexture.height : "screen")} mask={camera.cullingMask} rect={camera.rect} hdr={camera.allowHDR} | {components}");
+            }
+            foreach (UIView view in UIView.AllActiveViews)
+            {
+                text.AppendLine($"UIView {view.name} depth={view.Depth} fullscreen={view.IsFullscreen} camera={(view.RenderCamera != null ? view.RenderCamera.name : "null")}");
+            }
+            text.AppendLine($"time scale={Time.timeScale} captureFramerate={Time.captureFramerate} unscaledDelta={Time.unscaledDeltaTime:0.0000}");
+            return text.ToString();
         }
 
         private static string ListWindows()

@@ -179,7 +179,7 @@ namespace CurrencyMod.NativeUI
                 double balance = gain - paid;
                 string balanceColor = balance > 0.05 ? GainColor : balance < -0.05 ? PaidColor : null;
                 FillTextCardHeader(top,
-                    ShortEmpireName(partner.Empire) + " · " + other.Name,
+                    NationAndLeaderName(partner.Empire) + " · " + other.Name,
                     Colored(L.F("Saldo {0}/turno", Signed(balance)), balanceColor),
                     L.F("Recursos: você compra {0} · vende {1}", partner.BoughtGoods, partner.SoldGoods));
                 Tip(top, "StatsTable/PopCount", L.T("Saldo com esse império"),

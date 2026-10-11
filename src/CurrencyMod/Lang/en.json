@@ -1796,5 +1796,11 @@
   "Ambição": "Ambition",
   "De 0 a 100, com que começa no cargo. Pesa quanto a opinião conta no conselho; depois sobe e desce com os números da pasta.": "0 to 100, the starting value in office. Weighs how much the opinion counts in the council; then rises and falls with the portfolio's numbers.",
   "De 0 a 100. Sobe quando você segue os conselhos; ministros orgulhosos ou rancorosos perdem lealdade quando são contrariados.": "0 to 100. Rises when you follow the advice; proud or spiteful ministers lose loyalty when overruled.",
-  "De 0 a 100. Quanto quer subir: pesa no tom das falas e cresce quando um colega é demitido.": "0 to 100. How much they want to rise: shapes the tone of their speeches and grows when a colleague is fired."
+  "De 0 a 100. Quanto quer subir: pesa no tom das falas e cresce quando um colega é demitido.": "0 to 100. How much they want to rise: shapes the tone of their speeches and grows when a colleague is fired.",
+  "{0}/turno de juros": "{0}/turn of interest",
+  "eleição aberta": "election open",
+  "eleição em {0} turno(s)": "election in {0} turn(s)",
+  "até o turno {0}": "until turn {0}",
+  "O presidente põe pautas em votação; os outros sugerem. Mandato de {0} turnos, até o turno {1}; no fim há eleição, com 1 voto por membro (empate mantém o atual).": "The president puts motions to a vote; the others suggest. A {0}-turn term, until turn {1}; then an election, 1 vote per member (a tie keeps the incumbent).",
+  "Este império já tomou esta decisão. Se você escolher diferente, ele não vai gostar e vai abrir uma queixa contra você.": "This empire already took this choice. If you choose differently, it won't like it and will open a grievance against you."
 }
