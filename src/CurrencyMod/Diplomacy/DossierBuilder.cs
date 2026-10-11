@@ -1364,6 +1364,18 @@ namespace CurrencyMod.Diplomacy
             {
                 text.AppendLine($"- Você recusa as cartas privadas de: {string.Join(", ", nation.BlockedEmpires.Select(e => $"{Name(capture, e)} (E{e})"))}.");
             }
+            // Letters that asked for an answer and got none from this nation yet (a reminder, never an obligation).
+            List<Letter> waiting = world.Letters
+                .Where(l => l.ExpectsReply && l.IsFor(self) && l.DeliverTurn <= turn && l.DeliverTurn >= turn - 6 && !l.IsPublic)
+                .Where(l => !world.Letters.Any(mine => mine.From == self && mine.SentTurn >= l.DeliverTurn
+                    && (l.IsGroup ? mine.IsGroup && mine.GroupId == l.GroupId : mine.To == l.From)))
+                .OrderBy(l => l.DeliverTurn)
+                .ToList();
+            if (waiting.Count > 0)
+            {
+                text.AppendLine("- Ainda sem resposta sua (silêncio também é resposta, e quem escreveu nota): "
+                    + string.Join("; ", waiting.Select(l => $"{Name(capture, l.From)} (E{l.From}){(l.IsGroup ? " no grupo GRP" + l.GroupId : string.Empty)}, carta que chegou no turno {l.DeliverTurn}")) + ".");
+            }
             foreach (Letter letter in world.Letters.Where(l => l.From == self && l.RejectedBy.Count > 0 && l.SentTurn >= turn - 6))
             {
                 foreach (int refuser in letter.RejectedBy)

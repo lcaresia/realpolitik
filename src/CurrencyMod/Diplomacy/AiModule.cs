@@ -630,6 +630,14 @@ namespace CurrencyMod.Diplomacy
             int turn = capture.Turn;
             NationDetail detail = Runtime.Detail(empire);
             DossierBuild build;
+            // Group messages the player sent before 2026-10-11 were stored as "no answer asked".
+            foreach (Letter old in World.Letters)
+            {
+                if (old.IsGroup && old.From == playerIndex && !old.ExpectsReply)
+                {
+                    old.ExpectsReply = true;
+                }
+            }
             try
             {
                 build = DossierBuilder.Build(World, capture, empire);
@@ -1022,6 +1030,8 @@ namespace CurrencyMod.Diplomacy
                 Type = "grupo",
                 Subject = subject,
                 Text = text,
+                // The player's group messages ask for an answer; AI ones do not (seven AIs replying to each other loop).
+                ExpectsReply = from == playerIndex,
                 SentTurn = turn,
                 DeliverTurn = turn + delay,
                 InterceptionChecked = true,
