@@ -15,10 +15,10 @@ using UnityEngine;
 namespace CurrencyMod.NativeUI
 {
     /// <summary>
-    /// Janela do Banco Central feita com a interface do próprio jogo: é um clone da janela
-    /// "Cidades e Postos Avançados" (AllSettlementsWindow) sem os scripts de cidade, registrada
-    /// no grupo de janelas de seleção. Cabeçalho, abas, faixas de seção, cartões e botões são
-    /// peças nativas, então herdam fontes, estilos, animações e sons do jogo.
+    /// Central Bank window built with the game's own interface: a clone of the
+    /// "Cities and Outposts" window (AllSettlementsWindow) without the city scripts, registered
+    /// in the selection window group. Header, tabs, section bands, cards and buttons are
+    /// native pieces, so they inherit the game's fonts, styles, animations and sounds.
     /// </summary>
     internal partial class NativeBankWindow : UIWindow
     {
@@ -28,7 +28,7 @@ namespace CurrencyMod.NativeUI
 
         private enum Tab { Exchange, Trade, Policy, Cycle, Resources, Currency }
 
-        // Peças da janela (preenchidas por Build).
+        // Window pieces (filled in by Build).
         private UILabel headerLabel;
         private UIButton closeButton;
         private UILabel sectionTitle;
@@ -42,12 +42,12 @@ namespace CurrencyMod.NativeUI
 
         internal static bool IsOpen => Instance != null && Instance.Shown;
 
-        // ---------------- Criação ----------------
+        // ---------------- Creation ----------------
 
         internal static NativeBankWindow Create()
         {
-            // Tela cheia, como o Correio: moldura da tela de Configurações (coluna da esquerda, painel central e um painel
-            // da direita) e as listas de cartões vêm da janela de cidades.
+            // Fullscreen, like the Mail: frame from the Settings screen (left column, central panel and a right panel)
+            // and the card lists come from the cities window.
             SystemSettingsScreen donor = Resources.FindObjectsOfTypeAll<SystemSettingsScreen>().FirstOrDefault(w => w.gameObject.scene.IsValid());
             AllSettlementsWindow listDonor = Resources.FindObjectsOfTypeAll<AllSettlementsWindow>().FirstOrDefault(w => w.gameObject.scene.IsValid());
             InGameFullscreenGroup group = WindowsManager.Instance?.GetWindowsGroup<InGameFullscreenGroup>();
@@ -56,7 +56,7 @@ namespace CurrencyMod.NativeUI
                 return null;
             }
 
-            // Clona sob um pai inativo: nada carrega até a tela estar limpa e registrada.
+            // Clone under an inactive parent: nothing loads until the screen is clean and registered.
             var stash = new GameObject("CurrencyMod_Stash");
             stash.SetActive(false);
             NativeBankWindow window;
@@ -87,11 +87,11 @@ namespace CurrencyMod.NativeUI
             group.AddDebugWindowImplementation(window);
             Destroy(stash);
             Instance = window;
-            Plugin.Log.LogInfo("Tela cheia do Banco Central criada.");
+            Plugin.Log.LogInfo("Central Bank fullscreen created.");
             return window;
         }
 
-        /// <summary>Remove os scripts da janela de cidades; mantém renderizadores, layout e controles genéricos.</summary>
+        /// <summary>Removes the cities window scripts; keeps renderers, layout and generic controls.</summary>
         internal static void StripGameScripts(GameObject root)
         {
             var specific = new HashSet<string>
@@ -99,7 +99,7 @@ namespace CurrencyMod.NativeUI
                 "CultureAndWondersPanel", "SettlementActionButton", "ConstructibleItemPortrait",
                 "PopulationManagementPanel_AssignmentPolicyGroup",
             };
-            // Mais de uma passada: alguns componentes dependem de outros.
+            // More than one pass: some components depend on others.
             for (int pass = 0; pass < 3; pass++)
             {
                 foreach (MonoBehaviour behaviour in root.GetComponentsInChildren<MonoBehaviour>(true))
@@ -134,7 +134,7 @@ namespace CurrencyMod.NativeUI
                 }
             }
 
-            // Barra de ordenação nativa: fica só com os primeiros botões pedidos (e o de crescente/decrescente).
+            // Native sort bar: keeps only the first requested buttons (and the ascending/descending one).
             Transform sorters = root.Find("_SettlementsList/SortersTable");
             if (sorters != null)
             {
@@ -176,7 +176,7 @@ namespace CurrencyMod.NativeUI
                         "Table/_Advanced", "Table/Top/TitleGroup/CapitalPicto", "Table/Top/TitleGroup/AttachButton",
                         "Table/Top/FocusButton", "Table/Top/ProductionMode", "Table/Top/Pastille", "Table/Top/SelectShortcut",
                         "Table/Top/OwnedByLabel", "Table/Top/ExpandToggle",
-                        // Botão "toda a nação" da lista de cidades: aparecia como um quadradinho vazio à esquerda.
+                        // The cities list's "whole nation" button: it showed up as a small empty square on the left.
                         "EmpireWideToggle",
                     };
                     foreach (string path in samplePaths)
@@ -191,14 +191,14 @@ namespace CurrencyMod.NativeUI
             }
         }
 
-        // Geometria (tela padronizada de 1920 × 1080), a mesma do Correio: a barra de controle fica por cima do canto de
-        // baixo à esquerda (até x≈560, a partir de y≈913) e o fim de turno embaixo à direita.
+        // Geometry (standardized 1920 × 1080 screen), the same as the Mail: the control bar sits over the bottom-left
+        // corner (up to x≈560, from y≈913) and the end-turn button at the bottom right.
         private const float CenterX = 420f;
         private const float CenterWidth = 1030f;
         private const float RightX = 1470f;
         private const float RightWidth = 420f;
         private const float RightHeight = 830f;
-        private const float ListWidth = 928f;  // os cartões ficam 26 px dentro da lista e 34 px mais estreitos: alinham com a linha divisória
+        private const float ListWidth = 928f;  // cards sit 26 px inside the list and are 34 px narrower: they align with the divider line
         private const float ListHeight = 756f;
         private const float SideListWidth = 398f;
         private const float SideListHeight = 720f;
@@ -214,11 +214,11 @@ namespace CurrencyMod.NativeUI
             headerLabel = left.Find("Title").GetComponent<UILabel>();
             descriptionLabel = left.Find("ScreenDescription").GetComponent<UILabel>();
             closeButton = left.Find("CloseMenuButton").GetComponent<UIButton>();
-            // A barra de controle fica por cima da tela cheia no canto de baixo: o botão de voltar sobe.
+            // The control bar sits over the fullscreen in the bottom corner: the back button moves up.
             UITransform closeUi = closeButton.GetComponent<UITransform>();
             NativeUIKit.Place(closeButton.transform, closeUi.X, 836f, closeUi.Width, closeUi.Height);
 
-            // Esquerda: um botão por aba; os que sobram da tela de configurações saem.
+            // Left: one button per tab; the leftovers from the settings screen are removed.
             var all = new List<Transform>();
             foreach (Transform child in left.Find("SettingsTogglesTable"))
             {
@@ -237,7 +237,7 @@ namespace CurrencyMod.NativeUI
                 }
             }
 
-            // Centro: a aba escolhida. Direita: visão geral (cópia do painel central, ainda vazio).
+            // Center: the selected tab. Right: overview (copy of the central panel, still empty).
             Transform center = root.Find("Center");
             UITransform centerUi = center.GetComponent<UITransform>();
             Transform rightPanel = Instantiate(center.gameObject, root).transform;
@@ -245,8 +245,8 @@ namespace CurrencyMod.NativeUI
             NativeUIKit.Place(center, CenterX, centerUi.Y, CenterWidth, centerUi.Height);
             NativeUIKit.Place(rightPanel, RightX, 56f, RightWidth, RightHeight);
 
-            // O brasão do império (canto de cima) fica por cima da coluna da esquerda: título e descrição vão para o
-            // painel central.
+            // The empire's emblem (top corner) sits over the left column: title and description go to the central
+            // panel.
             headerLabel.transform.SetParent(center, false);
             NativeUIKit.Place(headerLabel.transform, 64f, 26f, 700f, 60f);
             descriptionLabel.transform.SetParent(center, false);
@@ -262,7 +262,7 @@ namespace CurrencyMod.NativeUI
             listTable = table;
             cardSample = sample;
 
-            // Ordenação do câmbio: os botões da lista de cidades sobem para a linha do título da seção, à direita.
+            // Exchange-rate sorting: the cities list buttons move up to the section title row, on the right.
             Transform sorters = list.Find("SortersTable");
             if (sorters != null)
             {
@@ -293,7 +293,7 @@ namespace CurrencyMod.NativeUI
             Transform side = Instantiate(citiesList.gameObject, sideContainer).transform;
             side.name = "OverviewList";
             Diplomacia.UI.MailScreen.PrepareList(side, SideListWidth + 8f, SideListHeight, out sideTable, out sideSample);
-            // A cópia da lista da direita trouxe a barra de ordenação junto: sai.
+            // The copy of the right list brought the sort bar along: remove it.
             Transform sideSorters = side.Find("SortersTable");
             if (sideSorters != null)
             {
@@ -303,7 +303,7 @@ namespace CurrencyMod.NativeUI
 
         private const int TabCount = 6;
 
-        // ---------------- Ordenação do câmbio ----------------
+        // ---------------- Exchange-rate sorting ----------------
 
         private enum SortKey { Rate, Inflation, Interest }
 
@@ -343,7 +343,7 @@ namespace CurrencyMod.NativeUI
                 if (picto != null)
                 {
                     picto.Texture = new UITexture(sortIconGuids[i], UITextureFlags.AlphaStraight, UITextureColorFormat.Srgb, sortIcons[i]);
-                    // Cada botão doador tinha a cor do seu recurso (comida, ciência...): todos ficam brancos.
+                    // Each donor button had its resource's color (food, science...): all become white.
                     picto.Color = Color.white;
                 }
                 int index = i;
@@ -372,7 +372,7 @@ namespace CurrencyMod.NativeUI
                 return;
             }
             sortKey = (SortKey)index;
-            SyncSorters(); // clicar no já escolhido não o desliga
+            SyncSorters(); // clicking the already selected one does not turn it off
             nextRefresh = 0;
         }
 
@@ -394,7 +394,7 @@ namespace CurrencyMod.NativeUI
         {
             Func<EmpireCurrency, double> key = sortKey == SortKey.Inflation ? (c => c.InflationRate)
                 : sortKey == SortKey.Interest ? (Func<EmpireCurrency, double>)(c => c.InterestRate)
-                : c => -c.ExchangeValue; // decrescente = quem mais rende para você (moeda mais fraca) primeiro
+                : c => -c.ExchangeValue; // descending = whoever yields the most for you (weakest currency) first
             return sortDescending ? currencies.OrderByDescending(key) : currencies.OrderBy(key);
         }
 
@@ -417,14 +417,14 @@ namespace CurrencyMod.NativeUI
             }
         }
 
-        // ---------------- Ciclo de vida da janela ----------------
+        // ---------------- Window lifecycle ----------------
 
         protected override System.Collections.IEnumerator PostLoad()
         {
             yield return base.PostLoad();
             closeButton.LeftClick += CloseButton_LeftClick;
 
-            // Seis seções na coluna da esquerda (botões da tela de configurações).
+            // Six sections in the left column (buttons from the settings screen).
             string[] tabNames = { L.T("Câmbio"), L.T("Comércio"), L.T("Política"), L.T("Ciclo"), L.T("Recursos"), L.T("Sua moeda") };
             for (int i = 0; i < tabToggles.Count; i++)
             {
@@ -452,7 +452,7 @@ namespace CurrencyMod.NativeUI
             }
             catch (Exception ex)
             {
-                Plugin.Log.LogError($"Banco Central: falha ao montar abas: {ex}");
+                Plugin.Log.LogError($"Central Bank: failed to build tabs: {ex}");
             }
             ClearInheritedTooltips();
             SetupSorters();
@@ -473,9 +473,9 @@ namespace CurrencyMod.NativeUI
         private int pendingTab = -1;
 
         /// <summary>
-        /// As peças clonadas da janela de cidades trazem tooltips de cidades (abas, população,
-        /// fortificação...). Limpa todos, menos o do botão de fechar. As linhas da lista são
-        /// clonadas depois, a partir da amostra já limpa.
+        /// The pieces cloned from the cities window carry city tooltips (tabs, population,
+        /// fortification...). Clears them all, except the close button's. The list rows are
+        /// cloned later, from the already cleaned sample.
         /// </summary>
         private void ClearInheritedTooltips()
         {
@@ -492,7 +492,7 @@ namespace CurrencyMod.NativeUI
                 }
                 catch (Exception)
                 {
-                    // Tooltip ainda não carregado: some quando a amostra for limpa.
+                    // Tooltip not loaded yet: it goes away when the sample is cleaned.
                 }
             }
         }
@@ -503,7 +503,7 @@ namespace CurrencyMod.NativeUI
             tooltip?.Bind(TooltipUtils.TitleAndDescription, new Amplitude.Mercury.UI.Tooltips.TitleAndDescription(title, description));
         }
 
-        // ---------------- Abas de política e moeda ----------------
+        // ---------------- Policy and currency tabs ----------------
 
         private Transform policyCard;
         private Transform sliderItem;
@@ -515,7 +515,7 @@ namespace CurrencyMod.NativeUI
         private UIButton saveButton;
         private readonly Transform[] fieldItems = new Transform[3];
         private readonly UITextField[] fields = new UITextField[3];
-        private static readonly string[] FieldTitles = { L.N("Nome da moeda"), L.N("Plural"), L.N("Símbolo") }; // traduzidos com L.T na hora de mostrar
+        private static readonly string[] FieldTitles = { L.N("Nome da moeda"), L.N("Plural"), L.N("Símbolo") }; // translated with L.T when shown
         private static readonly int[] FieldMaxChars = { 24, 26, 4 };
 
         private void BuildPolicyTab()
@@ -537,16 +537,16 @@ namespace CurrencyMod.NativeUI
             }
             else
             {
-                Plugin.Log.LogWarning("Banco Central: doador do controle deslizante não encontrado.");
+                Plugin.Log.LogWarning("Central Bank: slider donor not found.");
             }
 
-            // Cartão de inflação: o alvo da política (meta) e o efeito acumulado nos preços.
+            // Inflation card: the policy target and the cumulative effect on prices.
             inflationCard = listTable.InstantiateChild(cardSample, "InflationCard").transform;
         }
 
         private Transform inflationCard;
 
-        // ---------------- Aba do ciclo econômico ----------------
+        // ---------------- Economic cycle tab ----------------
 
         private enum CycleCard { Diagnosis, Demand, Interest, Credit, Stability, Savings, Inflation }
 
@@ -559,9 +559,9 @@ namespace CurrencyMod.NativeUI
         private const string BadColor = "E8685E";
 
         /// <summary>
-        /// Aba "Ciclo" (docs\proposta-ciclo-economico.md): diagnóstico, um cartão por elo do ciclo (oferta × demanda,
-        /// inflação → juros, juros → produção), estabilidade, rendimento do saldo e o rumo da inflação decomposto.
-        /// Cada cartão ganha um texto de várias linhas: um clone do título com a fonte dos chips e quebra de linha.
+        /// "Ciclo" tab (docs\proposta-ciclo-economico.md): diagnosis, one card per link of the cycle (supply × demand,
+        /// inflation → interest, interest → production), stability, balance yield and the decomposed inflation trend.
+        /// Each card gets a multi-line text: a clone of the title with the chips' font and line wrapping.
         /// </summary>
         private void BuildCycleTab()
         {
@@ -588,7 +588,7 @@ namespace CurrencyMod.NativeUI
                 label.AutoAdjustHeight = true;
                 label.Margins = new RectMargins(0f, 0f, 0f, 0f);
                 label.Alignment = new Alignment(HorizontalAlignment.Left, VerticalAlignment.Top);
-                // Largura do cartão (menos as margens), preso pelo topo; a altura vem do texto.
+                // Card width (minus the margins), anchored at the top; the height comes from the text.
                 text.PivotXAnchor = text.PivotXAnchor.SetAttach(false);
                 text.LeftAnchor = new UIBorderAnchor(true, 0f, 8f, 0f);
                 text.RightAnchor = new UIBorderAnchor(true, 1f, 10f, 0f);
@@ -616,19 +616,19 @@ namespace CurrencyMod.NativeUI
             string debtRuleNote = debtShare > 0.0005
                 ? " " + L.F("Da inflação que vem da dívida ({0}), a regra conta {1}: a dívida pesa, mas com teto, para os juros não encarecerem a própria dívida sem fim.", Pct(debtShare), Pct(EconomySimulation.DebtInRule(debtShare)))
                 : string.Empty;
-            // Pela inflação e pelo crédito de agora: é o que o próximo fim de turno aplica (e vale em saves antigos).
+            // From current inflation and credit: it is what the next end of turn applies (and works in old saves).
             double inflationLoss = EconomySimulation.InflationStabilityLoss(inflation);
             double unemploymentLoss = EconomySimulation.UnemploymentStabilityLoss(credit);
             bool hasDemandData = mine.SmoothedProduction > 0;
             double threshold1 = EconomyConfig.InflationStabilityThreshold1.Value;
             double threshold2 = EconomyConfig.InflationStabilityThreshold2.Value;
 
-            // 1. Diagnóstico: o problema mais urgente primeiro (o mesmo que acende o selo do botão do Banco Central).
+            // 1. Diagnosis: the most urgent problem first (the same one that lights the Central Bank button badge).
             EconomyDiagnosis diagnosis = EconomyDiagnosis.For(mine, stock);
             string color = diagnosis.Severity == EconomyDiagnosis.Level.Bad ? BadColor : diagnosis.Severity == EconomyDiagnosis.Level.Warning ? WarnColor : GoodColor;
             FillCycleCard(CycleCard.Diagnosis, L.F("Diagnóstico: {0}", Colored(diagnosis.Headline, color)), diagnosis.Advice);
 
-            // 2. Oferta × demanda.
+            // 2. Supply × demand.
             if (!hasDemandData)
             {
                 FillCycleCard(CycleCard.Demand, L.T("1 · Oferta × demanda"), L.T("A comparação entre o dinheiro e a produção aparece depois do próximo fim de turno."));
@@ -649,7 +649,7 @@ namespace CurrencyMod.NativeUI
                 CycleTip(CycleCard.Demand, 2, L.T("Efeito na inflação"), L.T("Quanto a pressão de demanda soma (ou tira) da inflação por turno."));
             }
 
-            // 3. Inflação → juros.
+            // 3. Inflation → interest.
             string interestText = mine.ForcedInterest
                 ? L.F("Juros fixados por comando de teste. A regra automática pediria {0}.", Pct(wanted))
                 : (manual
@@ -667,7 +667,7 @@ namespace CurrencyMod.NativeUI
                 L.F("Juros neutros ({0}) + 1,5 × (inflação − meta) + um pouco da pressão de demanda, entre {1} e {2}. A inflação que vem da dívida conta quase inteira quando é pequena e cada vez menos quando cresce (teto suave de {3}).", Pct(EconomyConfig.NeutralInterest.Value), Pct(EconomyConfig.MinInterest.Value), Pct(EconomyConfig.MaxInterest.Value), Pct(EconomyConfig.DebtRuleCap.Value)));
             CycleTip(CycleCard.Interest, 2, L.T("Modo dos juros"), L.T("Troque na aba Política."));
 
-            // 4. Juros → produção (crédito).
+            // 4. Interest → production (credit).
             string creditColor = credit < 0.995 ? WarnColor : (credit > 1.005 ? GoodColor : null);
             string creditText = creditTarget < credit - 0.005
                 ? L.F("Crédito caro: a produção das cidades vai cair até ×{0}, aos poucos.", Format.Rate(creditTarget))
@@ -685,14 +685,14 @@ namespace CurrencyMod.NativeUI
             CycleTip(CycleCard.Credit, 1, L.T("Juro real neutro"), L.T("Juros neutros menos a meta de inflação: nesse ponto o crédito não aquece nem esfria."));
             CycleTip(CycleCard.Credit, 2, L.T("Alvo da produção"), L.F("Para onde a produção anda, {0:0}% da diferença por turno: investimento demora.", EconomyConfig.InvestmentSpeed.Value * 100));
 
-            // 5. Estabilidade.
+            // 5. Stability.
             double totalLoss = inflationLoss + unemploymentLoss;
             FillCycleCard(CycleCard.Stability,
                 totalLoss > 0.05 ? L.F("Estabilidade: {0} na meta das cidades", Colored(Loss(totalLoss), BadColor)) : L.T("Estabilidade: sem perdas"),
                 L.F("Inflação acima de {0} por turno baixa a meta de estabilidade de cada cidade, e o dobro acima de {1}. Produção cortada por crédito caro vira desemprego, que também baixa a meta. A estabilidade anda até a meta no ritmo do jogo, e cada perda aparece no detalhamento de estabilidade das cidades.", Pct(threshold1), Pct(threshold2)),
                 L.F("Inflação {0}", Loss(inflationLoss)), L.F("Desemprego {0}", Loss(unemploymentLoss)));
 
-            // 6. Rendimento do saldo (ou custo da dívida).
+            // 6. Balance yield (or cost of debt).
             double flow = mine.LastInterestFlow;
             string flowColor = flow > 0.05 ? GoodColor : (flow < -0.05 ? BadColor : null);
             if (stock >= 0)
@@ -721,7 +721,7 @@ namespace CurrencyMod.NativeUI
                     L.F("Juros + spread {0}", Pct(interest + spread)), L.F("Inflação {0}", Pct(inflation)));
             }
 
-            // 7. Rumo da inflação, decomposto como nos tooltips do jogo.
+            // 7. Inflation trend, decomposed as in the game's tooltips.
             if (!mine.HasInflationBreakdown)
             {
                 FillCycleCard(CycleCard.Inflation, L.T("Rumo da inflação"), L.T("A decomposição aparece depois do próximo fim de turno."));
@@ -750,13 +750,13 @@ namespace CurrencyMod.NativeUI
             }
         }
 
-        /// <summary>Título, chips (os que vierem; os outros somem) e o texto de várias linhas de um cartão da aba Ciclo.</summary>
+        /// <summary>Title, chips (whichever are given; the others are hidden) and the multi-line text of a Ciclo tab card.</summary>
         private void FillCycleCard(CycleCard which, string title, string text, params string[] chips)
         {
             FillTextCard(cycleCards[(int)which], cycleTexts[(int)which], title, text, chips);
         }
 
-        /// <summary>Cartão com título, até três chips e um texto de várias linhas; a altura acompanha o texto.</summary>
+        /// <summary>Card with a title, up to three chips and a multi-line text; the height follows the text.</summary>
         private static void FillTextCard(Transform card, UILabel label, string title, string text, params string[] chips)
         {
             Transform top = card.Find("Table/Top");
@@ -784,7 +784,7 @@ namespace CurrencyMod.NativeUI
             {
                 label.Text = text;
             }
-            // A altura só é medida com o rótulo visível: refaz a cada atualização (é barato).
+            // The height is only measured with the label visible: redo it on every update (it is cheap).
             label.AdjustSizesIfNecessary();
             HideOutputs(top, Mathf.Ceil(textTop + Mathf.Max(20f, textUi.Height) + 10f));
             SetVisible(card, true);
@@ -797,22 +797,22 @@ namespace CurrencyMod.NativeUI
 
         private static string Pct(double rate) => Format.Percent(rate);
 
-        /// <summary>Percentual com sinal e o "−" tipográfico.</summary>
+        /// <summary>Signed percentage with the typographic "−".</summary>
         private static string SignedPct(double rate) => Math.Abs(rate) < 0.00005 ? "0%" : (rate < 0 ? "−" : "+") + Format.Percent(Math.Abs(rate));
 
         private static string Pct0(double rate) => (rate * 100).ToString("0", L.Culture) + "%";
 
         private static string SignedPct0(double rate) => Math.Abs(rate) < 0.005 ? "0%" : (rate < 0 ? "−" : "+") + Pct0(Math.Abs(rate));
 
-        /// <summary>Quantidade sem sinal, para frases ("perde 2,4 de estabilidade").</summary>
+        /// <summary>Unsigned amount, for sentences ("loses 2.4 stability").</summary>
         private static string Amount(double value) => value.ToString("0.#", L.Culture);
 
-        /// <summary>Perda de estabilidade ("−2,4"), ou "0" quando não há perda.</summary>
+        /// <summary>Stability loss ("−2,4"), or "0" when there is no loss.</summary>
         private static string Loss(double value) => value > 0.05 ? "−" + value.ToString("0.#", L.Culture) : "0";
 
         private static string Colored(string text, string color) => string.IsNullOrEmpty(color) ? text : $"<c={color}>{text}</c>";
 
-        /// <summary>Linha da decomposição da inflação: o valor colorido primeiro, como nos efeitos dos tooltips do jogo.</summary>
+        /// <summary>Inflation decomposition line: the colored value first, as in the effects of the game's tooltips.</summary>
         private static string Part(double value, string name, bool neutral = false)
         {
             string color = neutral ? null : (value > 0.00005 ? WarnColor : (value < -0.00005 ? GoodColor : null));
@@ -820,8 +820,8 @@ namespace CurrencyMod.NativeUI
         }
 
         /// <summary>
-        /// Os campos clonam o item de texto das opções do jogo, que só existe depois que a janela de opções foi criada (numa
-        /// partida recém-carregada isso pode vir depois da nossa tela): tenta de novo ao abrir a seção Sua moeda.
+        /// The fields clone the text item from the game's options, which only exists after the options window was created
+        /// (in a freshly loaded game that may come after our screen): retries when opening the Your currency section.
         /// </summary>
         private void TryBuildCurrencyFields()
         {
@@ -839,13 +839,13 @@ namespace CurrencyMod.NativeUI
                     SetLabel(fieldItems[i], string.Empty, L.T(FieldTitles[i]));
                     fieldItems[i].GetComponent<UILabel>().Text = L.T(FieldTitles[i]);
                     fields[i] = fieldItems[i].Find("TextField").GetComponent<UITextField>();
-                    fields[i].maximumChars = FieldMaxChars[i]; // a propriedade é só leitura
-                    fields[i].whiteList = string.Empty; // o doador (semente do mundo) só aceita dígitos
+                    fields[i].maximumChars = FieldMaxChars[i]; // the property is read-only
+                    fields[i].whiteList = string.Empty; // the donor (world seed) only accepts digits
                     fields[i].BlackList = "%[]<>{}";
                     fields[i].InstructionText = string.Empty;
-                    NativeUIKit.BlockGameShortcuts(fields[i]); // digitar o nome da moeda não dispara atalhos do jogo
-                    // TextChange é ligado em HookCurrencyFields, depois que o campo carrega.
-                    // O Enter (TextValidation) é ligado em HookCurrencyFields, depois que o campo carrega.
+                    NativeUIKit.BlockGameShortcuts(fields[i]); // typing the currency name does not trigger game shortcuts
+                    // TextChange is hooked up in HookCurrencyFields, after the field loads.
+                    // Enter (TextValidation) is hooked up in HookCurrencyFields, after the field loads.
                 }
             }
             else
@@ -857,7 +857,7 @@ namespace CurrencyMod.NativeUI
                 int at = previewCard.GetSiblingIndex();
                 foreach (Transform item in fieldItems)
                 {
-                    item.SetSiblingIndex(at++); // antes do cartão de prévia
+                    item.SetSiblingIndex(at++); // before the preview card
                 }
                 SetVisible(previewCard, currentTab == Tab.Currency);
                 foreach (Transform item in fieldItems)
@@ -876,7 +876,7 @@ namespace CurrencyMod.NativeUI
             saveButton.LeftClick += button => SaveCurrency();
         }
 
-        /// <summary>Clona uma peça de outra janela sem o script dela (que tentaria se ligar às opções do jogo).</summary>
+        /// <summary>Clones a piece from another window without its script (which would try to bind to the game's options).</summary>
         private static Transform CloneStripped(Transform donor, UITransform parent, string name, params string[] stripTypes)
         {
             var stash = new GameObject("CurrencyMod_Stash");
@@ -908,8 +908,8 @@ namespace CurrencyMod.NativeUI
         }
 
         /// <summary>
-        /// Itens de opção são feitos para 952 px e encostam na borda: ficam com a largura e a
-        /// posição dos cartões da lista, rótulo com respiro à esquerda e controle à direita.
+        /// Option items are made for 952 px and touch the edge: they get the width and position
+        /// of the list cards, with the label padded on the left and the control on the right.
         /// </summary>
         private void FitOptionItem(Transform item)
         {
@@ -926,14 +926,14 @@ namespace CurrencyMod.NativeUI
             if (control != null)
             {
                 UITransform controlUi = control.GetComponent<UITransform>();
-                controlUi.Width = 400f; // a tela cheia comporta um controle bem mais comprido
+                controlUi.Width = 400f; // the fullscreen fits a much longer control
                 controlUi.X = sampleUi.Width - 400f;
             }
         }
         private void AutoButton_LeftClick(IUIButton button)
         {
             WithMine(mine => mine.AutoInterest = !mine.AutoInterest);
-            EconomySimulation.ResetEffects(); // a prévia dos juros (barra do topo, tooltips) usa a taxa da tabela
+            EconomySimulation.ResetEffects(); // the interest preview (top bar, tooltips) uses the table's rate
             nextRefresh = 0;
         }
 
@@ -945,10 +945,10 @@ namespace CurrencyMod.NativeUI
             }
             WithMine(mine =>
             {
-                mine.AutoInterest = false; // mexer no controle passa para o modo manual
+                mine.AutoInterest = false; // touching the control switches to manual mode
                 mine.InterestRate = Math.Round(value * 10) / 1000.0;
             });
-            EconomySimulation.ResetEffects(); // a prévia dos juros (barra do topo, tooltips) usa a taxa da tabela
+            EconomySimulation.ResetEffects(); // the interest preview (top bar, tooltips) uses the table's rate
             nextRefresh = 0;
         }
 
@@ -981,7 +981,7 @@ namespace CurrencyMod.NativeUI
             if (saved != null)
             {
                 TextPatches.RefreshLocalCache(saved);
-                Plugin.Log.LogInfo($"Jogador nomeou a moeda: {name} / {plural} ({symbol}).");
+                Plugin.Log.LogInfo($"Player named the currency: {name} / {plural} ({symbol}).");
             }
             nextRefresh = 0;
         }
@@ -1035,12 +1035,12 @@ namespace CurrencyMod.NativeUI
                 updatingSlider = true;
                 interestSlider.SetCurrentValue((float)(mine.InterestRate * 100), force: true, silent: true);
                 updatingSlider = false;
-                // Rótulo curto: o controle ocupa a metade direita da linha.
+                // Short label: the control takes the right half of the row.
                 sliderItem.GetComponent<UILabel>().Text = L.T("Ajustar juros");
                 Tip(sliderItem, string.Empty, L.T("Ajustar juros"), L.T("Arraste para definir os juros por turno. Mexer aqui passa o banco para o modo manual."));
             }
 
-            // Inflação: meta, índice de preços acumulado e direção em relação ao turno passado.
+            // Inflation: target, cumulative price index and direction relative to last turn.
             Transform inflation = inflationCard.Find("Table/Top");
             double previousInflation = mine.History.Count >= 2 ? mine.History[mine.History.Count - 2].InflationRate : mine.InflationRate;
             SetLabel(inflation, "TitleGroup/Title", L.F("Inflação: {0}/turno", Format.Percent(mine.InflationRate)) + TrendMark(mine.InflationRate - previousInflation));
@@ -1086,8 +1086,8 @@ namespace CurrencyMod.NativeUI
         private readonly UITextFieldResponder[] hookedResponders = new UITextFieldResponder[3];
 
         /// <summary>
-        /// O campo cria o responder (quem trata o Enter) ao carregar, depois de clonado: a assinatura feita antes se perde.
-        /// Aqui ela é refeita sempre que o responder muda (mesmo padrão da tela de provedores).
+        /// The field creates its responder (which handles Enter) on load, after being cloned: a subscription made before is
+        /// lost. Here it is redone whenever the responder changes (same pattern as the providers screen).
         /// </summary>
         private void HookCurrencyFields()
         {
@@ -1114,8 +1114,8 @@ namespace CurrencyMod.NativeUI
         }
 
         /// <summary>
-        /// O doador (semente do mundo, nas opções) vem travado dentro da partida: o item e o campo clonados herdam
-        /// InteractiveSelf = false e o clique não dá foco ("campo só leitura"). Destrava os dois.
+        /// The donor (world seed, in the options) comes locked inside a game: the cloned item and field inherit
+        /// InteractiveSelf = false and clicking does not give focus ("read-only field"). Unlocks both.
         /// </summary>
         private void EnsureCurrencyFieldsInteractive()
         {
@@ -1151,7 +1151,7 @@ namespace CurrencyMod.NativeUI
             {
                 return;
             }
-            // O botão doador ("Libertar") vem desabilitado quando a cidade não pode ser libertada.
+            // The donor button ("Liberate") comes disabled when the city cannot be liberated.
             UITransform buttonUi = button.GetComponent<UITransform>();
             if (buttonUi != null && !buttonUi.InteractiveSelf)
             {
@@ -1162,7 +1162,7 @@ namespace CurrencyMod.NativeUI
             {
                 label.Text = text;
                 UITransform ui = button.GetComponent<UITransform>();
-                // Na linha do título, presa à direita, deixando a linha de chips livre.
+                // On the title row, anchored right, leaving the chips row free.
                 ui.BottomAnchor = ui.BottomAnchor.SetAttach(false);
                 ui.LeftAnchor = ui.LeftAnchor.SetAttach(false);
                 ui.SetTopBorder(8f);
@@ -1200,7 +1200,7 @@ namespace CurrencyMod.NativeUI
             return false;
         }
 
-        /// <summary>Comandos de desenvolvimento: "open", "close", "tab 0..3", "scroll inicio|fim".</summary>
+        /// <summary>Development commands: "open", "close", "tab 0..3", "scroll inicio|fim".</summary>
         internal static void DevCommand(string args)
         {
             string[] parts = args.Split(' ');
@@ -1213,7 +1213,7 @@ namespace CurrencyMod.NativeUI
             {
                 CurrencyWorld ledgerWorld = CurrencyManager.Current;
                 TradePoint ledgerPoint = ledgerWorld?.TradeHistory?.LastOrDefault();
-                Plugin.Log.LogInfo(ledgerPoint == null ? "Livro de comércio: vazio" : $"Livro de comércio (turno {ledgerPoint.Turn}, {ledgerWorld.TradeHistory.Count} pontos): " + string.Join(" · ", ledgerPoint.Flows.Select(f => $"E{f.Buyer}<-E{f.Seller} {f.Value:0.#} ({f.Goods})")) + " | dinheiro: " + string.Join(" · ", ledgerPoint.Money.Select(m => $"k{m.Kind} E{m.From}->E{m.To} paga {m.Paid:0.#} ganha {m.Gain:0.#}")));
+                Plugin.Log.LogInfo(ledgerPoint == null ? "Trade ledger: empty" : $"Trade ledger (turn {ledgerPoint.Turn}, {ledgerWorld.TradeHistory.Count} points): " + string.Join(" · ", ledgerPoint.Flows.Select(f => $"E{f.Buyer}<-E{f.Seller} {f.Value:0.#} ({f.Goods})")) + " | money: " + string.Join(" · ", ledgerPoint.Money.Select(m => $"k{m.Kind} E{m.From}->E{m.To} pays {m.Paid:0.#} gains {m.Gain:0.#}")));
                 return;
             }
             if (parts[0] == "fake")
@@ -1252,12 +1252,12 @@ namespace CurrencyMod.NativeUI
             }
             if (Instance.LoadingState != Amplitude.UI.Windows.LoadingState.Loaded)
             {
-                // Recém-criada (ou recriada numa recarga do mod), a tela só aceita abrir depois do PostLoad.
+                // Freshly created (or recreated on a mod reload), the screen only accepts opening after PostLoad.
                 Instance.pendingOpen = true;
                 return;
             }
             Instance.pendingOpen = false;
-            // Uma janela de cada vez, e nada do jogo aberto por cima (tropa, cidade, menus da barra, outras telas cheias).
+            // One window at a time, and nothing from the game open on top (unit, city, bar menus, other fullscreens).
             ExclusiveWindows.BeforeOpen(Instance);
             Instance.openedAt = Time.unscaledTime;
             WindowsUtils.ShowWindow(Instance);
@@ -1315,20 +1315,20 @@ namespace CurrencyMod.NativeUI
             nextRefresh = 0;
         }
 
-        // ---------------- Conteúdo ----------------
+        // ---------------- Content ----------------
 
         private void Update()
         {
             if (wasShown && !Shown)
             {
-                NativeUIKit.ReleaseTextFocus(); // o jogo escondeu a tela sem passar por SetOpen
+                NativeUIKit.ReleaseTextFocus(); // the game hid the screen without going through SetOpen
             }
             wasShown = Shown;
             if (pendingOpen && LoadingState == Amplitude.UI.Windows.LoadingState.Loaded)
             {
                 SetOpen(true);
             }
-            // O jogador foi mexer em outra coisa (tropa, cidade, menu da barra, outra janela): fecha, como as do jogo.
+            // The player went to do something else (unit, city, bar menu, another window): close, like the game's windows.
             if (Shown && ExclusiveWindows.Interrupted(this, openedAt))
             {
                 SetOpen(false);
@@ -1349,7 +1349,7 @@ namespace CurrencyMod.NativeUI
             }
             catch (Exception ex)
             {
-                Plugin.Log.LogError($"Banco Central (nativo): {ex}");
+                Plugin.Log.LogError($"Central Bank (native): {ex}");
                 nextRefresh = Time.unscaledTime + 5f;
             }
         }
@@ -1400,7 +1400,7 @@ namespace CurrencyMod.NativeUI
             RenderPendingChart();
         }
 
-        // ---------------- Gráfico de histórico ----------------
+        // ---------------- History chart ----------------
 
         private const float ChartImageLeft = 76f;
         private const float ChartImageTop = 84f;
@@ -1454,7 +1454,7 @@ namespace CurrencyMod.NativeUI
                 chartImage = image.GetComponent<UIImage>();
                 image.VisibleSelf = true;
                 NativeUIKit.Place(image.transform, ChartImageLeft, ChartImageTop, imageWidth, ChartImageHeight);
-                chartImage.Material = new UIMaterialId("Default"); // o doador usa campo de distância (ícone): aqui é imagem comum
+                chartImage.Material = new UIMaterialId("Default"); // the donor uses a distance field (icon): here it is a plain image
                 chartImage.Color = Color.white;
             }
             for (int i = 0; i < chartYLabels.Length; i++)
@@ -1469,7 +1469,7 @@ namespace CurrencyMod.NativeUI
 
         private static string Dot(string hex) => "<c=" + hex + ">●</c> ";
 
-        /// <summary>Atualiza o gráfico da aba atual (câmbio ou juros × inflação) com o histórico guardado.</summary>
+        /// <summary>Updates the current tab's chart (exchange rate or interest × inflation) with the stored history.</summary>
         private void FillChart(GameSnapshot.Data game, CurrencyWorld world, EmpireCurrency mine, int localIndex)
         {
             bool exchange = currentTab == Tab.Exchange;
@@ -1521,7 +1521,7 @@ namespace CurrencyMod.NativeUI
             }
 
             var series = new List<BankChart.Series>();
-            var seriesNames = new List<string>(); // um nome por linha, na mesma ordem, para o balão do gráfico
+            var seriesNames = new List<string>(); // one name per line, in the same order, for the chart tooltip
             var references = new List<BankChart.Reference>();
             Func<double, string> label;
             string title;
@@ -1598,8 +1598,8 @@ namespace CurrencyMod.NativeUI
             if (signature != chartSignature)
             {
                 chartSignature = signature;
-                // Os dados já são cópias (AlignSeries): a pintura (centenas de milhares de pixels) roda depois, fora do
-                // CurrencyManager.Lock que o sandbox também usa no fim de turno.
+                // The data are already copies (AlignSeries): painting (hundreds of thousands of pixels) runs later, outside
+                // the CurrencyManager.Lock that the sandbox also uses at end of turn.
                 pendingChart = new PendingChart { Series = series, References = references, Min = min, Max = max, Count = count };
             }
 
@@ -1619,7 +1619,7 @@ namespace CurrencyMod.NativeUI
             SetVisible(top.Find("StatsTable"), true);
             HideOutputs(top, ChartCardHeight);
 
-            // Balão: o valor de cada linha no turno sob o mouse (a sua primeiro).
+            // Tooltip: the value of each line at the turn under the mouse (yours first).
             Func<double, string> format = label;
             SetChartHover(first, count, index =>
             {
@@ -1647,7 +1647,7 @@ namespace CurrencyMod.NativeUI
 
         private PendingChart pendingChart;
 
-        /// <summary>Pinta o gráfico que FillChart deixou pronto (fora do lock da economia).</summary>
+        /// <summary>Paints the chart that FillChart prepared (outside the economy lock).</summary>
         private void RenderPendingChart()
         {
             PendingChart job = pendingChart;
@@ -1675,7 +1675,7 @@ namespace CurrencyMod.NativeUI
         {
             ClearChartHover();
             SetLabel(top, "TitleGroup/Title", L.T("Histórico"));
-            // A mensagem vai num chip do cartão: o rótulo do eixo X fica abaixo da área do gráfico, fora do cartão encolhido.
+            // The message goes into a card chip: the X-axis label sits below the chart area, outside the shrunken card.
             SetVisible(top.Find("StatsTable"), true);
             SetVisible(top.Find(ChipPaths[0]), true);
             SetChip(top, ChipPaths[0], message ?? L.T("O gráfico aparece depois de dois turnos."));
@@ -1727,7 +1727,7 @@ namespace CurrencyMod.NativeUI
             }
         }
 
-        // ---------------- Ranking das moedas (painel da direita) ----------------
+        // ---------------- Currency ranking (right panel) ----------------
 
         private const float RankRowHeight = 28f;
         private const float RankTop = 50f;
@@ -1855,7 +1855,7 @@ namespace CurrencyMod.NativeUI
             SetVisible(rankCard, true);
         }
 
-        // ---------------- Painel da direita: visão geral ----------------
+        // ---------------- Right panel: overview ----------------
 
         private Transform diagCard;
         private UILabel diagText;
@@ -1863,7 +1863,7 @@ namespace CurrencyMod.NativeUI
         private Transform worldCard;
         private UILabel worldText;
 
-        /// <summary>Cartão de texto com várias linhas (a técnica da aba Ciclo), numa lista qualquer.</summary>
+        /// <summary>Multi-line text card (the Ciclo tab technique), in any list.</summary>
         private static Transform MakeTextCard(UITransform table, Transform sample, string name, out UILabel label)
         {
             UILabel chipLabel = sample.Find("Table/Top/StatsTable/PopCount")?.GetComponent<UILabel>();
@@ -1906,13 +1906,13 @@ namespace CurrencyMod.NativeUI
 
         private void FillSideCards(GameSnapshot.Data game, CurrencyWorld world, EmpireCurrency mine, int localIndex, double stock)
         {
-            // Diagnóstico do momento (o mesmo do selo do botão e da aba Ciclo).
+            // Current diagnosis (the same as the button badge and the Ciclo tab).
             EconomyDiagnosis diagnosis = EconomyDiagnosis.For(mine, stock);
             string color = diagnosis.Severity == EconomyDiagnosis.Level.Bad ? BadColor : diagnosis.Severity == EconomyDiagnosis.Level.Warning ? WarnColor : GoodColor;
             FillTextCard(diagCard, diagText, L.F("Diagnóstico: {0}", Colored(diagnosis.Headline, color)), diagnosis.Advice);
             Tip(diagCard.Find("Table/Top"), string.Empty, L.T("Diagnóstico"), L.T("O problema mais urgente da sua economia agora e o que fazer. Os detalhes estão na seção Ciclo."));
 
-            // Posição entre os impérios que você conhece.
+            // Position among the empires you know.
             var known = world.Empires
                 .Where(e => e.EmpireIndex != localIndex && e.EmpireIndex < game.NumberOfMajorEmpires && e.EmpireIndex < game.EmpireInfo.Length
                     && game.EmpireInfo[e.EmpireIndex].IsAlive && TradePostWindow.IsKnown(e.EmpireIndex))
@@ -1968,12 +1968,12 @@ namespace CurrencyMod.NativeUI
         private const string UpColor = "8FD18A";
         private const string DownColor = "E8685E";
 
-        /// <summary>Seta colorida de tendência (verde sobe, vermelho cai); nada se ficou estável.</summary>
+        /// <summary>Colored trend arrow (green up, red down); nothing if it stayed stable.</summary>
         private static readonly Dictionary<UITooltip, string> boundTips = new Dictionary<UITooltip, string>();
 
         /// <summary>
-        /// Ajuda ao passar o mouse, no estilo nativo (título + frase). Chips e botões dos cartões já trazem
-        /// um UITooltip; só religa quando o texto muda, para o balão não piscar a cada atualização.
+        /// Hover help, in the native style (title + sentence). Card chips and buttons already come with
+        /// a UITooltip; it only rebinds when the text changes, so the tooltip does not flicker on every update.
         /// </summary>
         internal static void Tip(Transform parent, string path, string title, string description)
         {
@@ -1981,7 +1981,7 @@ namespace CurrencyMod.NativeUI
             UITooltip tooltip = target != null ? target.GetComponent<UITooltip>() : null;
             if (tooltip == null && target != null)
             {
-                tooltip = target.gameObject.AddComponent<UITooltip>(); // alvo sem balão (rótulo, linha): ganha o componente nativo
+                tooltip = target.gameObject.AddComponent<UITooltip>(); // target without a tooltip (label, row): gets the native component
             }
             if (tooltip == null)
             {
@@ -1999,11 +1999,11 @@ namespace CurrencyMod.NativeUI
             }
             catch (Exception)
             {
-                // Ainda não carregado: tenta na próxima atualização.
+                // Not loaded yet: try on the next update.
             }
         }
 
-        /// <summary>Chip extra na linha de estatísticas do cartão (clone do primeiro); devolve o caminho dele.</summary>
+        /// <summary>Extra chip in the card's stats row (clone of the first one); returns its path.</summary>
         internal static string ExtraChip(Transform top, int number)
         {
             string path = "StatsTable/Chip" + number;
@@ -2041,7 +2041,7 @@ namespace CurrencyMod.NativeUI
                 EmpireCurrency other = currencies[i];
                 Transform top = rows[i].Find("Table/Top");
                 double rate = world.Rate(localIndex, other.EmpireIndex);
-                // Tendência da cotação para você: ▲ verde = seu dinheiro compra mais da moeda deles que no turno passado.
+                // Rate trend for you: green ▲ = your money buys more of their currency than last turn.
                 double previousRate = other.PreviousExchangeValue > 0 ? mine.PreviousExchangeValue / other.PreviousExchangeValue : rate;
                 SetLabel(top, "TitleGroup/Title", $"{ShortEmpireName(other.EmpireIndex)} · {other.Name}");
                 SetChip(top, "StatsTable/PopCount", $"1 {mine.Symbol} = {Format.Rate(rate)} {other.Symbol}{TrendMark(rate - previousRate)}");
@@ -2053,7 +2053,7 @@ namespace CurrencyMod.NativeUI
                 Tip(top, "StatsTable/ExtensionsCount", L.T("Juros deles"), L.T("Juros do banco central deles, por turno."));
                 string strengthChip = ExtraChip(top, 3);
                 string gdpChip = ExtraChip(top, 4);
-                // As linhas são as mesmas da aba Recursos, que esconde alguns chips.
+                // The rows are the same as the Resources tab, which hides some chips.
                 foreach (string chip in new[] { "StatsTable/PopCount", "StatsTable/Fortification", "StatsTable/ExtensionsCount", strengthChip, gdpChip })
                 {
                     SetVisible(top.Find(chip), true);
@@ -2080,9 +2080,9 @@ namespace CurrencyMod.NativeUI
             SetVisible(cardSample, false);
         }
 
-        // ---------------- Utilidades ----------------
+        // ---------------- Utilities ----------------
 
-        /// <summary>"Rainha Zenóbia (Os Cartagineses)" vira "Os Cartagineses".</summary>
+        /// <summary>"Rainha Zenóbia (Os Cartagineses)" becomes "Os Cartagineses".</summary>
         internal static string ShortEmpireName(int empireIndex)
         {
             string name = CentralBankWindow.EmpireName(empireIndex);
@@ -2105,12 +2105,12 @@ namespace CurrencyMod.NativeUI
             SetVisible(parent.Find(path), false);
         }
 
-        private const float CardHeight = 78f; // cartões sem a linha de produção da janela original
+        private const float CardHeight = 78f; // cards without the original window's production row
 
         /// <summary>
-        /// Esconde a linha de produção e encolhe o cartão (ou o deixa com a altura pedida, para caber um texto).
-        /// Os filhos vinham ancorados para a altura antiga (96 px); aqui eles passam a ser presos pelo topo, com
-        /// altura fixa. A tabela vertical do cartão e o UIParentResizer acompanham a nova altura sozinhos.
+        /// Hides the production row and shrinks the card (or gives it the requested height, to fit a text).
+        /// The children were anchored for the old height (96 px); here they become anchored at the top, with a
+        /// fixed height. The card's vertical table and the UIParentResizer follow the new height by themselves.
         /// </summary>
         internal static void HideOutputs(Transform top, float height = CardHeight)
         {
@@ -2150,9 +2150,9 @@ namespace CurrencyMod.NativeUI
         }
 
         /// <summary>
-        /// Chip de estatística (fundo arredondado + texto). Os chips da janela original têm largura
-        /// fixa e margem reservada ao ícone; aqui a largura acompanha o texto medido pelo próprio
-        /// rótulo, e a tabela (que vem desligada no prefab) é religada e reorganizada.
+        /// Stat chip (rounded background + text). The original window's chips have a fixed width
+        /// and a margin reserved for the icon; here the width follows the text measured by the label
+        /// itself, and the table (which comes disabled in the prefab) is re-enabled and re-laid out.
         /// </summary>
         internal static void SetChip(Transform parent, string path, string text)
         {
@@ -2172,7 +2172,7 @@ namespace CurrencyMod.NativeUI
             {
                 label.Text = text;
             }
-            // A medição só acontece com o rótulo visível: refaz a cada atualização (é barato).
+            // Measuring only happens with the label visible: redo it on every update (it is cheap).
             label.AdjustSizesIfNecessary();
 
             var layout = chip.parent.GetComponent<Amplitude.UI.Layouts.UILayout>();
@@ -2189,7 +2189,7 @@ namespace CurrencyMod.NativeUI
                 layout.ArrangeChildren();
             }
         }
-        // ---------------- Remoção (recarga / saída da partida) ----------------
+        // ---------------- Removal (reload / leaving the game) ----------------
 
         internal static void DestroyWindow()
         {
@@ -2218,7 +2218,7 @@ namespace CurrencyMod.NativeUI
             }
             catch (Exception ex)
             {
-                Plugin.Log.LogWarning($"Remoção da tela do Banco Central: {ex.Message}");
+                Plugin.Log.LogWarning($"Central Bank screen removal: {ex.Message}");
             }
             window.gameObject.SetActive(false);
             Destroy(window.gameObject);

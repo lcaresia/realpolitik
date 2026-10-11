@@ -13,8 +13,9 @@ using UnityEngine;
 namespace CurrencyMod.Diplomacia.UI
 {
     /// <summary>
-    /// Botão das alianças (blocos) na barra de controle, ao lado do conselho: clone do botão "Comercializar" com o ícone
-    /// de três anéis e um selo "!" quando algo pede ação sua (convite, voto que falta, eleição ou sugestão ao presidente).
+    /// Alliances (blocs) button on the control bar, next to the council: a clone of the "Trade" button with the
+    /// three-rings icon and a "!" badge when something needs your action (invite, missing vote, election or suggestion to
+    /// the president).
     /// </summary>
     internal class AlliancesButton : MonoBehaviour
     {
@@ -55,7 +56,7 @@ namespace CurrencyMod.Diplomacia.UI
                 }
                 catch (Exception ex)
                 {
-                    Plugin.Log.LogError($"Falha ao criar a tela das alianças: {ex}");
+                    Plugin.Log.LogError($"Failed to create the alliances screen: {ex}");
                     enabled = false;
                     return;
                 }
@@ -121,7 +122,7 @@ namespace CurrencyMod.Diplomacia.UI
             button.Tooltip.Bind(TooltipUtils.TitleAndDescription, tooltipTarget);
             badge = NativeUIKit.CreateBadge(cloneTransform.transform, "AlliancesBadge");
             button.Show(instant: true);
-            Plugin.Log.LogInfo("Botão das alianças criado na barra de controle.");
+            Plugin.Log.LogInfo("Alliances button created on the control bar.");
         }
 
         private void RefreshBadge()

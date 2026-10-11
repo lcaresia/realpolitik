@@ -11,28 +11,28 @@ using Math = System.Math;
 namespace CurrencyMod
 {
     /// <summary>
-    /// Comandos de desenvolvimento para testar sem clicar (dev\cmd.txt): carregar e salvar partidas e passar o turno.
-    /// Fazem o mesmo que a tela de saves e o botão de fim de turno.
-    ///   jogo estado              estado do jogo, turno e se dá para passar o turno
-    ///   jogo saves               lista os saves (os mais novos primeiro)
-    ///   jogo carregar [título]   carrega o save pelo título; sem título, o mais recente
-    ///   jogo salvar &lt;título&gt;     salva a partida com esse título
-    ///   jogo turno               passa o turno (OrderEmpireReady), como o botão
-    ///   jogo propostas           tratados e acordos pendentes entre o jogador e cada nação
-    ///   jogo responder &lt;E#&gt; aceitar|ignorar   responde pelo jogador a uma proposta pendente daquela nação
-    ///   jogo propor &lt;E#&gt; economico|informacao|cultural|militar|alianca|paz   proposta formal do jogador (testes)
-    ///   jogo crises [E#]         reclamações (G = índice no jogo), exigências e crise de todas as relações (ou de uma nação)
-    ///   jogo exigir &lt;E#&gt; todas|G#...   o jogador transforma reclamações em exigências contra a nação (testes)
-    ///   jogo exigencias &lt;E#&gt; aceitar|recusar|enrolar|retirar   o jogador responde às exigências (ou retira as suas)
-    ///   jogo travado [n]         por que o fim do turno não termina (pendências, batalhas, decisões) e as últimas n ordens
-    ///   jogo batalha [auto|recuar]   batalhas em andamento; responde pelo jogador às que esperam a confirmação dele
+    /// Dev commands to test without clicking (dev\cmd.txt): load and save games and end the turn.
+    /// They do the same as the saves screen and the end-turn button.
+    ///   jogo estado              game state, turn and whether the turn can be ended
+    ///   jogo saves               lists the saves (newest first)
+    ///   jogo carregar [title]    loads the save by title; without a title, the most recent
+    ///   jogo salvar &lt;title&gt;      saves the game with that title
+    ///   jogo turno               ends the turn (OrderEmpireReady), like the button
+    ///   jogo propostas           pending treaties and agreements between the player and each nation
+    ///   jogo responder &lt;E#&gt; aceitar|ignorar   answers, for the player, a pending proposal from that nation
+    ///   jogo propor &lt;E#&gt; economico|informacao|cultural|militar|alianca|paz   formal proposal by the player (tests)
+    ///   jogo crises [E#]         grievances (G = in-game index), demands and crisis of all relations (or of one nation)
+    ///   jogo exigir &lt;E#&gt; todas|G#...   the player turns grievances into demands against the nation (tests)
+    ///   jogo exigencias &lt;E#&gt; aceitar|recusar|enrolar|retirar   the player answers the demands (or withdraws their own)
+    ///   jogo travado [n]         why end of turn does not finish (pending items, battles, decisions) and the last n orders
+    ///   jogo batalha [auto|recuar]   ongoing battles; answers, for the player, those awaiting their confirmation
     /// </summary>
     internal static class GameCommands
     {
         /// <summary>
-        /// "jogo posto E# T#": funda um posto avançado do império num território livre, com a ordem de editor do próprio
-        /// jogo (EditorOrderCreateCampAt). Serve para montar cenários de teste (ex.: rota que cruza dois territórios do
-        /// mesmo dono, para o pedágio de posto interno).
+        /// "jogo posto E# T#": founds an outpost for the empire in a free territory, using the game's own editor order
+        /// (EditorOrderCreateCampAt). Used to build test scenarios (e.g. a route crossing two territories of the
+        /// same owner, for the inner-outpost toll).
         /// </summary>
         private static string SpawnCamp(string args)
         {
@@ -63,9 +63,9 @@ namespace CurrencyMod
         }
 
         /// <summary>
-        /// "jogo espiao E# T# [unidade]": cria um exército espião daquele império num tile de terra livre do território,
-        /// com a ordem de depuração do próprio jogo (OrderSpawnArmy, a mesma do atalho de criar unidade do editor).
-        /// Serve para testar a interceptação de cartas. Padrão: o espião medieval (LandUnit_Era3_Common_Spies).
+        /// "jogo espiao E# T# [unit]": creates a spy army for that empire on a free land tile of the territory, using
+        /// the game's own debug order (OrderSpawnArmy, the same as the editor's create-unit shortcut).
+        /// Used to test letter interception. Default: the medieval spy (LandUnit_Era3_Common_Spies).
         /// </summary>
         private static string SpawnSpy(string args)
         {
@@ -152,7 +152,7 @@ namespace CurrencyMod
                 case "espectador":
                     return Spectator(rest);
                 case "sair":
-                    // Fecha o jogo do jeito normal: matar o processo deixa a Steam achando que ele continua aberto (AppError_16).
+                    // Quits the game the normal way: killing the process leaves Steam thinking it is still running (AppError_16).
                     UnityEngine.Application.Quit();
                     return "fechando o jogo";
                 case "economia":
@@ -184,14 +184,14 @@ namespace CurrencyMod
                     string what = (rest ?? string.Empty).Trim();
                     if (what == "rotulos")
                     {
-                        // "jogo rotas rotulos": os rótulos de valor da última apresentação (tile e texto), para mirar a câmera.
+                        // "jogo rotas rotulos": the value labels from the last render (tile and text), to aim the camera.
                         var labels = RouteVisuals.Labels;
                         return labels == null || labels.Count == 0 ? "nenhum rótulo (abra a visão de comércio)"
                             : string.Join("\n", labels.Select(l => $"tile {l.Tile}: {l.Text}{(l.Paid ? " (pago)" : string.Empty)}"));
                     }
                     if (what.StartsWith("cores"))
                     {
-                        // "jogo rotas cores E5": pinta as rotas como se o jogador fosse o E5 (teste); "jogo rotas cores" volta ao normal.
+                        // "jogo rotas cores E5": colors the routes as if the player were E5 (test); "jogo rotas cores" goes back to normal.
                         string arg = what.Substring(5).Trim().TrimStart('E', 'e');
                         RouteVisuals.LabelAll = arg == "todas";
                         RouteVisuals.ViewAs = int.TryParse(arg, out int viewAs) ? viewAs : -1;
@@ -201,8 +201,8 @@ namespace CurrencyMod
                 }
                 case "civico":
                 {
-                    // "jogo civico E# NomeDoCivico": a lei de um império agora (escolha ativa, situação, turno da última troca);
-                    // confere o que aconteceu com uma lei imposta pelo Congresso.
+                    // "jogo civico E# CivicName": an empire's current law (active choice, status, turn of the last change);
+                    // checks what happened to a law imposed by the Congress.
                     string[] words = rest.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
                     if (words.Length < 2 || !TryEmpire(words[0], out int holder))
                     {
@@ -220,8 +220,8 @@ namespace CurrencyMod
                 }
                 case "comprar":
                 {
-                    // "jogo comprar E# luxo|estrategico": o jogador compra todos os recursos dessa categoria do império (o
-                    // botão "comprar tudo" do comércio). Cria a rota se não houver: testa o caminho de uma rota nova.
+                    // "jogo comprar E# luxo|estrategico": the player buys all of the empire's resources in that category (the
+                    // trade "buy all" button). Creates the route if there is none: tests a new route's path.
                     string[] words = rest.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
                     if (words.Length < 2 || !TryEmpire(words[0], out int seller))
                     {
@@ -239,13 +239,13 @@ namespace CurrencyMod
                 }
                 case "pedagio":
                 {
-                    // "jogo pedagio E# E# livre|pedagio|bloqueio": o primeiro aplica o modo às rotas do segundo em todos os
-                    // territórios dele (testes; o mesmo que a janela do posto faz para o jogador).
+                    // "jogo pedagio E# E# livre|pedagio|bloqueio": the first applies the mode to the second's routes in all of
+                    // its territories (tests; the same as the outpost window does for the player).
                     string[] words = rest.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
                     CurrencyWorld world = CurrencyManager.Current;
                     if (words.Length == 2 && words[0] == "peso" && double.TryParse(words[1].Replace(',', '.'), System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out double weight))
                     {
-                        // "jogo pedagio peso n": PesoPedagioNasRotas (0 = a rota ignora o pedágio e paga; 1 = desvia se for mais barato).
+                        // "jogo pedagio peso n": PesoPedagioNasRotas (0 = the route ignores the toll and pays; 1 = detours if cheaper).
                         EconomyConfig.TollDetourCost.Value = weight;
                         TradePolicy.PathsDirty = true;
                         return $"ok: PesoPedagioNasRotas = {weight} (as rotas são recalculadas)";
@@ -253,14 +253,14 @@ namespace CurrencyMod
                     if (words.Length >= 6 && words[0] == "teste" && TryEmpire(words[1], out int testOwner) && TryEmpire(words[4], out int testLeft) && TryEmpire(words[5], out int testRight)
                         && int.TryParse(words[2].TrimStart('T', 't'), out int freePost) && int.TryParse(words[3].TrimStart('T', 't'), out int tolledPost))
                     {
-                        // "jogo pedagio teste E# T_livre T_taxado E_esq E_dir [preço]": custo de passo do posto interno.
+                        // "jogo pedagio teste E# T_free T_taxed E_left E_right [price]": step cost of the inner outpost.
                         double testPrice = words.Length > 6 && double.TryParse(words[6], out double p) ? p : 50;
                         return TradeBlockade.SelfTestInnerPost(testOwner, freePost, tolledPost, testLeft, testRight, testPrice);
                     }
                     if (words.Length == 4 && words[0] == "preco" && TryEmpire(words[1], out int seller) && TryEmpire(words[2], out int buyer) && world != null
                         && double.TryParse(words[3], out double general))
                     {
-                        // "jogo pedagio preco E# E# n": preço geral do primeiro para o segundo (0 = padrão), como os botões da diplomacia.
+                        // "jogo pedagio preco E# E# n": general price from the first to the second (0 = default), like the diplomacy buttons.
                         lock (CurrencyManager.Lock)
                         {
                             TradePolicy.SetGeneralPrice(world, seller, buyer, general);
@@ -297,12 +297,12 @@ namespace CurrencyMod
                     return Diplomacia.ExpansionSavePatch.Describe() + (mode == "on" ? " (vale no próximo carregamento de save)" : string.Empty);
                 }
                 case "alerta":
-                    // Teste visual do selo do Banco Central: "jogo alerta <texto>" acende, "jogo alerta off" volta ao diagnóstico.
+                    // Visual test of the Central Bank badge: "jogo alerta <text>" lights it up, "jogo alerta off" returns to diagnostics.
                     NativeUI.NativeBankButton.TestAlert = string.IsNullOrEmpty(rest) || rest == "off" ? null : rest;
                     return NativeUI.NativeBankButton.TestAlert == null ? "selo de alerta volta a seguir o diagnóstico" : $"selo de alerta forçado: {rest}";
                 case "menu":
                 {
-                    // Sai da partida para o menu principal, sem salvar (como a automação do próprio jogo, Operations.cs:441).
+                    // Leaves the game to the main menu without saving (like the game's own automation, Operations.cs:441).
                     var runtime = Services.GetService<Amplitude.Framework.Runtime.IRuntimeService>();
                     if (runtime?.Runtime?.FiniteStateMachine == null)
                     {
@@ -318,9 +318,9 @@ namespace CurrencyMod
         }
 
         /// <summary>
-        /// "jogo detalhe industria|estabilidade|dinheiro [n]": pede ao jogo o detalhamento nativo, o mesmo dos tooltips
-        /// (indústria e estabilidade da n-ésima cidade do jogador; dinheiro do império), e grava as linhas do jeito que
-        /// o jogo as monta. A resposta chega depois, numa entrada própria do result.txt.
+        /// "jogo detalhe industria|estabilidade|dinheiro [n]": asks the game for the native breakdown, the same as the tooltips
+        /// (industry and stability of the player's n-th city; the empire's money), and writes the lines the way the game
+        /// builds them. The answer arrives later, in its own result.txt entry.
         /// </summary>
         private static string Breakdown(string args)
         {
@@ -397,17 +397,17 @@ namespace CurrencyMod
         }
 
         /// <summary>
-        /// "jogo congresso ...": testes do Congresso mundial (research\congress.md §7.9).
-        ///   liberar E#                forma o Congresso à força (ordens de depuração do jogo); E# preside a 1ª sessão
-        ///   encerrar lei|K#           encerra a votação na hora
-        ///   consulado E#              cria o consulado na capital da nação (ordem de editor)
-        ///   alavancagem E# E# n       dá n de alavancagem do primeiro contra o segundo (ordem de editor)
-        ///   lei E# NomeDoCivico       deixa a lei disponível para a nação (ordem de editor)
-        ///   propor V#                 o jogador propõe a lei (quando preside)
-        ///   votar lei A|B             o jogador vota na lei
-        ///   votar K# E#               o jogador apoia um lado da crise
-        ///   subornar lei|K# E# n      o jogador suborna
-        ///   cumprir|guerra E#         o jogador responde ao veredito
+        /// "jogo congresso ...": World Congress tests (research\congress.md §7.9).
+        ///   liberar E#                forces the Congress to form (game debug orders); E# presides the 1st session
+        ///   encerrar lei|K#           closes the vote immediately
+        ///   consulado E#              creates the consulate in the nation's capital (editor order)
+        ///   alavancagem E# E# n       gives n leverage of the first against the second (editor order)
+        ///   lei E# CivicName          makes the law available to the nation (editor order)
+        ///   propor V#                 the player proposes the law (when presiding)
+        ///   votar lei A|B             the player votes on the law
+        ///   votar K# E#               the player backs one side of the crisis
+        ///   subornar lei|K# E# n      the player bribes
+        ///   cumprir|guerra E#         the player answers the verdict
         /// </summary>
         private static string Congress(string args)
         {
@@ -530,9 +530,9 @@ namespace CurrencyMod
         }
 
         /// <summary>
-        /// "jogo rendicao oferecer|impor|aceitar|recusar|cancelar E#": o jogador age numa guerra como pela aba Crise
-        /// (testes da rendição com as nações da IA de linguagem). Oferecer e impor vão com os termos padrão do jogo
-        /// (exigências e o resto em ouro).
+        /// "jogo rendicao oferecer|impor|aceitar|recusar|cancelar E#": the player acts in a war as through the Crisis tab
+        /// (surrender tests with the language-model AI nations). Offer and impose use the game's default terms
+        /// (demands and the rest in gold).
         /// </summary>
         private static string Surrender(string args)
         {
@@ -579,7 +579,7 @@ namespace CurrencyMod
             return $"ok: {string.Join(" → ", steps)} postada(s) para E{local} na guerra com E{other}";
         }
 
-        /// <summary>"jogo zoom 0..1": ajusta o zoom da câmera (1 = visão estratégica) sem a roda do mouse.</summary>
+        /// <summary>"jogo zoom 0..1": sets the camera zoom (1 = strategic view) without the mouse wheel.</summary>
         private static string SetZoom(string args)
         {
             var camera = Amplitude.Mercury.Presentation.Presentation.PresentationCameraController;
@@ -599,7 +599,7 @@ namespace CurrencyMod
         }
 
         /// <summary>
-        /// "jogo camera T#|tile": centraliza a câmera num território (centro administrativo ou centro visual) ou num tile.
+        /// "jogo camera T#|tile": centers the camera on a territory (administrative center or visual center) or on a tile.
         /// </summary>
         private static string CenterCamera(string args)
         {
@@ -626,13 +626,13 @@ namespace CurrencyMod
         }
 
         /// <summary>
-        /// "jogo interacao esc|tropa|cidade|fe|sociedade|normal|estado": faz o que o jogador faria (tecla ESC pelo mesmo
-        /// caminho do jogo, selecionar uma tropa ou cidade, abrir o menu de Fé ou Sociedade) e mostra quais janelas
-        /// ficaram abertas. Serve para testar se as janelas do mod fecham quando o jogador vai mexer em outra coisa.
+        /// "jogo interacao esc|tropa|cidade|fe|sociedade|normal|estado": does what the player would do (ESC key through the
+        /// game's own path, select a troop or city, open the Faith or Society menu) and shows which windows stayed
+        /// open. Used to test whether the mod's windows close when the player goes to interact with something else.
         /// </summary>
         /// <summary>
-        /// "jogo foco &lt;caminho&gt;|off": põe o cursor num campo de texto (como o clique do jogador) ou tira. Com o cursor no
-        /// campo, "jogo interacao estado" diz "digitando: sim" e os atalhos do mod (F8, F10) ficam desligados.
+        /// "jogo foco &lt;path&gt;|off": puts the cursor in a text field (like the player's click) or removes it. With the cursor
+        /// in the field, "jogo interacao estado" says "digitando: sim" and the mod's shortcuts (F8, F10) are disabled.
         /// </summary>
         private static string FocusField(string args)
         {
@@ -666,7 +666,7 @@ namespace CurrencyMod
             switch (what)
             {
                 case "esc":
-                    // O mesmo que a tecla: WindowsManager.ExitWindow gera o ESC e passa pelos grupos de janelas.
+                    // Same as the key: WindowsManager.ExitWindow raises ESC and goes through the window groups.
                     Amplitude.Mercury.UI.Windows.WindowsManager.Instance?.ExitWindow(null, Amplitude.Framework.Input.ActionState.Pressed);
                     break;
                 case "tropa":
@@ -703,7 +703,7 @@ namespace CurrencyMod
                     break;
                 case "aba":
                 {
-                    // "aba relacoes|comercio|tratados|crise": o mesmo que clicar na aba da tela de diplomacia.
+                    // "aba relacoes|comercio|tratados|crise": same as clicking the tab on the diplomacy screen.
                     var screen = Amplitude.Mercury.UI.Helpers.WindowsUtils.GetWindow<Amplitude.Mercury.UI.DiplomaticScreen>();
                     string[] words = (args ?? string.Empty).Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
                     string name = words.Length > 1 ? words[1].ToLowerInvariant() : "relacoes";
@@ -720,7 +720,7 @@ namespace CurrencyMod
                 }
                 case "diplomacia":
                 {
-                    // "diplomacia E3": abre a tela de diplomacia com essa nação (o mesmo que clicar no retrato dela).
+                    // "diplomacia E3": opens the diplomacy screen with that nation (same as clicking its portrait).
                     int other = -1;
                     string[] words = (args ?? string.Empty).Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
                     if (words.Length > 1)
@@ -785,7 +785,7 @@ namespace CurrencyMod
             return text.ToString();
         }
 
-        /// <summary>"jogo rpn &lt;nome&gt;": a fórmula de dados do jogo (pilha de operações, constantes e propriedades), para entender um cálculo.</summary>
+        /// <summary>"jogo rpn &lt;name&gt;": the game's data formula (operation stack, constants and properties), to understand a calculation.</summary>
         private static string DumpRpn(string name)
         {
             var database = Databases.GetDatabase<Amplitude.Framework.Simulation.Rpn.RpnDefinition>();
@@ -845,8 +845,8 @@ namespace CurrencyMod
         }
 
         /// <summary>
-        /// "jogo saves reler": relê a pasta de saves atual (a mesma troca de diretório que o botão de nuvem da tela de saves faz),
-        /// para o jogo enxergar um save copiado com o jogo aberto. Não muda a escolha local/nuvem do jogador.
+        /// "jogo saves reler": rereads the current saves folder (the same directory switch the saves screen's cloud button does),
+        /// so the game sees a save copied while it is running. Does not change the player's local/cloud choice.
         /// </summary>
         private static string RescanSaves()
         {
@@ -895,7 +895,7 @@ namespace CurrencyMod
                 return $"erro: save '{title}' não encontrado";
             }
             var runtime = Services.GetService<Amplitude.Framework.Runtime.IRuntimeService>();
-            // Mesmo caminho do botão Carregar da tela de saves (LoadSavesScreen.OnLoadRequested), partida solo.
+            // Same path as the saves screen's Load button (LoadSavesScreen.OnLoadRequested), single-player game.
             runtime.Runtime.FiniteStateMachine.PostStateChange(typeof(RuntimeState_OutGame), new RuntimeStateGameSaveDescriptorParameter(descriptor));
             return $"carregando '{descriptor.Title}'";
         }
@@ -914,7 +914,7 @@ namespace CurrencyMod
             return $"salvando '{title}'";
         }
 
-        /// <summary>Tratados e acordos pendentes do jogador. Lê a simulação na thread principal: só para testes.</summary>
+        /// <summary>The player's pending treaties and agreements. Reads the simulation on the main thread: tests only.</summary>
         private static string Proposals()
         {
             Sandbox sandbox = SandboxManager.Sandbox;
@@ -948,7 +948,7 @@ namespace CurrencyMod
             return lines.Length > 0 ? lines.ToString().TrimEnd() : "nenhuma proposta pendente";
         }
 
-        /// <summary>Responde pelo jogador (testes): aceitar assina, ignorar recusa sem insultar.</summary>
+        /// <summary>Answers for the player (tests): aceitar signs, ignorar refuses without insulting.</summary>
         private static string Answer(string args)
         {
             string[] parts = (args ?? string.Empty).Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
@@ -978,7 +978,7 @@ namespace CurrencyMod
             return sent.Count > 0 ? $"enviado para E{other}: {string.Join(", ", sent)}" : $"nada para responder a E{other}";
         }
 
-        /// <summary>Proposta formal do jogador, como pela tela de diplomacia (testes da opção B do F3).</summary>
+        /// <summary>Formal proposal by the player, as through the diplomacy screen (tests of F3 option B).</summary>
         private static string Propose(string args)
         {
             string[] parts = (args ?? string.Empty).Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
@@ -1012,8 +1012,8 @@ namespace CurrencyMod
         }
 
         /// <summary>
-        /// Por que o fim do turno não termina: pendências diplomáticas que seguram o TurnFinish e as últimas ordens
-        /// (o TurnFinish só sai depois de 8 s sem ordem nova). Leitura na thread principal: só para diagnóstico.
+        /// Why end of turn does not finish: pending diplomatic items holding TurnFinish and the last orders
+        /// (TurnFinish only fires after 8 s with no new order). Read on the main thread: diagnostics only.
         /// </summary>
         private static string Stuck(string args)
         {
@@ -1075,8 +1075,8 @@ namespace CurrencyMod
         }
 
         /// <summary>
-        /// Batalhas em andamento. Com "auto" ou "recuar", responde pelo jogador às que esperam a confirmação dele (o fim
-        /// do turno espera por isso), como os botões de resolução instantânea e de recuo da tela de batalha.
+        /// Ongoing battles. With "auto" or "recuar", answers for the player those awaiting their confirmation (end of
+        /// turn waits for that), like the battle screen's instant-resolve and retreat buttons.
         /// </summary>
         private static string Battles(string args)
         {
@@ -1113,8 +1113,8 @@ namespace CurrencyMod
         }
 
         /// <summary>
-        /// Humor da IA nativa de cada nação com as outras (o que a tela de diplomacia mostra), ao lado da postura que a
-        /// IA de linguagem definiu: confere o viés do NativeAiBias. Leitura na thread principal: só para testes.
+        /// Each nation's native AI mood toward the others (what the diplomacy screen shows), next to the stance the
+        /// language-model AI set: checks the NativeAiBias skew. Read on the main thread: tests only.
         /// </summary>
         private static string Moods(string args)
         {
@@ -1156,8 +1156,8 @@ namespace CurrencyMod
         }
 
         /// <summary>
-        /// Modo espectador (testes de desempenho): a IA nativa passa a jogar pelo império local e os turnos andam
-        /// sozinhos. Mesma ordem que o jogo usa ao trocar o império local (Sandbox.cs:953). "off" devolve o controle.
+        /// Spectator mode (performance tests): the native AI takes over the local empire and turns advance on their
+        /// own. Same order the game uses when switching the local empire (Sandbox.cs:953). "off" gives control back.
         /// </summary>
         private static string Spectator(string args)
         {
@@ -1178,10 +1178,10 @@ namespace CurrencyMod
         }
 
         /// <summary>
-        /// Auditoria da economia (testes de balanceamento): números do jogo e do CurrencyMod de cada império, com
-        /// alertas para valores impossíveis ou fora da curva (NaN/infinito, câmbio no limite, inflação ou juros
-        /// extremos, saltos no histórico, tesouro, renda, ciência ou exército muito acima/abaixo da mediana, juros que
-        /// rendem mais que a economia real). Grava dev\out\economia_T{turno}.csv para comparar turnos.
+        /// Economy audit (balance tests): game and CurrencyMod numbers for each empire, with warnings for impossible or
+        /// outlier values (NaN/infinity, exchange rate at its limit, extreme inflation or interest, jumps in the history,
+        /// treasury, income, science or army far above/below the median, interest yielding more than the real economy).
+        /// Writes dev\out\economia_T{turno}.csv to compare turns.
         /// </summary>
         private static string EconomyAudit()
         {
@@ -1302,8 +1302,8 @@ namespace CurrencyMod
         }
 
         /// <summary>
-        /// Fixa os juros de uma nação (também da IA) para comparar estratégias de balanceamento: "jogo juros E3 5" trava
-        /// em 5% por turno; "jogo juros E3 auto" devolve a regra automática.
+        /// Pins a nation's interest rate (AI ones too) to compare balance strategies: "jogo juros E3 5" locks it
+        /// at 5% per turn; "jogo juros E3 auto" restores the automatic rule.
         /// </summary>
         private static string ForceInterest(string args)
         {
@@ -1358,9 +1358,9 @@ namespace CurrencyMod
         private static bool lobbyOptionsSaved;
 
         /// <summary>
-        /// Partida nova sem clicar (testes): grava o número de jogadores e o tamanho do mapa nas opções do lobby (o
-        /// registro do jogo) e usa o início rápido do menu principal, que começa direto com essas opções
-        /// (SessionState_LobbyOwner lê GameOption_SlotCount). "jogo novo restaurar" devolve as opções de antes.
+        /// New game without clicking (tests): writes the number of players and the map size into the lobby options (the
+        /// game's registry) and uses the main menu's quick start, which starts directly with those options
+        /// (SessionState_LobbyOwner reads GameOption_SlotCount). "jogo novo restaurar" restores the previous options.
         /// </summary>
         private static string NewGame(string args)
         {
@@ -1370,7 +1370,7 @@ namespace CurrencyMod
             string sizePath = Amplitude.Mercury.Options.GameOptionsManager.BuildRegistryPath("GameOption_WorldSize");
             if (parts.Length > 0 && parts[0].Equals("restaurar", StringComparison.OrdinalIgnoreCase))
             {
-                // "jogo novo restaurar 10 Large" grava valores explícitos (a recarga do núcleo perde os guardados).
+                // "jogo novo restaurar 10 Large" writes explicit values (a core reload loses the stored ones).
                 if (parts.Length >= 3 && int.TryParse(parts[1], out int explicitPlayers))
                 {
                     string explicitSize = WorldSizes.FirstOrDefault(s => s.Equals(parts[2], StringComparison.OrdinalIgnoreCase)) ?? "Large";
@@ -1417,7 +1417,7 @@ namespace CurrencyMod
             {
                 registry.SetValue(sizePath, size);
             }
-            // Mesmo caminho do botão "Início rápido" do menu principal (MainMenuScreen.QuickStartButton_LeftClick).
+            // Same path as the main menu's "Quick start" button (MainMenuScreen.QuickStartButton_LeftClick).
             runtime.Runtime.FiniteStateMachine.PostStateChange(typeof(Amplitude.Mercury.Runtime.RuntimeState_Staging), new Amplitude.Mercury.Runtime.RuntimeStateQuickStartParameter());
             return $"começando partida nova: {players} jogadores{(size != null ? ", mapa " + size : string.Empty)} (antes: {savedSlotCount ?? "?"} jogadores, {savedWorldSize ?? "?"}; use 'jogo novo restaurar' depois)";
         }
@@ -1429,7 +1429,7 @@ namespace CurrencyMod
                 && empire >= 0 && empire < Sandbox.NumberOfMajorEmpires;
         }
 
-        /// <summary>Reclamações e exigências de cada par de nações (lê a simulação na thread principal: só para testes).</summary>
+        /// <summary>Grievances and demands for each pair of nations (reads the simulation on the main thread: tests only).</summary>
         private static string Crises(string args)
         {
             if (SandboxManager.Sandbox == null)
@@ -1477,7 +1477,7 @@ namespace CurrencyMod
             return lines.Length > 0 ? lines.ToString().TrimEnd() : "nenhuma reclamação nem exigência";
         }
 
-        /// <summary>O jogador transforma reclamações em exigências (testes das respostas da IA de linguagem).</summary>
+        /// <summary>The player turns grievances into demands (tests of the language-model AI's answers).</summary>
         private static string Demand(string args)
         {
             string[] parts = (args ?? string.Empty).Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
@@ -1517,7 +1517,7 @@ namespace CurrencyMod
             return sent.Count > 0 ? string.Join("; ", sent) : "nenhum código G válido";
         }
 
-        /// <summary>O jogador responde às exigências de uma nação, ou retira as suas (testes).</summary>
+        /// <summary>The player answers a nation's demands, or withdraws their own (tests).</summary>
         private static string AnswerDemands(string args)
         {
             string[] parts = (args ?? string.Empty).Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
@@ -1557,9 +1557,9 @@ namespace CurrencyMod
             {
                 return $"erro: o jogo não deixa passar o turno {turn} agora (decisão obrigatória pendente?)";
             }
-            // Mesmo pedido do botão de fim de turno (EndTurnWindow.TryEndTurn).
+            // Same request as the end-turn button (EndTurnWindow.TryEndTurn).
             SandboxManager.PostOrder(new OrderEmpireReady());
-            // Proposta esperando o jogador segura o fim do turno até ele responder.
+            // A proposal awaiting the player holds the end of turn until they answer.
             string pending = Proposals();
             return pending.Contains("você responde")
                 ? $"turno {turn} encerrado, mas o jogo vai esperar você responder:\n{pending}\n(use: jogo responder <E#> aceitar|ignorar)"

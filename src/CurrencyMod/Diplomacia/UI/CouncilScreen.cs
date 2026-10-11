@@ -19,13 +19,13 @@ using B = CurrencyMod.NativeUI.NativeBankWindow;
 namespace CurrencyMod.Diplomacia.UI
 {
     /// <summary>
-    /// Tela do conselho do jogador (design §10.6), na mesma moldura do Correio (clone da tela de Configurações, no
-    /// grupo das telas cheias da partida):
-    ///   esquerda: Reunião do turno, Ministros, Reuniões anteriores;
-    ///   centro: as falas (a Mão abre, cada ministro com título, pasta, credibilidade e apreço por você), as suas
-    ///           respostas e as reações; ou as fichas dos ministros, com o botão de demitir;
-    ///   direita: falar ao conselho.
-    /// O conteúdo vem de IaModule.World.PlayerCouncil; as chamadas à API ficam no PlayerCouncil.
+    /// The player's council screen (design §10.6), in the same frame as the Mail screen (clone of the Settings screen, in
+    /// the game's full-screen group):
+    ///   left: Meeting of the turn, Ministers, Previous meetings;
+    ///   center: the speeches (the Hand opens, each minister with title, portfolio, credibility and regard for you), your
+    ///           replies and the reactions; or the ministers' profiles, with the dismiss button;
+    ///   right: speak to the council.
+    /// The content comes from IaModule.World.PlayerCouncil; the API calls live in PlayerCouncil.
     /// </summary>
     internal class CouncilScreen : UIWindow
     {
@@ -40,8 +40,8 @@ namespace CurrencyMod.Diplomacia.UI
         private const float RightX = 1470f;
         private const float RightWidth = 420f;
         private const float RightHeight = 830f;
-        private const float ListWidth = 928f; // os cartões ficam 26 px dentro da lista e 34 px mais estreitos: alinham com a linha divisória
-        /// <summary>A lista termina acima da barra de controle (que fica por cima da tela cheia até x≈560).</summary>
+        private const float ListWidth = 928f; // the cards sit 26 px inside the list and 34 px narrower: they line up with the divider line
+        /// <summary>The list ends above the control bar (which sits over the full screen up to x≈560).</summary>
         private const float ListHeight = 756f;
         private const float SideListWidth = 398f;
         private const float SideListHeight = 720f;
@@ -87,7 +87,7 @@ namespace CurrencyMod.Diplomacia.UI
         private bool feedbackIsError;
         private string confirmFire;
         private float confirmUntil;
-        /// <summary>Falas suas e respostas já mostradas: quando muda, a lista rola até a sua última fala.</summary>
+        /// <summary>Your speeches and replies already shown: when this changes, the list scrolls to your last speech.</summary>
         private string shownExchanges;
         private Transform scrollTarget;
         private float scrollAt;
@@ -100,12 +100,12 @@ namespace CurrencyMod.Diplomacia.UI
             public Transform Body;
             public UIButton Button;
             public string Portfolio;
-            /// <summary>Cartão de pasta vaga (o botão abre os candidatos) ou de candidato (o botão nomeia).</summary>
+            /// <summary>Card of a vacant portfolio (the button opens the candidates) or of a candidate (the button appoints).</summary>
             public string Vacant;
             public string Candidate;
         }
 
-        // ---------------- Criação ----------------
+        // ---------------- Creation ----------------
 
         internal static CouncilScreen Create()
         {
@@ -145,7 +145,7 @@ namespace CurrencyMod.Diplomacia.UI
             group.AddDebugWindowImplementation(window);
             Destroy(stash);
             Instance = window;
-            Plugin.Log.LogInfo("Tela cheia do conselho criada.");
+            Plugin.Log.LogInfo("Council full screen created.");
             return window;
         }
 
@@ -244,7 +244,7 @@ namespace CurrencyMod.Diplomacia.UI
             }
             catch (Exception ex)
             {
-                Plugin.Log.LogError($"Conselho: falha ao montar o painel de falar: {ex}");
+                Plugin.Log.LogError($"Council: failed to build the speak panel: {ex}");
             }
             SelectSection(pendingSection >= 0 ? (Section)pendingSection : Section.Meeting);
             pendingSection = -1;
@@ -275,7 +275,7 @@ namespace CurrencyMod.Diplomacia.UI
             tooltip?.Bind(TooltipUtils.TitleAndDescription, new Amplitude.Mercury.UI.Tooltips.TitleAndDescription(title, description));
         }
 
-        // ---------------- Painel da direita: falar ----------------
+        // ---------------- Right panel: speak ----------------
 
         private void BuildSide()
         {
@@ -301,12 +301,12 @@ namespace CurrencyMod.Diplomacia.UI
                 field.actionOnFocus = UITextFieldFocusAction.PlaceCaretAtCursor;
                 field.multiline = true;
                 field.OnMultilineChanged(false, true);
-                // TextChange é ligado em Update (EnsureTextChange), depois que o campo carrega.
+                // TextChange is hooked in Update (EnsureTextChange), after the field loads.
                 NativeUIKit.Tip(fieldItem, L.T("Falar ao conselho"), L.F("Enter quebra a linha. Até {0} palavras. Cada fala sua custa uma chamada à API.", PlayerCouncil.MaxPlayerWords));
             }
             else
             {
-                Plugin.Log.LogWarning("Conselho: doador do campo de texto não encontrado.");
+                Plugin.Log.LogWarning("Council: text field donor not found.");
             }
 
             sendCard = sideTable.InstantiateChild(sideSample, "SendCard").transform;
@@ -330,7 +330,7 @@ namespace CurrencyMod.Diplomacia.UI
             }
             if (PlayerCouncil.Meeting(IaModule.World, IaModule.Instance?.CurrentTurn ?? -1) == null)
             {
-                // Conselho dispensado: o botão convoca a audiência (a fala escrita fica no campo para depois).
+                // Council dismissed: the button summons an audience (the written speech stays in the field for later).
                 string convened = PlayerCouncil.Convene();
                 SetFeedback(convened.Replace("ok: ", string.Empty).Replace("erro: ", string.Empty), convened.StartsWith("erro"));
                 return;
@@ -372,7 +372,7 @@ namespace CurrencyMod.Diplomacia.UI
 
             if (meeting == null)
             {
-                // Conselho dispensado neste turno: o cartão de envio vira o pedido de audiência.
+                // Council dismissed this turn: the send card becomes the audience request.
                 int next = Math.Max(turn, PlayerCouncil.NextAutoTurn(IaModule.World));
                 B.SetLabel(top, "TitleGroup/Title", L.T("O conselho está dispensado"));
                 B.SetChip(top, "StatsTable/Fortification", L.F("Sozinho no turno {0}", next));
@@ -419,7 +419,7 @@ namespace CurrencyMod.Diplomacia.UI
             B.Tip(sendTop, "StatsTable/PopCount", L.T("Tamanho"), L.F("Falas acima de {0} palavras são cortadas.", PlayerCouncil.MaxPlayerWords));
             B.Tip(sendButton.transform, string.Empty, L.T("Falar"), L.T("Manda a sua fala ao conselho. As reações aparecem na reunião, logo abaixo da sua fala."));
 
-            // Situação da reunião (e convocar de novo, se a chamada falhou).
+            // Meeting status (and summon again, if the call failed).
             bool failed = meeting != null && (meeting.Status == "erro" || meeting.Exchanges.Any(e => e.Status == "erro"));
             B.SetVisible(stateCard, meeting != null);
             if (meeting != null)
@@ -447,7 +447,7 @@ namespace CurrencyMod.Diplomacia.UI
             }
         }
 
-        // ---------------- Abertura e seções ----------------
+        // ---------------- Opening and sections ----------------
 
         internal static void SetOpen(bool open)
         {
@@ -512,7 +512,7 @@ namespace CurrencyMod.Diplomacia.UI
             NativeUIKit.FixLayoutAfterPaste(field);
             if (wasShown && !Shown)
             {
-                NativeUIKit.ReleaseTextFocus(); // o jogo escondeu a tela sem passar por SetOpen
+                NativeUIKit.ReleaseTextFocus(); // the game hid the screen without going through SetOpen
             }
             wasShown = Shown;
             if (pendingOpen && LoadingState == Amplitude.UI.Windows.LoadingState.Loaded)
@@ -540,12 +540,12 @@ namespace CurrencyMod.Diplomacia.UI
             }
             catch (Exception ex)
             {
-                Plugin.Log.LogError($"Conselho: {ex}");
+                Plugin.Log.LogError($"Council: {ex}");
                 nextRefresh = Time.unscaledTime + 5f;
             }
         }
 
-        /// <summary>Rola a lista até o cartão ficar no topo (o UIScrollView.ScrollTo só garante que ele apareça).</summary>
+        /// <summary>Scrolls the list until the card is at the top (UIScrollView.ScrollTo only guarantees it is visible).</summary>
         private void ScrollToTop(Transform card)
         {
             try
@@ -563,11 +563,11 @@ namespace CurrencyMod.Diplomacia.UI
             }
             catch (Exception ex)
             {
-                Plugin.Log.LogWarning($"Conselho: rolar a lista: {ex.Message}");
+                Plugin.Log.LogWarning($"Council: scrolling the list: {ex.Message}");
             }
         }
 
-        // ---------------- Conteúdo ----------------
+        // ---------------- Content ----------------
 
         private void RefreshContent()
         {
@@ -587,7 +587,7 @@ namespace CurrencyMod.Diplomacia.UI
             CapturedEmpire empire = capture.Empire(me);
             int era = empire?.EraIndex ?? 0;
             CouncilMeeting meeting = PlayerCouncil.Meeting(world, turn);
-            // Sem reunião neste turno, a seção mostra a última (o conselho se reúne a cada N turnos ou por audiência).
+            // With no meeting this turn, the section shows the last one (the council meets every N turns or by audience).
             CouncilMeeting shown = meeting ?? PlayerCouncil.LastMeeting(world);
             if (meeting != null && meeting.Status == "pronta" && currentSection == Section.Meeting && !meeting.Seen)
             {
@@ -648,7 +648,7 @@ namespace CurrencyMod.Diplomacia.UI
                 FillNotice(rows[0], meeting == null || meeting.Status == "pensando" ? L.T("O conselho está se reunindo…") : L.T("A reunião falhou"), chip, text);
                 return;
             }
-            // Primeira linha: o resumo (o conselho de cada ministro numa linha, montado da própria resposta, sem chamada extra).
+            // First row: the summary (each minister's advice on one line, built from the response itself, no extra call).
             List<CouncilSpeech> advised = meeting.Speeches.Where(s => s.Portfolio != "mao" && !string.IsNullOrWhiteSpace(s.Advice ?? s.Text)).ToList();
             int summary = advised.Count > 0 ? 1 : 0;
             int count = summary + meeting.Speeches.Count + meeting.Exchanges.Sum(e => 1 + e.Replies.Count + (e.Status == "pronta" ? 0 : 1)) + (meeting.Notes.Count > 0 ? 1 : 0);
@@ -668,7 +668,7 @@ namespace CurrencyMod.Diplomacia.UI
             string exchangesKey = $"{meeting.Turn}:{meeting.Exchanges.Count}:{meeting.Exchanges.Count(e => e.Status == "pronta")}";
             if (shownExchanges != null && exchangesKey != shownExchanges && meeting.Exchanges.Count > 0)
             {
-                // Fala nova ou resposta nova: a sua última fala sobe para o topo da lista (com as reações logo abaixo).
+                // New speech or new reply: your last speech goes to the top of the list (with the reactions right below).
                 int last = summary + meeting.Speeches.Count + meeting.Exchanges.Take(meeting.Exchanges.Count - 1).Sum(e => 1 + e.Replies.Count + (e.Status == "pronta" ? 0 : 1));
                 scrollTarget = rows[last].Card;
                 scrollAt = Time.unscaledTime + 0.3f;
@@ -728,7 +728,7 @@ namespace CurrencyMod.Diplomacia.UI
             Texture2D speakerPortrait = minister != null ? Portraits.Get(minister.Portfolio, era, minister.Gender) : null;
             SetPortrait(row, speakerPortrait);
             if (speakerPortrait != null) B.HideOutputs(top, PortraitCardHeight); else B.HideOutputs(top);
-            B.Tip(top, "StatsTable/PopCount", PortfolioName(speech.Portfolio), minister != null ? MailScreen.Escape(TraitsUi(minister)) + (string.IsNullOrWhiteSpace(minister.Voice) ? string.Empty : "\n" + MailScreen.Escape(L.T(minister.Voice))) : string.Empty); // voz: do banco padrão, marcado com L.N
+            B.Tip(top, "StatsTable/PopCount", PortfolioName(speech.Portfolio), minister != null ? MailScreen.Escape(TraitsUi(minister)) + (string.IsNullOrWhiteSpace(minister.Voice) ? string.Empty : "\n" + MailScreen.Escape(L.T(minister.Voice))) : string.Empty); // voice: from the default bank, marked with L.N
             string body = MailScreen.Escape(speech.Text);
             if (!string.IsNullOrWhiteSpace(speech.Advice))
             {
@@ -756,7 +756,7 @@ namespace CurrencyMod.Diplomacia.UI
             MailScreen.SetBody(row.Body, $"<i>{MailScreen.Escape(exchange.PlayerText)}</i>");
         }
 
-        /// <summary>Resumo da reunião: uma linha por ministro, com a pasta e o conselho dele.</summary>
+        /// <summary>Meeting summary: one line per minister, with their portfolio and advice.</summary>
         private void FillSummary(Row row, List<CouncilSpeech> advised, IaNation nation, int era)
         {
             var lines = new List<string>();
@@ -843,7 +843,7 @@ namespace CurrencyMod.Diplomacia.UI
                 B.SetChip(top, "StatsTable/Fortification", L.F("Credibilidade {0}", minister.Credibility));
                 B.SetVisible(top.Find("StatsTable/ExtensionsCount"), true);
                 B.SetChip(top, "StatsTable/ExtensionsCount", AffectionChip(minister.Affection));
-                // Veterano: o tempo no cargo rende na área da pasta (a Mão não tem).
+                // Veteran: time in office pays off in the portfolio's area (the Hand has none).
                 int veteran = CouncilEngine.VeteranBonus(minister, turn);
                 string veteranChip = B.ExtraChip(top, 3);
                 B.SetVisible(top.Find(veteranChip), minister.Portfolio != "mao");
@@ -871,7 +871,7 @@ namespace CurrencyMod.Diplomacia.UI
                 };
                 if (!string.IsNullOrWhiteSpace(minister.Voice))
                 {
-                    lines.Add(L.F("Voz: {0}", MailScreen.Escape(L.T(minister.Voice)))); // voz: do banco padrão, marcado com L.N
+                    lines.Add(L.F("Voz: {0}", MailScreen.Escape(L.T(minister.Voice)))); // voice: from the default bank, marked with L.N
                 }
                 lines.Add(L.F("Lealdade {0} · ambição {1} · no cargo desde o turno {2}", minister.Loyalty, minister.Ambition, minister.Since));
                 var likes = minister.Sympathies.Where(p => p.Value > 0).Select(p => capture.Empire(p.Key)?.Culture ?? "E" + p.Key).ToList();
@@ -914,7 +914,7 @@ namespace CurrencyMod.Diplomacia.UI
                 B.SetChip(top, "StatsTable/PopCount", L.F("{0} fala(s)", meeting.Speeches.Count - 1));
                 B.SetVisible(top.Find("StatsTable/Fortification"), true);
                 B.SetChip(top, "StatsTable/Fortification", L.F("{0} resposta(s) sua(s)", meeting.Exchanges.Count));
-                // As linhas são reaproveitadas entre as seções: sem trocar o tooltip, ficava o da fala anterior.
+                // Rows are reused across sections: without swapping the tooltip, the previous speech's one stayed.
                 B.Tip(top, "StatsTable/PopCount", L.T("Falas"), L.T("Quantos ministros falaram nessa reunião, fora a Mão."));
                 B.Tip(top, "StatsTable/Fortification", L.T("Suas respostas"), L.T("Quantas vezes você respondeu ao conselho nessa reunião."));
                 B.HideChild(top, "StatsTable/ExtensionsCount");
@@ -941,10 +941,10 @@ namespace CurrencyMod.Diplomacia.UI
 
         private static string PortfolioName(string portfolio)
         {
-            return portfolio == "mao" ? L.T("A Mão") : CouncilBank.PortfolioNames.TryGetValue(portfolio ?? string.Empty, out string name) ? L.T(name) : portfolio; // nomes marcados com L.N no CouncilBank
+            return portfolio == "mao" ? L.T("A Mão") : CouncilBank.PortfolioNames.TryGetValue(portfolio ?? string.Empty, out string name) ? L.T(name) : portfolio; // names marked with L.N in CouncilBank
         }
 
-        /// <summary>Traços do ministro para a tela (os do banco padrão estão marcados com L.N).</summary>
+        /// <summary>Minister's traits for the screen (those from the default bank are marked with L.N).</summary>
         private static string TraitsUi(Minister minister)
         {
             return string.Join(", ", minister.Traits.Select(t => CouncilBank.TraitUi(t)));
@@ -980,20 +980,20 @@ namespace CurrencyMod.Diplomacia.UI
             B.SetVisible(cardSample, false);
         }
 
-        /// <summary>Pasta vaga aberta na lista (mostra os 3 candidatos logo abaixo).</summary>
+        /// <summary>Vacant portfolio open in the list (shows the 3 candidates right below).</summary>
         private string expandedSeat;
 
-        // ---------------- Retratos ----------------
+        // ---------------- Portraits ----------------
 
         private const float PortraitSize = 104f;
         private const float PortraitMargin = 10f;
         private static readonly Dictionary<Texture2D, Amplitude.Framework.Guid> portraitGuids = new Dictionary<Texture2D, Amplitude.Framework.Guid>();
-        /// <summary>Âncora esquerda original do título e dos chips de cada cartão (para tirar o retrato sem estragar o layout).</summary>
+        /// <summary>Original left anchor of each card's title and chips (to remove the portrait without breaking the layout).</summary>
         private readonly Dictionary<UITransform, UIBorderAnchor> originalLeft = new Dictionary<UITransform, UIBorderAnchor>();
 
         /// <summary>
-        /// Retrato à esquerda do topo do cartão (ou nenhum, com null): o título e os chips andam para a direita e o topo cresce
-        /// para caber a imagem. A imagem é um clone do ícone do chip com material comum e a textura do retrato.
+        /// Portrait on the left of the card's top (or none, with null): the title and chips move right and the top grows
+        /// to fit the image. The image is a clone of the chip icon with a plain material and the portrait texture.
         /// </summary>
         private void SetPortrait(Row row, Texture2D texture)
         {
@@ -1010,7 +1010,7 @@ namespace CurrencyMod.Diplomacia.UI
                 UITransform clone = top.GetComponent<UITransform>().InstantiateChild(picto, "Portrait");
                 image = clone.transform;
                 UIImage ui = image.GetComponent<UIImage>();
-                ui.Material = new UIMaterialId("Default"); // o ícone usa campo de distância; aqui é imagem comum
+                ui.Material = new UIMaterialId("Default"); // the icon uses a distance field; here it is a plain image
                 ui.Color = Color.white;
                 NativeUIKit.Place(image, PortraitMargin, PortraitMargin, PortraitSize, PortraitSize);
             }
@@ -1047,10 +1047,10 @@ namespace CurrencyMod.Diplomacia.UI
             image.Texture = new UITexture(guid, UITextureFlags.AlphaStraight, UITextureColorFormat.Srgb, texture);
         }
 
-        /// <summary>Altura do topo de um cartão com retrato.</summary>
+        /// <summary>Height of the top of a card with a portrait.</summary>
         private const float PortraitCardHeight = PortraitSize + PortraitMargin * 2;
 
-        /// <summary>Onde o bônus de veterano de cada pasta rende (melhorias-jogando item 3).</summary>
+        /// <summary>Where each portfolio's veteran bonus pays off (melhorias-jogando item 3).</summary>
         internal static string VeteranArea(string portfolio)
         {
             switch (portfolio)
@@ -1152,7 +1152,7 @@ namespace CurrencyMod.Diplomacia.UI
                 return;
             }
             confirmFire = null;
-            // O resultado do Fire (em português) também vai para a IA; a tela monta a própria frase, traduzida.
+            // Fire's result (in Portuguese) also goes to the AI; the screen builds its own sentence, translated.
             IaModule module = IaModule.Instance;
             IaNation nation = module != null && module.PlayerIndex >= 0 ? IaModule.World?.Ensure(module.PlayerIndex) : null;
             Minister old = nation?.Council.FirstOrDefault(m => m.Portfolio == portfolio);
@@ -1168,9 +1168,9 @@ namespace CurrencyMod.Diplomacia.UI
             SetFeedback(result.Replace("ok: ", string.Empty).Replace("erro: ", string.Empty), !result.StartsWith("ok"));
         }
 
-        // ---------------- Desenvolvimento e remoção ----------------
+        // ---------------- Development and removal ----------------
 
-        /// <summary>Comandos: "abrir", "fechar", "secao 0..2".</summary>
+        /// <summary>Commands: "abrir", "fechar", "secao 0..2".</summary>
         internal static string DevCommand(string args)
         {
             string[] parts = (args ?? string.Empty).Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
@@ -1197,7 +1197,7 @@ namespace CurrencyMod.Diplomacia.UI
             }
         }
 
-        /// <summary>Remoção segura (recarga do núcleo, saída da partida): igual à do correio.</summary>
+        /// <summary>Safe removal (core reload, leaving the game): same as the mail screen's.</summary>
         internal static void DestroyWindow()
         {
             CouncilScreen window = Instance;
@@ -1225,7 +1225,7 @@ namespace CurrencyMod.Diplomacia.UI
             }
             catch (Exception ex)
             {
-                Plugin.Log.LogWarning($"Remoção da tela do conselho: {ex.Message}");
+                Plugin.Log.LogWarning($"Council screen removal: {ex.Message}");
             }
             window.gameObject.SetActive(false);
             Destroy(window.gameObject);

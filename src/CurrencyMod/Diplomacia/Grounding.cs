@@ -6,13 +6,13 @@ using System.Text;
 namespace CurrencyMod.Diplomacia
 {
     /// <summary>
-    /// Confere se uma carta fala só do que existe no jogo (design §9.1) e se não repete a carta anterior (§9, regras
-    /// anti-laço). Roda na thread de trabalho, só com o ValidationContext.
+    /// Checks that a letter only talks about what exists in the game (design §9.1) and does not repeat the previous
+    /// letter (§9, anti-loop rules). Runs on the worker thread, using only the ValidationContext.
     /// </summary>
     internal static class Grounding
     {
-        /// <summary>Palavras que aparecem com maiúscula no meio da frase sem ser nome inventado: títulos, lugares do
-        /// céu e da terra, instituições. Comparação em minúsculas.</summary>
+        /// <summary>Words that appear capitalized mid-sentence without being invented names: titles, places in the
+        /// heavens and on earth, institutions. Compared in lowercase.</summary>
         private static readonly HashSet<string> CommonCapitalized = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
         {
             "rei", "reis", "rainha", "rainhas", "senhor", "senhora", "senhores", "senhoras", "sua", "suas", "seu", "seus",
@@ -24,7 +24,7 @@ namespace CurrencyMod.Diplomacia
             "ocidente", "fé", "templo", "igreja", "senado", "república", "assembleia", "congresso", "humanidade",
             "autocrata", "chefe", "cacique", "faraó", "sultão", "califa", "xá", "cã", "khan", "imperial", "real",
             "todos", "todas", "neolítica", "antiga", "clássica", "medieval", "moderna", "industrial", "contemporânea",
-            // Cartas em inglês ([IA] IdiomaDasCartas).
+            // Letters in English ([IA] IdiomaDasCartas).
             "your", "my", "our", "his", "her", "their", "you", "we", "the", "majesty", "majesties", "highness",
             "excellency", "lord", "lords", "lady", "ladies", "sir", "king", "kings", "queen", "queens", "emperor",
             "empress", "princess", "council", "court", "throne", "crown", "empire", "empires", "kingdom", "kingdoms",
@@ -35,13 +35,13 @@ namespace CurrencyMod.Diplomacia
             "age", "dear", "yours", "sincerely", "regards", "greetings", "respectfully", "january", "february", "march",
             "april", "may", "june", "july", "august", "september", "october", "november", "december", "monday",
             "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday",
-            // Espanhol.
+            // Spanish.
             "su", "sus", "vuestra", "vuestro", "vuestras", "vuestros", "majestad", "excelencia", "señor", "señora",
             "señores", "rey", "reyes", "reina", "emperador", "emperatriz", "consejo", "imperio", "imperios", "naciones",
             "pueblo", "pueblos", "dios", "dioses", "diosa", "cielo", "cielos", "tierra", "océano", "sur", "este",
             "fe", "iglesia", "asamblea", "congreso", "humanidad", "jefe", "faraón", "sultán", "antigua", "clásica",
             "contemporánea", "atentamente", "saludos", "estimado", "estimada", "querido", "querida",
-            // Francês.
+            // French.
             "votre", "vos", "notre", "nos", "sa", "son", "ses", "majesté", "altesse", "seigneur", "sire", "monsieur",
             "madame", "roi", "rois", "reine", "empereur", "impératrice", "conseil", "cour", "trône", "couronne",
             "royaume", "royaumes", "peuple", "dieu", "dieux", "déesse", "ciel", "soleil", "lune", "mer", "océan",
@@ -50,7 +50,7 @@ namespace CurrencyMod.Diplomacia
             "contemporaine", "cordialement", "salutations", "cher", "chère",
         };
 
-        /// <summary>Deuses e figuras de fé: o tom da cultura pode citá-los (design §9.1, sabor permitido).</summary>
+        /// <summary>Gods and faith figures: the culture's tone may cite them (design §9.1, allowed flavor).</summary>
         private static readonly HashSet<string> Faith = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
         {
             "zeus", "júpiter", "jupiter", "atena", "athena", "ares", "apolo", "hera", "poseidon", "netuno", "marte",
@@ -62,16 +62,16 @@ namespace CurrencyMod.Diplomacia
             "assur", "nabu", "teshub", "amaterasu", "perun", "svarog", "dagda", "lugh", "brigid", "anahita", "sol",
         };
 
-        /// <summary>Coisas que o jogo não tem e que as IAs já inventaram (turnos 80–95): mercadorias e mecanismos. Um
-        /// recurso de verdade com o mesmo nome no mapa (ex.: "Seda") vale, porque entra no vocabulário conhecido.</summary>
+        /// <summary>Things the game does not have and that the AIs have already invented (turns 80–95): goods and
+        /// mechanics. A real resource with the same name on the map (e.g. "Seda") is fine, since it enters the known vocabulary.</summary>
         private static readonly HashSet<string> NotInGame = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
         {
             "pano", "panos", "tecido", "tecidos", "prisioneiro", "prisioneiros", "recibo", "recibos", "carreta", "carretas",
             "sal", "milho", "trigo", "cevada", "arroz", "vinho", "azeite", "seda", "especiarias", "lã",
-            // Os mesmos em inglês, espanhol, francês e alemão ([IA] IdiomaDasCartas).
+            // The same in English, Spanish, French and German ([IA] IdiomaDasCartas).
             "cloth", "cloths", "fabric", "fabrics", "prisoner", "prisoners", "receipt", "receipts", "cart", "carts",
             "salt", "corn", "maize", "wheat", "barley", "rice", "wine", "silk", "spices", "wool",
-            // Sem palavras que também são português comum ("aceite", "tela", "mais", "reis").
+            // Excluding words that are also common Portuguese ("aceite", "tela", "mais", "reis").
             "paño", "paños", "prisionero", "prisioneros", "maíz", "vino", "especias",
             "tissu", "tissus", "étoffe", "étoffes", "prisonnier", "prisonniers", "reçu", "reçus", "charrette",
             "charrettes", "sel", "maïs", "blé", "orge", "riz", "vin", "soie", "épices", "laine",
@@ -79,7 +79,7 @@ namespace CurrencyMod.Diplomacia
             "weizen", "gerste", "wein", "seide", "gewürze", "wolle",
         };
 
-        /// <summary>Códigos do dossiê (E3, C14, A7, T31): nas cartas vão os nomes.</summary>
+        /// <summary>Dossier codes (E3, C14, A7, T31): letters must use the names instead.</summary>
         private static readonly System.Text.RegularExpressions.Regex Codes =
             new System.Text.RegularExpressions.Regex(@"\b[ECATG]\d{1,4}\b", System.Text.RegularExpressions.RegexOptions.Compiled);
 
@@ -87,7 +87,7 @@ namespace CurrencyMod.Diplomacia
             ? new List<string>()
             : Codes.Matches(text).Cast<System.Text.RegularExpressions.Match>().Select(m => m.Value).Distinct().ToList();
 
-        /// <summary>Palavras de um nome, em minúsculas ("Os Chou" → "os", "chou").</summary>
+        /// <summary>Words of a name, lowercased ("Os Chou" → "os", "chou").</summary>
         internal static IEnumerable<string> Words(string name)
         {
             if (string.IsNullOrWhiteSpace(name))
@@ -113,13 +113,13 @@ namespace CurrencyMod.Diplomacia
             }
         }
 
-        /// <summary>Junta as palavras de um nome real ao vocabulário permitido.</summary>
+        /// <summary>Adds the words of a real name to the allowed vocabulary.</summary>
         internal static void AddKnown(HashSet<string> known, string name)
         {
             foreach (string word in Words(name))
             {
                 known.Add(word);
-                // "lcaresia" (L minúsculo) e "Icaresia" (i maiúsculo) são a mesma coisa na tela.
+                // "lcaresia" (lowercase L) and "Icaresia" (uppercase i) look the same on screen.
                 if (word.StartsWith("l"))
                 {
                     known.Add("i" + word.Substring(1));
@@ -127,11 +127,11 @@ namespace CurrencyMod.Diplomacia
             }
         }
 
-        /// <summary>Nomes próprios da carta que não estão no jogo nem no dossiê ("Marco Túlio").</summary>
+        /// <summary>Proper names in the letter that are neither in the game nor in the dossier ("Marco Túlio").</summary>
         internal static List<string> UnknownNames(string text, HashSet<string> known)
         {
             var unknown = new List<string>();
-            // Em alemão todo substantivo tem maiúscula: a regra de nome próprio não funciona e fica desligada.
+            // In German every noun is capitalized: the proper-name rule does not work and stays off.
             if (string.IsNullOrWhiteSpace(text) || IaConfig.WritingCode == "de")
             {
                 return unknown;
@@ -155,7 +155,7 @@ namespace CurrencyMod.Diplomacia
             {
                 if (!char.IsLetter(text[i]))
                 {
-                    // Pontuação entre palavras quebra a sequência de um nome composto.
+                    // Punctuation between words breaks a compound name sequence.
                     if (!char.IsWhiteSpace(text[i]))
                     {
                         Flush();
@@ -184,22 +184,22 @@ namespace CurrencyMod.Diplomacia
         {
             if (token.Length < 3 || !char.IsUpper(token[0]) || token.All(c => !char.IsLetter(c) || char.IsUpper(c)))
             {
-                return false; // minúscula, curta demais ou TODA EM MAIÚSCULAS (ênfase)
+                return false; // lowercase, too short or ALL CAPS (emphasis)
             }
             if (SentenceStart(text, start))
             {
-                return false; // primeira palavra da frase: não dá para saber se é nome
+                return false; // first word of the sentence: no way to tell whether it is a name
             }
             string lower = token.ToLowerInvariant();
             if (known.Contains(lower) || CommonCapitalized.Contains(lower) || Faith.Contains(lower) || Variants(lower).Any(known.Contains))
             {
                 return false;
             }
-            // Nome composto com hífen ("Amon-Rá"): basta cada parte ser conhecida.
+            // Hyphenated compound name ("Amon-Rá"): each part being known is enough.
             return !(lower.Contains('-') && lower.Split('-').All(p => p.Length == 0 || known.Contains(p) || Faith.Contains(p) || CommonCapitalized.Contains(p)));
         }
 
-        /// <summary>Singular, plural e feminino de um nome real ("Godo" vale por "Godos", "Bizantina" por "Bizantinos").</summary>
+        /// <summary>Singular, plural and feminine of a real name ("Godo" counts for "Godos", "Bizantina" for "Bizantinos").</summary>
         private static IEnumerable<string> Variants(string word)
         {
             yield return word + "s";
@@ -234,8 +234,8 @@ namespace CurrencyMod.Diplomacia
                 }
                 if (c == ',')
                 {
-                    // Saudação de carta: "Agamenão, rei dos Romanos, Finalmente..." — o corpo começa com maiúscula
-                    // depois da vírgula, ainda na primeira frase.
+                    // Letter greeting: "Agamenão, rei dos Romanos, Finalmente..." — the body starts capitalized
+                    // after the comma, still within the first sentence.
                     return text.IndexOfAny(SentenceEnds, 0, j) < 0;
                 }
                 return c == '.' || c == '!' || c == '?' || c == ':' || c == ';' || c == '\n' || c == '\r' || c == '"' || c == '“'
@@ -246,13 +246,13 @@ namespace CurrencyMod.Diplomacia
 
         private static readonly char[] SentenceEnds = { '.', '!', '?', '\n', '\r' };
 
-        /// <summary>Mercadorias e mecanismos que o jogo não tem, citados na carta.</summary>
+        /// <summary>Goods and mechanics the game does not have, mentioned in the letter.</summary>
         internal static List<string> NotInGameWords(string text, HashSet<string> known)
         {
             return Words(text).Where(w => NotInGame.Contains(w) && !known.Contains(w)).Distinct().ToList();
         }
 
-        /// <summary>Verbos de oferta e possessivos de quem escreve, nos 5 idiomas das cartas: "ofereço cobre", "meu cobre".</summary>
+        /// <summary>Offer verbs and the writer's possessives, in the 5 letter languages: "ofereço cobre", "meu cobre".</summary>
         private static readonly HashSet<string> OfferWords = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
         {
             "ofereço", "ofereco", "oferto", "dou", "darei", "envio", "enviarei", "mando", "mandarei", "vendo", "venderei", "entrego",
@@ -263,7 +263,7 @@ namespace CurrencyMod.Diplomacia
             "biete", "gebe", "schicke", "sende", "verkaufe", "liefere", "öffne", "mein", "meine", "meinen", "unser", "unsere",
         };
 
-        /// <summary>Possessivos do outro: "teu cobre" é pedir, não oferecer.</summary>
+        /// <summary>The other party's possessives: "teu cobre" is asking, not offering.</summary>
         private static readonly HashSet<string> TheirWords = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
         {
             "teu", "tua", "teus", "tuas", "vosso", "vossa", "vossos", "vossas", "seu", "sua", "seus", "suas",
@@ -272,8 +272,8 @@ namespace CurrencyMod.Diplomacia
         };
 
         /// <summary>
-        /// Recursos que a carta oferece ou diz ter sem ter: palavra de recurso do mapa até 6 palavras depois de um verbo de
-        /// oferta ou de "meu/nosso", sem "teu/vosso" no meio, e que não está entre os recursos de quem escreve.
+        /// Resources the letter offers or claims to have without having them: a map resource word up to 6 words after an
+        /// offer verb or "meu/nosso", with no "teu/vosso" in between, and not among the writer's resources.
         /// </summary>
         internal static List<string> OfferedNotOwned(string text, HashSet<string> ownResources, HashSet<string> allResources)
         {
@@ -304,13 +304,13 @@ namespace CurrencyMod.Diplomacia
             return found.Distinct().ToList();
         }
 
-        /// <summary>Palavras que identificam um recurso pelo nome ("Cobre" → "cobre"; nomes compostos: cada palavra de 4+ letras).
-        /// "Ouro" fica de fora: nas cartas quase sempre quer dizer dinheiro ("meu ouro e minha palavra são teus").</summary>
+        /// <summary>Words that identify a resource by name ("Cobre" → "cobre"; compound names: each word of 4+ letters).
+        /// "Ouro" is left out: in letters it almost always means money ("meu ouro e minha palavra são teus").</summary>
         internal static IEnumerable<string> ResourceWords(string name) => Words(name).Where(w => w.Length >= 4 && !MoneyLikeWords.Contains(w));
 
         private static readonly HashSet<string> MoneyLikeWords = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "ouro", "gold" };
 
-        /// <summary>Semelhança entre duas cartas (0 a 1): palavras de 4+ letras em comum sobre o total.</summary>
+        /// <summary>Similarity between two letters (0 to 1): shared words of 4+ letters over the total.</summary>
         internal static double Similarity(string a, string b)
         {
             var left = new HashSet<string>(Words(a).Where(w => w.Length >= 4));

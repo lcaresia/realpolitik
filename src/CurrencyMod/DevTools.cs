@@ -13,19 +13,19 @@ using UnityEngine;
 namespace CurrencyMod
 {
     /// <summary>
-    /// Ferramentas de desenvolvimento acionadas por _Modding\dev\cmd.txt (lido pelo Loader).
-    /// Resultados vão para _Modding\dev\out\result.txt; dumps e prints ficam em _Modding\dev\out\.
+    /// Development tools triggered by _Modding\dev\cmd.txt (read by the Loader).
+    /// Results go to _Modding\dev\out\result.txt; dumps and screenshots go to _Modding\dev\out\.
     ///
-    /// Comandos:
-    ///   screenshot [nome]          captura a tela do jogo
-    ///   find &lt;texto&gt;              acha rótulos cujo texto visível contém o texto
-    ///   tree [visible|all] [raiz]  árvore de UITransforms (opcionalmente só sob uma raiz)
-    ///   inspect &lt;caminho&gt; [prof]  dump detalhado (componentes, estilos, campos serializados)
-    ///   windows                    lista janelas (UIWindow) e se estão visíveis
-    ///   styles [filtro]            lista nomes de estilos da UI
-    ///   bank open|close|tab &lt;n&gt;   controla o Banco Central
-    ///   ia &lt;comando&gt;              diplomacia com IA (ver Diplomacia\IaCommands.cs)
-    ///   jogo &lt;comando&gt;            carregar/salvar partida e passar o turno (ver GameCommands.cs)
+    /// Commands:
+    ///   screenshot [name]          captures the game screen
+    ///   find &lt;text&gt;               finds labels whose visible text contains the text
+    ///   tree [visible|all] [root]  tree of UITransforms (optionally only under a root)
+    ///   inspect &lt;path&gt; [depth]   detailed dump (components, styles, serialized fields)
+    ///   windows                    lists windows (UIWindow) and whether they are visible
+    ///   styles [filter]            lists UI style names
+    ///   bank open|close|tab &lt;n&gt;   controls the Central Bank
+    ///   ia &lt;command&gt;              AI diplomacy (see Diplomacia\IaCommands.cs)
+    ///   jogo &lt;command&gt;            load/save game and end the turn (see GameCommands.cs)
     /// </summary>
     internal class DevTools : MonoBehaviour
     {
@@ -34,7 +34,7 @@ namespace CurrencyMod
 
         private static string OutDir => Path.GetDirectoryName(ResultPath);
 
-        /// <summary>A pasta _Modding\dev (arquivos de entrada dos testes).</summary>
+        /// <summary>The _Modding\dev folder (test input files).</summary>
         internal static string DevDir => Path.GetDirectoryName(OutDir);
 
         private void Awake()
@@ -71,15 +71,15 @@ namespace CurrencyMod
                         }
                         else
                         {
-                            // Sem componente ativo: a Unity grava o arquivo no fim do frame.
+                            // No active component: Unity writes the file at the end of the frame.
                             string file = Path.Combine(OutDir, Sanitize(args.Length > 0 ? args : "shot") + ".png");
                             ScreenCapture.CaptureScreenshot(file);
                             Write(line, $"ok (assíncrono): {file}");
                         }
                         return;
                     case "rec":
-                        // rec <nome> <segundos> [fps]: grava quadros (jpg) em dev\out\rec_<nome>\ com o tempo do jogo travado
-                        // em fps constante (Time.captureFramerate): o resultado é um vídeo liso, mesmo que a captura seja lenta.
+                        // rec <name> <seconds> [fps]: records frames (jpg) into dev\out\rec_<name>\ with game time locked
+                        // to a constant fps (Time.captureFramerate): the result is a smooth video, even if capturing is slow.
                         {
                             string[] ra = args.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
                             if (instance == null || ra.Length < 2 || !float.TryParse(ra[1], System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out float secs))
@@ -169,8 +169,8 @@ namespace CurrencyMod
         }
 
         /// <summary>
-        /// "idioma": idioma em uso e tamanho da tabela; "idioma &lt;Auto|pt|en|es|fr|de&gt;": troca (grava no .cfg);
-        /// "idioma faltando": textos pedidos sem tradução, em dev\out\idioma_faltando_&lt;código&gt;.txt.
+        /// "idioma": language in use and table size; "idioma &lt;Auto|pt|en|es|fr|de&gt;": switches it (writes to the .cfg);
+        /// "idioma faltando": requested texts without translation, in dev\out\idioma_faltando_&lt;code&gt;.txt.
         /// </summary>
         private static string LanguageCommand(string args)
         {
@@ -193,8 +193,8 @@ namespace CurrencyMod
         private static Amplitude.UI.Interactables.UITooltip hoveredTooltip;
 
         /// <summary>
-        /// "hover &lt;caminho&gt;": abre o tooltip nativo de um elemento como se o mouse estivesse em cima (para capturas
-        /// sem mexer no mouse do jogador). "hover off" fecha.
+        /// "hover &lt;path&gt;": opens an element's native tooltip as if the mouse were over it (for screenshots without
+        /// moving the player's mouse). "hover off" closes it.
         /// </summary>
         private static string Hover(string path)
         {
@@ -210,8 +210,8 @@ namespace CurrencyMod
             }
             if (string.IsNullOrEmpty(path) || path == "off")
             {
-                // Também o balão do mouse de verdade (ex.: o cursor parado em cima da "Atitude" cobre a aba Crise):
-                // o jogo só abre outro quando o cursor entrar num elemento de novo.
+                // Also the real mouse tooltip (e.g. the cursor resting over "Attitude" covers the Crisis tab):
+                // the game only opens another one when the cursor enters an element again.
                 Amplitude.UI.Interactables.UITooltip current = manager.CurrentlyHoveredTooltip;
                 if (current != null)
                 {
@@ -231,9 +231,9 @@ namespace CurrencyMod
         }
 
         /// <summary>
-        /// "click &lt;caminho&gt;": o mesmo que um clique de mouse num toggle ou botão do jogo (dispara o evento dele pelo próprio
-        /// responder), sem mexer no mouse do jogador. Ex.: abrir a seção recolhida "Exigências deles" da aba Crise para um print.
-        /// Cuidado: num botão de ação (Exigir tudo, Aceitar…) a ação acontece de verdade.
+        /// "click &lt;path&gt;": the same as a mouse click on a game toggle or button (fires its event through its own
+        /// responder), without moving the player's mouse. E.g. opening the collapsed "Their demands" section of the Crisis
+        /// tab for a screenshot. Careful: on an action button (Demand all, Accept…) the action really happens.
         /// </summary>
         private static string Click(string path)
         {
@@ -257,12 +257,12 @@ namespace CurrencyMod
             return "sem UIToggle nem UIButton em " + PathOf(target);
         }
 
-        /// <summary>Resposta que chega depois (pedidos assíncronos ao jogo): entra no result.txt como uma resposta comum.</summary>
+        /// <summary>Response that arrives later (asynchronous requests to the game): goes into result.txt like a regular response.</summary>
         internal static void WriteResult(string command, string message) => Write(command, message);
 
         private static void Write(string command, string message)
         {
-            // Respostas longas vão para um arquivo próprio, o result.txt só aponta.
+            // Long responses go to their own file; result.txt only points to it.
             if (message.Length > 6000)
             {
                 string file = Path.Combine(OutDir, $"{DateTime.Now:HHmmss}_{Sanitize(command)}.txt");
@@ -283,7 +283,7 @@ namespace CurrencyMod
             return builder.ToString();
         }
 
-        // ---------------- Captura de tela ----------------
+        // ---------------- Screenshot ----------------
 
         private IEnumerator CaptureScreenshot(string command, string name)
         {
@@ -325,7 +325,7 @@ namespace CurrencyMod
             Write(command, $"ok: {total} quadros a {fps} fps em {dir}");
         }
 
-        // ---------------- Raio-x da interface ----------------
+        // ---------------- UI X-ray ----------------
 
         private static readonly MethodInfo LocalizeIfNecessary = AccessTools.Method(typeof(UILabel), "LocalizeIfNecessary");
 
@@ -354,7 +354,7 @@ namespace CurrencyMod
 
         internal static Transform FindByPath(string path)
         {
-            // Aceita o caminho completo ou um sufixo único ("Janela/Filho").
+            // Accepts the full path or a unique suffix ("Window/Child").
             List<Transform> matches = Resources.FindObjectsOfTypeAll<Transform>()
                 .Where(t => t.gameObject.scene.IsValid())
                 .Where(t => PathOf(t) == path || PathOf(t).EndsWith("/" + path))
@@ -454,8 +454,8 @@ namespace CurrencyMod
         }
 
         /// <summary>
-        /// "responders x y" (pixels, origem no canto superior esquerdo, como no screenshot): lista, na ordem em que o jogo
-        /// oferece o clique, os responders que contêm o ponto. Só leitura. Serve para achar quem rouba o clique de um campo.
+        /// "responders x y" (pixels, origin at the top-left corner, as in the screenshot): lists, in the order in which the
+        /// game offers the click, the responders that contain the point. Read-only. Useful to find who steals a field's click.
         /// </summary>
         private static string RespondersAt(string args)
         {
@@ -582,7 +582,7 @@ namespace CurrencyMod
                 }
             }
 
-            // Campos serializados (privados com [SerializeField] e públicos), apontando para onde levam.
+            // Serialized fields (private with [SerializeField] and public), pointing to where they lead.
             for (Type t = type; t != null && t != typeof(MonoBehaviour) && t != typeof(Component); t = t.BaseType)
             {
                 foreach (FieldInfo field in t.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.DeclaredOnly))
@@ -629,7 +629,7 @@ namespace CurrencyMod
                 case Array array:
                     return $"[{array.Length}] " + string.Join(", ", array.Cast<object>().Take(6).Select(FormatValue));
             }
-            // Structs do framework: mostra os campos públicos.
+            // Framework structs: show the public fields.
             Type type = value.GetType();
             if (type.IsValueType && !type.IsPrimitive && !type.IsEnum && type.Namespace != null && type.Namespace.StartsWith("Amplitude"))
             {
@@ -661,7 +661,7 @@ namespace CurrencyMod
             return text.Length <= max ? text : text.Substring(0, max) + "…";
         }
 
-        /// <summary>Salva em PNG a textura de um UIImage/UIRoundImage e mede os canais (para ícones SDF).</summary>
+        /// <summary>Saves the texture of a UIImage/UIRoundImage as PNG and measures the channels (for SDF icons).</summary>
         private static string DumpTexture(string path)
         {
             Transform target = FindByPath(path);
@@ -686,7 +686,7 @@ namespace CurrencyMod
             }
             builder.AppendLine($"textura={texture.name} {texture.width}x{texture.height} tipo={texture.GetType().Name} coords={coordinates} graphicsFormat={texture.graphicsFormat}");
 
-            // Copia a região do ícone (pode ser um atlas) para uma textura legível.
+            // Copies the icon's region (may be an atlas) into a readable texture.
             int width = Mathf.Max(1, Mathf.RoundToInt(coordinates.width * texture.width));
             int height = Mathf.Max(1, Mathf.RoundToInt(coordinates.height * texture.height));
             RenderTexture rt = RenderTexture.GetTemporary(width, height, 0, RenderTextureFormat.ARGB32, RenderTextureReadWrite.Linear);

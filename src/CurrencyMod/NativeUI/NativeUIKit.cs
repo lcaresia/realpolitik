@@ -8,12 +8,12 @@ using UnityEngine;
 
 namespace CurrencyMod.NativeUI
 {
-    /// <summary>Utilitários comuns para montar UI com peças clonadas do jogo.</summary>
+    /// <summary>Common helpers to build UI from pieces cloned from the game.</summary>
     internal static class NativeUIKit
     {
         /// <summary>
-        /// Clona uma peça (de qualquer janela) sob um pai inativo, remove scripts que tentariam se
-        /// ligar à janela original e coloca o clone no destino, visível.
+        /// Clones a piece (from any window) under an inactive parent, removes scripts that would try to
+        /// bind to the original window and places the clone at the destination, visible.
         /// </summary>
         public static Transform Clone(Transform donor, Transform parent, string name, params string[] stripTypes)
         {
@@ -45,7 +45,7 @@ namespace CurrencyMod.NativeUI
             }
         }
 
-        /// <summary>Solta todas as âncoras e posiciona pela borda superior esquerda, relativa ao pai.</summary>
+        /// <summary>Releases all anchors and positions by the top-left edge, relative to the parent.</summary>
         public static void Place(Transform target, float left, float top, float width, float height)
         {
             UITransform ui = target.GetComponent<UITransform>();
@@ -63,8 +63,8 @@ namespace CurrencyMod.NativeUI
         }
 
         /// <summary>
-        /// Barra de comparação clonada da diplomacia: o preenchimento (Mask/Value) vem na cor do estado de moral da tela de origem
-        /// (muda conforme a sessão: carmim, rosa...) e o separador fica no meio. Cor explícita e sem separador.
+        /// Comparison bar cloned from diplomacy: the fill (Mask/Value) comes in the morale-state color of the source screen
+        /// (it varies per session: crimson, pink...) and the separator sits in the middle. Explicit color and no separator.
         /// </summary>
         public static void StyleGauge(Transform valueGroup, Color fill)
         {
@@ -83,7 +83,7 @@ namespace CurrencyMod.NativeUI
             {
                 NativeBankWindow.SetVisible(separator, false);
             }
-            // A marca de variação (DeltaGroup) fica no meio da barra, com 6 px: é o "antes e depois" da moral na diplomacia.
+            // The variation mark (DeltaGroup) sits in the middle of the bar, 6 px wide: it is diplomacy's morale "before and after".
             Transform delta = valueGroup.parent != null ? valueGroup.parent.Find("DeltaGroup") : null;
             if (delta != null)
             {
@@ -94,8 +94,8 @@ namespace CurrencyMod.NativeUI
         private static readonly System.Collections.Generic.Dictionary<UITextField, object> hookedFields = new System.Collections.Generic.Dictionary<UITextField, object>();
 
         /// <summary>
-        /// O campo cria o responder (quem dispara TextChange) ao carregar, depois de clonado: a assinatura feita antes se perde.
-        /// Chame a cada quadro; religa o evento sempre que o responder muda.
+        /// The field creates its responder (what fires TextChange) on load, after being cloned: a subscription made earlier is lost.
+        /// Call every frame; it rebinds the event whenever the responder changes.
         /// </summary>
         public static void EnsureTextChange(UITextField field, System.Action<IUITextField, string> handler)
         {
@@ -117,10 +117,10 @@ namespace CurrencyMod.NativeUI
         private static readonly Dictionary<UITextField, int> fieldRelayouts = new Dictionary<UITextField, int>();
 
         /// <summary>
-        /// Colar um texto grande deixava o campo "vazio": o UITextField posiciona o texto pela posição do cursor
-        /// (GetCharPosition) logo depois de trocar o texto do rótulo, antes de o rótulo refazer as linhas. Com a posição
-        /// velha, o texto é empurrado para fora da máscara. Chame a cada quadro: quando o texto mudou mais de um
-        /// caractere de uma vez (colar), reposiciona com o rótulo já montado.
+        /// Pasting a large text left the field "empty": UITextField positions the text by the cursor position
+        /// (GetCharPosition) right after changing the label text, before the label re-lays out its lines. With the stale
+        /// position, the text is pushed out of the mask. Call every frame: when the text changed by more than one
+        /// character at once (paste), it repositions with the label already laid out.
         /// </summary>
         public static void FixLayoutAfterPaste(UITextField field)
         {
@@ -131,7 +131,7 @@ namespace CurrencyMod.NativeUI
             int length = field.Text?.Length ?? 0;
             if (fieldLengths.TryGetValue(field, out int previous) && Mathf.Abs(length - previous) > 1)
             {
-                fieldRelayouts[field] = 3; // alguns quadros: o rótulo pode levar um para refazer as linhas
+                fieldRelayouts[field] = 3; // a few frames: the label may take one to re-lay out its lines
             }
             fieldLengths[field] = length;
             if (fieldRelayouts.TryGetValue(field, out int left) && left > 0)
@@ -139,15 +139,15 @@ namespace CurrencyMod.NativeUI
                 fieldRelayouts[field] = left - 1;
                 if (field.IsEditing && field.label != null)
                 {
-                    // Com o rótulo já montado, o cálculo do jogo traz o cursor (e o texto em volta) de volta para a máscara.
+                    // With the label already laid out, the game's calculation brings the cursor (and surrounding text) back into the mask.
                     field.MoveCaretToCharIndex(field.caretIndex, force: true);
                 }
             }
         }
 
         /// <summary>
-        /// Visível na tela de verdade: a janela pode continuar Shown com o grupo das telas escondido (virada de turno,
-        /// cursor de diplomacia), e aí nada do que ela mostra foi visto.
+        /// Actually visible on screen: the window may stay Shown while the screens group is hidden (end of turn,
+        /// diplomacy cursor), and then nothing it shows has been seen.
         /// </summary>
         public static bool IsReallyVisible(UITransform ui) => ui != null && ui.gameObject.activeInHierarchy && ui.VisibleGlobally;
 
@@ -189,8 +189,8 @@ namespace CurrencyMod.NativeUI
         }
 
         /// <summary>
-        /// Ajuda ao passar o mouse num elemento qualquer. Se a peça não tem UITooltip (rótulos, barras),
-        /// o componente nativo é adicionado; o texto usa o balão padrão do jogo (título + descrição).
+        /// Hover help on any element. If the piece has no UITooltip (labels, bars),
+        /// the native component is added; the text uses the game's standard tooltip (title + description).
         /// </summary>
         public static void Tip(Transform target, string title, string description)
         {
@@ -208,8 +208,8 @@ namespace CurrencyMod.NativeUI
         private const string BadgeDonor = "AllSettlementsWindow/_SettlementsList/Scrollview/Viewport/SettlementItemsTable/_SettlementItemSample/Table/Top/StatsTable/PopCount";
 
         /// <summary>
-        /// Selo no canto de um botão da barra (cartas novas, alerta): um chip de cartão nativo, avermelhado, escondido
-        /// até ganhar texto. Null se o doador (lista de cidades do jogo) ainda não existir.
+        /// Badge in the corner of a bar button (new letters, alert): a native card chip, reddish, hidden
+        /// until it gets text. Null if the donor (the game's city list) does not exist yet.
         /// </summary>
         public static Transform CreateBadge(Transform parent, string name)
         {
@@ -239,7 +239,7 @@ namespace CurrencyMod.NativeUI
             return chip;
         }
 
-        /// <summary>Mostra o selo com o texto, ou esconde se o texto for vazio.</summary>
+        /// <summary>Shows the badge with the text, or hides it if the text is empty.</summary>
         public static void SetBadge(Transform badge, string text)
         {
             if (badge == null)
@@ -256,9 +256,9 @@ namespace CurrencyMod.NativeUI
         }
 
         /// <summary>
-        /// Campo de texto que segura o teclado inteiro enquanto o jogador digita, como os da partida (renomear cidade,
-        /// chat, busca de tecnologias: KeyboardOnly). Os campos clonados de telas de fora da partida (anotações do save)
-        /// só seguravam os caracteres, e as teclas físicas disparavam os atalhos do jogo no meio do texto.
+        /// Text field that captures the whole keyboard while the player types, like the in-match ones (rename city,
+        /// chat, tech search: KeyboardOnly). Fields cloned from out-of-match screens (save notes) only captured
+        /// characters, and the physical keys fired the game's shortcuts in the middle of the text.
         /// </summary>
         public static void BlockGameShortcuts(UITextField field)
         {
@@ -269,8 +269,8 @@ namespace CurrencyMod.NativeUI
         }
 
         /// <summary>
-        /// O jogador está digitando num campo de texto. Os atalhos do mod (F8, F10) leem o teclado direto da Unity e
-        /// não passam pelo bloqueio do campo, então conferem isto antes.
+        /// The player is typing in a text field. The mod's shortcuts (F8, F10) read the keyboard straight from Unity and
+        /// bypass the field's capture, so they check this first.
         /// </summary>
         public static bool TypingInField()
         {
@@ -278,8 +278,8 @@ namespace CurrencyMod.NativeUI
         }
 
         /// <summary>
-        /// Solta o foco de um campo de texto ao esconder a janela dele. Escondido, o campo continua segurando o teclado
-        /// (KeyboardOnly) e engole o ESC e os atalhos do jogo até o próximo clique.
+        /// Releases a text field's focus when its window is hidden. While hidden, the field keeps capturing the keyboard
+        /// (KeyboardOnly) and swallows ESC and the game's shortcuts until the next click.
         /// </summary>
         public static void ReleaseTextFocus()
         {
@@ -289,7 +289,7 @@ namespace CurrencyMod.NativeUI
             }
         }
 
-        /// <summary>Desmonta um objeto de UI com segurança (descarrega antes de destruir).</summary>
+        /// <summary>Tears down a UI object safely (unloads before destroying).</summary>
         public static void Dispose(Transform target)
         {
             if (target != null)

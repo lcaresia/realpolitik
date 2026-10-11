@@ -13,8 +13,8 @@ using UnityEngine;
 namespace CurrencyMod.Diplomacia.UI
 {
     /// <summary>
-    /// Botão do Correio Diplomático na barra de controle inferior, ao lado do Banco Central: clone do botão
-    /// "Comercializar" do jogo, com ícone de envelope (SDF) e um selo com o número de cartas novas.
+    /// Diplomatic Mail button on the bottom control bar, next to the Central Bank: a clone of the game's "Trade"
+    /// button, with an envelope icon (SDF) and a badge with the number of new letters.
     /// </summary>
     internal class MailButton : MonoBehaviour
     {
@@ -55,7 +55,7 @@ namespace CurrencyMod.Diplomacia.UI
                 }
                 catch (Exception ex)
                 {
-                    Plugin.Log.LogError($"Falha ao criar a tela do correio: {ex}");
+                    Plugin.Log.LogError($"Failed to create the mail screen: {ex}");
                     enabled = false;
                     return;
                 }
@@ -121,7 +121,7 @@ namespace CurrencyMod.Diplomacia.UI
             button.Tooltip.Bind(TooltipUtils.TitleAndDescription, tooltipTarget);
             badge = NativeUIKit.CreateBadge(cloneTransform.transform, "MailBadge");
             button.Show(instant: true);
-            Plugin.Log.LogInfo("Botão do Correio Diplomático criado na barra de controle.");
+            Plugin.Log.LogInfo("Diplomatic Mail button created on the control bar.");
         }
 
         private bool shownDown;
@@ -129,7 +129,7 @@ namespace CurrencyMod.Diplomacia.UI
         private void RefreshBadge()
         {
             int count = IaModule.Instance?.PlayerUnreadCount() ?? 0;
-            // IA desconectada (fila inteira falhando): o selo vira um X vermelho até ela voltar.
+            // AI disconnected (the whole queue failing): the badge becomes a red X until it comes back.
             bool down = Llm.Providers.ProviderRouter.AllDown;
             if (count == shownCount && down == shownDown && !down)
             {
@@ -211,7 +211,7 @@ namespace CurrencyMod.Diplomacia.UI
             }
         }
 
-        /// <summary>Ao sair da partida, o jogo reconstrói a barra; o botão e a janela saem junto.</summary>
+        /// <summary>When leaving the match, the game rebuilds the bar; the button and the window go with it.</summary>
         [HarmonyPatch(typeof(ControlBanner), nameof(ControlBanner.OnPresentationShuttingDown))]
         private static class ShutdownPatch
         {

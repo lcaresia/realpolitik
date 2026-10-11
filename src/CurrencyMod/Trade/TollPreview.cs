@@ -8,21 +8,21 @@ using Amplitude.Mercury.Simulation;
 namespace CurrencyMod
 {
     /// <summary>
-    /// Prévia de desvio: quantas rotas de um império passariam por um posto (ou pelos postos de um dono) sem pedágio, e
-    /// quantas continuam passando com um preço. Usa o próprio cálculo de caminho do jogo (BaseTradeRelation.TryFindPath,
-    /// que já inclui o custo de pedágio e bloqueio do mod) com um cenário "e se" (TradePolicy.WhatIf), sem mudar nenhuma
-    /// rota. A interface pede (thread principal); o cálculo roda na thread do sandbox, entre as ordens, no turno principal.
+    /// Detour preview: how many routes of an empire would pass through a post (or through an owner's posts) with no toll,
+    /// and how many keep passing at a given price. Uses the game's own pathfinding (BaseTradeRelation.TryFindPath, which
+    /// already includes the mod's toll and blockade cost) with a "what if" scenario (TradePolicy.WhatIf), without changing
+    /// any route. The UI requests (main thread); the computation runs on the sandbox thread, between orders, in the main turn.
     /// </summary>
     internal static class TollPreview
     {
         internal sealed class Ask
         {
             public int Owner;
-            /// <summary>-1 = todos os territórios do dono (preço geral da diplomacia).</summary>
+            /// <summary>-1 = all of the owner's territories (general price from diplomacy).</summary>
             public int Territory;
             public int Target;
             public TradeMode Mode;
-            /// <summary>Preço pedido. Negativo = as regras e os preços de hoje, sem cenário (postos com preços diferentes).</summary>
+            /// <summary>Requested price. Negative = today's rules and prices, no scenario (posts with different prices).</summary>
             public double Price;
 
             public string Key => $"{Owner}|{Territory}|{Target}|{(int)Mode}|{Price:0.##}";
@@ -31,23 +31,23 @@ namespace CurrencyMod
         internal sealed class Answer
         {
             public string Key;
-            /// <summary>Rotas desse império que passariam por ali sem pedágio nem bloqueio.</summary>
+            /// <summary>Routes of that empire that would pass there with no toll or blockade.</summary>
             public int Routes;
-            /// <summary>Das que passariam, quantas continuam passando com o modo e o preço pedidos.</summary>
+            /// <summary>Of those that would pass, how many keep passing with the requested mode and price.</summary>
             public int Stay;
             public int Away => Routes - Stay;
-            /// <summary>Quando foi calculada (Environment.TickCount, ms): vale em qualquer thread.</summary>
+            /// <summary>When it was computed (Environment.TickCount, ms): valid on any thread.</summary>
             public int At;
-            /// <summary>Para o comando de teste: cada rota olhada e o caminho que ela faria sem regra do dono.</summary>
+            /// <summary>For the test command: each route examined and the path it would take without the owner's rule.</summary>
             public string Detail;
-            /// <summary>Outro lado de cada rota que continua passando / que desvia (ou fica barrada).</summary>
+            /// <summary>Other side of each route that keeps passing / that detours (or gets blocked).</summary>
             public readonly List<int> StayPartners = new List<int>();
             public readonly List<int> AwayPartners = new List<int>();
-            /// <summary>Para cada rota que desvia (mesma ordem de AwayPartners): outro território do mesmo dono por onde ela
-            /// passa a ir (-1 = sai das terras dele). Desviar de um posto para outro posto seu continua pagando você.</summary>
+            /// <summary>For each route that detours (same order as AwayPartners): another territory of the same owner it now
+            /// goes through (-1 = leaves their lands). Detouring from one of your posts to another of yours still pays you.</summary>
             public readonly List<int> AwayVia = new List<int>();
 
-            /// <summary>Chave da rota (menor|maior), para somar postos e linhas sem contar a mesma rota duas vezes.</summary>
+            /// <summary>Route key (lower|higher), to sum posts and rows without counting the same route twice.</summary>
             public static string RouteKey(int a, int b) => a < b ? $"{a}|{b}" : $"{b}|{a}";
         }
 
@@ -55,13 +55,13 @@ namespace CurrencyMod
         private static readonly Dictionary<string, Ask> pending = new Dictionary<string, Ask>();
         private static volatile Dictionary<string, Answer> answers = new Dictionary<string, Answer>();
 
-        /// <summary>Resposta já calculada (null = ainda não). Respostas com mais de alguns segundos são refeitas no próximo pedido.</summary>
+        /// <summary>Already computed answer (null = not yet). Answers older than a few seconds are redone on the next request.</summary>
         internal static Answer Get(Ask ask)
         {
             return answers.TryGetValue(ask.Key, out Answer answer) ? answer : null;
         }
 
-        /// <summary>Pede o cálculo (se a resposta não existe ou envelheceu). Chamado pela interface.</summary>
+        /// <summary>Requests the computation (if the answer does not exist or is stale). Called by the UI.</summary>
         internal static void Request(Ask ask, float maxAgeSeconds = 4f)
         {
             Answer known = Get(ask);
@@ -75,7 +75,7 @@ namespace CurrencyMod
             }
         }
 
-        /// <summary>Thread do sandbox (bomba do ActionExecutor): calcula os pedidos acumulados.</summary>
+        /// <summary>Sandbox thread (ActionExecutor pump): computes the accumulated requests.</summary>
         internal static void Pump()
         {
             List<Ask> work;
@@ -105,7 +105,7 @@ namespace CurrencyMod
                 }
                 catch (Exception ex)
                 {
-                    Plugin.Log?.LogWarning($"Prévia de desvio: {ex.Message}");
+                    Plugin.Log?.LogWarning($"Detour preview: {ex.Message}");
                 }
             }
             answers = updated;
@@ -128,7 +128,7 @@ namespace CurrencyMod
                 {
                     continue;
                 }
-                // Sem nenhuma regra do dono ali (nem para o outro lado da rota, que também pagaria): a rota passaria?
+                // With no rule from the owner there (not even for the route's other side, who would also pay): would the route pass?
                 bool crosses = Crosses(relation, ask, -1, TradeMode.Free, 0, path);
                 detail.Append($"E{left}↔E{right} sem regra: ");
                 for (int i = 0; i < path.Length; i++)
@@ -144,7 +144,7 @@ namespace CurrencyMod
                 }
                 answer.Routes++;
                 int partner = left == ask.Target ? right : left;
-                // Com as regras de hoje e o modo e o preço pedidos para esse império: continua passando?
+                // With today's rules plus the requested mode and price for that empire: does it keep passing?
                 if (ask.Mode != TradeMode.Block && Crosses(relation, ask, ask.Target, ask.Mode, ask.Price, path))
                 {
                     answer.Stay++;
@@ -185,7 +185,7 @@ namespace CurrencyMod
 
         private static bool Crosses(ExternalTradeRelation relation, Ask ask, int target, TradeMode mode, double price, ListOfStruct<TerritoryPathInfo> path)
         {
-            // Preço negativo na passada "com a regra": vale o que está guardado hoje (cada posto com o seu preço).
+            // Negative price in the "with the rule" pass: what is stored today applies (each post with its own price).
             TradePolicy.WhatIf = target >= 0 && price < 0 ? null
                 : new TradePolicy.Scenario { Owner = ask.Owner, Territory = ask.Territory, Target = target, Mode = mode, Price = price };
             try

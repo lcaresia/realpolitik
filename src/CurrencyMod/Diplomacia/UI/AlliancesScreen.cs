@@ -19,11 +19,12 @@ using B = CurrencyMod.NativeUI.NativeBankWindow;
 namespace CurrencyMod.Diplomacia.UI
 {
     /// <summary>
-    /// Tela "Alianças" (melhorias-jogando item 16), na mesma moldura do Correio e do Conselho:
-    ///   esquerda: Meu bloco, Pautas e eleição, Convites, Blocos do mundo, Histórico;
-    ///   centro: cartões (o bloco e os benefícios com números, membros com fama e força, pautas com placar e prazo);
-    ///   direita: fundar um bloco (nome + convidados) ou propor uma pauta ao seu bloco, e sair.
-    /// A entidade é "bloco" para não confundir com o acordo de Aliança do jogo. Regras em Blocs.BlocEngine.
+    /// "Alianças" screen (melhorias-jogando item 16), in the same frame as the Mail and the Council:
+    ///   left: My bloc, Agenda and election, Invitations, World blocs, History;
+    ///   center: cards (the bloc and the benefits with numbers, members with fame and strength, agenda items with tally
+    ///   and deadline);
+    ///   right: found a bloc (name + invitees) or propose an agenda item to your bloc, and leave.
+    /// The entity is "bloco" so as not to confuse it with the game's Alliance agreement. Rules in Blocs.BlocEngine.
     /// </summary>
     internal class AlliancesScreen : UIWindow
     {
@@ -58,7 +59,7 @@ namespace CurrencyMod.Diplomacia.UI
             L.N("Tudo o que aconteceu no seu bloco, turno a turno."),
         };
 
-        /// <summary>Tipos de pauta na ordem do botão Trocar.</summary>
+        /// <summary>Agenda item types in the order of the Switch button.</summary>
         private static readonly string[] MotionKinds = { "tarifa", "fim_tarifa", "admitir", "expulsar", "congresso", "renomear", "dissolver" };
 
         private UILabel titleLabel;
@@ -84,7 +85,7 @@ namespace CurrencyMod.Diplomacia.UI
         private readonly List<Row> rows = new List<Row>();
         private readonly List<Row> sideRows = new List<Row>();
 
-        // Painel da direita.
+        // Right panel.
         private readonly HashSet<int> invitees = new HashSet<int>();
         private int kindIndex;
         private int target = -1;
@@ -105,7 +106,7 @@ namespace CurrencyMod.Diplomacia.UI
             public Action SecondAction;
         }
 
-        // ---------------- Criação ----------------
+        // ---------------- Creation ----------------
 
         internal static AlliancesScreen Create()
         {
@@ -145,7 +146,7 @@ namespace CurrencyMod.Diplomacia.UI
             group.AddDebugWindowImplementation(window);
             Destroy(stash);
             Instance = window;
-            Plugin.Log.LogInfo("Tela cheia das alianças criada.");
+            Plugin.Log.LogInfo("Alliances full screen created.");
             return window;
         }
 
@@ -164,7 +165,7 @@ namespace CurrencyMod.Diplomacia.UI
             {
                 all.Add(child);
             }
-            // O doador pode ter menos botões de seção que as cinco daqui: clona o último.
+            // The donor may have fewer section buttons than the five here: clones the last one.
             while (all.Count < SectionNames.Length && all.Count > 0)
             {
                 Transform extra = Instantiate(all[all.Count - 1].gameObject, toggles).transform;
@@ -264,7 +265,7 @@ namespace CurrencyMod.Diplomacia.UI
             }
             catch (Exception ex)
             {
-                Plugin.Log.LogError($"Alianças: falha ao montar o campo de texto: {ex}");
+                Plugin.Log.LogError($"Alliances: failed to build the text field: {ex}");
             }
             built = true;
             SelectSection(pendingSection >= 0 ? (Section)pendingSection : Section.Bloc);
@@ -282,7 +283,7 @@ namespace CurrencyMod.Diplomacia.UI
             Transform donor = DevTools.FindByPath(FieldDonor);
             if (donor == null)
             {
-                Plugin.Log.LogWarning("Alianças: doador do campo de texto não encontrado.");
+                Plugin.Log.LogWarning("Alliances: text field donor not found.");
                 return;
             }
             fieldItem = NativeUIKit.Clone(donor, sideTable.transform, "AllianceField");
@@ -302,7 +303,7 @@ namespace CurrencyMod.Diplomacia.UI
             field.OnMultilineChanged(false, true);
         }
 
-        // ---------------- Abertura e seções ----------------
+        // ---------------- Opening and sections ----------------
 
         internal static void SetOpen(bool open)
         {
@@ -390,12 +391,12 @@ namespace CurrencyMod.Diplomacia.UI
             }
             catch (Exception ex)
             {
-                Plugin.Log.LogError($"Alianças: {ex}");
+                Plugin.Log.LogError($"Alliances: {ex}");
                 nextRefresh = Time.unscaledTime + 5f;
             }
         }
 
-        // ---------------- Conteúdo ----------------
+        // ---------------- Content ----------------
 
         private sealed class View
         {
@@ -465,7 +466,7 @@ namespace CurrencyMod.Diplomacia.UI
             return L.F("Turno {0}. {1} · {2} membros · presidente: {3}", view.Turn, Esc(view.Mine.Name), view.Mine.Members.Count, Who(view, view.Mine.President)) + ".";
         }
 
-        // ---- Meu bloco ----
+        // ---- My bloc ----
 
         private void FillBloc(View view)
         {
@@ -518,13 +519,13 @@ namespace CurrencyMod.Diplomacia.UI
             Body(row, string.Join("\n", lines));
         }
 
-        /// <summary>Os quatro benefícios, cada um num cartão, com o estado e os números (sem bloco: só a explicação).</summary>
+        /// <summary>The four benefits, each on a card, with the state and the numbers (no bloc: only the explanation).</summary>
         private void FillBenefits(View view, Bloc bloc, int first)
         {
             bool on = bloc != null && bloc.Formed;
             string state = on ? $"<c={Green}>" + L.T("Ativo") + "</c>" : $"<c={Dim}>" + L.T("Sem bloco") + "</c>";
 
-            // Comércio interno.
+            // Internal trade.
             Row trade = rows[first];
             Transform top = Top(trade);
             Title(trade, L.T("Comércio interno"));
@@ -538,7 +539,7 @@ namespace CurrencyMod.Diplomacia.UI
             SetButtons(trade, null, null, null, null);
             Body(trade, L.T("Sem pedágio nem bloqueio entre membros (o posto deixa passar sozinho) e 25% de desconto na manutenção das rotas entre vocês."));
 
-            // Defesa mútua.
+            // Mutual defense.
             Row defense = rows[first + 1];
             top = Top(defense);
             Title(defense, L.T("Defesa mútua"));
@@ -553,7 +554,7 @@ namespace CurrencyMod.Diplomacia.UI
                 ? L.F("Último: no turno {0}, {1} declarou guerra a {2}.", lastCall.Turn, Who(view, lastCall.Actor), Who(view, lastCall.Target))
                 : L.T("Guerra entre membros não expulsa ninguém, mas também não aciona a defesa."));
 
-            // Congresso.
+            // Congress.
             Row congress = rows[first + 2];
             top = Top(congress);
             Title(congress, L.T("Voz no Congresso"));
@@ -566,7 +567,7 @@ namespace CurrencyMod.Diplomacia.UI
             SetButtons(congress, null, null, null, null);
             Body(congress, L.T("Uma votação do Congresso aberta pode virar pauta do bloco (à direita: tipo \"Votar junto no Congresso\")."));
 
-            // Tarifa comum.
+            // Common tariff.
             Row tariff = rows[first + 3];
             top = Top(tariff);
             Title(tariff, L.T("Tarifa comum"));
@@ -611,7 +612,7 @@ namespace CurrencyMod.Diplomacia.UI
             Body(row, string.Join("\n", lines));
         }
 
-        // ---- Pautas e eleição ----
+        // ---- Agenda and election ----
 
         private void FillAgenda(View view)
         {
@@ -775,7 +776,7 @@ namespace CurrencyMod.Diplomacia.UI
             return string.Join("\n", lines);
         }
 
-        // ---- Convites ----
+        // ---- Invitations ----
 
         private void FillInvites(View view)
         {
@@ -821,7 +822,7 @@ namespace CurrencyMod.Diplomacia.UI
             }
         }
 
-        // ---- Blocos do mundo ----
+        // ---- World blocs ----
 
         private void FillWorld(View view)
         {
@@ -857,7 +858,7 @@ namespace CurrencyMod.Diplomacia.UI
             }
         }
 
-        // ---- Histórico ----
+        // ---- History ----
 
         private void FillHistory(View view)
         {
@@ -913,7 +914,7 @@ namespace CurrencyMod.Diplomacia.UI
             return ev.Kind;
         }
 
-        /// <summary>Primeira letra visível em maiúscula (pula as marcas de cor do começo).</summary>
+        /// <summary>First visible letter in uppercase (skips the leading color tags).</summary>
         private static string Capitalize(string text)
         {
             int i = 0;
@@ -931,7 +932,7 @@ namespace CurrencyMod.Diplomacia.UI
 
         private string Target(View view, BlocEvent ev) => ev.Target >= 0 ? " (" + Short(view, ev.Target) + ")" : string.Empty;
 
-        /// <summary>Nome do tipo de pauta (o histórico guarda "tipo" ou "tipo:valor").</summary>
+        /// <summary>Name of the agenda item type (the history stores "type" or "type:value").</summary>
         private static string KindUi(string kind)
         {
             string value = null;
@@ -986,7 +987,7 @@ namespace CurrencyMod.Diplomacia.UI
             return Esc(choice);
         }
 
-        // ---------------- Painel da direita ----------------
+        // ---------------- Right panel ----------------
 
         private void FillSide(View view)
         {
@@ -1259,7 +1260,7 @@ namespace CurrencyMod.Diplomacia.UI
             return feedback != null && feedbackIsError ? $"<c={Red}>{title}</c>" : title;
         }
 
-        // ---------------- Ações ----------------
+        // ---------------- Actions ----------------
 
         private void Found(View view)
         {
@@ -1296,7 +1297,7 @@ namespace CurrencyMod.Diplomacia.UI
             Act(BlocEngine.Leave(view.World, view.Me, view.Turn), L.T("Você saiu do bloco."));
         }
 
-        /// <summary>Mostra o resultado (o problema vem do motor, em português; a tela só tira o prefixo) e salva.</summary>
+        /// <summary>Shows the result (the problem comes from the engine, in Portuguese; the screen only strips the prefix) and saves.</summary>
         private bool Act(string problem, string ok)
         {
             if (problem != null)
@@ -1325,7 +1326,7 @@ namespace CurrencyMod.Diplomacia.UI
             MailScreen.Instance?.SelectSection(MailScreen.Section.Groups);
         }
 
-        // ---------------- Cartões ----------------
+        // ---------------- Cards ----------------
 
         private void SetRowCount(List<Row> pool, UITransform table, Transform sample, int count)
         {
@@ -1356,7 +1357,7 @@ namespace CurrencyMod.Diplomacia.UI
 
         private static void Title(Row row, string title) => B.SetLabel(Top(row), "TitleGroup/Title", title);
 
-        /// <summary>Chip 0..3 do topo do cartão (null esconde), com tooltip.</summary>
+        /// <summary>Card top chip 0..3 (null hides it), with tooltip.</summary>
         private static void Chip(Transform top, int index, string text, string tipTitle, string tip)
         {
             string path = index == 0 ? "StatsTable/PopCount" : index == 1 ? "StatsTable/Fortification" : index == 2 ? "StatsTable/ExtensionsCount" : B.ExtraChip(top, 3);
@@ -1370,7 +1371,7 @@ namespace CurrencyMod.Diplomacia.UI
             B.Tip(top, path, tipTitle ?? string.Empty, tip ?? string.Empty);
         }
 
-        /// <summary>Botões do cartão (null esconde) e o espaço do título; o topo fica na altura padrão.</summary>
+        /// <summary>Card buttons (null hides them) and the title space; the top stays at the default height.</summary>
         private static void SetButtons(Row row, string primary, Action onPrimary, string second, Action onSecond)
         {
             Transform top = Top(row);
@@ -1422,15 +1423,15 @@ namespace CurrencyMod.Diplomacia.UI
 
         private static string Esc(string text) => MailScreen.Escape(text);
 
-        /// <summary>"Os Han · Walinong Sari", ou "você".</summary>
+        /// <summary>"Os Han · Walinong Sari", or "você".</summary>
         private static string Who(View view, int empire) => empire == view.Me ? L.T("você") : Esc(MailScreen.NationAndLeader(view.Capture, empire, inline: true));
 
-        /// <summary>Só o povo ("Os Han"), ou "você".</summary>
+        /// <summary>Only the people ("Os Han"), or "você".</summary>
         private static string Short(View view, int empire) => empire == view.Me ? L.T("você") : Esc(GameText.InlineUi(view.Capture.Empire(empire)?.Culture ?? "E" + empire));
 
-        // ---------------- Selo do botão ----------------
+        // ---------------- Button badge ----------------
 
-        /// <summary>"!" quando algo pede ação sua: convite, voto que falta, eleição ou sugestão para o presidente.</summary>
+        /// <summary>"!" when something needs your action: invitation, missing vote, election or suggestion for the president.</summary>
         internal static string Badge()
         {
             IaModule module = IaModule.Instance;
@@ -1448,9 +1449,9 @@ namespace CurrencyMod.Diplomacia.UI
             return pending ? "!" : null;
         }
 
-        // ---------------- Desenvolvimento e remoção ----------------
+        // ---------------- Development and removal ----------------
 
-        /// <summary>Comandos: "abrir", "fechar", "secao 0..4", "tipo N", "alvo E#", "valor N", "texto ...", "convidar E#", "enviar".</summary>
+        /// <summary>Commands: "abrir", "fechar", "secao 0..4", "tipo N", "alvo E#", "valor N", "texto ...", "convidar E#", "enviar".</summary>
         internal static string DevCommand(string args)
         {
             string[] parts = (args ?? string.Empty).Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
@@ -1495,7 +1496,7 @@ namespace CurrencyMod.Diplomacia.UI
                     Instance.nextRefresh = 0;
                     return "ok: " + string.Join(",", Instance.invitees);
                 case "enviar":
-                    // O mesmo que o botão de envio do painel (fundar, ou propor a pauta montada).
+                    // The same as the panel's send button (found, or propose the assembled agenda item).
                     if (view == null)
                     {
                         return "erro: sem partida";
@@ -1515,7 +1516,7 @@ namespace CurrencyMod.Diplomacia.UI
             }
         }
 
-        /// <summary>Remoção segura (recarga do núcleo, saída da partida): igual à do conselho.</summary>
+        /// <summary>Safe removal (core reload, leaving the game): same as the council's.</summary>
         internal static void DestroyWindow()
         {
             AlliancesScreen window = Instance;
@@ -1543,7 +1544,7 @@ namespace CurrencyMod.Diplomacia.UI
             }
             catch (Exception ex)
             {
-                Plugin.Log.LogWarning($"Remoção da tela das alianças: {ex.Message}");
+                Plugin.Log.LogWarning($"Alliances screen removal: {ex.Message}");
             }
             window.gameObject.SetActive(false);
             Destroy(window.gameObject);

@@ -16,12 +16,12 @@ using B = CurrencyMod.NativeUI.NativeBankWindow;
 namespace CurrencyMod.Diplomacia.UI
 {
     /// <summary>
-    /// Aba "Cartas" na tela de diplomacia de cada nação (design §8.1): a conversa com aquela nação, em ordem, e o campo
-    /// de escrever. As abas do jogo são fixas no código (enum e campos); esta é uma aba "sobreposta": um clone da aba
-    /// Relações na fileira de abas e um painel nosso no grupo de painéis. Ativar abre Relações por baixo (aba sempre
-    /// válida), esconde o painel dela e mostra o nosso; um patch em DiplomaticScreen.SetCurrentMode desativa quando o
-    /// jogador clica numa aba do jogo e reafirma a nossa quando ele só troca de nação.
-    /// Pesquisa: research\mail-fullscreen-and-diplomacy-tab.md, parte B.
+    /// "Letters" tab in each nation's diplomacy screen (design §8.1): the conversation with that nation, in order, and
+    /// the writing field. The game's tabs are hardcoded (enum and fields); this is an "overlay" tab: a clone of the
+    /// Relations tab in the tab row and a panel of ours in the panel group. Activating opens Relations underneath (always
+    /// a valid tab), hides its panel and shows ours; a patch on DiplomaticScreen.SetCurrentMode deactivates it when the
+    /// player clicks a game tab and reasserts ours when they only switch nation.
+    /// Research: research\mail-fullscreen-and-diplomacy-tab.md, part B.
     /// </summary>
     internal class CorrespondenceTab : MonoBehaviour
     {
@@ -45,9 +45,9 @@ namespace CurrencyMod.Diplomacia.UI
         private static readonly string[] TypeNames = { L.N("Carta privada"), L.N("Ultimato") };
 
         internal static CorrespondenceTab Instance;
-        /// <summary>A aba nossa está ativa (o jogo acha que é Relações).</summary>
+        /// <summary>Our tab is active (the game thinks it is Relations).</summary>
         internal static bool Active;
-        /// <summary>Chamada nossa de SetCurrentMode (não desativa a aba).</summary>
+        /// <summary>Our own call to SetCurrentMode (does not deactivate the tab).</summary>
         internal static bool InternalCall;
 
         private DiplomaticScreen screen;
@@ -63,7 +63,7 @@ namespace CurrencyMod.Diplomacia.UI
         private Transform rightSpacer;
         private float leftSpacerWidth = -1f;
         private float rightSpacerWidth = -1f;
-        /// <summary>Cantos de cima (esquerdo, direito) de cada aba do jogo antes de a nossa entrar.</summary>
+        /// <summary>Top corners (left, right) of each game tab before ours was added.</summary>
         private readonly Dictionary<SquircleBackgroundWidget, Vector2> originalCorners = new Dictionary<SquircleBackgroundWidget, Vector2>();
         private float nextTabsCheck;
         private bool built;
@@ -143,7 +143,7 @@ namespace CurrencyMod.Diplomacia.UI
                 bool shown = screen.Shown;
                 if (!shown && screenWasShown)
                 {
-                    // A tela fechou: a próxima abertura começa nas abas do jogo.
+                    // The screen closed: the next opening starts on the game's tabs.
                     Deactivate(restoreNative: true);
                 }
                 screenWasShown = shown;
@@ -154,7 +154,7 @@ namespace CurrencyMod.Diplomacia.UI
                 RefreshBlip();
                 if (Time.unscaledTime >= nextTabsCheck && tab != null)
                 {
-                    // O jogo mostra ou esconde abas conforme a nação (Consulado): espaçamento e cantos acompanham.
+                    // The game shows or hides tabs depending on the nation (Consulate): spacing and corners follow.
                     nextTabsCheck = Time.unscaledTime + 1f;
                     FitTabs(tab.transform.parent);
                     ShapeTabs();
@@ -167,12 +167,12 @@ namespace CurrencyMod.Diplomacia.UI
             }
             catch (Exception ex)
             {
-                Plugin.Log.LogError($"Aba de cartas da diplomacia: {ex}");
+                Plugin.Log.LogError($"Diplomacy letters tab: {ex}");
                 nextCheck = Time.unscaledTime + 5f;
             }
         }
 
-        // ---------------- Montagem ----------------
+        // ---------------- Assembly ----------------
 
         private void Build(DiplomaticScreen target)
         {
@@ -188,7 +188,7 @@ namespace CurrencyMod.Diplomacia.UI
                 return;
             }
 
-            // Restos de uma geração anterior do mod (recarga a quente).
+            // Leftovers from a previous generation of the mod (hot reload).
             Transform oldTab = tabsTable.Find(TabName);
             if (oldTab != null)
             {
@@ -200,7 +200,7 @@ namespace CurrencyMod.Diplomacia.UI
                 NativeUIKit.Dispose(oldPanel);
             }
 
-            // Aba: clone de Relações sem o script da aba do jogo, antes do espaçador da direita.
+            // Tab: clone of Relations without the game's tab script, before the right spacer.
             Transform tabClone = NativeUIKit.Clone(relationTab, tabsTable, TabName, "DiplomaticScreen_TabItem");
             leftSpacer = tabsTable.Find("Left");
             rightSpacer = tabsTable.Find("Right");
@@ -227,7 +227,7 @@ namespace CurrencyMod.Diplomacia.UI
                     letterIcon = SdfIcons.Letter();
                     letterIconGuid = UIRenderingManager.Instance.RegisterTexture(letterIcon);
                 }
-                // O selo da aba mostra o envelope: cartas novas desta nação.
+                // The tab badge shows the envelope: new letters from this nation.
                 if (blip.picto != null)
                 {
                     blip.picto.Texture = new UITexture(letterIconGuid, UITextureFlags.AlphaStraight, UITextureColorFormat.Srgb, letterIcon);
@@ -238,9 +238,9 @@ namespace CurrencyMod.Diplomacia.UI
             ShapeTabs();
             NativeUIKit.Tip(tabClone, L.T("Cartas"), L.T("A correspondência com esta nação, em ordem, e o campo para escrever. A carta leva o tempo de entrega da sua era."));
 
-            // Painel: cópia da lista da janela de cidades para a conversa e outra para escrever. Tudo é montado sob um
-            // pai inativo e só depois entra na tela: uma lista clonada direto na tela carrega e se dimensiona sozinha
-            // (altura do conteúdo vazio) antes de receber o tamanho dela.
+            // Panel: a copy of the cities window's list for the conversation and another for writing. Everything is
+            // assembled under an inactive parent and only then enters the screen: a list cloned directly onto the screen
+            // loads and sizes itself (height of the empty content) before it receives its size.
             var stash = new GameObject("CurrencyMod_Stash");
             stash.SetActive(false);
             try
@@ -289,10 +289,10 @@ namespace CurrencyMod.Diplomacia.UI
             NativeUIKit.SetVisible(panel, false);
             built = true;
             Active = false;
-            Plugin.Log.LogInfo("Aba de cartas da diplomacia montada.");
+            Plugin.Log.LogInfo("Diplomacy letters tab assembled.");
         }
 
-        /// <summary>Os cartões clonados da lista de cidades trazem tooltips de cidade: limpa todos (só os do painel nosso).</summary>
+        /// <summary>The cards cloned from the city list carry city tooltips: clears them all (only those in our panel).</summary>
         private void ClearPanelTooltips()
         {
             foreach (UITooltip tooltip in panel.GetComponentsInChildren<UITooltip>(true))
@@ -312,7 +312,7 @@ namespace CurrencyMod.Diplomacia.UI
             }
         }
 
-        /// <summary>Cinco abas em vez de quatro: os espaçadores das pontas encolhem para a fileira caber nos 1176 px.</summary>
+        /// <summary>Five tabs instead of four: the end spacers shrink so the row fits in 1176 px.</summary>
         private void FitTabs(Transform tabsTable)
         {
             int visible = 0;
@@ -359,9 +359,9 @@ namespace CurrencyMod.Diplomacia.UI
         }
 
         /// <summary>
-        /// Cantos da fileira de abas: o jogo arredonda o canto de cima à esquerda da primeira aba e o de cima à direita da
-        /// última (as do meio são retas). A nossa entra no fim, então fica com o canto da direita, e a última aba visível
-        /// do jogo (Crise, ou Consulado quando aparece) perde o dela. Os valores originais voltam na limpeza.
+        /// Corners of the tab row: the game rounds the top-left corner of the first tab and the top-right corner of the
+        /// last one (the middle ones are square). Ours goes at the end, so it gets the right corner, and the game's last
+        /// visible tab (Crisis, or Consulate when shown) loses its own. The original values come back on cleanup.
         /// </summary>
         private void ShapeTabs()
         {
@@ -424,7 +424,7 @@ namespace CurrencyMod.Diplomacia.UI
             originalCorners.Clear();
         }
 
-        /// <summary>Só mexe quando muda: cada troca refaz o desenho do fundo.</summary>
+        /// <summary>Only touches it when it changes: each change redraws the background.</summary>
         private static void SetTopCorners(SquircleBackgroundWidget background, float topLeft, float topRight)
         {
             if (Mathf.Abs(background.cornerRadiusTopLeft - topLeft) > 0.01f)
@@ -463,7 +463,7 @@ namespace CurrencyMod.Diplomacia.UI
                 demandField = demandItem.GetComponent<UITextField>();
                 bodyItem = CloneField(fieldDonor, "BodyField", 300f, true, IaConfig.PlayerLetterLimit, L.T("Escreva sua carta…"));
                 bodyField = bodyItem.GetComponent<UITextField>();
-                // TextChange é ligado em Update (EnsureTextChange), depois que o campo carrega.
+                // TextChange is hooked up in Update (EnsureTextChange), after the field loads.
             }
             Transform sliderDonor = DevTools.FindByPath(SliderDonor);
             if (sliderDonor != null)
@@ -531,7 +531,7 @@ namespace CurrencyMod.Diplomacia.UI
             return item;
         }
 
-        // ---------------- Ativar e desativar ----------------
+        // ---------------- Activate and deactivate ----------------
 
         private void Activate()
         {
@@ -541,7 +541,7 @@ namespace CurrencyMod.Diplomacia.UI
             }
             try
             {
-                // Relações por baixo (sempre válida): o jogo não força troca de aba e desfaz o cursor de comércio.
+                // Relations underneath (always valid): the game does not force a tab switch and undoes the trade cursor.
                 InternalCall = true;
                 screen.SetCurrentMode(DiplomaticScreenMode.Relations);
             }
@@ -556,7 +556,7 @@ namespace CurrencyMod.Diplomacia.UI
             nextRefresh = 0;
         }
 
-        /// <summary>Esconde Relações, desliga as abas do jogo e mostra a nossa (depois de cada SetCurrentMode do jogo).</summary>
+        /// <summary>Hides Relations, turns off the game's tabs and shows ours (after each of the game's SetCurrentMode calls).</summary>
         internal void Reassert()
         {
             if (!Active || screen == null)
@@ -570,11 +570,11 @@ namespace CurrencyMod.Diplomacia.UI
                 tab.State = true;
             }
             NativeUIKit.SetVisible(panel, true);
-            // O fundo com desfoque (e que segura o clique) tem que cobrir o painel inteiro.
+            // The blurred background (which also catches clicks) has to cover the whole panel.
             screen.AnimateBackgroundHeight(PanelHeight, instant: false);
         }
 
-        /// <summary>Volta às abas do jogo. restoreNative: devolve Relações (quando a tela fecha ou o mod sai).</summary>
+        /// <summary>Returns to the game's tabs. restoreNative: restores Relations (when the screen closes or the mod unloads).</summary>
         internal void Deactivate(bool restoreNative)
         {
             if (!Active)
@@ -596,7 +596,7 @@ namespace CurrencyMod.Diplomacia.UI
             }
         }
 
-        /// <summary>Abre a diplomacia com uma nação já na aba de cartas (botão "Diplomacia" do correio).</summary>
+        /// <summary>Opens diplomacy with a nation directly on the letters tab (the mail's "Diplomacy" button).</summary>
         internal static void OpenFor(int empire)
         {
             var cursors = Amplitude.Mercury.Presentation.Presentation.PresentationCursorController;
@@ -611,7 +611,7 @@ namespace CurrencyMod.Diplomacia.UI
         private static bool pendingActivation;
         private static float pendingSince;
 
-        // ---------------- Conteúdo ----------------
+        // ---------------- Content ----------------
 
         private void RefreshBlip()
         {
@@ -655,7 +655,7 @@ namespace CurrencyMod.Diplomacia.UI
             CapturedEmpire them = capture.Empire(other);
             if (other != shownEmpire)
             {
-                // Outra nação: o rascunho fica, mas a ligação de resposta e o aviso recomeçam.
+                // Another nation: the draft stays, but the reply link and the notice start over.
                 replyDetached = false;
                 feedback = null;
             }
@@ -665,11 +665,11 @@ namespace CurrencyMod.Diplomacia.UI
             }
 
             List<Letter> letters = IaModule.World.Letters
-                // As minhas sempre; as deles só depois de chegar (a interceptada nunca chega).
+                // Mine always; theirs only after arriving (an intercepted one never arrives).
                 .Where(l => l.From == me || l.Arrived(turn))
                 .Where(l => (l.From == me && l.To == other) || (l.From == other && (l.To == me || l.IsPublic)))
                 .Where(l => !(l.From == other && l.RejectedBy.Contains(me)))
-                // Mais recentes em cima, como no Correio.
+                // Most recent on top, as in the Mail.
                 .OrderByDescending(l => l.From == me ? l.SentTurn : l.DeliverTurn).ThenByDescending(l => l.Id)
                 .Take(MaxShown)
                 .ToList();
@@ -736,7 +736,7 @@ namespace CurrencyMod.Diplomacia.UI
                     if (!letter.IsPublic && letter.ExpectsReply)
                     {
                         B.SetChip(top, "StatsTable/ExtensionsCount", answered ? $"<c={Green}>" + L.T("Respondida") + "</c>" : letter.Type == "ultimato" ? MailScreen.UltimatumChip(letter, turn) : $"<c={Gold}>" + L.T("Pede resposta") + "</c>");
-                        // A linha é reaproveitada: sem isto ficava o tooltip "Situação" de uma carta sua.
+                        // The row is reused: without this, the "Status" tooltip of one of your letters stayed.
                         B.Tip(top, "StatsTable/ExtensionsCount", answered ? L.T("Respondida") : L.T("Pede resposta"),
                             answered ? L.T("Você já respondeu a esta carta.") : L.T("Eles esperam uma resposta sua. Responda no painel ao lado."));
                     }
@@ -780,7 +780,7 @@ namespace CurrencyMod.Diplomacia.UI
             B.SetVisible(typeCard, true);
             B.SetVisible(sendCard, true);
             Transform typeTop = typeCard.Find("Table/Top");
-            B.SetLabel(typeTop, "TitleGroup/Title", canWrite ? L.T(TypeNames[composeType]) : L.T("Sem correio")); // TypeNames: marcados com L.N
+            B.SetLabel(typeTop, "TitleGroup/Title", canWrite ? L.T(TypeNames[composeType]) : L.T("Sem correio")); // TypeNames: marked with L.N
             B.SetChip(typeTop, "StatsTable/PopCount", canWrite ? L.F("Chega no turno {0}", arrives) : L.T("Só nações do computador"));
             B.HideChild(typeTop, "StatsTable/Fortification");
             B.HideChild(typeTop, "StatsTable/ExtensionsCount");
@@ -865,7 +865,7 @@ namespace CurrencyMod.Diplomacia.UI
                 return;
             }
             int deadline = deadlineSlider != null ? Mathf.RoundToInt(deadlineSlider.CurrentValue) : 3;
-            int inReplyTo = replyDetached ? -2 : -1; // -1: o módulo liga sozinho à última carta deles que pedia resposta
+            int inReplyTo = replyDetached ? -2 : -1; // -1: the module links it automatically to their last letter that asked for a reply
             string result = module.SendPlayerLetter(other, type, subjectField?.Text.Trim(), text, demand, deadline, inReplyTo: inReplyTo);
             if (result.StartsWith("ok"))
             {
@@ -888,7 +888,7 @@ namespace CurrencyMod.Diplomacia.UI
             nextRefresh = 0;
         }
 
-        // ---------------- Remoção ----------------
+        // ---------------- Removal ----------------
 
         private void Cleanup()
         {
@@ -915,7 +915,7 @@ namespace CurrencyMod.Diplomacia.UI
             }
             catch (Exception ex)
             {
-                Plugin.Log.LogWarning($"Aba de cartas: limpeza: {ex.Message}");
+                Plugin.Log.LogWarning($"Letters tab: cleanup: {ex.Message}");
             }
             built = false;
             tab = null;
@@ -947,8 +947,8 @@ namespace CurrencyMod.Diplomacia.UI
         }
 
         /// <summary>
-        /// Clique numa aba do jogo: a nossa sai. Troca de nação com a nossa ativa: o jogo reabre Relações e a nossa
-        /// volta por cima no mesmo quadro.
+        /// Click on a game tab: ours goes away. Nation switch with ours active: the game reopens Relations and ours comes
+        /// back on top in the same frame.
         /// </summary>
         [HarmonyPatch(typeof(DiplomaticScreen), nameof(DiplomaticScreen.SetCurrentMode))]
         private static class SetModePatch

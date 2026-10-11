@@ -7,7 +7,7 @@ using CurrencyMod.Diplomacia.Capture;
 
 namespace CurrencyMod.Diplomacia
 {
-    /// <summary>Resultado da montagem do dossiê de uma nação num turno.</summary>
+    /// <summary>Result of building a nation's dossier for one turn.</summary>
     internal sealed class DossierBuild
     {
         public string Text;
@@ -19,9 +19,9 @@ namespace CurrencyMod.Diplomacia
     }
 
     /// <summary>
-    /// Monta o dossiê de uma nação do computador a partir da foto do turno (WorldCapture): tudo sobre ela e só o que
-    /// ela sabe dos outros (quem ela conhece, o que está vendo, o que é público). Roda na thread principal, sem tocar
-    /// na simulação.
+    /// Builds the dossier of a computer nation from the turn snapshot (WorldCapture): everything about it and only what
+    /// it knows about the others (whom it knows, what it is seeing, what is public). Runs on the main thread, without
+    /// touching the simulation.
     /// </summary>
     internal static class DossierBuilder
     {
@@ -50,10 +50,10 @@ namespace CurrencyMod.Diplomacia
 
             FillGrounding(build.Context, world, capture, self, turn);
 
-            // Cada seção é montada na ordem das dependências (quem conhece quem, cartas entregues agora), mas o texto sai
-            // na ordem do cache: o que muda pouco de um turno para o outro primeiro, o turno por último. O provedor
-            // reaproveita o prefixo igual ao do pedido anterior (estudo-custo-ia.md §2); a ordem não mudou a qualidade
-            // na bancada.
+            // Each section is built in dependency order (who knows whom, letters delivered now), but the text comes out
+            // in cache order: what changes little from one turn to the next first, the turn last. The provider reuses
+            // the prefix identical to the previous request's (estudo-custo-ia.md §2); the order did not change quality
+            // on the bench.
             var self_ = new StringBuilder();
             var empires = new StringBuilder();
             var congress = new StringBuilder();
@@ -113,7 +113,7 @@ namespace CurrencyMod.Diplomacia
             return captured?.FullName ?? $"Império {empire + 1}";
         }
 
-        // ---------------- Sua nação ----------------
+        // ---------------- Your nation ----------------
 
         private static void AppendSelf(StringBuilder text, IaWorld world, WorldCapture capture, CapturedEmpire me, DossierBuild build)
         {
@@ -147,7 +147,7 @@ namespace CurrencyMod.Diplomacia
                     }
                 }
             }
-            // Só vizinhos já contatados (névoa de guerra): a fronteira pode encostar antes do primeiro contato.
+            // Only neighbors already contacted (fog of war): the border can touch before first contact.
             List<int> neighbors = me.Neighbors.Where(n => KnowsEmpire(me, n)).ToList();
             if (neighbors.Count > 0)
             {
@@ -186,7 +186,7 @@ namespace CurrencyMod.Diplomacia
                 string details = city.IsCity
                     ? $"pop. {city.Population}, ordem pública {N(city.PublicOrder)}, {city.Territories.Count} território(s)"
                     : $"{city.Territories.Count} território(s)";
-                // Anexos: territórios da cidade fora o central (podem ser cedidos com ceder_territorio).
+                // Attached: the city's territories other than the central one (can be ceded with ceder_territorio).
                 List<int> annexes = city.Territories.Where(t => t != city.CenterTerritory).ToList();
                 string annexText = annexes.Count > 0 ? " · anexos: " + string.Join(", ", annexes.Select(t => $"{capture.TerritoryName(t)} (T{t})")) : string.Empty;
                 text.AppendLine($"- {handle} {city.Name ?? "?"}{tagText} — {details}, em {capture.TerritoryName(city.CenterTerritory)} (T{city.CenterTerritory}){annexText}");
@@ -219,7 +219,7 @@ namespace CurrencyMod.Diplomacia
                 if (army.Moving) tags.Add("em marcha");
                 string state = ArmyState(army.State);
                 if (state != null) tags.Add(state);
-                // Ordem sua a este exército: o que pediu e em que pé está (some da lista depois de 3 turnos encerrada).
+                // Your order to this army: what was asked and how it stands (drops off the list 3 turns after it ends).
                 ArmyMission mission = world.MissionFor(army.Key);
                 if (mission != null && (mission.Active || mission.StatusTurn >= capture.Turn - 3))
                 {
@@ -244,8 +244,8 @@ namespace CurrencyMod.Diplomacia
         }
 
         /// <summary>
-        /// "Sua rede": onde estão os seus espiões, o que fazem, se já foram notados, e a chance de interceptar cartas de
-        /// cada nação (alta, média, baixa). Só o que a própria nação sabe dos próprios agentes.
+        /// "Your network": where your spies are, what they do, whether they have been noticed, and the chance of intercepting
+        /// letters from each nation (high, medium, low). Only what the nation itself knows about its own agents.
         /// </summary>
         private static void AppendSpyNetwork(StringBuilder text, IaWorld world, WorldCapture capture, CapturedEmpire me, DossierBuild build)
         {
@@ -301,7 +301,7 @@ namespace CurrencyMod.Diplomacia
             }
         }
 
-        /// <summary>Aviso do jogo: atividade de espiões estrangeiros nos territórios da nação (ela sabe que há, não de quem).</summary>
+        /// <summary>Game warning: foreign spy activity in the nation's territories (it knows there is some, not whose).</summary>
         private static void AppendForeignSpies(StringBuilder text, WorldCapture capture, CapturedEmpire me)
         {
             List<int> watched = capture.StealthActivity.Where(t => capture.OwnerOf(t) == me.Index).ToList();
@@ -337,14 +337,14 @@ namespace CurrencyMod.Diplomacia
             }
         }
 
-        // ---------------- Nações conhecidas ----------------
+        // ---------------- Known nations ----------------
 
         private static List<int> AppendKnownEmpires(StringBuilder text, IaWorld world, WorldCapture capture, CapturedEmpire me, DossierBuild build)
         {
             var known = new List<int>();
             text.AppendLine("== NAÇÕES QUE VOCÊ CONHECE ==");
             text.AppendLine("(em detalhe: vizinhas, em guerra, aliadas, com pendência ou conversa recente com você; as outras, resumidas)");
-            // Quem está "na conversa": escreveu agora, trocou carta com você nos últimos turnos ou tem ultimato em aberto.
+            // Who is "in the conversation": wrote now, exchanged letters with you in recent turns or has an open ultimatum.
             int self = me.Index, turn = capture.Turn;
             var talking = new HashSet<int>();
             foreach (Letter letter in world.Letters.Where(l => l.SentTurn >= turn - RecentLetterTurns || (l.Type == "ultimato" && l.SentTurn >= turn - 20)))
@@ -399,9 +399,9 @@ namespace CurrencyMod.Diplomacia
                     ? $"   Sua postura com eles: {PostureName(posture.Value)} (desde o turno {posture.Turn})."
                     : "   Sua postura com eles: neutra (nenhuma definida).");
 
-                // O detalhe é sempre montado (ele preenche o contexto de validação: queixas, propostas, exércitos à
-                // vista), mas só vai para o dossiê das nações relevantes. Na bancada: −8% por decisão, qualidade igual
-                // às cegas (estudo-custo-ia.md §0).
+                // The detail is always built (it fills the validation context: grievances, proposals, armies in
+                // sight), but only goes into the dossier for relevant nations. On the bench: −8% per decision, same
+                // quality in blind tests (estudo-custo-ia.md §0).
                 var detail = new StringBuilder();
                 AppendCrisis(detail, capture, me, relation, build);
                 AppendSurrender(detail, capture, me, relation, build);
@@ -436,8 +436,8 @@ namespace CurrencyMod.Diplomacia
         }
 
         /// <summary>
-        /// Rendição numa guerra (research\surrender.md §5.6): proposta esperando resposta, quem pode impor, e a prévia
-        /// exata dos termos (preço = placar do vencedor, gasto quase todo; o que sobra vira ouro).
+        /// Surrender in a war (research\surrender.md §5.6): proposal awaiting an answer, who can impose it, and the exact
+        /// preview of the terms (price = the winner's war score, almost all spent; what is left becomes gold).
         /// </summary>
         private static void AppendSurrender(StringBuilder text, WorldCapture capture, CapturedEmpire me, CapturedRelation relation, DossierBuild build)
         {
@@ -496,7 +496,7 @@ namespace CurrencyMod.Diplomacia
             limitsByEmpire[other] = limits;
             if (preview == null)
             {
-                limits.Room = int.MaxValue; // sem prévia (foto da thread principal): o executor confere com o rascunho real
+                limits.Room = int.MaxValue; // no preview (main-thread snapshot): the executor checks against the real draft
                 return " Os termos detalhados aparecem no próximo turno; sem \"termos\", vale o padrão do jogo (exigências e o resto em ouro).";
             }
             limits.Room = preview.DemandsFixed ? preview.Budget - preview.DemandCost : 0;
@@ -564,13 +564,13 @@ namespace CurrencyMod.Diplomacia
                 var places = armies.OrderByDescending(a => a.Strength).Take(4).Select(a =>
                 {
                     Territory(build, a.Territory);
-                    // Código A do exército deles: alvo possível de ordem_exercito "atacar" enquanto estiver à vista.
+                    // A code of their army: a possible target for ordem_exercito "atacar" while it is in sight.
                     string code = a.Key != null ? world.ArmyHandle(a.Key) + " " : string.Empty;
                     if (a.Key != null)
                     {
                         build.Context.SeenArmies.Add(world.ArmyHandle(a.Key));
                     }
-                    // A força de cada exército: sem ela, a IA gastava raciocínio adivinhando se dava para atacar (T88 E8).
+                    // Each army's strength: without it, the AI spent reasoning guessing whether it could attack (T88 E8).
                     return $"{code}{a.Units} un., força {N(a.Strength)}, em {capture.TerritoryName(a.Territory)} (T{a.Territory}){(a.Naval ? ", naval" : string.Empty)}{(a.Partial ? ", parte oculta" : string.Empty)}";
                 });
                 text.AppendLine($"   Tropas deles à sua vista: {armies.Count} exército(s), força visível {N(strength)}{ratio}" +
@@ -639,13 +639,13 @@ namespace CurrencyMod.Diplomacia
             }
         }
 
-        // ---------------- Reclamações, exigências e crise ----------------
+        // ---------------- Grievances, demands and crisis ----------------
 
         private const int MaxGrievancesListed = 6;
 
         /// <summary>
-        /// Reclamações (código G, que a ação exigir usa), exigências dos dois lados e o estado da crise, com o que cada
-        /// resposta faz no jogo. Registra os códigos e as nações que podem ser respondidas no ValidationContext.
+        /// Grievances (G code, used by the exigir action), demands on both sides and the crisis state, with what each
+        /// answer does in the game. Registers the codes and the nations that can be answered in the ValidationContext.
         /// </summary>
         private static void AppendCrisis(StringBuilder text, WorldCapture capture, CapturedEmpire me, CapturedRelation relation, DossierBuild build)
         {
@@ -673,7 +673,7 @@ namespace CurrencyMod.Diplomacia
             }
 
             bool refused = relation.Crisis == "DemandRefused";
-            // Disputa no Congresso: enquanto a votação corre (ou espera o perdedor), aceitar, recusar e retirar não valem.
+            // Dispute in the Congress: while the vote runs (or waits for the loser), accept, refuse and withdraw are not valid.
             bool inCongress = relation.Crisis == "InternationalCrisisVoteOnGoing" || relation.Crisis == "InternationalCrisisVoteEnded";
             if (relation.MyDemands.Count > 0)
             {
@@ -697,7 +697,7 @@ namespace CurrencyMod.Diplomacia
             }
             else if (relation.TheirDemands.Count > 0 && relation.AtWar)
             {
-                // Em guerra o jogo não aceita responder a exigências: elas entram na rendição ou caem com a paz.
+                // At war the game does not allow answering demands: they go into the surrender or lapse with peace.
                 text.AppendLine($"   Exigências deles contra você, de antes da guerra: {DemandList(capture, me, relation.TheirDemands, build)}. Em guerra elas não se respondem: entram nos termos de uma rendição.");
             }
             else if (relation.TheirDemands.Count > 0)
@@ -740,7 +740,7 @@ namespace CurrencyMod.Diplomacia
             return string.Join("; ", demands.Select(d => $"{GainText(capture, me, d.Gain, build)} ({GrievanceName(d.Type)})"));
         }
 
-        /// <summary>O que quem perde a disputa teria de fazer, no infinitivo ("pagar 120 sestércios").</summary>
+        /// <summary>What the loser of the dispute would have to do, in the infinitive ("pagar 120 sestércios").</summary>
         private static string GainText(WorldCapture capture, CapturedEmpire me, CapturedGain gain, DossierBuild build)
         {
             if (gain == null)
@@ -794,7 +794,7 @@ namespace CurrencyMod.Diplomacia
             }
         }
 
-        /// <summary>Nação citada numa exigência: "você", o nome se for conhecida, ou "outra nação".</summary>
+        /// <summary>Nation cited in a demand: "você", the name if known, or "outra nação".</summary>
         private static string EmpireRef(WorldCapture capture, CapturedEmpire me, int empire)
         {
             if (empire == me.Index)
@@ -860,7 +860,7 @@ namespace CurrencyMod.Diplomacia
             }
         }
 
-        /// <summary>Ação diplomática como substantivo, para "turno N, X por você/por eles".</summary>
+        /// <summary>Diplomatic action as a noun, for "turno N, X por você/por eles".</summary>
         private static string ActionName(string action)
         {
             switch (action)
@@ -910,9 +910,9 @@ namespace CurrencyMod.Diplomacia
             }
         }
 
-        // ---------------- Notícias públicas ----------------
+        // ---------------- Public news ----------------
 
-        /// <summary>Guerras e alianças entre outras nações: só entre duas que você conhece (regra do jogo).</summary>
+        /// <summary>Wars and alliances between other nations: only between two you know (game rule).</summary>
         private static void AppendWorldNews(StringBuilder text, WorldCapture capture, CapturedEmpire me, List<int> known)
         {
             var news = new List<string>();
@@ -946,7 +946,7 @@ namespace CurrencyMod.Diplomacia
             }
         }
 
-        // ---------------- Povos independentes ----------------
+        // ---------------- Independent peoples ----------------
 
         private static readonly string[] MinorTreatyFallback =
         {
@@ -954,7 +954,7 @@ namespace CurrencyMod.Diplomacia
             "Contrato privilegiado", "Intercâmbio cultural", "Vassalo", "Anexação",
         };
 
-        /// <summary>Nome do tratado com povo independente: o do jogo, se houver tradução, senão o padrão.</summary>
+        /// <summary>Name of a treaty with an independent people: the game's, if there is a translation, otherwise the default.</summary>
         internal static string MinorTreatyName(CapturedMinorTreaty treaty)
         {
             string name = treaty.Definition != null ? GameGlossary.Title(treaty.Definition) : null;
@@ -985,8 +985,8 @@ namespace CurrencyMod.Diplomacia
         }
 
         /// <summary>
-        /// Povos independentes que a nação já viu: código M, cidade, situação, patrocínio dela e de quem lidera, o que já
-        /// assinou e o que pode assinar agora (custo em influência). Até 8, os de maior patrocínio primeiro.
+        /// Independent peoples the nation has already seen: M code, city, status, its patronage and the leader's, what it has
+        /// already signed and what it can sign now (influence cost). Up to 8, highest patronage first.
         /// </summary>
         private static void AppendMinors(StringBuilder text, WorldCapture capture, CapturedEmpire me, List<int> known, DossierBuild build)
         {
@@ -1043,11 +1043,11 @@ namespace CurrencyMod.Diplomacia
             text.AppendLine();
         }
 
-        // ---------------- Cartas ----------------
+        // ---------------- Letters ----------------
 
-        /// <summary>Cartas dos últimos turnos ficam com o resumo; as mais velhas viram uma linha (estudo-custo-ia.md §5.4).</summary>
+        /// <summary>Letters from recent turns keep their summary; older ones become one line (estudo-custo-ia.md §5.4).</summary>
         private const int RecentLetterTurns = 4;
-        /// <summary>A janela da correspondência anda em blocos, para o começo da seção não mudar a cada turno (cache).</summary>
+        /// <summary>The correspondence window moves in blocks, so the start of the section does not change every turn (cache).</summary>
         private const int LetterWindowBlock = 5;
         private const int OldLettersMax = 40;
 
@@ -1065,7 +1065,7 @@ namespace CurrencyMod.Diplomacia
             {
                 if (!letter.IsPublic && letter.Type != "ultimato" && nation.BlockedEmpires.Contains(letter.From))
                 {
-                    build.RejectedLetterIds.Add(letter.Id); // correspondência recusada por você: volta ao remetente
+                    build.RejectedLetterIds.Add(letter.Id); // correspondence you refused: goes back to the sender
                     continue;
                 }
                 build.DeliveredLetterIds.Add(letter.Id);
@@ -1078,12 +1078,12 @@ namespace CurrencyMod.Diplomacia
             }
             text.AppendLine();
 
-            // Correspondência já lida, para lembrar do que foi dito e prometido. Só o que já chegou: carta a caminho não
-            // pode aparecer (nem as que você recusou).
-            // - dos últimos turnos: até 3 cartas privadas por nação, as 2 últimas declarações públicas suas e a última de
-            //   cada nação conhecida, com o resumo de 60 palavras;
-            // - mais velhas: uma linha cada (quem, quando, assunto), desde o início do bloco de 5 turnos. A memória e o
-            //   diário guardam o essencial delas, e a seção fica estável de um turno para o outro.
+            // Correspondence already read, to remember what was said and promised. Only what has arrived: a letter in transit
+            // cannot appear (nor the ones you refused).
+            // - from recent turns: up to 3 private letters per nation, your 2 latest public declarations and the latest of
+            //   each known nation, with the 60-word summary;
+            // - older: one line each (who, when, subject), since the start of the 5-turn block. Memory and the
+            //   diary keep their essentials, and the section stays stable from one turn to the next.
             int recentFrom = turn - RecentLetterTurns;
             int windowFrom = (turn - 15) / LetterWindowBlock * LetterWindowBlock;
             bool Seen(Letter l) => !build.DeliveredLetterIds.Contains(l.Id)
@@ -1116,8 +1116,8 @@ namespace CurrencyMod.Diplomacia
                 .OrderBy(l => l.Id).ToList();
             if (old.Count > OldLettersMax)
             {
-                // Corta em blocos de 20: cortando linha a linha, a primeira linha mudava a cada turno e o cache quebrava
-                // logo no começo da seção (medido na Teste16, T83–T92).
+                // Trim in blocks of 20: trimming line by line, the first line changed every turn and the cache broke
+                // right at the start of the section (measured in Teste16, T83–T92).
                 int skip = ((old.Count - OldLettersMax) / 20 + 1) * 20;
                 old = old.Skip(Math.Min(skip, old.Count)).ToList();
             }
@@ -1137,7 +1137,7 @@ namespace CurrencyMod.Diplomacia
             correspondence.AppendLine();
         }
 
-        /// <summary>Carta antiga em uma linha. Nada que dependa do turno atual, para a linha ficar igual nos próximos turnos.</summary>
+        /// <summary>Old letter in one line. Nothing that depends on the current turn, so the line stays identical in the next turns.</summary>
         private static void AppendLetterLine(StringBuilder text, Letter letter, int self)
         {
             string from = letter.From == self ? "você" : $"E{letter.From}";
@@ -1153,8 +1153,8 @@ namespace CurrencyMod.Diplomacia
         }
 
         /// <summary>
-        /// Cartas que os espiões desta nação interceptaram: as novas inteiras (até 3 por turno; o resto fica para o
-        /// próximo) e as já lidas dos últimos 15 turnos em resumo, para lembrar do que ela sabe.
+        /// Letters this nation's spies intercepted: new ones in full (up to 3 per turn; the rest wait for the next
+        /// turn) and those already read in the last 15 turns as summaries, to remember what it knows.
         /// </summary>
         private static void AppendIntercepted(StringBuilder text, IaWorld world, WorldCapture capture, int self, int turn, DossierBuild build)
         {
@@ -1209,8 +1209,8 @@ namespace CurrencyMod.Diplomacia
             string from = letter.From == self ? "você" : $"{Name(capture, letter.From)} (E{letter.From})";
             string to = letter.IsPublic ? "todos" : letter.IsGroup ? GroupLabel(world: null, letter) : letter.To == self ? "você" : $"{Name(capture, letter.To)} (E{letter.To})";
             string reply = letter.From != self && full ? (letter.ExpectsReply ? " · pede resposta" : " · não pede resposta") : string.Empty;
-            // Escrita e chegada separadas: com o atraso do mensageiro, "turno 92" sozinho fazia a IA gastar o
-            // raciocínio tentando descobrir se já tinha respondido (teste do turno 95).
+            // Written and arrival turns kept separate: with the messenger delay, "turno 92" alone made the AI spend its
+            // reasoning trying to work out whether it had already replied (turn 95 test).
             string when = letter.From == self
                 ? (letter.DeliverTurn > turn ? $"enviada no turno {letter.SentTurn}, chega no turno {letter.DeliverTurn}" : $"enviada no turno {letter.SentTurn}, entregue no turno {letter.DeliverTurn}")
                 : $"escrita no turno {letter.SentTurn}, chegou no turno {letter.DeliverTurn}";
@@ -1231,7 +1231,7 @@ namespace CurrencyMod.Diplomacia
             }
         }
 
-        /// <summary>"o grupo GRP3 (E1, E4, você)" com os membros da mensagem.</summary>
+        /// <summary>"o grupo GRP3 (E1, E4, você)" with the message's members.</summary>
         private static string GroupLabel(IaWorld world, Letter letter)
         {
             string members = letter.Members != null ? string.Join(", ", letter.Members.Select(m => "E" + m)) : "?";
@@ -1239,8 +1239,8 @@ namespace CurrencyMod.Diplomacia
         }
 
         /// <summary>
-        /// Conversas em grupo da nação (melhorias-jogando item 15): cada grupo com os membros e as últimas mensagens em
-        /// resumo. As novas chegam inteiras em CARTAS QUE CHEGARAM. Preenche os códigos GRP# que a nação pode usar.
+        /// The nation's group conversations (melhorias-jogando item 15): each group with its members and the latest messages
+        /// as summaries. New ones arrive in full under CARTAS QUE CHEGARAM. Fills the GRP# codes the nation can use.
         /// </summary>
         private const int GroupMessagesShown = 4;
 
@@ -1283,9 +1283,9 @@ namespace CurrencyMod.Diplomacia
             }
         }
 
-        // ---------------- Conselho ----------------
+        // ---------------- Council ----------------
 
-        /// <summary>O conselho opina com o que a nação sabe (o contexto já montado pelas seções anteriores).</summary>
+        /// <summary>The council gives its opinion with what the nation knows (the context already built by the previous sections).</summary>
         private static void AppendCouncil(StringBuilder text, IaWorld world, WorldCapture capture, IaNation nation, CapturedEmpire me, int turn, DossierBuild build)
         {
             if (!IaConfig.Councils.Value)
@@ -1304,18 +1304,18 @@ namespace CurrencyMod.Diplomacia
             }
             catch (Exception ex)
             {
-                Plugin.Log?.LogWarning($"[IA] Conselho de E{nation.EmpireIndex} não montado: {ex.Message}");
+                Plugin.Log?.LogWarning($"[IA] Council of E{nation.EmpireIndex} not built: {ex.Message}");
             }
         }
 
-        // ---------------- Memória ----------------
+        // ---------------- Memory ----------------
 
         private static void AppendMemory(StringBuilder text, WorldCapture capture, IaNation nation)
         {
             text.AppendLine("== SUA MEMÓRIA ==");
             bool any = false;
-            // As notas vêm primeiro e a janela anda em blocos de 8 (12 a 19 notas): o começo da seção fica igual por
-            // vários turnos e cai no cache. Sentimentos, diário e ordens mudam todo turno e vêm depois.
+            // Notes come first and the window moves in blocks of 8 (12 to 19 notes): the start of the section stays the
+            // same for several turns and hits the cache. Feelings, diary and orders change every turn and come after.
             int firstNote = Math.Max(0, nation.Notes.Count - 12) / 8 * 8;
             foreach (MemoryNote note in nation.Notes.Skip(firstNote))
             {
@@ -1346,7 +1346,7 @@ namespace CurrencyMod.Diplomacia
             text.AppendLine();
         }
 
-        // ---------------- Lembretes ----------------
+        // ---------------- Reminders ----------------
 
         private static void AppendReminders(StringBuilder text, IaWorld world, WorldCapture capture, IaNation nation, int self, int turn, DossierBuild build)
         {
@@ -1372,9 +1372,9 @@ namespace CurrencyMod.Diplomacia
             }
         }
 
-        // ---------------- Ancoragem no jogo (design §9.1) ----------------
+        // ---------------- Grounding in the game (design §9.1) ----------------
 
-        /// <summary>Vocabulário real do jogo e últimas cartas da nação, para o validador conferir as cartas novas.</summary>
+        /// <summary>The game's real vocabulary and the nation's latest letters, for the validator to check new letters.</summary>
         private static void FillGrounding(ValidationContext context, IaWorld world, WorldCapture capture, int self, int turn)
         {
             HashSet<string> known = context.KnownWords;
@@ -1417,9 +1417,9 @@ namespace CurrencyMod.Diplomacia
             {
                 Grounding.AddKnown(known, nation.Persona?.LeaderName);
             }
-            // Boato que já circula: nome que chegou em carta a esta nação pode ser citado de volta. Sem isso, um nome que
-            // escapou uma vez (ex.: "Teodoro", o forjador dos Francos T100–130) cobrava nova tentativa de todas as nações
-            // que o repetiam, por 30 turnos (estudo-custo-ia.md §4).
+            // Rumor already circulating: a name that reached this nation in a letter may be cited back. Without this, a name
+            // that slipped out once (e.g. "Teodoro", the Franks' forger T100–130) forced a retry from every nation that
+            // repeated it, for 30 turns (estudo-custo-ia.md §4).
             foreach (Letter letter in world.Letters.Where(l => l.From != self && l.SentTurn >= turn - 30
                 && (l.IsPublic || l.To == self) && l.DeliverTurn <= turn))
             {
@@ -1435,7 +1435,7 @@ namespace CurrencyMod.Diplomacia
             }
         }
 
-        /// <summary>Nome da moeda do império (CurrencyMod) ou "ouro" sem o mod de moeda.</summary>
+        /// <summary>The empire's currency name (CurrencyMod) or "ouro" without the currency mod.</summary>
         private static string Money(CapturedEmpire empire) => empire?.CurrencyName ?? "ouro";
 
         private static string ResourceLine(CapturedEmpire me)
@@ -1475,7 +1475,7 @@ namespace CurrencyMod.Diplomacia
             return string.Join(", ", types.Select(t => GameGlossary.Resource(t)?.Name).Where(n => n != null));
         }
 
-        /// <summary>Rotas comerciais, pedágios do último turno e postos com pedágio ou bloqueio entre as duas nações.</summary>
+        /// <summary>Trade routes, last turn's tolls and posts with a toll or blockade between the two nations.</summary>
         private static void AppendTrade(StringBuilder text, WorldCapture capture, CapturedEmpire me, int other)
         {
             var trade = new List<string>();
@@ -1525,7 +1525,7 @@ namespace CurrencyMod.Diplomacia
                         posts.Add($"eles bloqueiam as suas rotas em {rule.Posts} posto(s) deles");
                         continue;
                     }
-                    // Quem paga escolhe (rota_pedagio): pagar sempre, desviar sempre ou deixar a rota comparar custos.
+                    // The payer chooses (rota_pedagio): always pay, always detour or let the route compare costs.
                     TollChoiceKind choice = TradePolicy.GetTollChoice(me.Index, other);
                     string chosen = choice == TollChoiceKind.Pay ? "você escolheu PAGAR (suas rotas passam e pagam)"
                         : choice == TollChoiceKind.Detour ? "você escolheu DESVIAR (suas rotas fogem dos postos deles quando há outro caminho)"
@@ -1539,7 +1539,7 @@ namespace CurrencyMod.Diplomacia
             }
         }
 
-        /// <summary>Propostas formais pendentes na relação (opção B do F3): as que esperam você e as suas que esperam eles.</summary>
+        /// <summary>Formal proposals pending in the relation (option B of F3): those waiting for you and yours waiting for them.</summary>
         private static void AppendProposals(StringBuilder text, CapturedRelation relation, int self, DossierBuild build)
         {
             int maxTurns = Math.Max(1, IaConfig.ProposalTurns.Value);
@@ -1564,7 +1564,7 @@ namespace CurrencyMod.Diplomacia
             Line(relation.Agreement, false);
         }
 
-        /// <summary>Os nomes que existem no jogo: o que pode ser citado e negociado nas cartas.</summary>
+        /// <summary>The names that exist in the game: what may be cited and negotiated in letters.</summary>
         private static void AppendGlossary(StringBuilder text, WorldCapture capture, CapturedEmpire me)
         {
             var strategic = new List<string>();
@@ -1577,7 +1577,7 @@ namespace CurrencyMod.Diplomacia
                 }
                 if (entry.Type < capture.ResourceDeposits.Length && capture.ResourceDeposits[entry.Type] == 0)
                 {
-                    continue; // não há jazida desse recurso neste mapa
+                    continue; // there is no deposit of this resource on this map
                 }
                 string name = entry.Era > me.EraIndex ? $"{entry.Name} (de uma era futura)" : entry.Name;
                 (entry.Strategic ? strategic : luxury).Add(name);
@@ -1590,7 +1590,7 @@ namespace CurrencyMod.Diplomacia
             text.AppendLine();
         }
 
-        /// <summary>Ultimatos em aberto ou vencidos, seus e contra você: há quanto tempo se arrastam (design §9, anti-laço).</summary>
+        /// <summary>Open or expired ultimatums, yours and against you: how long they have dragged on (design §9, anti-loop).</summary>
         private static void AppendPending(StringBuilder text, IaWorld world, WorldCapture capture, int self, int turn)
         {
             var lines = new List<string>();
@@ -1624,9 +1624,9 @@ namespace CurrencyMod.Diplomacia
             text.AppendLine();
         }
 
-        // ---------------- Utilidades ----------------
+        // ---------------- Utilities ----------------
 
-        /// <summary>Parâmetros de uma ordem sem o json ("nacao E1, postura hostil").</summary>
+        /// <summary>An order's parameters without the json ("nacao E1, postura hostil").</summary>
         private static string ActionParameters(string json)
         {
             try

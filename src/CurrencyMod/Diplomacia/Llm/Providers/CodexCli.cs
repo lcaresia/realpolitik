@@ -11,12 +11,12 @@ using Newtonsoft.Json.Linq;
 namespace CurrencyMod.Diplomacia.Llm.Providers
 {
     /// <summary>
-    /// Provedor "ChatGPT (Codex)": usa o Codex instalado no PC do jogador (o mesmo programa do @openai/codex-sdk) e a
-    /// conta do ChatGPT em que ele entrou ("codex login"). O uso sai da cota do plano dele. O mod nunca lê o login do
-    /// Codex: só roda "codex exec" e "codex login".
-    /// Cada chamada é um "codex exec" sem ferramentas (shell, navegador, apps desligados), só leitura, numa pasta
-    /// vazia, sem gravar sessão: medido em 2026-10-06, a base do Codex cai de ~20 mil para ~10 mil tokens e de ~15 s
-    /// para ~5 s por chamada.
+    /// "ChatGPT (Codex)" provider: uses the Codex installed on the player's PC (the same program as @openai/codex-sdk) and
+    /// the ChatGPT account they signed into ("codex login"). Usage comes out of their plan's quota. The mod never reads the
+    /// Codex login: it only runs "codex exec" and "codex login".
+    /// Each call is a "codex exec" with no tools (shell, browser, apps disabled), read-only, in an empty folder,
+    /// without saving a session: measured on 2026-10-06, Codex's baseline drops from ~20k to ~10k tokens and from ~15 s
+    /// to ~5 s per call.
     /// </summary>
     internal static class CodexCli
     {
@@ -27,7 +27,7 @@ namespace CurrencyMod.Diplomacia.Llm.Providers
         private static DateTime loginCheckedUtc;
         private static int checking;
 
-        /// <summary>Recursos do Codex que só servem para programar: desligados em toda chamada (menos tokens, sem ferramenta).</summary>
+        /// <summary>Codex features only useful for programming: disabled on every call (fewer tokens, no tools).</summary>
         private static readonly string[] DisabledFeatures =
         {
             "shell_tool", "unified_exec", "apps", "browser_use", "browser_use_external", "computer_use", "image_generation",
@@ -41,9 +41,9 @@ namespace CurrencyMod.Diplomacia.Llm.Providers
 
         internal static string Folder => Path.Combine(Paths.BepInExRootPath, "DiplomaciaIA", "codex");
 
-        // ---------------- Instalação e login ----------------
+        // ---------------- Installation and login ----------------
 
-        /// <summary>Caminho do codex.exe (ou do codex.cmd), ou null se o Codex não estiver instalado.</summary>
+        /// <summary>Path of codex.exe (or codex.cmd), or null if Codex is not installed.</summary>
         internal static string Exe
         {
             get
@@ -62,7 +62,7 @@ namespace CurrencyMod.Diplomacia.Llm.Providers
 
         internal static bool Installed => Exe != null;
 
-        /// <summary>Instalado e com login do ChatGPT. O estado é conferido em segundo plano (no máximo a cada 2 min).</summary>
+        /// <summary>Installed and logged into ChatGPT. The state is checked in the background (at most every 2 min).</summary>
         internal static bool Ready
         {
             get
@@ -76,7 +76,7 @@ namespace CurrencyMod.Diplomacia.Llm.Providers
             }
         }
 
-        /// <summary>null = ainda conferindo.</summary>
+        /// <summary>null = still checking.</summary>
         internal static bool? LoggedIn => loggedIn;
 
         internal static void RefreshLoginAsync(bool force)
@@ -120,8 +120,8 @@ namespace CurrencyMod.Diplomacia.Llm.Providers
         }
 
         /// <summary>
-        /// "Entrar": roda o "codex login" do próprio Codex, que abre o navegador na página da OpenAI e guarda o login no
-        /// Codex. O mod só espera terminar (5 minutos) e confere o estado.
+        /// "Sign in": runs Codex's own "codex login", which opens the browser on the OpenAI page and stores the login in
+        /// Codex. The mod just waits for it to finish (5 minutes) and checks the state.
         /// </summary>
         internal static void Login(LoginSession session)
         {
@@ -161,7 +161,7 @@ namespace CurrencyMod.Diplomacia.Llm.Providers
             {
                 return File.Exists(custom) ? custom : null;
             }
-            // App do Codex para Windows: %LOCALAPPDATA%\OpenAI\Codex\bin\<versão>\codex.exe (a versão mais nova).
+            // Codex app for Windows: %LOCALAPPDATA%\OpenAI\Codex\bin\<version>\codex.exe (the newest version).
             try
             {
                 string bin = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "OpenAI", "Codex", "bin");
@@ -180,7 +180,7 @@ namespace CurrencyMod.Diplomacia.Llm.Providers
             catch (Exception)
             {
             }
-            // Instalado pelo npm ou pelo instalador da linha de comando: procura no PATH.
+            // Installed via npm or the command-line installer: search the PATH.
             foreach (string dir in (Environment.GetEnvironmentVariable("PATH") ?? string.Empty).Split(';'))
             {
                 foreach (string name in new[] { "codex.exe", "codex.cmd" })
@@ -201,7 +201,7 @@ namespace CurrencyMod.Diplomacia.Llm.Providers
             return null;
         }
 
-        // ---------------- Chamada ----------------
+        // ---------------- Call ----------------
 
         internal static ChatResult Send(ChatRequest request, ProviderDef provider, int timeoutSeconds)
         {
@@ -264,7 +264,7 @@ namespace CurrencyMod.Diplomacia.Llm.Providers
             return result;
         }
 
-        /// <summary>O Codex recebe um texto só: as instruções do mod, a mensagem e, nas novas tentativas, a conversa.</summary>
+        /// <summary>Codex receives a single text: the mod's instructions, the message and, on retries, the conversation.</summary>
         private static string BuildPrompt(ChatRequest request)
         {
             var text = new StringBuilder();
@@ -300,11 +300,11 @@ namespace CurrencyMod.Diplomacia.Llm.Providers
                 case "low":
                     return "low";
                 default:
-                    return "low"; // "desligado": o mais barato que o Codex aceita
+                    return "low"; // "off": the cheapest Codex accepts
             }
         }
 
-        /// <summary>Eventos do "codex exec --json": a última mensagem do agente e o uso do fim do turno.</summary>
+        /// <summary>Events of "codex exec --json": the agent's last message and the usage at the end of the turn.</summary>
         private static void Parse(RunResult run, ChatResult result)
         {
             string message = null;
@@ -368,7 +368,7 @@ namespace CurrencyMod.Diplomacia.Llm.Providers
                 result.Ok = true;
                 result.Content = message;
                 result.FinishReason = "stop";
-                result.CostUsd = 0; // cota do plano, sem dólar
+                result.CostUsd = 0; // plan quota, no dollars
                 return;
             }
             result.Ok = false;
@@ -406,7 +406,7 @@ namespace CurrencyMod.Diplomacia.Llm.Providers
             result.Error = "Codex: " + (detail.Length > 300 ? detail.Substring(0, 300) : detail);
         }
 
-        /// <summary>Avisos do Codex que não são erro da chamada.</summary>
+        /// <summary>Codex warnings that are not call errors.</summary>
         private static bool Harmless(string text)
         {
             text = text ?? string.Empty;
@@ -418,7 +418,7 @@ namespace CurrencyMod.Diplomacia.Llm.Providers
             return (text ?? string.Empty).Split('\n').Select(l => l.Trim()).LastOrDefault(l => l.Length > 0 && !l.Contains("PATH aliases"));
         }
 
-        // ---------------- Processo ----------------
+        // ---------------- Process ----------------
 
         private sealed class RunResult
         {
@@ -468,7 +468,7 @@ namespace CurrencyMod.Diplomacia.Llm.Providers
                 }
                 catch (Exception)
                 {
-                    // O processo saiu antes de ler (erro de inicialização): o motivo vem na saída.
+                    // The process exited before reading (startup error): the reason comes in the output.
                 }
                 var deadline = DateTime.UtcNow.AddSeconds(timeoutSeconds);
                 while (!process.WaitForExit(250))
@@ -506,7 +506,7 @@ namespace CurrencyMod.Diplomacia.Llm.Providers
             return result;
         }
 
-        /// <summary>Aspas no estilo do Windows (CommandLineToArgvW), para caminhos com espaço.</summary>
+        /// <summary>Windows-style quoting (CommandLineToArgvW), for paths with spaces.</summary>
         private static string Quote(string arg)
         {
             if (arg.Length > 0 && arg.IndexOfAny(new[] { ' ', '\t', '"' }) < 0)

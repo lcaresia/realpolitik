@@ -7,9 +7,9 @@ using System.Threading;
 namespace CurrencyMod.Diplomacia.Llm.Providers
 {
     /// <summary>
-    /// Provedor "Modelo local": qualquer servidor com API chat/completions da OpenAI rodando neste PC ou na rede de casa
-    /// (Ollama, LM Studio, llama.cpp, vLLM...). Sem chave, sem custo, e o dossiê não sai da máquina. O endereço vem de
-    /// [IA.Provedores] EnderecoLocal; vazio = procura nas portas padrão (Ollama 11434, LM Studio 1234, llama.cpp 8080).
+    /// "Local model" provider: any server with an OpenAI chat/completions API running on this PC or on the home network
+    /// (Ollama, LM Studio, llama.cpp, vLLM...). No key, no cost, and the dossier never leaves the machine. The address
+    /// comes from [IA.Provedores] EnderecoLocal; empty = probe the default ports (Ollama 11434, LM Studio 1234, llama.cpp 8080).
     /// </summary>
     internal static class LocalLlm
     {
@@ -27,10 +27,10 @@ namespace CurrencyMod.Diplomacia.Llm.Providers
         private static DateTime probedUtc = DateTime.MinValue;
         private static volatile bool probing;
 
-        /// <summary>Resultado da última procura: true = achou servidor, false = não achou, null = ainda não procurou.</summary>
+        /// <summary>Result of the last probe: true = server found, false = not found, null = not probed yet.</summary>
         internal static bool? Reachable { get; private set; }
 
-        /// <summary>Endereço base (termina em /v1), do .cfg ou do último servidor achado; null se não houver.</summary>
+        /// <summary>Base address (ends in /v1), from the .cfg or the last server found; null if there is none.</summary>
         internal static string Base
         {
             get
@@ -47,7 +47,7 @@ namespace CurrencyMod.Diplomacia.Llm.Providers
             }
         }
 
-        /// <summary>Normaliza "localhost:1234", "http://x:8080" ou "http://x/v1/chat/completions" para ".../v1".</summary>
+        /// <summary>Normalizes "localhost:1234", "http://x:8080" or "http://x/v1/chat/completions" to ".../v1".</summary>
         internal static string Normalize(string text)
         {
             text = (text ?? string.Empty).Trim().TrimEnd('/');
@@ -73,7 +73,7 @@ namespace CurrencyMod.Diplomacia.Llm.Providers
             return Uri.TryCreate(text, UriKind.Absolute, out _) ? text : null;
         }
 
-        /// <summary>Aponta ChatUrl/ModelsUrl do provedor para o endereço atual (chamar antes de cada uso).</summary>
+        /// <summary>Points the provider's ChatUrl/ModelsUrl at the current address (call before each use).</summary>
         internal static void Apply(ProviderDef provider)
         {
             string bas = Base;
@@ -83,8 +83,8 @@ namespace CurrencyMod.Diplomacia.Llm.Providers
         }
 
         /// <summary>
-        /// Procura o servidor (se o .cfg não fixou um) e guarda a lista de modelos. Roda numa thread de trabalho e no
-        /// máximo uma vez a cada 20 s, para a tela poder chamar à vontade.
+        /// Probes for the server (if the .cfg did not pin one) and caches the model list. Runs on a worker thread and at
+        /// most once every 20 s, so the screen can call it freely.
         /// </summary>
         internal static void Probe(ProviderDef provider, bool force = false)
         {
@@ -129,7 +129,7 @@ namespace CurrencyMod.Diplomacia.Llm.Providers
                 }
                 catch (Exception ex)
                 {
-                    Plugin.Log.LogInfo($"[IA] Procura do modelo local falhou: {ex.GetType().Name}");
+                    Plugin.Log.LogInfo($"[IA] Local model probe failed: {ex.GetType().Name}");
                     Reachable = false;
                 }
                 finally
@@ -139,7 +139,7 @@ namespace CurrencyMod.Diplomacia.Llm.Providers
             });
         }
 
-        /// <summary>Modelo a usar quando o .cfg não escolheu um: o primeiro que o servidor lista (ou null).</summary>
+        /// <summary>Model to use when the .cfg did not pick one: the first one the server lists (or null).</summary>
         internal static string FirstModel(ProviderDef provider)
         {
             return ProviderTester.Models(provider).FirstOrDefault();

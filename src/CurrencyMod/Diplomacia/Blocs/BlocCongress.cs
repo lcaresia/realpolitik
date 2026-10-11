@@ -5,16 +5,16 @@ using CurrencyMod.Diplomacia.Capture;
 namespace CurrencyMod.Diplomacia.Blocs
 {
     /// <summary>
-    /// Voz conjunta no Congresso: a pauta "congresso" aprovada fixa a posição do bloco na votação aberta ("lei:A",
-    /// "lei:B" ou "K#:E#" numa crise). Cada membro que não é humano e ainda não votou recebe a mesma ordem de voto que
-    /// as IAs de linguagem usam (CongressFlow.Vote); o peso de todos vai para o mesmo lado. O jogador só é avisado.
+    /// Joint voice in the Congress: an approved "congresso" agenda item fixes the bloc's position in the open vote
+    /// ("lei:A", "lei:B" or "K#:E#" in a crisis). Each member that is not human and has not voted yet gets the same vote
+    /// order the language AIs use (CongressFlow.Vote); everyone's weight goes to the same side. The player is only notified.
     /// </summary>
     internal static class BlocCongress
     {
-        /// <summary>Votos já mandados (bloco:membro:sessão), para não repetir a cada segundo.</summary>
+        /// <summary>Votes already sent (bloc:member:session), so they are not repeated every second.</summary>
         private static readonly HashSet<string> sent = new HashSet<string>();
 
-        /// <summary>Chave da votação aberta a que a posição se refere ("lei:&lt;civic&gt;:&lt;turno&gt;" ou "crise:&lt;pool&gt;:&lt;turno&gt;").</summary>
+        /// <summary>Key of the open vote the position refers to ("lei:&lt;civic&gt;:&lt;turn&gt;" or "crise:&lt;pool&gt;:&lt;turn&gt;").</summary>
         internal static string SessionKeyFor(string choice, WorldCapture capture)
         {
             CapturedCongress congress = capture?.Congress;
@@ -35,7 +35,7 @@ namespace CurrencyMod.Diplomacia.Blocs
             return null;
         }
 
-        /// <summary>Confere se a posição combina com uma votação aberta agora (validação da pauta).</summary>
+        /// <summary>Checks whether the position matches a vote open right now (agenda item validation).</summary>
         internal static string Check(string choice, WorldCapture capture)
         {
             choice = (choice ?? string.Empty).Trim();
@@ -54,7 +54,7 @@ namespace CurrencyMod.Diplomacia.Blocs
                 && int.TryParse(parts[1].TrimStart('E', 'e'), out side) && parts[0].StartsWith("K", System.StringComparison.OrdinalIgnoreCase);
         }
 
-        /// <summary>Thread principal, a cada segundo: manda os votos que faltam dos membros.</summary>
+        /// <summary>Main thread, every second: sends the members' missing votes.</summary>
         internal static void Apply(IaWorld world, WorldCapture capture, int turn, System.Func<int, bool> isHuman)
         {
             if (world == null || capture?.Congress == null)
@@ -67,7 +67,7 @@ namespace CurrencyMod.Diplomacia.Blocs
                 string key = SessionKeyFor(choice, capture);
                 if (key == null || key != bloc.CongressLine.SessionKey)
                 {
-                    continue; // a votação para a qual o bloco decidiu já fechou
+                    continue; // the vote the bloc decided on has already closed
                 }
                 CongressBallot[] ballots;
                 var intentTemplate = new ActionIntent { Guid = world.GameGuid, Turn = turn, Name = "votar_congresso", Summary = "voto do bloco " + bloc.Name };
@@ -106,7 +106,7 @@ namespace CurrencyMod.Diplomacia.Blocs
                         CrisisVote = intentTemplate.CrisisVote,
                         Choice = intentTemplate.Choice,
                     });
-                    Plugin.Log.LogInfo($"Bloco {bloc.Handle}: E{member} vota {choice} no Congresso com o bloco.");
+                    Plugin.Log.LogInfo($"Bloc {bloc.Handle}: E{member} votes {choice} in the Congress with the bloc.");
                 }
             }
         }

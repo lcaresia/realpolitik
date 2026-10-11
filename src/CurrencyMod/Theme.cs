@@ -3,8 +3,8 @@
 namespace CurrencyMod
 {
     /// <summary>
-    /// Visual da janela: tudo gerado em código (texturas com cantos arredondados, moeda dourada),
-    /// na paleta do Humankind — azul-petróleo escuro, dourado e branco frio.
+    /// Window visuals: everything generated in code (rounded-corner textures, gold coin),
+    /// in the Humankind palette — dark petrol blue, gold and cool white.
     /// </summary>
     internal static class Theme
     {
@@ -281,7 +281,7 @@ namespace CurrencyMod
             return texture;
         }
 
-        /// <summary>Retângulo de cantos arredondados com borda, para 9-slice.</summary>
+        /// <summary>Rounded-corner rectangle with a border, for 9-slice.</summary>
         private static Texture2D Rounded(int size, float radius, Color fill, Color border, float borderWidth)
         {
             Texture2D texture = NewTexture(size, size);
@@ -291,7 +291,7 @@ namespace CurrencyMod
             {
                 for (int x = 0; x < size; x++)
                 {
-                    // Distância com sinal até a borda de uma caixa arredondada (positiva = dentro).
+                    // Signed distance to the edge of a rounded box (positive = inside).
                     float qx = Mathf.Abs(x + 0.5f - half) - (half - radius);
                     float qy = Mathf.Abs(y + 0.5f - half) - (half - radius);
                     float outside = new Vector2(Mathf.Max(qx, 0), Mathf.Max(qy, 0)).magnitude;
@@ -348,7 +348,7 @@ namespace CurrencyMod
 
         private static Texture2D ToggleTexture(bool on)
         {
-            // Pílula de 28x16 à esquerda; o resto transparente.
+            // 28x16 pill on the left; the rest transparent.
             const int width = 64, height = 28;
             Texture2D texture = NewTexture(width, height);
             var pixels = new Color[width * height];
@@ -388,7 +388,7 @@ namespace CurrencyMod
             return texture;
         }
 
-        /// <summary>Moeda dourada com gradiente, aro e um losango central.</summary>
+        /// <summary>Gold coin with a gradient, rim and a central diamond.</summary>
         private static Texture2D MakeCoin(int size)
         {
             Texture2D texture = NewTexture(size, size);
@@ -407,7 +407,7 @@ namespace CurrencyMod
                         pixels[y * size + x] = Color.clear;
                         continue;
                     }
-                    // Luz vindo de cima à esquerda.
+                    // Light coming from the top left.
                     float shade = Mathf.Clamp01(0.5f + ((p.y - radius) - (p.x - radius)) / (size * 1.2f));
                     Color color = Color.Lerp(dark, Color.Lerp(mid, light, shade), 0.35f + 0.65f * shade);
                     float rel = distance / radius;
@@ -419,7 +419,7 @@ namespace CurrencyMod
                     {
                         color = Color.Lerp(color, dark, 0.55f);
                     }
-                    // Losango central em relevo.
+                    // Embossed central diamond.
                     float diamond = Mathf.Abs(p.x - radius) + Mathf.Abs(p.y - radius);
                     if (diamond < radius * 0.42f)
                     {

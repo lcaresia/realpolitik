@@ -9,10 +9,10 @@ using UnityEngine;
 namespace CurrencyMod.NativeUI
 {
     /// <summary>
-    /// Painel "Economia" na aba Relações da tela de diplomacia: compara a sua economia com a do
-    /// império selecionado (PIB, renda, força da moeda, inflação e juros) e mostra a cotação.
-    /// Montado com peças da própria tela: título de "Minhas Relações", caixa fosca da lista de
-    /// relações, barras de "Apoio de Guerra" e o texto rico da frase de estado.
+    /// "Economy" panel in the Relations tab of the diplomacy screen: compares your economy with the
+    /// selected empire's (GDP, income, currency strength, inflation and interest) and shows the exchange rate.
+    /// Built from pieces of the screen itself: the "My Relations" title, the frosted box of the relations
+    /// list, the "War Support" gauges and the rich text of the status sentence.
     /// </summary>
     internal class DiplomacyEconomyPanel : MonoBehaviour
     {
@@ -49,8 +49,8 @@ namespace CurrencyMod.NativeUI
             nextUpdate = Time.unscaledTime + 0.5f;
             try
             {
-                // No começo do jogo o serviço de janelas ainda não existe: a busca daria erro e o painel se
-                // desligaria até a próxima recarga.
+                // At the start of the game the windows service does not exist yet: the lookup would throw and the panel
+                // would switch itself off until the next reload.
                 if (WindowsUtils.WindowsService == null || !Diplomacia.GameAccess.TryGetSession(out _, out _, out _))
                 {
                     return;
@@ -72,7 +72,7 @@ namespace CurrencyMod.NativeUI
             {
                 if (!failed)
                 {
-                    Plugin.Log.LogError($"Painel de economia na diplomacia: {ex}");
+                    Plugin.Log.LogError($"Economy panel in diplomacy: {ex}");
                 }
                 failed = true;
                 nextUpdate = Time.unscaledTime + 5f;
@@ -97,7 +97,7 @@ namespace CurrencyMod.NativeUI
                 NativeUIKit.Dispose(leftover);
             }
 
-            // Caixa fosca (a mesma da lista de relações), sem a rolagem.
+            // Frosted box (the same as the relations list), without the scrolling.
             panel = NativeUIKit.Clone(boxDonor, group, PanelName, "UIScrollView", "ScrollingDragArea");
             Transform viewport = panel.Find("Viewport");
             if (viewport != null)
@@ -112,21 +112,21 @@ namespace CurrencyMod.NativeUI
             NativeUIKit.Place(panel, left, top, PanelWidth, height);
             foreach (Transform child in panel)
             {
-                NativeUIKit.Place(child, 0, 0, PanelWidth, height); // o desfoque acompanha a caixa
+                NativeUIKit.Place(child, 0, 0, PanelWidth, height); // the blur follows the box
             }
 
             title = NativeUIKit.Clone(titleDonor, panel, "Title");
             NativeUIKit.Place(title, 0, 4, PanelWidth, 32);
             NativeUIKit.Align(title, HorizontalAlignment.Center);
-            NativeUIKit.Label(title).Color = new Color(1f, 0.875f, 0.584f); // dourado dos títulos de seção
+            NativeUIKit.Label(title).Color = new Color(1f, 0.875f, 0.584f); // gold of the section titles
 
-            // A frase de estado ajusta a própria altura; aqui a altura é fixa.
+            // The status sentence adjusts its own height; here the height is fixed.
             subtitle = NativeUIKit.Clone(sentenceDonor, panel, "Subtitle");
             NativeUIKit.Label(subtitle).AutoAdjustHeight = false;
-            NativeUIKit.Place(subtitle, 20, 44, PanelWidth - 40, 44); // cabe 2 linhas (a frase de câmbio é longa)
+            NativeUIKit.Place(subtitle, 20, 44, PanelWidth - 40, 44); // fits 2 lines (the exchange sentence is long)
             NativeUIKit.Align(subtitle, HorizontalAlignment.Center);
 
-            // Cabeçalhos das colunas, alinhados aos valores de cada lado.
+            // Column headers, aligned to the values on each side.
             float columnWidth = (PanelWidth - GaugeWidth) / 2f - 34f;
             headerMine = NativeUIKit.Clone(smallCapsDonor, panel, "HeaderMine");
             NativeUIKit.Place(headerMine, 20, 94, columnWidth, 18);
@@ -153,7 +153,7 @@ namespace CurrencyMod.NativeUI
                 NativeUIKit.Align(row.Left, HorizontalAlignment.Right);
                 NativeUIKit.Place(row.Right, gaugeLeft + GaugeWidth + 14, y + 17, gaugeLeft - 34, 28);
                 NativeUIKit.Align(row.Right, HorizontalAlignment.Left);
-                // O rótulo doador ajusta a largura ao texto, o que anula o alinhamento: largura fixa.
+                // The donor label fits its width to the text, which cancels the alignment: fixed width.
                 NativeUIKit.Label(row.Left).AutoAdjustWidth = false;
                 NativeUIKit.Label(row.Right).AutoAdjustWidth = false;
                 NativeUIKit.Place(row.Left, 20, y + 17, gaugeLeft - 34, 28);
@@ -162,7 +162,7 @@ namespace CurrencyMod.NativeUI
                 NativeUIKit.SetVisible(row.Gauge.Find("LockGroup"), false);
                 rows.Add(row);
             }
-            Plugin.Log.LogInfo("Painel de economia criado na tela de diplomacia.");
+            Plugin.Log.LogInfo("Economy panel created on the diplomacy screen.");
         }
 
         private void Refresh()
@@ -203,12 +203,12 @@ namespace CurrencyMod.NativeUI
                         : L.T("Moedas equivalentes");
                 NativeUIKit.SetText(subtitle, $"<b>{theirs.Name} ({theirs.Symbol})</b>  ·  1 {mine.Symbol} = {Format.Rate(rate)} {theirs.Symbol}  ·  {verdict}");
 
-                // Renda comparada em valor real (convertida pelo câmbio), exibida na moeda de cada um.
+                // Income compared in real value (converted by the exchange rate), shown in each one's currency.
                 SetRow(0, L.T("PIB estimado"), Format.Money(mine.Gdp), Format.Money(theirs.Gdp), Share(mine.Gdp, theirs.Gdp));
                 SetRow(1, L.T("Renda por turno"), $"{Format.SignedMoney(myNet)} {mine.Symbol}", $"{Format.SignedMoney(theirNet)} {theirs.Symbol}",
                     Share(Math.Max(0, myNet) * mine.ExchangeValue, Math.Max(0, theirNet) * theirs.ExchangeValue));
                 SetRow(2, L.T("Força da moeda"), $"{Format.Rate(mine.ExchangeValue)}×", $"{Format.Rate(theirs.ExchangeValue)}×", Share(mine.ExchangeValue, theirs.ExchangeValue));
-                // Inflação e juros: barra mostra quem tem a economia mais estável / o dinheiro mais caro.
+                // Inflation and interest: the gauge shows who has the more stable economy / the more expensive money.
                 SetRow(3, L.T("Inflação por turno"), Format.Percent(mine.InflationRate), Format.Percent(theirs.InflationRate),
                     Share(1.0 / (1.0 + Math.Max(0, mine.InflationRate) * 100), 1.0 / (1.0 + Math.Max(0, theirs.InflationRate) * 100)));
                 SetRow(4, L.T("Juros por turno"), Format.Percent(mine.InterestRate), Format.Percent(theirs.InterestRate),
@@ -254,7 +254,7 @@ namespace CurrencyMod.NativeUI
             if (row.ValueGroup != null)
             {
                 NativeUIKit.StyleGauge(row.ValueGroup, new Color(0.89f, 0.78f, 0.54f, 1f));
-                // A parte preenchida vinha ancorada a 50% da barra: solta e define a largura.
+                // The filled part came anchored at 50% of the gauge: unanchor it and set the width.
                 UITransform ui = row.ValueGroup.GetComponent<UITransform>();
                 float width = Mathf.Clamp((float)share, 0.02f, 0.98f) * GaugeInnerWidth;
                 if (Mathf.Abs(ui.Width - width) > 0.5f)

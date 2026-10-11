@@ -11,58 +11,58 @@ using UnityEngine;
 
 namespace CurrencyMod.Diplomacia.Council
 {
-    /// <summary>Uma fala no conselho do jogador.</summary>
+    /// <summary>One speech in the player's council.</summary>
     internal sealed class CouncilSpeech
     {
         public string Portfolio;
         public string Text;
-        /// <summary>O conselho em uma linha (falas da reunião).</summary>
+        /// <summary>The advice in one line (meeting speeches).</summary>
         public string Advice;
-        /// <summary>Quanto o apreço do ministro pelo líder mudou com a resposta dele (reações).</summary>
+        /// <summary>How much the minister's regard for the leader changed with the leader's answer (reactions).</summary>
         public int AffectionChange;
     }
 
-    /// <summary>Uma resposta do jogador ao conselho e as reações dos ministros.</summary>
+    /// <summary>One player answer to the council and the ministers' reactions.</summary>
     internal sealed class CouncilExchange
     {
         public int Turn;
         public string PlayerText;
-        /// <summary>pensando, pronta, erro.</summary>
+        /// <summary>pensando, pronta, erro (status values).</summary>
         public string Status = "pensando";
         public string Error;
         public string Raw;
         public List<CouncilSpeech> Replies = new List<CouncilSpeech>();
     }
 
-    /// <summary>A reunião do conselho do jogador num turno.</summary>
+    /// <summary>The player's council meeting in one turn.</summary>
     internal sealed class CouncilMeeting
     {
         public int Turn;
-        /// <summary>pensando, pronta, erro.</summary>
+        /// <summary>pensando, pronta, erro (status values).</summary>
         public string Status = "pensando";
         public string Error;
         public int Attempts;
         public string Raw;
         public List<CouncilSpeech> Speeches = new List<CouncilSpeech>();
         public List<CouncilExchange> Exchanges = new List<CouncilExchange>();
-        /// <summary>Demissões e contratações feitas durante a reunião (entram na próxima resposta).</summary>
+        /// <summary>Dismissals and hirings made during the meeting (included in the next answer).</summary>
         public List<string> Notes = new List<string>();
-        /// <summary>As mesmas notas no idioma da interface (as de cima seguem em português para a IA).</summary>
+        /// <summary>The same notes in the UI language (the ones above go to the AI in Portuguese).</summary>
         public List<string> NotesUi = new List<string>();
         public bool Seen;
         public double CostUsd;
-        /// <summary>Audiência pedida pelo líder (senão, a reunião automática do intervalo).</summary>
+        /// <summary>Audience requested by the leader (otherwise, the automatic interval meeting).</summary>
         public bool Requested;
     }
 
     /// <summary>
-    /// O conselho do jogador (design §10.6). A cada turno o conselho se reúne: os números e as tendências de cada
-    /// pasta vêm das regras do CouncilEngine (as mesmas das IAs) e uma chamada à API escreve a reunião na voz de cada
-    /// ministro, a partir do dossiê completo do jogador. O jogador responde na tela do conselho e os ministros reagem
-    /// (uma chamada por resposta, com a reunião como contexto, que o cache da API aproveita). O apreço de cada ministro
-    /// pelo líder muda com as respostas (a IA julga) e com o que o líder fez no jogo (guerra, paz, acordos contra o
-    /// conselho do turno anterior). Os ministros do jogador não vazam cartas.
-    /// Tudo na thread principal, menos a chamada à API (ThreadPool, uma de cada vez).
+    /// The player's council (design §10.6). Every turn the council meets: the numbers and trends of each portfolio come
+    /// from the CouncilEngine rules (the same as the AIs') and one API call writes the meeting in each minister's voice,
+    /// from the player's full dossier. The player answers on the council screen and the ministers react (one call per
+    /// answer, with the meeting as context, which the API cache reuses). Each minister's regard for the leader changes
+    /// with the answers (the AI judges) and with what the leader did in the game (war, peace, agreements against the
+    /// previous turn's advice). The player's ministers do not leak letters.
+    /// Everything on the main thread, except the API call (ThreadPool, one at a time).
     /// </summary>
     internal static class PlayerCouncil
     {
@@ -76,7 +76,7 @@ namespace CurrencyMod.Diplomacia.Council
             public IaWorld World;
             public int Turn;
             public int Player;
-            /// <summary>-1 = a reunião; senão, o índice da resposta.</summary>
+            /// <summary>-1 = the meeting; otherwise, the answer index.</summary>
             public int Exchange = -1;
             public string Label;
             public List<ChatMessage> Messages;
@@ -111,7 +111,7 @@ namespace CurrencyMod.Diplomacia.Council
         private static string system;
         private static string user;
 
-        /// <summary>A reunião ficou pronta e a tela pode abrir sozinha (CouncilButton decide quando).</summary>
+        /// <summary>The meeting is ready and the screen may open by itself (CouncilButton decides when).</summary>
         internal static bool AutoOpenPending;
         internal static float ReadyAt;
 
@@ -119,16 +119,16 @@ namespace CurrencyMod.Diplomacia.Council
 
         internal static CouncilMeeting Meeting(IaWorld world, int turn) => world?.PlayerCouncil.LastOrDefault(m => m.Turn == turn);
 
-        /// <summary>Reunião do turno pronta e ainda não vista: o selo do botão.</summary>
+        /// <summary>The turn's meeting is ready and not seen yet: the button badge.</summary>
         internal static bool HasNews(IaWorld world, int turn)
         {
             CouncilMeeting meeting = Meeting(world, turn);
             return meeting != null && meeting.Status == "pronta" && !meeting.Seen;
         }
 
-        // ---------------- Turno ----------------
+        // ---------------- Turn ----------------
 
-        /// <summary>Uma vez por segundo, pelo IaModule.Tick (IA ligada, chave e teto de gasto em ordem).</summary>
+        /// <summary>Once per second, via IaModule.Tick (AI on, key and spending cap in order).</summary>
         internal static void Tick(IaWorld world, WorldCapture capture, int turn, int player)
         {
             if (world == null || capture == null || player < 0 || !IaConfig.PlayerCouncil.Value || !IaConfig.Councils.Value)
@@ -145,7 +145,7 @@ namespace CurrencyMod.Diplomacia.Council
             CouncilMeeting meeting = Meeting(world, turn);
             if (meeting == null)
             {
-                // Reunião sozinha só a cada ConselhoIntervaloTurnos; entre uma e outra, só por audiência (Convene).
+                // Automatic meeting only every ConselhoIntervaloTurnos; in between, only by audience (Convene).
                 if (turn < NextAutoTurn(world))
                 {
                     return;
@@ -157,7 +157,7 @@ namespace CurrencyMod.Diplomacia.Council
                 return;
             }
             bool pending = meeting.Status == "pensando" || (meeting.Status == "erro" && meeting.Attempts < 3) || meeting.Exchanges.Any(e => e.Status == "pensando");
-            // IA desconectada: a reunião espera (sem gastar tentativas) até a chamada de teste da fila.
+            // AI disconnected: the meeting waits (without spending attempts) until the queue's test call.
             if (pending && Llm.Providers.ProviderRouter.AllDown && !Llm.Providers.ProviderRouter.MayCall())
             {
                 return;
@@ -167,7 +167,7 @@ namespace CurrencyMod.Diplomacia.Council
                 DispatchMeeting(world, capture, meeting, player);
                 return;
             }
-            // Resposta que ficou sem chamada (núcleo recarregado no meio): manda de novo.
+            // Answer left without a call (core reloaded midway): send it again.
             int waiting = meeting.Exchanges.FindIndex(e => e.Status == "pensando");
             if (waiting >= 0 && meeting.Status == "pronta")
             {
@@ -175,10 +175,10 @@ namespace CurrencyMod.Diplomacia.Council
             }
         }
 
-        /// <summary>Última reunião (de qualquer turno), ou null se o conselho nunca se reuniu.</summary>
+        /// <summary>Latest meeting (of any turn), or null if the council never met.</summary>
         internal static CouncilMeeting LastMeeting(IaWorld world) => world?.PlayerCouncil.LastOrDefault();
 
-        /// <summary>Turno da próxima reunião automática: a última reunião (automática ou audiência) + o intervalo.</summary>
+        /// <summary>Turn of the next automatic meeting: the latest meeting (automatic or audience) + the interval.</summary>
         internal static int NextAutoTurn(IaWorld world)
         {
             CouncilMeeting last = LastMeeting(world);
@@ -197,7 +197,7 @@ namespace CurrencyMod.Diplomacia.Council
             return meeting;
         }
 
-        /// <summary>O líder pede audiência: o conselho se reúne neste turno (1 chamada) e a contagem recomeça.</summary>
+        /// <summary>The leader requests an audience: the council meets this turn (1 call) and the count restarts.</summary>
         internal static string Convene()
         {
             IaModule module = IaModule.Instance;
@@ -221,8 +221,8 @@ namespace CurrencyMod.Diplomacia.Council
         }
 
         /// <summary>
-        /// O que o líder fez desde o turno anterior (guerra, paz, acordos novos), comparando as relações: quem tinha
-        /// aconselhado isso ganha apreço; quem tinha aconselhado o contrário perde.
+        /// What the leader did since the previous turn (war, peace, new agreements), comparing the relations: whoever had
+        /// advised it gains regard; whoever had advised the opposite loses it.
         /// </summary>
         private static void FollowUp(IaWorld world, IaNation nation, WorldCapture capture, int turn, int player)
         {
@@ -266,7 +266,7 @@ namespace CurrencyMod.Diplomacia.Council
                 if (done.Count > 0)
                 {
                     CouncilEngine.ApplyReaction(nation, done, world.PlayerRelationMemoTurn);
-                    Plugin.Log?.LogInfo($"[IA] Conselho do jogador: desde o turno {world.PlayerRelationMemoTurn}, o líder fez {string.Join(", ", done)}");
+                    Plugin.Log?.LogInfo($"[IA] Player council: since turn {world.PlayerRelationMemoTurn}, the leader did {string.Join(", ", done)}");
                 }
             }
             world.PlayerRelationMemo = now;
@@ -279,9 +279,9 @@ namespace CurrencyMod.Diplomacia.Council
                 + (relation.OpenBorders ? "O" : string.Empty) + (relation.NonAggression ? "N" : string.Empty) + (relation.SharedMaps ? "S" : string.Empty);
         }
 
-        // ---------------- Jogador ----------------
+        // ---------------- Player ----------------
 
-        /// <summary>O jogador fala ao conselho (tela do conselho ou "ia conselho falar").</summary>
+        /// <summary>The player speaks to the council (council screen or "ia conselho falar").</summary>
         internal static string Speak(string text)
         {
             IaModule module = IaModule.Instance;
@@ -324,7 +324,7 @@ namespace CurrencyMod.Diplomacia.Council
             return "ok: " + L.T("o conselho está ouvindo");
         }
 
-        /// <summary>Demite um ministro do jogador e põe outra pessoa do banco no lugar.</summary>
+        /// <summary>Dismisses one of the player's ministers and puts another person from the pool in their place.</summary>
         internal static string Fire(string portfolio)
         {
             IaModule module = IaModule.Instance;
@@ -348,7 +348,7 @@ namespace CurrencyMod.Diplomacia.Council
             {
                 return "erro: " + L.T("ninguém nessa pasta");
             }
-            // Só a Mão é trocada na hora; as outras pastas ficam vagas até o jogador nomear alguém.
+            // Only the Hand is replaced on the spot; the other portfolios stay vacant until the player appoints someone.
             Minister newcomer = portfolio == "mao" ? nation.Council.FirstOrDefault(m => m.Portfolio == portfolio) : null;
             int era = capture.Empire(module.PlayerIndex)?.EraIndex ?? 0;
             CouncilMeeting noted = Meeting(world, module.CurrentTurn);
@@ -359,14 +359,14 @@ namespace CurrencyMod.Diplomacia.Council
                     ? L.F("Demissão de {0}; no lugar entra {1}", formerUi, newcomer.Name) + " (" + L.F("ficha do novo: {0}", CardUi(newcomer, era)) + ")"
                     : L.F("Demissão de {0}; a pasta fica vaga", formerUi));
             }
-            IaModule.Runtime.Event("Conselho do jogador: " + result + ".");
+            IaModule.Runtime.Event("Player council: " + result + ".");
             module.MarkDirty();
             return "ok: " + result;
         }
 
         /// <summary>
-        /// O jogador nomeia um dos 3 candidatos de uma pasta vaga (tela do conselho ou "ia conselho nomear pasta id"). Custa
-        /// influência (CouncilEngine.AppointCost), descontada pela ordem do próprio jogo.
+        /// The player appoints one of the 3 candidates for a vacant portfolio (council screen or "ia conselho nomear pasta
+        /// id"). Costs influence (CouncilEngine.AppointCost), deducted through the game's own order.
         /// </summary>
         internal static string Appoint(string portfolio, string personalityId)
         {
@@ -399,12 +399,12 @@ namespace CurrencyMod.Diplomacia.Council
                 noted.Notes.Add($"o líder nomeou {CouncilEngine.Title(minister, era)} {minister.Name} (ficha: {Card(minister, era, capture)})");
                 noted.NotesUi.Add(L.F("Nomeação: {0}", who) + " (" + CardUi(minister, era) + ")");
             }
-            IaModule.Runtime.Event($"Conselho do jogador: nomeado {minister.Name} ({minister.Portfolio}) por {cost} de influência.");
+            IaModule.Runtime.Event($"Player council: appointed {minister.Name} ({minister.Portfolio}) for {cost} influence.");
             module.MarkDirty();
             return "ok: " + L.F("{0} nomeado(a) por {1} de influência", who, cost);
         }
 
-        /// <summary>Desconta influência pela ordem do jogo (a mesma da tela de trapaças, com valor negativo).</summary>
+        /// <summary>Deducts influence through the game's order (the same as the cheats screen, with a negative value).</summary>
         internal static void ChargeInfluence(int empire, int amount)
         {
             if (amount > 0)
@@ -413,7 +413,7 @@ namespace CurrencyMod.Diplomacia.Council
             }
         }
 
-        /// <summary>Convoca de novo a reunião que falhou.</summary>
+        /// <summary>Convenes the failed meeting again.</summary>
         internal static string Retry()
         {
             IaModule module = IaModule.Instance;
@@ -438,7 +438,7 @@ namespace CurrencyMod.Diplomacia.Council
             return "ok: " + L.T("o conselho vai se reunir de novo");
         }
 
-        // ---------------- Chamadas ----------------
+        // ---------------- Calls ----------------
 
         private static void DispatchMeeting(IaWorld world, WorldCapture capture, CouncilMeeting meeting, int player)
         {
@@ -463,7 +463,7 @@ namespace CurrencyMod.Diplomacia.Council
         {
             if (inFlight)
             {
-                return; // o Tick manda quando a chamada atual voltar
+                return; // Tick sends it when the current call returns
             }
             if (!PreparePrompt(world, capture, player, meeting.Turn, out string error))
             {
@@ -526,7 +526,7 @@ namespace CurrencyMod.Diplomacia.Council
             });
         }
 
-        /// <summary>Thread de trabalho: a chamada, e mais uma se o json vier quebrado.</summary>
+        /// <summary>Worker thread: the call, plus one more if the json comes back broken.</summary>
         private static Result Run(Job job)
         {
             var result = new Result { Job = job };
@@ -583,7 +583,7 @@ namespace CurrencyMod.Diplomacia.Council
             return result;
         }
 
-        /// <summary>Thread principal, a cada frame (IaModule.Update): aplica o que voltou da API.</summary>
+        /// <summary>Main thread, every frame (IaModule.Update): applies what came back from the API.</summary>
         internal static void Pump()
         {
             while (results.TryDequeue(out Result result))
@@ -595,8 +595,8 @@ namespace CurrencyMod.Diplomacia.Council
                 }
                 catch (Exception ex)
                 {
-                    Plugin.Log?.LogError($"[IA] Conselho do jogador: falha ao aplicar a resposta: {ex}");
-                    // Sem isto a reunião segue "pensando" e o Tick manda a mesma chamada paga de novo no frame seguinte.
+                    Plugin.Log?.LogError($"[IA] Player council: failed to apply the response: {ex}");
+                    // Without this the meeting stays "pensando" and Tick sends the same paid call again on the next frame.
                     retryAt = Time.unscaledTime + 60f;
                 }
             }
@@ -608,7 +608,7 @@ namespace CurrencyMod.Diplomacia.Council
             IaWorld world = IaModule.World;
             if (world == null || !ReferenceEquals(world, job.World))
             {
-                return; // outra partida ou save carregado no meio
+                return; // another game or a save loaded midway
             }
             world.TotalCostUsd += result.Cost;
             world.TotalCalls += result.Calls;
@@ -642,10 +642,10 @@ namespace CurrencyMod.Diplomacia.Council
                 meeting.Status = "erro";
                 meeting.Error = result.Error ?? "resposta vazia";
                 retryAt = Time.unscaledTime + 20f * Math.Max(1, meeting.Attempts);
-                Plugin.Log?.LogWarning($"[IA] Conselho do jogador, turno {meeting.Turn}: {meeting.Error}");
+                Plugin.Log?.LogWarning($"[IA] Player council, turn {meeting.Turn}: {meeting.Error}");
                 return;
             }
-            // Frases com mecanismo que o jogo não tem saem (refazer a reunião custaria outra chamada).
+            // Sentences citing a mechanism the game does not have are removed (redoing the meeting would cost another call).
             var dropped = new List<string>();
             var speeches = new List<CouncilSpeech>
             {
@@ -670,7 +670,7 @@ namespace CurrencyMod.Diplomacia.Council
             }
             if (dropped.Count > 0)
             {
-                Plugin.Log?.LogInfo($"[IA] Conselho do jogador, turno {meeting.Turn}: {dropped.Count} frase(s) com mecanismo inventado removida(s): {string.Join(" | ", dropped)}");
+                Plugin.Log?.LogInfo($"[IA] Player council, turn {meeting.Turn}: {dropped.Count} sentence(s) with an invented mechanism removed: {string.Join(" | ", dropped)}");
             }
             meeting.Speeches = speeches;
             meeting.Raw = result.Raw;
@@ -679,7 +679,7 @@ namespace CurrencyMod.Diplomacia.Council
             meeting.Seen = false;
             AutoOpenPending = true;
             ReadyAt = Time.unscaledTime;
-            IaModule.Runtime.Event($"Seu conselho se reuniu no turno {meeting.Turn}: {speeches.Count - 1} ministro(s) falaram (US$ {result.Cost:0.0000}).");
+            IaModule.Runtime.Event($"Your council met on turn {meeting.Turn}: {speeches.Count - 1} minister(s) spoke (US$ {result.Cost:0.0000}).");
         }
 
         private static void ApplyExchange(CouncilExchange exchange, IaNation nation, Result result)
@@ -735,9 +735,9 @@ namespace CurrencyMod.Diplomacia.Council
         }
 
         /// <summary>
-        /// Teste ("ia teste conselho-json"): uma resposta fora do formato (fala como texto solto, pasta e conselho como
-        /// lista) passa pelo ApplyMeeting e pelo ApplyExchange de verdade, numa reunião descartável. Antes lançava exceção
-        /// e a reunião ficava "pensando", repetindo a chamada paga.
+        /// Test ("ia teste conselho-json"): a response out of format (speech as loose text, portfolio and advice as a list)
+        /// goes through the real ApplyMeeting and ApplyExchange, in a throwaway meeting. It used to throw an exception and
+        /// the meeting stayed "pensando", repeating the paid call.
         /// </summary>
         internal static string SelfTestMalformed(IaWorld world, int player)
         {
@@ -769,7 +769,7 @@ namespace CurrencyMod.Diplomacia.Council
             return text.ToString();
         }
 
-        /// <summary>Campo de texto do json, ou null: lista ou objeto no lugar do texto fariam o cast (string) lançar.</summary>
+        /// <summary>Text field of the json, or null: a list or object in place of the text would make the (string) cast throw.</summary>
         private static string Text(JToken token) => (token as JValue)?.Value?.ToString();
 
         private static string Portfolio(string value)
@@ -788,8 +788,9 @@ namespace CurrencyMod.Diplomacia.Council
         }
 
         /// <summary>
-        /// Tira a apresentação do começo da fala ("Hamilcar Barca, Marechal. Sem ferro…" → "Sem ferro…"): a tela já
-        /// mostra nome e cargo. Só quando a primeira frase é curta (até 5 palavras) e começa pelo nome.
+        /// Strips the self-introduction from the start of the speech ("Hamilcar Barca, Marechal. Sem ferro…" → "Sem
+        /// ferro…"): the screen already shows name and office. Only when the first sentence is short (up to 5 words) and
+        /// starts with the name.
         /// </summary>
         private static string WithoutIntro(string text, IaNation nation, string portfolio)
         {
@@ -814,8 +815,8 @@ namespace CurrencyMod.Diplomacia.Council
         }
 
         /// <summary>
-        /// Mecanismos que o conselho já inventou (turno 32: "só com reciprocidade plena de escribas e costumes"). Somam-se
-        /// às mercadorias e mecanismos do Grounding.NotInGame, que valem para as cartas das nações.
+        /// Mechanisms the council has already invented (turn 32: "só com reciprocidade plena de escribas e costumes"). Added
+        /// to the goods and mechanisms of Grounding.NotInGame, which apply to the nations' letters.
         /// </summary>
         private static readonly HashSet<string> CouncilInvented = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
         {
@@ -827,10 +828,10 @@ namespace CurrencyMod.Diplomacia.Council
             "gegenseitigkeit", "schreiber", "zoll", "zölle", "botschaft", "botschaften", "geisel", "geiseln", "heirat", "mitgift",
         };
 
-        /// <summary>Vocabulário real do dossiê da última reunião (nomes do jogo, recursos do mapa): "Seda" no mapa vale.</summary>
+        /// <summary>Real vocabulary from the last meeting's dossier (game names, map resources): "Seda" on the map is valid.</summary>
         private static HashSet<string> knownWords = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
-        /// <summary>Tira as frases que citam mecanismo inventado. Devolve o texto sem elas (vazio se não sobrar nada).</summary>
+        /// <summary>Removes sentences citing an invented mechanism. Returns the text without them (empty if nothing is left).</summary>
         internal static string Ground(string text, List<string> dropped)
         {
             if (string.IsNullOrWhiteSpace(text))
@@ -860,7 +861,7 @@ namespace CurrencyMod.Diplomacia.Council
 
         // ---------------- Prompt ----------------
 
-        /// <summary>Dossiê do jogador, fichas dos ministros e o pedido da reunião (o mesmo prefixo nas respostas: cache).</summary>
+        /// <summary>Player dossier, minister cards and the meeting request (the same prefix in the answers: cache).</summary>
         private static bool PreparePrompt(IaWorld world, WorldCapture capture, int player, int turn, out string error)
         {
             error = null;
@@ -882,7 +883,7 @@ namespace CurrencyMod.Diplomacia.Council
             catch (Exception ex)
             {
                 error = "falha ao montar o dossiê: " + ex.Message;
-                Plugin.Log?.LogError($"[IA] Conselho do jogador: {error}");
+                Plugin.Log?.LogError($"[IA] Player council: {error}");
                 return false;
             }
             IaNation nation = world.Ensure(player);
@@ -953,7 +954,7 @@ namespace CurrencyMod.Diplomacia.Council
             return text.ToString();
         }
 
-        /// <summary>O dossiê sem o pedido de decisão da IA e sem a seção do conselho (as fichas vêm completas depois).</summary>
+        /// <summary>The dossier without the AI decision request and without the council section (the full cards come later).</summary>
         private static string CleanDossier(string text)
         {
             var output = new StringBuilder();
@@ -987,7 +988,7 @@ namespace CurrencyMod.Diplomacia.Council
                     text.AppendLine("  Números da pasta: " + minister.Opinion + (minister.Advice != null ? " Tende a aconselhar: " + AdviceText(minister.Advice, capture) + "." : string.Empty));
                 }
             }
-            // Pastas vagas: ninguém fala por elas; a Mão pode sugerir nomear alguém (o líder escolhe na tela do conselho).
+            // Vacant portfolios: nobody speaks for them; the Hand may suggest appointing someone (the leader picks on the council screen).
             List<string> vacant = CouncilBank.Portfolios.Where(p => p != "mao" && !nation.Council.Any(m => m.Portfolio == p)).ToList();
             if (vacant.Count > 0)
             {
@@ -997,7 +998,7 @@ namespace CurrencyMod.Diplomacia.Council
             return text.ToString();
         }
 
-        /// <summary>A ficha curta no idioma da interface (a Card, em português, segue para a IA).</summary>
+        /// <summary>The short card in the UI language (Card, in Portuguese, goes to the AI).</summary>
         internal static string CardUi(Minister minister, int era)
         {
             var parts = new List<string>
@@ -1007,13 +1008,13 @@ namespace CurrencyMod.Diplomacia.Council
             };
             if (!string.IsNullOrWhiteSpace(minister.Voice))
             {
-                parts.Add(L.F("Voz: {0}", L.T(minister.Voice))); // voz: do banco padrão, marcado com L.N
+                parts.Add(L.F("Voz: {0}", L.T(minister.Voice))); // voice: from the default pool, marked with L.N
             }
             parts.Add(L.F("Credibilidade {0}", minister.Credibility));
             return string.Join(" · ", parts);
         }
 
-        /// <summary>Ficha curta de um ministro (título, nome, traços, voz e números).</summary>
+        /// <summary>Short card of a minister (title, name, traits, voice and numbers).</summary>
         internal static string Card(Minister minister, int era, WorldCapture capture)
         {
             var parts = new List<string>
@@ -1039,7 +1040,7 @@ namespace CurrencyMod.Diplomacia.Council
             return string.Join(" · ", parts);
         }
 
-        /// <summary>Etiqueta de conselho das regras em português ("paz:E3" → "paz com os Persas (E3)").</summary>
+        /// <summary>Advice tag from the rules, in Portuguese ("paz:E3" → "paz com os Persas (E3)").</summary>
         internal static string AdviceText(string advice, WorldCapture capture)
         {
             string[] pair = (advice ?? string.Empty).Split(':');
@@ -1069,7 +1070,7 @@ namespace CurrencyMod.Diplomacia.Council
             return them != null ? $"{them.Culture} (E{empire})" : $"E{empire}";
         }
 
-        // ---------------- Estado para a tela e os comandos ----------------
+        // ---------------- State for the screen and the commands ----------------
 
         internal static string Describe(IaWorld world, int turn)
         {

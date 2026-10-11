@@ -5,8 +5,8 @@ using BepInEx;
 namespace CurrencyMod.Diplomacia.Llm
 {
     /// <summary>
-    /// Lê a chave da API de BepInEx\config\deepseek.key (primeira linha que não começa com #).
-    /// A chave só sai daqui para o cabeçalho Authorization: nunca para log, F10, save ou backup.
+    /// Reads the API key from BepInEx\config\deepseek.key (first line that does not start with #).
+    /// The key only leaves here for the Authorization header: never to the log, F10, save or backup.
     /// </summary>
     internal static class ApiKey
     {
@@ -16,7 +16,7 @@ namespace CurrencyMod.Diplomacia.Llm
 
         internal static string FilePath => Path.Combine(Paths.ConfigPath, "deepseek.key");
 
-        /// <summary>Chave atual (relê o arquivo se ele mudou) ou null se não houver.</summary>
+        /// <summary>Current key (re-reads the file if it changed) or null if there is none.</summary>
         internal static string Get()
         {
             lock (Gate)
@@ -56,7 +56,7 @@ namespace CurrencyMod.Diplomacia.Llm
 
         internal static bool IsConfigured => !string.IsNullOrEmpty(Get());
 
-        /// <summary>Numa instalação nova, cria o arquivo só com a instrução, para a pessoa colar a chave.</summary>
+        /// <summary>On a fresh install, creates the file with just the instructions, for the player to paste the key.</summary>
         internal static void EnsureTemplate()
         {
             try
@@ -75,7 +75,7 @@ namespace CurrencyMod.Diplomacia.Llm
             }
         }
 
-        /// <summary>Descrição segura para mostrar (nunca mostra nenhum pedaço da chave).</summary>
+        /// <summary>Safe description for display (never shows any part of the key).</summary>
         internal static string Describe() => IsConfigured ? "chave configurada" : $"sem chave (coloque em {FilePath})";
     }
 }

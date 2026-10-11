@@ -6,27 +6,27 @@ using CurrencyMod.Diplomacia.Capture;
 namespace CurrencyMod.Diplomacia.Blocs
 {
     /// <summary>
-    /// Regras dos blocos, sem tocar no jogo: fundar e convidar, aceitar, sair, sugerir e pautar, votar, eleger o
-    /// presidente e o passo de cada turno (convites vencidos, pautas fechadas, eleição, bloco desfeito). Os efeitos no
-    /// jogo (pedágio, queixas, Congresso) leem o estado daqui. Toda função devolve null quando deu certo, ou o problema.
+    /// Bloc rules, without touching the game: found and invite, accept, leave, suggest and table motions, vote, elect the
+    /// president and the per-turn step (expired invites, closed motions, election, dissolved bloc). The in-game effects
+    /// (toll, grievances, Congress) read the state from here. Every function returns null on success, or the problem.
     /// </summary>
     internal static class BlocEngine
     {
-        // ---------------- Consultas ----------------
+        // ---------------- Queries ----------------
 
-        /// <summary>Bloco formado (ou em formação) de que a nação é membro.</summary>
+        /// <summary>Formed (or forming) bloc the nation is a member of.</summary>
         internal static Bloc Of(IaWorld world, int empire) => world?.Blocs.FirstOrDefault(b => b.Has(empire));
 
         internal static Bloc ById(IaWorld world, int id) => world?.Blocs.FirstOrDefault(b => b.Id == id);
 
-        /// <summary>Bloco pelo código "BLC#" ou pelo id.</summary>
+        /// <summary>Bloc by its "BLC#" code or by id.</summary>
         internal static Bloc ByHandle(IaWorld world, string handle)
         {
             string digits = (handle ?? string.Empty).Trim().ToUpperInvariant().Replace("BLC", string.Empty);
             return int.TryParse(digits, out int id) ? ById(world, id) : null;
         }
 
-        /// <summary>As duas nações estão no mesmo bloco já formado (comércio interno livre).</summary>
+        /// <summary>Both nations are in the same already-formed bloc (free internal trade).</summary>
         internal static bool SameBloc(IaWorld world, int a, int b)
         {
             if (a == b || world == null)
@@ -37,7 +37,7 @@ namespace CurrencyMod.Diplomacia.Blocs
             return bloc != null && bloc.Formed && bloc.Has(b);
         }
 
-        /// <summary>Tarifa comum do bloco do dono do posto contra a nação que passa: "pedagio", "bloqueio" ou null.</summary>
+        /// <summary>Common tariff of the post owner's bloc against the passing nation: "pedagio", "bloqueio" or null.</summary>
         internal static string TariffAgainst(IaWorld world, int postOwner, int trader)
         {
             Bloc bloc = Of(world, postOwner);
@@ -48,16 +48,16 @@ namespace CurrencyMod.Diplomacia.Blocs
             return bloc.Tariffs.FirstOrDefault(t => t.Target == trader)?.Mode;
         }
 
-        /// <summary>Convites abertos para a nação.</summary>
+        /// <summary>Open invites for the nation.</summary>
         internal static IEnumerable<Bloc> InvitesFor(IaWorld world, int empire) => world?.Blocs.Where(b => b.InviteFor(empire) != null) ?? Enumerable.Empty<Bloc>();
 
-        /// <summary>Turnos que ainda faltam da espera depois de sair de um bloco (0 = pode entrar).</summary>
+        /// <summary>Turns still left in the cooldown after leaving a bloc (0 = may join).</summary>
         internal static int CooldownLeft(IaWorld world, int empire, int turn)
         {
             return world.BlocLeftTurn.TryGetValue(empire, out int left) ? Math.Max(0, left + Bloc.LeaveCooldown - turn) : 0;
         }
 
-        // ---------------- Fundar, convidar, responder, sair ----------------
+        // ---------------- Found, invite, respond, leave ----------------
 
         internal static string Found(IaWorld world, int founder, string name, IEnumerable<int> invitees, int turn, out Bloc bloc)
         {
@@ -108,7 +108,7 @@ namespace CurrencyMod.Diplomacia.Blocs
             return null;
         }
 
-        /// <summary>Aceita ou recusa um convite. Ao aceitar, sai dos outros convites; o bloco forma com 3 membros.</summary>
+        /// <summary>Accepts or declines an invite. On accepting, drops the other invites; the bloc forms with 3 members.</summary>
         internal static string Respond(IaWorld world, int empire, Bloc bloc, bool accept, int turn)
         {
             BlocInvite invite = bloc?.InviteFor(empire);
@@ -169,7 +169,7 @@ namespace CurrencyMod.Diplomacia.Blocs
             bloc.Log(turn, expelled ? "expulso" : "saiu", empire);
             if (bloc.President == empire && bloc.Members.Count > 0)
             {
-                // Interino: o membro mais antigo, com mandato novo.
+                // Interim: the longest-standing member, with a fresh term.
                 bloc.President = bloc.Members[0];
                 bloc.TermStart = turn;
                 bloc.ElectionOpened = -1;
@@ -198,11 +198,11 @@ namespace CurrencyMod.Diplomacia.Blocs
             }
         }
 
-        // ---------------- Pautas ----------------
+        // ---------------- Motions ----------------
 
         /// <summary>
-        /// Sugere uma pauta (membro comum) ou já põe em votação (presidente). tarifa: target + "pedagio"|"bloqueio";
-        /// fim_tarifa, admitir, expulsar: target; congresso: arg = posição; renomear: arg = nome; dissolver.
+        /// Suggests a motion (regular member) or puts it straight to a vote (president). tarifa: target + "pedagio"|"bloqueio";
+        /// fim_tarifa, admitir, expulsar: target; congresso: arg = position; renomear: arg = name; dissolver.
         /// </summary>
         internal static string Propose(IaWorld world, int empire, string kind, int target, string arg, string reason, int turn, out BlocMotion motion)
         {
@@ -249,7 +249,7 @@ namespace CurrencyMod.Diplomacia.Blocs
             return null;
         }
 
-        /// <summary>Presidente põe uma sugestão em votação (ou a descarta).</summary>
+        /// <summary>The president puts a suggestion to a vote (or discards it).</summary>
         internal static string Schedule(IaWorld world, int empire, int motionId, bool open, int turn)
         {
             Bloc bloc = Of(world, empire);
@@ -354,7 +354,7 @@ namespace CurrencyMod.Diplomacia.Blocs
             return L.N("pauta desconhecida");
         }
 
-        /// <summary>Fecha a pauta quando todos que podem votar votaram, ou quando o prazo acabou.</summary>
+        /// <summary>Closes the motion when everyone eligible has voted, or when the deadline has passed.</summary>
         private static void CloseIfDone(IaWorld world, Bloc bloc, BlocMotion motion, int turn)
         {
             List<int> voters = Voters(bloc, motion);
@@ -374,7 +374,7 @@ namespace CurrencyMod.Diplomacia.Blocs
             }
             else
             {
-                // Empate (inclusive ninguém votou): decide o voto do presidente; sem voto dele, não passa.
+                // Tie (including nobody voted): the president's vote decides; without it, the motion fails.
                 passed = motion.Votes.TryGetValue(bloc.President, out bool presidentYes) && presidentYes && motion.Yes > 0;
             }
             motion.Status = passed ? BlocMotion.Passed : BlocMotion.Failed;
@@ -430,7 +430,7 @@ namespace CurrencyMod.Diplomacia.Blocs
             }
         }
 
-        // ---------------- Presidente ----------------
+        // ---------------- President ----------------
 
         internal static string VotePresident(IaWorld world, int empire, int candidate, int turn)
         {
@@ -467,11 +467,11 @@ namespace CurrencyMod.Diplomacia.Blocs
             bloc.ElectionVotes.Clear();
         }
 
-        // ---------------- Turno ----------------
+        // ---------------- Turn ----------------
 
         /// <summary>
-        /// Chamado a cada segundo pela thread principal: registra as defesas mútuas acionadas na simulação e roda o
-        /// Tick uma vez por turno. Devolve true se mudou algo (o mundo precisa ir para o save).
+        /// Called every second by the main thread: records the mutual defenses triggered in the simulation and runs
+        /// Tick once per turn. Returns true if anything changed (the world needs to go into the save).
         /// </summary>
         internal static bool Step(IaWorld world, int turn)
         {
@@ -494,7 +494,7 @@ namespace CurrencyMod.Diplomacia.Blocs
             return changed;
         }
 
-        /// <summary>Passo de cada turno: convites vencidos, formação que falhou, pautas no prazo e a eleição.</summary>
+        /// <summary>Per-turn step: expired invites, failed formation, motions at their deadline and the election.</summary>
         internal static void Tick(IaWorld world, int turn)
         {
             foreach (Bloc bloc in world.Blocs.ToList())
@@ -536,9 +536,9 @@ namespace CurrencyMod.Diplomacia.Blocs
             }
         }
 
-        // ---------------- Auxiliares ----------------
+        // ---------------- Helpers ----------------
 
-        /// <summary>Grupo de conversa do bloco: criado quando o bloco forma e com os mesmos membros dele.</summary>
+        /// <summary>The bloc's chat group: created when the bloc forms, with the same members.</summary>
         private static void SyncGroup(IaWorld world, Bloc bloc, int turn)
         {
             if (!bloc.Formed)

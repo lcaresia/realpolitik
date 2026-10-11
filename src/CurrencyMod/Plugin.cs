@@ -6,12 +6,12 @@ using UnityEngine;
 
 namespace CurrencyMod
 {
-    /// <summary>Configurações e log compartilhados do núcleo.</summary>
+    /// <summary>Shared core settings and log.</summary>
     public static class Plugin
     {
         public const string PluginName = "CurrencyMod";
         public const string PluginVersion = "1.1.0";
-        /// <summary>Versão do produto (Realpolitik): instalador, loja e aviso de atualização. As DLLs têm a própria.</summary>
+        /// <summary>Product version (Realpolitik): installer, store and update notice. The DLLs have their own.</summary>
         public const string ProductVersion = "1.2.0";
 
         internal static ManualLogSource Log;
@@ -23,9 +23,9 @@ namespace CurrencyMod
 
         internal static void BindConfig(ConfigFile config)
         {
-            // Relê o .cfg a cada recarga do núcleo: edições feitas com o jogo aberto passam a valer. Na primeira vez que o
-            // jogo abre (instalação nova) o arquivo ainda não existe e o Reload daria FileNotFoundException: os Bind
-            // abaixo criam o .cfg com os padrões.
+            // Re-reads the .cfg on every core reload: edits made with the game open take effect. The first time the
+            // game opens (fresh install) the file does not exist yet and Reload would throw FileNotFoundException: the
+            // Bind calls below create the .cfg with the defaults.
             if (System.IO.File.Exists(config.ConfigFilePath))
             {
                 config.Reload();
@@ -48,8 +48,8 @@ namespace CurrencyMod
     }
 
     /// <summary>
-    /// Ponto de entrada chamado pelo CurrencyMod.Loader (por reflexão). Permite recarregar
-    /// o núcleo com o jogo aberto: Stop desfaz tudo e devolve o estado, Start recria.
+    /// Entry point called by CurrencyMod.Loader (via reflection). Allows reloading
+    /// the core with the game open: Stop undoes everything and returns the state, Start recreates it.
     /// </summary>
     public static class ModEntry
     {
@@ -73,14 +73,14 @@ namespace CurrencyMod
                 }
                 catch (Exception ex)
                 {
-                    log.LogWarning($"Estado anterior não pôde ser restaurado: {ex.Message}");
+                    log.LogWarning($"Previous state could not be restored: {ex.Message}");
                 }
             }
 
-            // Regras ou balanceamento podem ter mudado: recalcula as rotas na próxima ação.
+            // Rules or balancing may have changed: recompute the routes on the next action.
             TradePolicy.PathsDirty = true;
 
-            // As travas da IA nativa entram já com a tabela da geração anterior (ver NativeAiLocks.Carry).
+            // The native AI locks start already holding the previous generation's table (see NativeAiLocks.Carry).
             Diplomacia.NativeAiLocks.RestoreCarried();
             harmony = new Harmony(HarmonyId);
             ApplyPatches(log);
@@ -98,12 +98,12 @@ namespace CurrencyMod
             host.AddComponent<Diplomacia.UI.InterceptedLettersTab>();
             host.AddComponent<Diplomacia.UI.ProvidersButtons>();
 
-            log.LogInfo($"{Plugin.PluginName} {Plugin.PluginVersion} carregado. Pressione {Plugin.ToggleWindowKey.Value} numa partida para abrir o Banco Central.");
+            log.LogInfo($"{Plugin.PluginName} {Plugin.PluginVersion} loaded. Press {Plugin.ToggleWindowKey.Value} in a game to open the Central Bank.");
         }
 
         /// <summary>
-        /// Aplica cada classe de patch separadamente: se uma falhar (método renomeado por uma atualização do jogo, por
-        /// exemplo), só aquela parte desliga e o motivo vai para o log, em vez de o PatchAll parar no meio.
+        /// Applies each patch class separately: if one fails (a method renamed by a game update, for example), only
+        /// that part is turned off and the reason goes to the log, instead of PatchAll stopping halfway.
         /// </summary>
         private static void ApplyPatches(ManualLogSource log)
         {
@@ -123,10 +123,10 @@ namespace CurrencyMod
                 catch (Exception ex)
                 {
                     failed++;
-                    log.LogError($"Patch {type.FullName} não aplicado: {ex.InnerException?.Message ?? ex.Message}");
+                    log.LogError($"Patch {type.FullName} not applied: {ex.InnerException?.Message ?? ex.Message}");
                 }
             }
-            log.LogInfo($"Patches do núcleo: {ok} aplicados, {failed} com falha.");
+            log.LogInfo($"Core patches: {ok} applied, {failed} failed.");
         }
 
         public static string Stop()
@@ -145,18 +145,18 @@ namespace CurrencyMod
             }
             catch (Exception ex)
             {
-                Plugin.Log?.LogWarning($"Falha ao guardar estado para recarga: {ex.Message}");
+                Plugin.Log?.LogWarning($"Failed to save state for reload: {ex.Message}");
             }
 
-            // Antes de destruir os componentes: solta a porta do visualizador e guarda a memória da IA,
-            // porque o Destroy da Unity só acontece no fim do frame e a nova geração já sobe neste frame.
-            // Cada passo à parte: uma exceção no meio (um original que o Harmony não restaura, por exemplo) faria o
-            // carregador perder o estado, e a geração nova criaria uma economia do zero para a partida aberta.
-            TryStep("IA de linguagem", Diplomacia.IaModule.Shutdown);
-            TryStep("travas da IA nativa", Diplomacia.NativeAiLocks.Carry);
+            // Before destroying the components: release the viewer port and save the AI memory,
+            // because Unity's Destroy only happens at the end of the frame and the new generation starts in this frame.
+            // Each step separately: an exception halfway (an original that Harmony does not restore, for example) would
+            // make the loader lose the state, and the new generation would create an economy from scratch for the open game.
+            TryStep("language AI", Diplomacia.IaModule.Shutdown);
+            TryStep("native AI locks", Diplomacia.NativeAiLocks.Carry);
             TryStep("patches", () => harmony?.UnpatchSelf());
             harmony = null;
-            TryStep("componentes", () =>
+            TryStep("components", () =>
             {
                 if (host != null)
                 {
@@ -166,7 +166,7 @@ namespace CurrencyMod
                     }
                 }
             });
-            TryStep("textos", () => TextPatches.RefreshLocalCache(null));
+            TryStep("texts", () => TextPatches.RefreshLocalCache(null));
             return state;
         }
 
@@ -178,7 +178,7 @@ namespace CurrencyMod
             }
             catch (Exception ex)
             {
-                Plugin.Log?.LogError($"Recarga: falha ao desligar ({name}): {ex}");
+                Plugin.Log?.LogError($"Reload: failed to shut down ({name}): {ex}");
             }
         }
 

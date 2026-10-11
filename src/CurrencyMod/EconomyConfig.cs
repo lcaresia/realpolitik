@@ -2,10 +2,10 @@
 
 namespace CurrencyMod
 {
-    /// <summary>Números de balanceamento. Ficam em BepInEx\config\lucas.humankind.currency.cfg.</summary>
+    /// <summary>Balance numbers. They live in BepInEx\config\lucas.humankind.currency.cfg.</summary>
     internal static class EconomyConfig
     {
-        // Inflação (taxas por turno: 0.004 = 0,4% por turno)
+        // Inflation (rates per turn: 0.004 = 0.4% per turn)
         public static ConfigEntry<double> BaseInflation;
         public static ConfigEntry<double> TargetInflation;
         public static ConfigEntry<double> MinInflation;
@@ -25,7 +25,7 @@ namespace CurrencyMod
         public static ConfigEntry<double> InflationStabilityThreshold2;
         public static ConfigEntry<double> InflationStabilityLoss2;
 
-        // Ciclo: juros → produção (investimento), desemprego e teto suave do rendimento
+        // Cycle: interest → production (investment), unemployment and soft cap on savings yield
         public static ConfigEntry<double> RealRateProductionEffect;
         public static ConfigEntry<double> MinCreditFactor;
         public static ConfigEntry<double> MaxCreditFactor;
@@ -34,7 +34,7 @@ namespace CurrencyMod
         public static ConfigEntry<double> SavingsCapacityTurns;
         public static ConfigEntry<double> PressureInterestReaction;
 
-        // Juros
+        // Interest
         public static ConfigEntry<double> NeutralInterest;
         public static ConfigEntry<double> MinInterest;
         public static ConfigEntry<double> MaxInterest;
@@ -44,14 +44,14 @@ namespace CurrencyMod
         public static ConfigEntry<double> DebtRuleCap;
         public static ConfigEntry<double> MaxRealRatePerTurn;
 
-        // Câmbio
+        // Exchange rate
         public static ConfigEntry<double> ExchangeElasticity;
         public static ConfigEntry<double> ExchangeSmoothing;
         public static ConfigEntry<double> ExchangeMin;
         public static ConfigEntry<double> ExchangeMax;
         public static ConfigEntry<double> BankruptStrengthFactor;
 
-        // Liga/desliga
+        // On/off switches
         public static ConfigEntry<bool> EnableEconomy;
         public static ConfigEntry<bool> EnableConversion;
         public static ConfigEntry<bool> EnableTextCurrency;
@@ -122,14 +122,14 @@ namespace CurrencyMod
             const string bloqueio = "BloqueioComercial";
             EnableTradeBlockade = config.Bind(bloqueio, "Ativo", true, "Permitir bloquear ou cobrar pedágio de rotas comerciais estrangeiras nos seus territórios.");
             TollPerResource = config.Bind(bloqueio, "PedagioPorRecurso", 2.0, "Pedágio por turno, por recurso que a rota transporta, multiplicado pela era de quem cobra (na moeda de quem cobra).");
-            // A rota compara pagar o pedágio com desviar (manutenção a mais por território atravessado).
+            // The route weighs paying the toll against detouring (extra upkeep per territory crossed).
             TollDetourCost = config.Bind(bloqueio, "PesoPedagioNasRotas", 1.0, "Como a rota pesa o pedágio contra desviar. 1 = compara o custo real (pedágio por turno x manutenção extra do desvio) e escolhe o mais barato; maior que 1 = foge mais do pedágio; 0 = ignora o pedágio e sempre passa e paga.");
             EnableAiTradePolicy = config.Bind(bloqueio, "IA", true, "A IA também bloqueia e cobra pedágio de rivais.");
             AiReviewInterval = config.Bind(bloqueio, "IntervaloIA", 5, "De quantos em quantos turnos cada IA revê os bloqueios.");
             RouteColors = config.Bind(bloqueio, "CoresDasRotas", true, "Na visão de comércio, pinta as rotas pela situação com você (dourado = paga o seu pedágio, branco = passa livre pelas suas terras, laranja = rota sua que paga pedágio, azul = rota sua), engrossa as que levam mais recursos e mostra o valor do pedágio no meio das que passam pelas suas terras.");
         }
 
-        // Bloqueio comercial
+        // Trade blockade
         public static ConfigEntry<bool> EnableTradeBlockade;
         public static ConfigEntry<double> TollPerResource;
         public static ConfigEntry<double> TollDetourCost;
@@ -138,9 +138,9 @@ namespace CurrencyMod
         public static ConfigEntry<bool> RouteColors;
 
         /// <summary>
-        /// Chaves de versões antigas que não fazem mais nada. O BepInEx guarda para sempre no .cfg as entradas que ninguém
-        /// lê mais, e quem abria o arquivo achava que elas valiam. Lista fechada: só estas saem (uma chave nova ainda não
-        /// lida por algum módulo nunca é apagada por engano).
+        /// Keys from old versions that no longer do anything. BepInEx keeps entries nobody reads anymore in the .cfg
+        /// forever, and whoever opened the file thought they still applied. Closed list: only these are removed (a new key
+        /// not yet read by some module is never deleted by mistake).
         /// </summary>
         private static readonly string[][] ObsoleteKeys =
         {
@@ -156,12 +156,12 @@ namespace CurrencyMod
             new[] { "Juros", "TetoRendimento" },
             new[] { "Juros", "DesempregoEstabilidade" },
             new[] { "BloqueioComercial", "CustoDesvioPedagio" },
-            // 2026-10-06: provedor e preços passaram para [IA.Provedores] e a tabela por modelo (Diplomacia IA §15).
+            // 2026-10-06: provider and prices moved to [IA.Provedores] and the per-model table (Diplomacia IA §15).
             new[] { "IA", "Endpoint" },
             new[] { "IA", "PrecoEntradaCacheUSD" },
             new[] { "IA", "PrecoEntradaUSD" },
             new[] { "IA", "PrecoSaidaUSD" },
-            // 2026-10-06: login oficial do ChatGPT e do Grok descartados (o ChatGPT fica pelo Codex).
+            // 2026-10-06: official ChatGPT and Grok logins dropped (ChatGPT stays via Codex).
             new[] { "IA.Provedores", "ChatGPTClientId" },
             new[] { "IA.Provedores", "ChatGPTPortaRetorno" },
             new[] { "IA.Provedores", "GrokClientId" },
@@ -183,7 +183,7 @@ namespace CurrencyMod
                 foreach (string[] key in ObsoleteKeys)
                 {
                     var definition = new ConfigDefinition(key[0], key[1]);
-                    // Na recarga a quente, a geração anterior ainda deixou a chave registrada (não é órfã).
+                    // On hot reload, the previous generation still left the key registered (it is not orphaned).
                     if (orphans.Remove(definition) | config.Remove(definition))
                     {
                         removed++;
@@ -192,12 +192,12 @@ namespace CurrencyMod
                 if (removed > 0)
                 {
                     config.Save();
-                    Plugin.Log?.LogInfo($"Configuração: {removed} chave(s) antiga(s), sem efeito, tirada(s) do .cfg.");
+                    Plugin.Log?.LogInfo($"Config: removed {removed} obsolete key(s) with no effect from the .cfg.");
                 }
             }
             catch (System.Exception ex)
             {
-                Plugin.Log?.LogWarning($"Configuração: não deu para limpar chaves antigas ({ex.Message}).");
+                Plugin.Log?.LogWarning($"Config: could not clean up obsolete keys ({ex.Message}).");
             }
         }
     }

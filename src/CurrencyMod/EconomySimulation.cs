@@ -9,35 +9,35 @@ using HarmonyLib;
 namespace CurrencyMod
 {
     /// <summary>
-    /// Inflação, juros e câmbio, com o ciclo produção → inflação → juros → produção (docs\proposta-ciclo-economico.md,
-    /// pesquisa em economia e jogos no mesmo documento):
-    /// - oferta × demanda: dinheiro crescendo mais rápido que a produção vira inflação; produção crescendo mais rápido
-    ///   segura os preços. A referência acompanha o próprio império em ~15 turnos (inflação ≈ crescimento do dinheiro −
-    ///   crescimento real), então a vantagem é de ritmo, não de tamanho;
-    /// - a inflação puxa os juros automáticos (regra de Taylor com hiato de demanda) e, acima de 0,75% por turno, baixa
-    ///   a meta de estabilidade das cidades, mais forte acima de 1,5%;
-    /// - juros agem forte e rápido na demanda (direto na inflação) e devagar na oferta: o juro real acima do neutro
-    ///   corta o investimento e a produção anda até o novo patamar em ~6 turnos (CreditProductionPatch). Produção
-    ///   cortada por crédito caro vira desemprego, que também baixa a meta de estabilidade;
-    /// - esses efeitos entram nos números e nos detalhamentos do próprio jogo (NativeEffects.cs);
-    /// - os juros do saldo têm teto suave: rendem plenamente até ~15 turnos de renda e cada vez menos acima disso.
-    /// Roda na thread do sandbox, logo antes do jogo somar a renda do turno (DepartmentOfTheTreasury.TurnEndPass_CollectMoney),
-    /// uma vez por império.
+    /// Inflation, interest and exchange rate, with the cycle production → inflation → interest → production
+    /// (docs\proposta-ciclo-economico.md, research on economics and games in the same document):
+    /// - supply × demand: money growing faster than production becomes inflation; production growing faster holds
+    ///   prices down. The reference tracks the empire itself over ~15 turns (inflation ≈ money growth − real growth),
+    ///   so the advantage is about pace, not size;
+    /// - inflation pulls the automatic interest rate (Taylor rule with a demand gap) and, above 0.75% per turn, lowers
+    ///   the cities' stability target, more strongly above 1.5%;
+    /// - interest acts strongly and quickly on demand (directly on inflation) and slowly on supply: a real rate above
+    ///   neutral cuts investment and production moves to the new level over ~6 turns (CreditProductionPatch).
+    ///   Production cut by expensive credit becomes unemployment, which also lowers the stability target;
+    /// - these effects go into the game's own numbers and breakdowns (NativeEffects.cs);
+    /// - interest on the balance has a soft cap: it pays fully up to ~15 turns of income and less and less above that.
+    /// Runs on the sandbox thread, right before the game adds up the turn's income
+    /// (DepartmentOfTheTreasury.TurnEndPass_CollectMoney), once per empire.
     /// </summary>
     [HarmonyPatch(typeof(DepartmentOfTheTreasury), "TurnEndPass_CollectMoney")]
     internal static class EconomySimulation
     {
         /// <summary>
-        /// Efeitos de um império que o jogo consulta a toda hora (produção das cidades, meta de estabilidade, juros
-        /// projetados na renda): uma cópia imutável por turno, lida sem lock pelas threads do sandbox, da IA e da UI.
+        /// An empire's effects that the game queries all the time (city production, stability target, interest
+        /// projected in income): one immutable copy per turn, read without a lock by the sandbox, AI and UI threads.
         /// </summary>
         internal sealed class EmpireEffects
         {
             internal static readonly EmpireEffects Neutral = new EmpireEffects();
 
-            /// <summary>Multiplicador da produção das cidades pelo crédito (juros).</summary>
+            /// <summary>City production multiplier from credit (interest).</summary>
             internal double Credit = 1.0;
-            /// <summary>Quanto a meta de estabilidade de cada cidade cai pela inflação e pelo desemprego.</summary>
+            /// <summary>How much each city's stability target drops from inflation and unemployment.</summary>
             internal double InflationLoss;
             internal double UnemploymentLoss;
             internal double InterestRate;
@@ -49,7 +49,7 @@ namespace CurrencyMod
         }
 
         private static volatile EmpireEffects[] effects = new EmpireEffects[0];
-        /// <summary>Peso do turno novo nas médias móveis de produção e renda (0,3 ≈ memória de uns 3 turnos).</summary>
+        /// <summary>Weight of the new turn in the moving averages of production and income (0.3 ≈ memory of about 3 turns).</summary>
         private const double Smoothing = 0.3;
         private const double MaxPressure = 0.5;
 
@@ -65,13 +65,13 @@ namespace CurrencyMod
 
         internal static double CreditFactor(int empireIndex) => Effects(empireIndex).Credit;
 
-        /// <summary>Esvazia a tabela: a próxima leitura refaz a partir do estado.</summary>
+        /// <summary>Clears the table: the next read rebuilds it from the state.</summary>
         internal static void ResetEffectsLater()
         {
             effects = new EmpireEffects[0];
         }
 
-        /// <summary>Refaz a tabela de efeitos a partir do estado salvo (save carregado, partida nova, juros mudados por comando).</summary>
+        /// <summary>Rebuilds the effects table from the saved state (save loaded, new game, interest changed by command).</summary>
         internal static EmpireEffects[] ResetEffects()
         {
             CurrencyWorld world = CurrencyManager.Current;
@@ -81,8 +81,8 @@ namespace CurrencyMod
                 lock (CurrencyManager.Lock)
                 {
                     built = world.Empires.Select(BuildEffects).ToArray();
-                    // Publicar dentro do lock: fora dele, a tabela do fim de turno gravada no meio seria sobrescrita
-                    // por esta, já velha.
+                    // Publish inside the lock: outside it, the end-of-turn table written in the meantime would be
+                    // overwritten by this one, already stale.
                     effects = built;
                 }
                 return built;
@@ -106,10 +106,10 @@ namespace CurrencyMod
         }
 
         /// <summary>
-        /// Economia global antes dos passes de todos os impérios. O jogo roda todos os passes de um império antes do
-        /// próximo (SandboxState_TurnEnd), então, feita só no CollectMoney do primeiro, o império 0 investia a produção
-        /// e calculava a ordem pública com o crédito e a meta do turno anterior, e os outros com os do turno atual.
-        /// O CollectMoney continua como reserva (LastProcessedTurn impede rodar duas vezes).
+        /// Global economy before the passes of all empires. The game runs all passes of one empire before the next
+        /// (SandboxState_TurnEnd), so, done only in the first one's CollectMoney, empire 0 invested production and
+        /// computed public order with the previous turn's credit and target, and the others with the current turn's.
+        /// CollectMoney stays as a fallback (LastProcessedTurn prevents running twice).
         /// </summary>
         [HarmonyPatch(typeof(SimulationPasses), nameof(SimulationPasses.InvokePasses))]
         private static class BeforeEmpirePassesPatch
@@ -140,7 +140,7 @@ namespace CurrencyMod
                 }
                 catch (Exception ex)
                 {
-                    Plugin.Log.LogError($"Erro na simulação econômica: {ex}");
+                    Plugin.Log.LogError($"Error in the economic simulation: {ex}");
                 }
             }
         }
@@ -173,20 +173,20 @@ namespace CurrencyMod
             }
             catch (Exception ex)
             {
-                Plugin.Log.LogError($"Erro na simulação econômica: {ex}");
+                Plugin.Log.LogError($"Error in the economic simulation: {ex}");
             }
         }
 
-        /// <summary>Juro real neutro: o juro neutro menos a meta de inflação.</summary>
+        /// <summary>Neutral real rate: the neutral rate minus the inflation target.</summary>
         private static double NeutralRealRate => EconomyConfig.NeutralInterest.Value - EconomyConfig.TargetInflation.Value;
 
-        /// <summary>Quanto os juros automáticos andam por turno em direção ao que a regra de Taylor pede.</summary>
+        /// <summary>How far the automatic interest rate moves per turn toward what the Taylor rule asks for.</summary>
         internal const double AutoInterestStep = 0.25;
 
         /// <summary>
-        /// Regra de Taylor: os juros que o banco automático procura. Inflação acima da meta e demanda acima da oferta sobem.
-        /// A parte da inflação que veio da dívida conta com teto suave (DebtInRule): subir juros por ela encarece a própria
-        /// dívida, e a IA endividada ficava presa (40% dos retratos da partida longa; relatório de calibração).
+        /// Taylor rule: the interest rate the automatic bank aims for. Inflation above target and demand above supply raise it.
+        /// The part of inflation that came from debt counts with a soft cap (DebtInRule): raising interest because of it makes
+        /// the debt itself more expensive, and indebted AI got stuck (40% of the long-game snapshots; calibration report).
         /// </summary>
         internal static double TaylorRate(double inflationRate, double pressure, double debtInflation = 0)
         {
@@ -198,8 +198,8 @@ namespace CurrencyMod
         }
 
         /// <summary>
-        /// Quanto da inflação vinda da dívida a regra dos juros leva em conta: quase tudo quando é pequena, cada vez menos
-        /// quando cresce, encostando em [Juros] DividaNaRegra (0 = tudo, como antes). Nunca zera: a dívida ainda pesa.
+        /// How much of the debt-driven inflation the interest rule takes into account: almost all when it is small, less and
+        /// less as it grows, approaching [Juros] DividaNaRegra (0 = all, as before). Never zero: debt still weighs in.
         /// </summary>
         internal static double DebtInRule(double debtInflation)
         {
@@ -207,7 +207,7 @@ namespace CurrencyMod
             return debtInflation <= 0 || cap <= 0 ? debtInflation : cap * Math.Tanh(debtInflation / cap);
         }
 
-        /// <summary>Alvo do multiplicador de produção pelo juro real (investimento): caro corta, barato aquece.</summary>
+        /// <summary>Target of the production multiplier from the real rate (investment): expensive cuts, cheap heats up.</summary>
         internal static double CreditTarget(double interestRate, double inflationRate)
         {
             double real = interestRate - inflationRate;
@@ -215,7 +215,7 @@ namespace CurrencyMod
             return Clamp(factor, EconomyConfig.MinCreditFactor.Value, EconomyConfig.MaxCreditFactor.Value);
         }
 
-        /// <summary>Recalcula PIB, pressão de demanda, inflação, juros automáticos, investimento, preços e câmbio de todos.</summary>
+        /// <summary>Recomputes GDP, demand pressure, inflation, automatic interest, investment, prices and exchange rate for everyone.</summary>
         private static void UpdateGlobalEconomy(CurrencyWorld world, int turn)
         {
             int count = Math.Min(Sandbox.NumberOfMajorEmpires, world.Empires.Count);
@@ -223,7 +223,7 @@ namespace CurrencyMod
             var logPressure = new double[count];
             var hasPressure = new bool[count];
 
-            // 1. Força econômica de cada império vivo (produção efetiva: o crédito do turno já valeu para ela).
+            // 1. Economic strength of each living empire (effective production: the turn's credit already applied to it).
             double strengthSum = 0;
             int aliveCount = 0;
             for (int i = 0; i < count; i++)
@@ -241,8 +241,8 @@ namespace CurrencyMod
                 for (int s = 0; s < empire.Settlements.Count; s++)
                 {
                     Settlement settlement = empire.Settlements[s];
-                    // Modo ciência: a indústria vira ciência (o jogo devolve 0 em ComputeProductionIncome) e já entra
-                    // no ResearchNet; somar aqui contaria duas vezes.
+                    // Science mode: industry becomes science (the game returns 0 in ComputeProductionIncome) and is
+                    // already in ResearchNet; adding it here would count it twice.
                     if (settlement != null && (settlement.CityFlags & CityFlags.ScienceMode) == CityFlags.None)
                     {
                         industry += (float)settlement.ProductionNetAfterAffinityBonuses.Value;
@@ -264,8 +264,8 @@ namespace CurrencyMod
                 strengthSum += currency.Strength;
                 aliveCount++;
 
-                // 2. Oferta × demanda: dinheiro por unidade de produção contra a referência do próprio império
-                //    (o desvio contra a tendência do mundo sai logo abaixo).
+                // 2. Supply × demand: money per unit of production against the empire's own reference
+                //    (the deviation from the world trend is removed just below).
                 if (currency.SmoothedProduction > 1)
                 {
                     double ratio = Math.Max(10.0, currency.SmoothedIncome) / currency.SmoothedProduction;
@@ -284,8 +284,8 @@ namespace CurrencyMod
             }
             double strengthAverage = strengthSum / aliveCount;
 
-            // A produção do jogo cresce mais rápido que o dinheiro para todo mundo no começo (é o desenho do jogo, não
-            // política monetária): só conta o desvio de cada império contra a mediana do mundo.
+            // The game's production grows faster than money for everyone early on (that is the game's design, not
+            // monetary policy): only each empire's deviation from the world median counts.
             var trend = new List<double>();
             for (int i = 0; i < count; i++)
             {
@@ -306,15 +306,15 @@ namespace CurrencyMod
                     continue;
                 }
                 currency.Pressure = Clamp(Math.Exp(logPressure[i] - worldTrend) - 1.0, -MaxPressure, MaxPressure);
-                // Teto suave: perto de zero é o linear de sempre; longe, encosta no limite aos poucos. O corte seco deixava a
-                // parcela colada em ±limite em 58% dos retratos da partida longa, pulando de um lado para o outro.
+                // Soft cap: near zero it is the usual linear value; far away, it approaches the limit gradually. The hard clamp
+                // left the term stuck at ±limit in 58% of the long-game snapshots, jumping from one side to the other.
                 double limit = EconomyConfig.PressureInflationLimit.Value;
                 double raw = EconomyConfig.PressureInflation.Value * currency.Pressure;
                 currency.CoverageInflation = limit > 0 ? limit * Math.Tanh(raw / limit) : 0;
                 currency.Coverage = 1.0 / (1.0 + currency.Pressure);
             }
 
-            // 3. Inflação, juros, investimento e índice de preços.
+            // 3. Inflation, interest, investment and price index.
             double logPriceSum = 0;
             for (int i = 0; i < count; i++)
             {
@@ -327,7 +327,7 @@ namespace CurrencyMod
                 double target = TargetInflation(empire, currency);
                 currency.InflationRate += EconomyConfig.InflationSmoothing.Value * (target - currency.InflationRate);
                 currency.InflationRate = Clamp(currency.InflationRate, EconomyConfig.MinInflation.Value, EconomyConfig.MaxInflation.Value);
-                // A parte da dívida dentro da inflação de agora anda no mesmo ritmo que ela.
+                // The debt part within current inflation moves at the same pace as inflation.
                 currency.InflationRateFromDebt += EconomyConfig.InflationSmoothing.Value * (currency.InflationFromDebt - currency.InflationRateFromDebt);
 
                 bool autoInterest = !currency.ForcedInterest && (currency.AutoInterest || !empire.IsControlledByHuman);
@@ -337,18 +337,18 @@ namespace CurrencyMod
                 }
                 currency.InterestRate = Clamp(currency.InterestRate, EconomyConfig.MinInterest.Value, EconomyConfig.MaxInterest.Value);
 
-                // Investimento: a produção anda devagar até o patamar que o juro real permite (vale a partir do próximo turno).
+                // Investment: production moves slowly to the level the real rate allows (applies from the next turn on).
                 double creditTarget = CreditTarget(currency.InterestRate, currency.InflationRate);
                 currency.CreditFactor += EconomyConfig.InvestmentSpeed.Value * (creditTarget - currency.CreditFactor);
 
                 currency.PriceIndex = Math.Max(0.01, currency.PriceIndex * (1 + currency.InflationRate));
                 logPriceSum += Math.Log(currency.PriceIndex);
             }
-            // Crédito, meta de estabilidade e juros novos valem a partir de agora para o jogo inteiro.
+            // New credit, stability target and interest apply from now on for the whole game.
             effects = world.Empires.Select(BuildEffects).ToArray();
             double priceGeoMean = Math.Exp(logPriceSum / aliveCount);
 
-            // 4. Câmbio: força relativa dividida pelo nível de preços relativo.
+            // 4. Exchange rate: relative strength divided by the relative price level.
             double logExchangeSum = 0;
             for (int i = 0; i < count; i++)
             {
@@ -365,7 +365,7 @@ namespace CurrencyMod
                 logExchangeSum += Math.Log(Math.Max(1e-6, currency.ExchangeValue));
             }
 
-            // Normaliza para a média geométrica ficar em 1.0 (só muda a escala, não as cotações entre moedas).
+            // Normalize so the geometric mean is 1.0 (only changes the scale, not the rates between currencies).
             double exchangeGeoMean = Math.Exp(logExchangeSum / aliveCount);
             for (int i = 0; i < count; i++)
             {
@@ -378,7 +378,7 @@ namespace CurrencyMod
                 currency.PushHistory(turn);
                 if (IsHuman(i))
                 {
-                    // Aba Recursos do Banco Central: acessos a cada recurso estratégico e de luxo, por turno (só humanos: save leve).
+                    // Central Bank Resources tab: access to each strategic and luxury resource, per turn (humans only: light save).
                     currency.History[currency.History.Count - 1].Resources = ResourceAccess(Sandbox.MajorEmpires[i]);
                 }
             }
@@ -386,8 +386,8 @@ namespace CurrencyMod
         }
 
         /// <summary>
-        /// Livro do Banco Central: grava um movimento de dinheiro no turno atual, só se algum dos lados for um jogador humano
-        /// (os eventos entre IAs não aparecem em tela e só engordariam o save). Quem chama já tem o CurrencyManager.Lock.
+        /// Central Bank ledger: records a money movement in the current turn, only if one of the sides is a human player
+        /// (events between AIs are not shown on screen and would only bloat the save). The caller already holds CurrencyManager.Lock.
         /// </summary>
         internal static void RecordMoney(CurrencyWorld world, int from, int to, double paid, double gain, int kind)
         {
@@ -403,7 +403,7 @@ namespace CurrencyMod
             world.RecordMoney(sandbox.Turn, from, to, paid, gain, kind);
         }
 
-        /// <summary>Acessos do império a cada recurso estratégico e de luxo (tipo → quantidade), só os que ele tem.</summary>
+        /// <summary>The empire's access to each strategic and luxury resource (type → amount), only the ones it has.</summary>
         private static Dictionary<int, int> ResourceAccess(MajorEmpire empire)
         {
             var access = new Dictionary<int, int>();
@@ -429,7 +429,7 @@ namespace CurrencyMod
             }
             catch (Exception ex)
             {
-                Plugin.Log?.LogWarning($"Banco Central: recursos do turno: {ex.Message}");
+                Plugin.Log?.LogWarning($"Central Bank: turn resources: {ex.Message}");
             }
             return access;
         }
@@ -441,8 +441,8 @@ namespace CurrencyMod
         }
 
         /// <summary>
-        /// Grava as compras de recursos por rota deste turno (quem compra de quem e quanto paga por turno), para o gráfico de
-        /// importação e exportação do Banco Central. Roda na thread do sandbox, no fim do turno.
+        /// Records this turn's resource purchases by route (who buys from whom and how much they pay per turn), for the
+        /// Central Bank's import and export chart. Runs on the sandbox thread, at end of turn.
         /// </summary>
         private static void RecordTrade(CurrencyWorld world, int turn)
         {
@@ -482,7 +482,7 @@ namespace CurrencyMod
             }
             catch (Exception ex)
             {
-                Plugin.Log.LogWarning($"Comércio do turno não gravado: {ex.Message}");
+                Plugin.Log.LogWarning($"Turn trade not recorded: {ex.Message}");
             }
         }
 
@@ -500,8 +500,8 @@ namespace CurrencyMod
             }
             else if (income > 0)
             {
-                // Dinheiro parado demais em relação à renda vira pressão inflacionária. Com renda zero ou negativa o
-                // império está gastando a reserva, não entesourando (antes caía no piso de renda 5 e levava o máximo).
+                // Too much idle money relative to income becomes inflationary pressure. With zero or negative income the
+                // empire is spending its reserve, not hoarding (it used to hit the income floor of 5 and get the maximum).
                 double turnsOfIncome = stock / Math.Max(5.0, income);
                 double excess = turnsOfIncome / EconomyConfig.HoardingTurns.Value - 1.0;
                 if (excess > 0)
@@ -511,7 +511,7 @@ namespace CurrencyMod
             }
 
             double stability = (0.6 - currency.Stability) * EconomyConfig.StabilityInflation.Value;
-            // Juros agem direto na demanda: mais forte que o efeito deles na oferta (senão subir juros subiria a inflação).
+            // Interest acts directly on demand: stronger than its effect on supply (otherwise raising interest would raise inflation).
             double interest = -(currency.InterestRate - EconomyConfig.NeutralInterest.Value) * EconomyConfig.InterestInflationEffect.Value;
 
             currency.InflationFromDebt = debt;
@@ -519,15 +519,15 @@ namespace CurrencyMod
             currency.InflationFromStability = stability;
             currency.InflationFromInterest = interest;
             currency.HasInflationBreakdown = true;
-            // A oferta × demanda (CoverageInflation) já foi calculada para todos antes.
+            // Supply × demand (CoverageInflation) was already computed for everyone beforehand.
             currency.InflationTarget = EconomyConfig.BaseInflation.Value + debt + hoarding + currency.CoverageInflation + stability + interest;
             return currency.InflationTarget;
         }
 
         /// <summary>
-        /// Juros do saldo (ou da dívida) num turno. Saldo positivo com juro real positivo tem teto suave: o banco aplica
-        /// bem até ~N turnos de renda e o resto rende cada vez menos. Inflação acima dos juros corrói o saldo inteiro;
-        /// dívida paga spread, e a inflação alta corrói a dívida também. A projeção na renda usa a mesma conta.
+        /// Interest on the balance (or debt) in one turn. A positive balance with a positive real rate has a soft cap: the
+        /// bank invests well up to ~N turns of income and the rest yields less and less. Inflation above interest erodes
+        /// the whole balance; debt pays a spread, and high inflation erodes debt too. The income projection uses the same math.
         /// </summary>
         internal static double InterestFlow(double stock, double interestRate, double inflationRate, double smoothedIncome)
         {
@@ -547,8 +547,8 @@ namespace CurrencyMod
         }
 
         /// <summary>
-        /// Juros e erosão sobre o saldo e o efeito antigo dos juros na renda. A inflação e o desemprego não mexem mais
-        /// direto na estabilidade: eles baixam a meta de estabilidade das cidades (NativeEffects), como as fontes do jogo.
+        /// Interest and erosion on the balance, and the old effect of interest on income. Inflation and unemployment no
+        /// longer touch stability directly: they lower the cities' stability target (NativeEffects), like the game's sources.
         /// </summary>
         private static void ApplyMonetaryEffects(CurrencyWorld world, MajorEmpire empire, DepartmentOfTheTreasury treasury)
         {
@@ -561,7 +561,7 @@ namespace CurrencyMod
             double stock = (float)empire.MoneyStock.Value;
             double interestFlow = InterestFlow(stock, currency.InterestRate, currency.InflationRate, currency.SmoothedIncome);
 
-            // Juros na renda em dinheiro (desligado por padrão: o custo dos juros passou para a produção).
+            // Interest on money income (off by default: the cost of interest moved to production).
             double income = (float)empire.MoneyNet.Value;
             double incomeEffect = 0;
             if (income > 0 && EconomyConfig.InterestIncomeDrag.Value > 0)
@@ -579,12 +579,12 @@ namespace CurrencyMod
                 TransferConversion.WithoutRecording(() => treasury.GainMoney((FixedPoint)(float)total));
             }
 
-            // Só para exibição: a meta de estabilidade das cidades já desconta isso (NativeEffects).
+            // Display only: the cities' stability target already deducts this (NativeEffects).
             currency.LastStabilityPenalty = InflationStabilityLoss(currency.InflationRate);
             currency.LastUnemploymentPenalty = UnemploymentStabilityLoss(currency.CreditFactor);
         }
 
-        /// <summary>Quanto a meta de estabilidade de cada cidade cai com essa inflação (em faixas).</summary>
+        /// <summary>How much each city's stability target drops with this inflation (in bands).</summary>
         internal static double InflationStabilityLoss(double inflationRate)
         {
             double points = inflationRate * 100;
@@ -592,7 +592,7 @@ namespace CurrencyMod
                 + EconomyConfig.InflationStabilityLoss2.Value * Math.Max(0, points - EconomyConfig.InflationStabilityThreshold2.Value * 100);
         }
 
-        /// <summary>Quanto a meta de estabilidade de cada cidade cai com a produção cortada pelo crédito caro (desemprego).</summary>
+        /// <summary>How much each city's stability target drops with production cut by expensive credit (unemployment).</summary>
         internal static double UnemploymentStabilityLoss(double creditFactor)
         {
             return EconomyConfig.UnemploymentStability.Value * Math.Max(0, 1.0 - creditFactor);
@@ -613,9 +613,9 @@ namespace CurrencyMod
     }
 
     /// <summary>
-    /// Juros → produção: multiplica a produção que entra nas construções pelo crédito/investimento do império. A IA, a
-    /// lista de cidades e a fila de construção leem essa mesma conta; a tela da cidade e o detalhamento recebem o
-    /// crédito em NativeEffects.
+    /// Interest → production: multiplies the production that goes into constructions by the empire's credit/investment.
+    /// The AI, the city list and the construction queue read this same value; the city screen and the breakdown get the
+    /// credit in NativeEffects.
     /// </summary>
     [HarmonyPatch(typeof(DepartmentOfIndustry), nameof(DepartmentOfIndustry.ComputeProductionIncome))]
     internal static class CreditProductionPatch
@@ -640,7 +640,7 @@ namespace CurrencyMod
             }
             catch (Exception)
             {
-                // Nunca atrapalhar a construção: sem crédito, fica o valor do jogo.
+                // Never get in the way of construction: without credit, the game's value stays.
             }
         }
     }

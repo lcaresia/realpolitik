@@ -7,18 +7,19 @@ using Amplitude.Mercury.Simulation;
 namespace CurrencyMod
 {
     /// <summary>
-    /// A IA decide, para cada rival, se deixa passar, cobra pedágio ou bloqueia em todos os seus postos. Cada IA revê de
-    /// tempos em tempos (escalonado pelo índice):
-    /// - nação comandada pela IA de linguagem com política escolhida (politica_comercial): vale a escolha dela;
-    /// - senão, hostilidade: reclamações contra o rival, crise em andamento e retaliação a pedágio ou bloqueio dele.
-    ///   Hostilidade alta bloqueia; média cobra pedágio. Rival muito mais rico só leva pedágio se houver alguma
-    ///   hostilidade (antes bastava ser mais rico, e as nações pequenas taxavam quase todo mundo);
-    /// - pedágio novo só contra quem tem rota passando pelos territórios da IA (sem rota, o pedágio não rende e só gera
-    ///   atrito). Regra que já existe continua enquanto a hostilidade justificar, para a rota que desviou não voltar.
+    /// The AI decides, for each rival, whether to let it through, charge a toll or block it at all of its posts. Each AI
+    /// reviews from time to time (staggered by index):
+    /// - nation driven by the language AI with a chosen policy (politica_comercial): its choice applies;
+    /// - otherwise, hostility: grievances against the rival, an ongoing crisis and retaliation for its toll or blockade.
+    ///   High hostility blocks; medium charges a toll. A much richer rival only gets a toll if there is some
+    ///   hostility (it used to be enough to be richer, and small nations taxed almost everyone);
+    /// - a new toll only against those with a route crossing the AI's territories (without a route, the toll earns
+    ///   nothing and only causes friction). An existing rule stays while hostility justifies it, so the detoured route
+    ///   does not come back.
     /// </summary>
     internal static class TradeAi
     {
-        /// <summary>(império &lt;&lt; 16 | rival) → modo escolhido pela IA de linguagem. Publicado pela thread principal.</summary>
+        /// <summary>(empire &lt;&lt; 16 | rival) → mode chosen by the language AI. Published by the main thread.</summary>
         private static volatile Dictionary<int, TradeMode> llmStances = new Dictionary<int, TradeMode>();
 
         internal static void SetLlmStances(Dictionary<int, TradeMode> table)
@@ -32,7 +33,7 @@ namespace CurrencyMod
             int count = Sandbox.NumberOfMajorEmpires;
             Dictionary<int, TradeMode> chosen = llmStances;
 
-            // Territórios de cada império (uma passada só).
+            // Territories of each empire (a single pass).
             var territoriesOf = new List<int>[count];
             for (int i = 0; i < count; i++)
             {
@@ -54,8 +55,8 @@ namespace CurrencyMod
                 {
                     continue;
                 }
-                // A política da IA de linguagem vale em todo território, também nos novos: aplica todo turno. A revisão
-                // pela hostilidade fica no intervalo de sempre.
+                // The language AI's policy applies to every territory, new ones included: applied every turn. The
+                // hostility review keeps the usual interval.
                 bool review = (turn + me) % interval == 0 && empire.DepartmentOfDevelopment.CurrentEraIndex > 0;
                 HashSet<int> users = review ? RouteUsers(territoriesOf[me], me) : null;
                 for (int other = 0; other < count; other++)
@@ -88,13 +89,13 @@ namespace CurrencyMod
                     }
                     if (changed > 0)
                     {
-                        Plugin.Log.LogInfo($"IA {me} → império {other}: {TradePolicy.ModeName(wanted)} em {territoriesOf[me].Count} território(s){(chosen.ContainsKey((me << 16) | other) ? " (escolha da IA de linguagem)" : string.Empty)}.");
+                        Plugin.Log.LogInfo($"AI {me} → empire {other}: {TradePolicy.ModeName(wanted)} in {territoriesOf[me].Count} territory(ies){(chosen.ContainsKey((me << 16) | other) ? " (language AI choice)" : string.Empty)}.");
                     }
                 }
             }
         }
 
-        /// <summary>Impérios estrangeiros com rota comercial passando pelos territórios de <paramref name="me"/>.</summary>
+        /// <summary>Foreign empires with a trade route crossing the territories of <paramref name="me"/>.</summary>
         private static HashSet<int> RouteUsers(List<int> territories, int me)
         {
             var users = new HashSet<int>();
@@ -114,7 +115,7 @@ namespace CurrencyMod
             DiplomaticRelation relation = me.DiplomaticRelationByOtherEmpireIndex[rival.Index];
             if (relation.CurrentState != DiplomaticStateType.Peace)
             {
-                // Aliados e vassalos passam livres; em guerra o próprio jogo já fecha o território.
+                // Allies and vassals pass freely; at war the game itself already closes the territory.
                 return TradeMode.Free;
             }
 
@@ -128,7 +129,7 @@ namespace CurrencyMod
             }
             if (TradePolicy.HasAnyRule(world, rival.Index, me.Index))
             {
-                hostility += 2; // retaliação
+                hostility += 2; // retaliation
             }
 
             if (hostility >= 5)

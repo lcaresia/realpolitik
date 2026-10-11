@@ -7,23 +7,23 @@ namespace CurrencyMod.Diplomacia.Llm.Providers
 {
     internal enum WireFormat
     {
-        /// <summary>chat/completions da OpenAI (DeepSeek, OpenAI, Gemini, GLM, xAI, OpenRouter).</summary>
+        /// <summary>OpenAI chat/completions (DeepSeek, OpenAI, Gemini, GLM, xAI, OpenRouter).</summary>
         ChatCompletions,
 
-        /// <summary>O Codex instalado no PC ("codex exec"), com o login do ChatGPT feito nele (CodexCli).</summary>
+        /// <summary>The Codex installed on the PC ("codex exec"), with the ChatGPT login done in it (CodexCli).</summary>
         CodexCli,
     }
 
     internal enum LoginKind
     {
         None,
-        /// <summary>Navegador + retorno local com PKCE (OpenRouter).</summary>
+        /// <summary>Browser + local callback with PKCE (OpenRouter).</summary>
         BrowserPkce,
-        /// <summary>O login do próprio Codex ("codex login"), que guarda a conta do ChatGPT no Codex.</summary>
+        /// <summary>Codex's own login ("codex login"), which stores the ChatGPT account in Codex.</summary>
         Codex,
     }
 
-    /// <summary>Preço em US$ por milhão de tokens: entrada do cache, entrada fora do cache e saída.</summary>
+    /// <summary>Price in US$ per million tokens: cached input, uncached input and output.</summary>
     internal sealed class ModelDef
     {
         public string Id;
@@ -41,29 +41,29 @@ namespace CurrencyMod.Diplomacia.Llm.Providers
         public string Name;
         public WireFormat Format = WireFormat.ChatCompletions;
         public LoginKind Login = LoginKind.None;
-        /// <summary>Aceita chave colada (o OpenRouter aceita os dois: login ou chave).</summary>
+        /// <summary>Accepts a pasted key (OpenRouter accepts both: login or key).</summary>
         public bool AcceptsKey = true;
         public string ChatUrl;
         public string ModelsUrl;
         public string KeyUrl;
-        /// <summary>Para onde o dossiê vai (nota de privacidade).</summary>
+        /// <summary>Where the dossier goes (privacy note).</summary>
         public string Host;
         public List<ModelDef> Models = new List<ModelDef>();
-        /// <summary>Manda response_format json_object (onde a documentação confirma).</summary>
+        /// <summary>Sends response_format json_object (where the documentation confirms it).</summary>
         public bool JsonObject = true;
-        /// <summary>Raciocínio no formato do DeepSeek: thinking {type, reasoning_effort}.</summary>
+        /// <summary>Reasoning in DeepSeek format: thinking {type, reasoning_effort}.</summary>
         public bool DeepSeekThinking;
-        /// <summary>Raciocínio no formato do GLM: thinking {type} sem nível.</summary>
+        /// <summary>Reasoning in GLM format: thinking {type} without a level.</summary>
         public bool GlmThinking;
-        /// <summary>Raciocínio no formato do OpenRouter: reasoning {effort | enabled}.</summary>
+        /// <summary>Reasoning in OpenRouter format: reasoning {effort | enabled}.</summary>
         public bool OpenRouterReasoning;
-        /// <summary>Modelos de raciocínio da OpenAI: max_completion_tokens e sem temperature.</summary>
+        /// <summary>OpenAI reasoning models: max_completion_tokens and no temperature.</summary>
         public bool OpenAiStyle;
-        /// <summary>Preço pela metade fora do horário de pico (DeepSeek).</summary>
+        /// <summary>Half price off-peak (DeepSeek).</summary>
         public bool OffPeak;
-        /// <summary>Usa a cota da assinatura do jogador: custo em dólar é zero.</summary>
+        /// <summary>Uses the player's subscription quota: the dollar cost is zero.</summary>
         public bool Subscription;
-        /// <summary>Servidor no próprio PC (Ollama, LM Studio...): sem chave, sem custo; o endereço vem de LocalLlm.</summary>
+        /// <summary>Server on the player's own PC (Ollama, LM Studio...): no key, no cost; the address comes from LocalLlm.</summary>
         public bool Local;
 
         internal bool Visible => true;
@@ -74,8 +74,8 @@ namespace CurrencyMod.Diplomacia.Llm.Providers
     }
 
     /// <summary>
-    /// Provedores conhecidos. Endereços e preços conferidos nas páginas oficiais em 2026-10-06
-    /// (research\provedores-ia.md). O .cfg pode sobrescrever preços ([IA.Provedores] PrecosPersonalizados).
+    /// Known providers. Addresses and prices checked on the official pages on 2026-10-06
+    /// (research\provedores-ia.md). The .cfg can override prices ([IA.Provedores] PrecosPersonalizados).
     /// </summary>
     internal static class ProviderCatalog
     {
@@ -100,7 +100,7 @@ namespace CurrencyMod.Diplomacia.Llm.Providers
             },
             new ProviderDef
             {
-                // Pelo Codex do jogador (@openai/codex-sdk usa o mesmo "codex exec"): cota do Plus/Pro, sem chave.
+                // Through the player's Codex (@openai/codex-sdk uses the same "codex exec"): Plus/Pro quota, no key.
                 Id = "codex", Name = "ChatGPT (Codex)", Format = WireFormat.CodexCli, Login = LoginKind.Codex,
                 AcceptsKey = false, Subscription = true, JsonObject = false,
                 ChatUrl = "codex exec",
@@ -171,7 +171,7 @@ namespace CurrencyMod.Diplomacia.Llm.Providers
                 ModelsUrl = "https://api.x.ai/v1/models",
                 KeyUrl = "https://console.x.ai",
                 Host = "api.x.ai",
-                // A documentação da xAI só confirma json_schema: o json vai pedido no prompt e o cliente o extrai.
+                // The xAI documentation only confirms json_schema: the JSON is requested in the prompt and the client extracts it.
                 JsonObject = false,
                 Models =
                 {
@@ -181,7 +181,7 @@ namespace CurrencyMod.Diplomacia.Llm.Providers
             },
             new ProviderDef
             {
-                // Qualquer servidor chat/completions local. O endereço é resolvido por LocalLlm.Apply a cada uso.
+                // Any local chat/completions server. The address is resolved by LocalLlm.Apply on each use.
                 Id = LocalLlm.Id, Name = "Ollama / LM Studio", Local = true, AcceptsKey = false, JsonObject = false,
                 ChatUrl = "http://localhost:11434/v1/chat/completions",
                 ModelsUrl = "http://localhost:11434/v1/models",
@@ -190,12 +190,12 @@ namespace CurrencyMod.Diplomacia.Llm.Providers
             },
         };
 
-        /// <summary>Sugerido para quem acabou de instalar.</summary>
+        /// <summary>Suggested for fresh installs.</summary>
         internal const string Suggested = "openrouter";
 
         internal static ProviderDef Get(string id) => All.FirstOrDefault(p => string.Equals(p.Id, id?.Trim(), StringComparison.OrdinalIgnoreCase));
 
-        /// <summary>Preço de um modelo: o do .cfg se houver, senão o da tabela, senão null (desconhecido).</summary>
+        /// <summary>Price of a model: the .cfg one if any, else the table one, else null (unknown).</summary>
         internal static ModelDef Price(ProviderDef provider, string model)
         {
             ModelDef custom = CustomPrice(provider.Id, model);
@@ -210,9 +210,9 @@ namespace CurrencyMod.Diplomacia.Llm.Providers
             return provider.Model(model) ?? Live(provider.Id, model);
         }
 
-        // ---------------- Preços personalizados (.cfg) ----------------
+        // ---------------- Custom prices (.cfg) ----------------
 
-        /// <summary>Formato: "provedor/modelo=cache/entrada/saída; ..." (US$ por milhão de tokens).</summary>
+        /// <summary>Format: "provider/model=cache/input/output; ..." (US$ per million tokens).</summary>
         private static ModelDef CustomPrice(string provider, string model)
         {
             string spec = IaConfig.CustomPrices?.Value;
@@ -245,7 +245,7 @@ namespace CurrencyMod.Diplomacia.Llm.Providers
             return null;
         }
 
-        // ---------------- Preços da lista de modelos (OpenRouter) ----------------
+        // ---------------- Prices from the model list (OpenRouter) ----------------
 
         private static readonly Dictionary<string, ModelDef> LivePrices = new Dictionary<string, ModelDef>();
 

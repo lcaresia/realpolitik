@@ -16,15 +16,15 @@ using HarmonyLib;
 namespace CurrencyMod.Diplomacia
 {
     /// <summary>
-    /// Postura e foco da IA de linguagem viram viés na IA nativa (design §11.1; research\llm-diplomacy-feasibility.md
-    /// §7.1). Só mexe nas saídas das análises da IA, nunca na simulação:
-    /// - simpatia e superioridade (o humor que a tela de diplomacia mostra) e animosidade, por par de nações;
-    /// - "alvo de guerra" vira o inimigo principal: a IA nativa prepara o exército, mas a guerra continua travada
-    ///   (NativeAiLocks) até o líder declarar;
-    /// - o foco multiplica a motivação dos objetivos do império (expandir, economia, exército, defesa, maravilhas,
-    ///   poder diplomático, religião) e as necessidades de dinheiro, ciência, influência, comida, produção e fé.
-    /// Vale só para nações travadas pela IA de linguagem (mesma regra do F1). A tabela vem da thread principal
-    /// (IaModule) e é trocada inteira; os patches rodam na thread da IA nativa.
+    /// The language AI's posture and focus become a bias on the native AI (design §11.1; research\llm-diplomacy-feasibility.md
+    /// §7.1). Only touches the outputs of the AI's analyses, never the simulation:
+    /// - rapport and superiority (the mood the diplomacy screen shows) and animosity, per pair of nations;
+    /// - "war target" becomes the main enemy (nemesis): the native AI prepares the army, but war stays locked
+    ///   (NativeAiLocks) until the leader declares it;
+    /// - the focus multiplies the motivation of the empire's goals (expand, economy, army, defense, wonders,
+    ///   diplomatic power, religion) and the needs for money, science, influence, food, industry and faith.
+    /// Applies only to nations locked by the language AI (same rule as F1). The table comes from the main thread
+    /// (IaModule) and is swapped whole; the patches run on the native AI thread.
     /// </summary>
     internal static class NativeAiBias
     {
@@ -32,7 +32,7 @@ namespace CurrencyMod.Diplomacia
 
         internal enum Focus : byte { None, Expansion, Economy, Science, Military, Faith, Culture }
 
-        /// <summary>Viés de uma postura: soma na simpatia, na superioridade e na animosidade.</summary>
+        /// <summary>Bias of a posture: added to rapport, superiority and animosity.</summary>
         private struct Effect
         {
             public float Rapport;
@@ -42,18 +42,18 @@ namespace CurrencyMod.Diplomacia
 
         private static readonly Effect[] Effects =
         {
-            new Effect(),                                                            // neutro
-            new Effect { Rapport = 0.35f, Animosity = -0.3f },                       // aliado
-            new Effect { Rapport = 0.2f, Animosity = -0.15f },                       // amigável
-            new Effect { Rapport = -0.15f, Superiority = 0.05f, Animosity = 0.05f }, // desconfiado
-            new Effect { Rapport = -0.3f, Superiority = 0.15f, Animosity = 0.2f },   // hostil
-            new Effect { Rapport = -0.4f, Superiority = 0.25f, Animosity = 0.4f },   // alvo de guerra
+            new Effect(),                                                            // neutral
+            new Effect { Rapport = 0.35f, Animosity = -0.3f },                       // ally
+            new Effect { Rapport = 0.2f, Animosity = -0.15f },                       // friendly
+            new Effect { Rapport = -0.15f, Superiority = 0.05f, Animosity = 0.05f }, // wary
+            new Effect { Rapport = -0.3f, Superiority = 0.15f, Animosity = 0.2f },   // hostile
+            new Effect { Rapport = -0.4f, Superiority = 0.25f, Animosity = 0.4f },   // war target
         };
 
-        /// <summary>Multiplicador da motivação de cada objetivo por foco (ordem do enum Focus), entre 0,5 e 2.</summary>
+        /// <summary>Multiplier of each goal's motivation per focus (order of the Focus enum), between 0.5 and 2.</summary>
         private static readonly Dictionary<Type, float[]> GoalWeights = new Dictionary<Type, float[]>
         {
-            //                                                                                      nenhum expansão economia ciência militar fé    cultura
+            //                                                                                      none expansion economy science military faith culture
             [typeof(Amplitude.Mercury.AI.Brain.Generators.ExpandEmpire)] = new[] { 1f, 1.6f, 0.9f, 0.9f, 0.9f, 0.9f, 0.9f },
             [typeof(Amplitude.Mercury.AI.Brain.Generators.DevelopEmpireEconomy)] = new[] { 1f, 0.9f, 1.6f, 1.1f, 0.85f, 1f, 1f },
             [typeof(Amplitude.Mercury.AI.Brain.Generators.DevelopEmpireMilitary)] = new[] { 1f, 1f, 0.85f, 0.85f, 2f, 0.85f, 0.85f },
@@ -63,7 +63,7 @@ namespace CurrencyMod.Diplomacia
             [typeof(Amplitude.Mercury.AI.Brain.Generators.CreateReligion)] = new[] { 1f, 1f, 1f, 1f, 1f, 1.5f, 1f },
         };
 
-        //                                                    nenhum expansão economia ciência militar fé  cultura
+        //                                                    none expansion economy science military faith culture
         private static readonly float[] FoodNeed = { 1f, 1.2f, 1f, 1f, 1f, 1f, 1f };
         private static readonly float[] IndustryNeed = { 1f, 1.1f, 1.2f, 1f, 1.3f, 1f, 1f };
         private static readonly float[] MoneyNeed = { 1f, 1f, 1.4f, 1f, 1f, 1f, 1f };
@@ -87,7 +87,7 @@ namespace CurrencyMod.Diplomacia
         private static volatile string lastNemesis;
         private static volatile bool errorLogged;
 
-        // ---------------- Tabela (thread principal) ----------------
+        // ---------------- Table (main thread) ----------------
 
         internal static Posture ParsePosture(string value)
         {
@@ -116,7 +116,7 @@ namespace CurrencyMod.Diplomacia
             }
         }
 
-        /// <summary>Monta a tabela a partir das nações (só as que a IA de linguagem comanda e com o viés ligado).</summary>
+        /// <summary>Builds the table from the nations (only those the language AI controls, and with the bias enabled).</summary>
         internal static void Publish(IaWorld world, Func<int, bool> active)
         {
             var built = new Table();
@@ -184,13 +184,13 @@ namespace CurrencyMod.Diplomacia
             if (!errorLogged)
             {
                 errorLogged = true;
-                Plugin.Log?.LogError($"[IA] Viés da IA nativa: {ex}");
+                Plugin.Log?.LogError($"[IA] Native AI bias: {ex}");
             }
         }
 
-        // ---------------- Postura (thread da IA nativa) ----------------
+        // ---------------- Posture (native AI thread) ----------------
 
-        /// <summary>Simpatia e superioridade: as duas notas que escolhem o humor (amigável, desconfiado, hostil...).</summary>
+        /// <summary>Rapport and superiority: the two scores that pick the mood (friendly, wary, hostile...).</summary>
         [HarmonyPatch(typeof(ComputeDiplomaticScore), "ProcessGenericModifiers")]
         private static class ScorePatch
         {
@@ -211,7 +211,7 @@ namespace CurrencyMod.Diplomacia
                     Effect effect = Effects[(int)posture];
                     score.Value += score.IsSuperiorityScore ? effect.Superiority : effect.Rapport;
                     System.Threading.Interlocked.Increment(ref scoreTouches);
-                    // Postura nova muda o humor na hora, sem a transição de 1 ou 2 turnos.
+                    // A new posture changes the mood immediately, without the 1-2 turn transition.
                     if (since >= Amplitude.Mercury.Interop.AI.Snapshots.Game.Turn - 1)
                     {
                         relationData.DiplomaticContext.DiplomacyContext.TriggerInstantTransitions = true;
@@ -256,7 +256,7 @@ namespace CurrencyMod.Diplomacia
             }
         }
 
-        /// <summary>Alvo de guerra = inimigo principal (o de maior animosidade, se houver mais de um).</summary>
+        /// <summary>War target = main enemy (the one with the highest animosity, if there is more than one).</summary>
         [HarmonyPatch(typeof(ComputeNemesis), nameof(ComputeNemesis.Process))]
         private static class NemesisPatch
         {
@@ -309,9 +309,9 @@ namespace CurrencyMod.Diplomacia
             }
         }
 
-        // ---------------- Foco (thread da IA nativa) ----------------
+        // ---------------- Focus (native AI thread) ----------------
 
-        /// <summary>Motivação dos objetivos do império: o primeiro parâmetro de todos é o próprio império ("context").</summary>
+        /// <summary>Motivation of the empire's goals: the first parameter of all of them is the empire itself ("context").</summary>
         [HarmonyPatch]
         private static class GoalPatch
         {
@@ -354,7 +354,7 @@ namespace CurrencyMod.Diplomacia
             }
         }
 
-        /// <summary>Necessidades de comida, produção, dinheiro, ciência e influência do império (de 0 a 1).</summary>
+        /// <summary>The empire's needs for food, industry, money, science and influence (from 0 to 1).</summary>
         [HarmonyPatch(typeof(ComputeFIMSNeeds), nameof(ComputeFIMSNeeds.Process))]
         private static class NeedsPatch
         {
@@ -388,7 +388,7 @@ namespace CurrencyMod.Diplomacia
             }
         }
 
-        /// <summary>Foco em fé: mais vontade de converter territórios à sua religião.</summary>
+        /// <summary>Faith focus: more eagerness to convert territories to its religion.</summary>
         [HarmonyPatch(typeof(FaithNeed), nameof(FaithNeed.Process))]
         private static class FaithPatch
         {

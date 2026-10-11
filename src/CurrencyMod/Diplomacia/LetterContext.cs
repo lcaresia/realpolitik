@@ -6,9 +6,9 @@ using Newtonsoft.Json.Linq;
 namespace CurrencyMod.Diplomacia
 {
     /// <summary>
-    /// "O que isso significa": fatos do jogo por trás de uma carta da IA, sem chamada à API. O que o remetente fez com o
-    /// leitor no turno em que escreveu (acordo proposto, presente, exigência, guerra, paz, pedágio) e as regras do mod que
-    /// a carta costuma citar em metáfora (a "praça fechada" = declaração pública só a cada N turnos).
+    /// "What this means": game facts behind an AI letter, with no API call. What the sender did to the reader on the
+    /// turn it wrote (proposed agreement, gift, demand, war, peace, toll) and the mod rules the letter tends to cite as a
+    /// metaphor (the "closed square" = public declaration only once every N turns).
     /// </summary>
     internal static class LetterContext
     {
@@ -18,7 +18,7 @@ namespace CurrencyMod.Diplomacia
             "square", "public", "world", "proclaim", "announce", "plaza", "monde", "place publique", "welt", "öffentlich",
         };
 
-        /// <summary>Linhas de contexto (no idioma da interface) para uma carta recebida pelo leitor; vazio se não há nada.</summary>
+        /// <summary>Context lines (in the UI language) for a letter received by the reader; empty if there is nothing.</summary>
         internal static List<string> For(IaWorld world, Letter letter, int reader)
         {
             var lines = new List<string>();
@@ -41,8 +41,8 @@ namespace CurrencyMod.Diplomacia
                 }
             }
 
-            // Declaração pública: a regra é 1 a cada N turnos. Quando a carta fala de praça/mundo e o remetente estava
-            // bloqueado no turno em que escreveu, diz até quando.
+            // Public declaration: the rule is 1 every N turns. When the letter talks about the square/world and the sender
+            // was blocked on the turn it wrote, say until when.
             int interval = Math.Max(1, IaConfig.PublicDeclarationInterval.Value);
             int lastPublic = world.Letters.Where(l => l.From == letter.From && l.IsPublic && l.SentTurn <= letter.SentTurn)
                 .Select(l => l.SentTurn).DefaultIfEmpty(-999).Max();

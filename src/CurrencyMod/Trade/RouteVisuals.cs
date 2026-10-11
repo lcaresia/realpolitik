@@ -15,16 +15,16 @@ using Territory = Amplitude.Mercury.Simulation.Territory;
 namespace CurrencyMod
 {
     /// <summary>
-    /// Rotas comerciais com cor, espessura e valor (pedido de 2026-10-10, docs\melhorias-jogando.md item 8). O jogo desenha
-    /// todas as rotas iguais (PresentationTradeRoadController, um estilo por situação: normal, interrompida, destruída).
-    /// Aqui:
-    /// - na thread do sandbox (pós-fixo de TradePathSnapshot.ComputePathRendering), cada linha externa ganha a situação em
-    ///   relação ao jogador local, a mercadoria que passa, o pedágio que vale para ele e o tile do meio do caminho;
-    /// - na apresentação (pós-fixo de TradePathSnapshot_PresentationChanged), a linha troca para um estilo do mod: cópia do
-    ///   estilo normal do jogo com outra cor e outra largura;
-    /// - um rótulo "£12/t" no meio de cada rota que passa pelas terras do jogador (RouteLabels, só na visão de comércio).
-    /// Cores: dourado = paga o seu pedágio; branco = passa livre pelas suas terras; laranja = rota sua que paga pedágio a
-    /// alguém; azul = rota sua; as outras ficam como o jogo desenha. Espessura: quanto mais recursos, mais grossa.
+    /// Trade routes with color, thickness and value (request from 2026-10-10, docs\melhorias-jogando.md item 8). The game
+    /// draws all routes the same (PresentationTradeRoadController, one style per situation: normal, interrupted, destroyed).
+    /// Here:
+    /// - on the sandbox thread (postfix of TradePathSnapshot.ComputePathRendering), each external line gets its situation
+    ///   relative to the local player, the goods it carries, the toll that applies to the player and the mid-path tile;
+    /// - in the presentation (postfix of TradePathSnapshot_PresentationChanged), the line switches to a mod style: a copy of
+    ///   the game's normal style with another color and another width;
+    /// - a "£12/t" label in the middle of each route that crosses the player's land (RouteLabels, only in the trade view).
+    /// Colors: gold = pays your toll; white = passes free through your land; orange = your route that pays a toll to
+    /// someone; blue = your route; the others stay as the game draws them. Thickness: the more resources, the thicker.
     /// </summary>
     internal static class RouteVisuals
     {
@@ -35,7 +35,7 @@ namespace CurrencyMod
             public bool External;
             public Kind Kind;
             public int Goods;
-            /// <summary>Pedágio por turno que vale para o jogador: cobrado (PaysMe) ou que cobraria no preço atual (FreeOnMe).</summary>
+            /// <summary>Per-turn toll that applies to the player: charged (PaysMe) or that would be charged at the current price (FreeOnMe).</summary>
             public double Value;
             public int MidTile;
         }
@@ -45,10 +45,10 @@ namespace CurrencyMod
             public Info[] Items = new Info[0];
         }
 
-        /// <summary>Os dados de cada buffer do snapshot (o jogo alterna dois objetos Data entre sandbox e apresentação).</summary>
+        /// <summary>The data of each snapshot buffer (the game alternates two Data objects between sandbox and presentation).</summary>
         private static readonly ConditionalWeakTable<TradePathSnapshot.Data, Lines> table = new ConditionalWeakTable<TradePathSnapshot.Data, Lines>();
 
-        /// <summary>Um rótulo de valor: tile do meio da rota, texto e se a rota já paga (dourado) ou só pagaria.</summary>
+        /// <summary>A value label: the route's middle tile, text, and whether the route already pays (gold) or only would pay.</summary>
         internal sealed class Label
         {
             public int Tile;
@@ -56,15 +56,15 @@ namespace CurrencyMod
             public bool Paid;
         }
 
-        /// <summary>Rótulos da última apresentação (lidos pelo RouteLabels na thread principal).</summary>
+        /// <summary>Labels from the last presentation (read by RouteLabels on the main thread).</summary>
         internal static volatile List<Label> Labels = new List<Label>();
 
         internal static bool Enabled => EconomyConfig.RouteColors.Value && !SavePatches.IsGameOnline();
 
-        /// <summary>Teste ("jogo rotas cores E5"): pinta como se o jogador fosse outro império (-1 = o jogador local).</summary>
+        /// <summary>Test ("jogo rotas cores E5"): paints as if the player were another empire (-1 = the local player).</summary>
         internal static volatile int ViewAs = -1;
 
-        /// <summary>Teste ("jogo rotas cores todas"): rótulo em toda rota colorida, para conferir a posição.</summary>
+        /// <summary>Test ("jogo rotas cores todas"): label on every colored route, to check the position.</summary>
         internal static volatile bool LabelAll;
 
         // ---------------- Sandbox ----------------
@@ -84,7 +84,7 @@ namespace CurrencyMod
                 }
                 catch (Exception ex)
                 {
-                    Plugin.Log.LogWarning($"Cores das rotas: {ex}");
+                    Plugin.Log.LogWarning($"Route colors: {ex}");
                 }
             }
         }
@@ -106,7 +106,7 @@ namespace CurrencyMod
                 ExternalTradeRelation relation = relations[r];
                 if (relation == null)
                 {
-                    continue; // mesma ordem do ComputePathRendering: só as relações que existem viram linha
+                    continue; // same order as ComputePathRendering: only existing relations become a line
                 }
                 lines.Items[line] = Describe(relation, local);
                 line++;
@@ -151,7 +151,7 @@ namespace CurrencyMod
                         {
                             continue;
                         }
-                        // O dono cobra uma vez por rota, pelo posto mais caro dele no caminho.
+                        // The owner charges once per route, at its most expensive post along the path.
                         double price = TradePolicy.GetPrice(territory.Index, payer, local, era) * info.Goods;
                         if (TradePolicy.GetMode(territory.Index, payer, local) == TradeMode.Toll)
                         {
@@ -180,21 +180,21 @@ namespace CurrencyMod
             return info;
         }
 
-        // ---------------- Apresentação ----------------
+        // ---------------- Presentation ----------------
 
-        /// <summary>Largura relativa por faixa de mercadoria (1-2, 3-5, 6+ recursos).</summary>
+        /// <summary>Relative width per goods tier (1-2, 3-5, 6+ resources).</summary>
         private static readonly float[] WidthTiers = { 0.8f, 1.25f, 1.8f };
 
         private static readonly Color[] KindColors =
         {
-            Color.white,                              // Other (não usado: fica o estilo do jogo)
-            new Color(0.95f, 0.78f, 0.36f),           // PaysMe: dourado
-            new Color(1f, 1f, 1f),                    // FreeOnMe: branco
-            new Color(0.95f, 0.55f, 0.25f),           // MinePays: laranja
-            new Color(0.45f, 0.72f, 0.95f),           // Mine: azul
+            Color.white,                              // Other (unused: the game's style stays)
+            new Color(0.95f, 0.78f, 0.36f),           // PaysMe: gold
+            new Color(1f, 1f, 1f),                    // FreeOnMe: white
+            new Color(0.95f, 0.55f, 0.25f),           // MinePays: orange
+            new Color(0.45f, 0.72f, 0.95f),           // Mine: blue
         };
 
-        /// <summary>Índice do primeiro estilo do mod no controlador (os do jogo vêm antes).</summary>
+        /// <summary>Index of the first mod style in the controller (the game's come first).</summary>
         private static readonly ConditionalWeakTable<PresentationTradeRoadController, object> styled = new ConditionalWeakTable<PresentationTradeRoadController, object>();
 
         private static int Tier(int goods) => goods >= 6 ? 2 : goods >= 3 ? 1 : 0;
@@ -215,7 +215,7 @@ namespace CurrencyMod
                 }
                 catch (Exception ex)
                 {
-                    Plugin.Log.LogWarning($"Cores das rotas (apresentação): {ex}");
+                    Plugin.Log.LogWarning($"Route colors (presentation): {ex}");
                 }
             }
         }
@@ -240,7 +240,7 @@ namespace CurrencyMod
             {
                 Info info = computed.Items[i];
                 WorldSpaceLinesWithSteps.Line line = lines.Lines[i];
-                // Só mexe nas linhas no estilo normal (interrompidas e destruídas ficam como o jogo mostra).
+                // Only touches lines in the normal style (interrupted and destroyed ones stay as the game shows them).
                 if (!info.External || info.Kind == Kind.Other || !line.IsVisible || line.StyleIndex != defaultStyle)
                 {
                     continue;
@@ -261,8 +261,8 @@ namespace CurrencyMod
         }
 
         /// <summary>
-        /// Põe os estilos do mod logo depois dos do jogo (sempre na mesma posição: recarregar o núcleo não acumula estilos,
-        /// o UpdateStyles só reescreve os que já existem). Devolve o índice do primeiro.
+        /// Puts the mod styles right after the game's (always at the same position: reloading the core does not pile up
+        /// styles, UpdateStyles only rewrites the ones that already exist). Returns the index of the first.
         /// </summary>
         private static int EnsureStyles(PresentationTradeRoadController controller, WorldSpaceLinesWithSteps lines)
         {
@@ -298,7 +298,7 @@ namespace CurrencyMod
             }
             lines.UpdateStyles(all.ToArray());
             styled.Add(controller, firstMod);
-            Plugin.Log.LogInfo($"Cores das rotas: {all.Count - firstMod} estilos acrescentados (largura base {template.Width:0.0}, cor própria do jogo {template.UseCustomColor}).");
+            Plugin.Log.LogInfo($"Route colors: {all.Count - firstMod} styles added (base width {template.Width:0.0}, game's own custom color {template.UseCustomColor}).");
             return firstMod;
         }
     }

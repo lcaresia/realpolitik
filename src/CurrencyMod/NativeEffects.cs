@@ -13,17 +13,17 @@ using SettlementStatuses = Amplitude.Mercury.Data.Simulation.SettlementStatuses;
 namespace CurrencyMod
 {
     /// <summary>
-    /// Os efeitos da economia entram no jogo como os efeitos dele: nos números que o jogo usa e mostra, e com uma linha
-    /// própria nos detalhamentos nativos (o "resumo de buffs e debuffs" das cidades e do dinheiro). O jogo não deixa
-    /// criar efeitos de dados novos em tempo de execução (os descritores são compilados), então cada efeito entra onde
-    /// o jogo calcula e onde ele mostra o valor:
-    /// - crédito (juros → produção): construção e IA (CreditProductionPatch), tela da cidade (SettlementCursorSnapshot)
-    ///   e a linha "Crédito" no detalhamento de indústria;
-    /// - inflação e desemprego: baixam a meta de estabilidade de cada cidade. A estabilidade anda até a meta no ritmo do
-    ///   jogo (GetSettlementPublicOrderGain), a meta mostrada já vem descontada (SettlementInfo), a IA vê a meta
-    ///   descontada e cada perda tem a sua linha no detalhamento de estabilidade;
-    /// - juros do saldo: entram na renda por turno mostrada (barra do topo) e numa linha do detalhamento de dinheiro.
-    /// Tudo roda nas threads do sandbox e da IA e lê só a tabela imutável de EconomySimulation.Effects.
+    /// The economy's effects enter the game like the game's own effects: in the numbers the game uses and shows, and with
+    /// their own line in the native breakdowns (the "buffs and debuffs summary" of cities and money). The game does not
+    /// allow creating new data effects at runtime (descriptors are compiled), so each effect is injected where the game
+    /// computes and where it shows the value:
+    /// - credit (interest → production): construction and AI (CreditProductionPatch), city screen (SettlementCursorSnapshot)
+    ///   and the "Credit" line in the industry breakdown;
+    /// - inflation and unemployment: lower each city's stability target. Stability moves toward the target at the game's
+    ///   pace (GetSettlementPublicOrderGain), the displayed target is already discounted (SettlementInfo), the AI sees the
+    ///   discounted target and each loss has its own line in the stability breakdown;
+    /// - interest on the balance: added to the displayed per-turn income (top bar) and to a line in the money breakdown.
+    /// Everything runs on the sandbox and AI threads and reads only the immutable EconomySimulation.Effects table.
     /// </summary>
     internal static class NativeEffects
     {
@@ -33,7 +33,7 @@ namespace CurrencyMod
 
         internal static bool Enabled => EconomyConfig.EnableEconomy.Value && !SavePatches.IsGameOnline();
 
-        /// <summary>Efeitos do dono de uma cidade de império maior; null se não houver efeito a aplicar.</summary>
+        /// <summary>Effects of the owner of a major-empire city; null if there is no effect to apply.</summary>
         internal static EconomySimulation.EmpireEffects EffectsOf(Settlement settlement)
         {
             if (settlement == null || !Enabled || !(settlement.Empire.Entity is MajorEmpire empire))
@@ -44,7 +44,7 @@ namespace CurrencyMod
             return effects.Active ? effects : null;
         }
 
-        /// <summary>Perda total na meta de estabilidade de uma cidade (0 se não for cidade de império maior).</summary>
+        /// <summary>Total loss on a city's stability target (0 if it is not a major-empire city).</summary>
         internal static double StabilityLoss(Settlement settlement)
         {
             if (settlement == null || settlement.SettlementStatus != SettlementStatuses.City)
@@ -55,7 +55,7 @@ namespace CurrencyMod
             return effects != null ? effects.StabilityLoss : 0;
         }
 
-        /// <summary>Meta de estabilidade já com a inflação e o desemprego, sem passar do mínimo garantido da cidade.</summary>
+        /// <summary>Stability target with inflation and unemployment applied, never below the city's guaranteed minimum.</summary>
         internal static FixedPoint EffectiveStabilityTarget(Settlement settlement, double loss)
         {
             double target = (float)settlement.PublicOrderTarget.Value;
@@ -63,7 +63,7 @@ namespace CurrencyMod
             return (FixedPoint)(float)Math.Max(minimum, target - loss);
         }
 
-        /// <summary>Juros que o saldo vai render (ou custar) no próximo fim de turno: a mesma conta da simulação.</summary>
+        /// <summary>Interest the balance will yield (or cost) at the next end of turn: the same calculation as the simulation.</summary>
         internal static double ProjectedInterest(Empire empire)
         {
             if (!(empire is MajorEmpire major) || !major.IsAlive || !Enabled)
@@ -78,7 +78,7 @@ namespace CurrencyMod
             return EconomySimulation.InterestFlow((float)major.MoneyStock.Value, effects.InterestRate, effects.InflationRate, effects.SmoothedIncome);
         }
 
-        /// <summary>Renda por turno que o jogo mostra: a dele mais os juros projetados (MoneyNetDisplayPatch).</summary>
+        /// <summary>Per-turn income the game shows: its own plus the projected interest (MoneyNetDisplayPatch).</summary>
         public static FixedPoint DisplayedMoneyNet(Empire empire)
         {
             FixedPoint net = empire.MoneyNet.Value;
@@ -92,7 +92,7 @@ namespace CurrencyMod
             }
             catch (Exception)
             {
-                // Nunca atrapalhar a barra do topo: sem juros, fica o valor do jogo.
+                // Never break the top bar: without interest, the game's value stays.
             }
             return net;
         }
@@ -101,9 +101,9 @@ namespace CurrencyMod
     }
 
     /// <summary>
-    /// Linhas próprias nos detalhamentos nativos. O montador do jogo junta as partes de cada fonte (BreakdownParts),
-    /// ordena e só depois escreve as linhas com o formato dele; uma parte com LocalizedSourceName entra igual às do
-    /// jogo (valor colorido, ícone do recurso, ganhos antes das perdas).
+    /// Our own lines in the native breakdowns. The game's builder gathers the parts from each source (BreakdownParts),
+    /// sorts them and only then writes the lines in its own format; a part with LocalizedSourceName shows up just like
+    /// the game's (colored value, resource icon, gains before losses).
     /// </summary>
     [HarmonyPatch(typeof(PropertyBreakdownWorker), nameof(PropertyBreakdownWorker.Evaluate))]
     internal static class BreakdownLinesPatch
@@ -150,7 +150,7 @@ namespace CurrencyMod
                 if (!loggedError)
                 {
                     loggedError = true;
-                    Plugin.Log.LogError($"Detalhamento nativo da economia: {ex}");
+                    Plugin.Log.LogError($"Native economy breakdown: {ex}");
                 }
             }
         }
@@ -200,7 +200,7 @@ namespace CurrencyMod
 
         private static bool AddPart(ref PropertyBreakdownWorker worker, double gain, string source, StaticString id)
         {
-            // O próprio jogo descarta partes menores que meio ponto antes de escrever as linhas.
+            // The game itself discards parts smaller than half a point before writing the lines.
             if (Math.Abs(gain) < 0.5)
             {
                 return false;
@@ -223,8 +223,8 @@ namespace CurrencyMod
     }
 
     /// <summary>
-    /// A estabilidade anda até a meta descontada. Mesma fórmula do jogo (RPN "PublicOrderGain"):
-    /// ganho = clamp(meta − atual, −queda por turno, +subida por turno).
+    /// Stability moves toward the discounted target. Same formula as the game (RPN "PublicOrderGain"):
+    /// gain = clamp(target − current, −fall per turn, +rise per turn).
     /// </summary>
     [HarmonyPatch(typeof(DepartmentOfTheInterior), nameof(DepartmentOfTheInterior.GetSettlementPublicOrderGain))]
     internal static class StabilityGainPatch
@@ -246,12 +246,12 @@ namespace CurrencyMod
             }
             catch (Exception)
             {
-                // Sem a perda, fica o ganho do jogo.
+                // Without the loss, the game's gain stays.
             }
         }
     }
 
-    /// <summary>A meta de estabilidade que as telas mostram (SettlementInfo, copiada para a tela da cidade e a lista).</summary>
+    /// <summary>The stability target the screens show (SettlementInfo, copied to the city screen and the list).</summary>
     [HarmonyPatch]
     internal static class StabilityInfoPatch
     {
@@ -275,12 +275,12 @@ namespace CurrencyMod
             }
             catch (Exception)
             {
-                // Tela com a meta do jogo é melhor que tela quebrada.
+                // A screen with the game's target beats a broken screen.
             }
         }
     }
 
-    /// <summary>A IA enxerga a meta de estabilidade descontada (constrói estabilidade, evita expandir em crise...).</summary>
+    /// <summary>The AI sees the discounted stability target (builds stability, avoids expanding during a crisis...).</summary>
     [HarmonyPatch(typeof(Amplitude.Mercury.Interop.AI.Entities.Settlement.Synchronizer), "Synchronize")]
     internal static class StabilityAiPatch
     {
@@ -300,7 +300,7 @@ namespace CurrencyMod
         }
     }
 
-    /// <summary>Produção da tela da cidade com o crédito (a construção já recebe pelo CreditProductionPatch).</summary>
+    /// <summary>City screen production with credit applied (construction already gets it via CreditProductionPatch).</summary>
     [HarmonyPatch(typeof(SettlementCursorSnapshot), "Synchronize")]
     internal static class CreditCursorPatch
     {
@@ -330,9 +330,9 @@ namespace CurrencyMod
     }
 
     /// <summary>
-    /// Renda por turno do império com os juros projetados do saldo, nas duas cópias que o jogo faz para a interface
-    /// (InitializeOnLoad e SynchronizeEmpireInfo). Troca "império.MoneyNet.Value" por NativeEffects.DisplayedMoneyNet,
-    /// também na comparação que detecta mudança, para a cópia não ficar "suja" a cada quadro.
+    /// The empire's per-turn income with the balance's projected interest, in both copies the game makes for the UI
+    /// (InitializeOnLoad and SynchronizeEmpireInfo). Replaces "empire.MoneyNet.Value" with NativeEffects.DisplayedMoneyNet,
+    /// also in the change-detection comparison, so the copy is not marked "dirty" every frame.
     /// </summary>
     [HarmonyPatch]
     internal static class MoneyNetDisplayPatch
@@ -362,7 +362,7 @@ namespace CurrencyMod
             {
                 if (list[i].opcode == OpCodes.Ldflda && Equals(list[i].operand, moneyNet) && list[i + 1].Calls(getValue))
                 {
-                    // Mantém rótulos e blocos das instruções originais.
+                    // Keeps the labels and blocks of the original instructions.
                     list[i].opcode = OpCodes.Call;
                     list[i].operand = displayed;
                     list[i + 1].opcode = OpCodes.Nop;
@@ -370,7 +370,7 @@ namespace CurrencyMod
                     replaced++;
                 }
             }
-            Plugin.Log.LogInfo($"Renda com juros na interface: {replaced} leitura(s) trocada(s) em GameSnapshot.{__originalMethod?.Name}.");
+            Plugin.Log.LogInfo($"Income with interest in the UI: {replaced} read(s) replaced in GameSnapshot.{__originalMethod?.Name}.");
             return list;
         }
     }

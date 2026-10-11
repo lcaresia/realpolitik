@@ -18,14 +18,14 @@ using B = CurrencyMod.NativeUI.NativeBankWindow;
 namespace CurrencyMod.Diplomacia.UI
 {
     /// <summary>
-    /// Correio Diplomático em tela cheia (design §8.1). A moldura é um clone da tela de Configurações do jogo
-    /// (coluna da esquerda com título, seções e botão de voltar; painel central com desfoque), registrado no grupo das
-    /// telas cheias da partida: o jogo esconde o HUD, fecha no ESC e mostra uma tela cheia por vez. A lista de cartões
-    /// vem da janela de cidades, como no Banco Central.
-    ///   esquerda: Novas, A responder, Lidas, Respondidas, Enviadas, Comunicados públicos, Nações;
-    ///   centro: as cartas da seção, com filtro por nação e por período;
-    ///   direita: escrever (e responder, ligado à carta original).
-    /// As cartas vivem em IaModule.World; esta tela só lê e chama SendPlayerLetter / TogglePlayerBlock.
+    /// Full-screen Diplomatic Mail (design §8.1). The frame is a clone of the game's Settings screen
+    /// (left column with title, sections and back button; central panel with blur), registered in the match's
+    /// full-screen group: the game hides the HUD, closes on ESC and shows one full screen at a time. The card list
+    /// comes from the cities window, as in the Central Bank.
+    ///   left: New, To answer, Read, Answered, Sent, Public statements, Nations;
+    ///   center: the section's letters, with a filter by nation and by period;
+    ///   right: compose (and reply, linked to the original letter).
+    /// The letters live in IaModule.World; this screen only reads and calls SendPlayerLetter / TogglePlayerBlock.
     /// </summary>
     internal class MailScreen : UIWindow
     {
@@ -36,19 +36,19 @@ namespace CurrencyMod.Diplomacia.UI
         private const string Gold = "E3C88A";
         private const string Green = "8FD18A";
 
-        // Geometria (tela padronizada de 1920 × 1080). O HUD que fica por cima da tela cheia: a barra de controle
-        // embaixo à esquerda (até x≈370, a partir de y≈913) e o fim de turno embaixo à direita.
+        // Geometry (standardized 1920 × 1080 screen). The HUD that stays on top of the full screen: the control bar
+        // at the bottom left (up to x≈370, from y≈913) and the end-turn button at the bottom right.
         private const float CenterX = 420f;
         private const float CenterWidth = 1030f;
         private const float RightX = 1470f;
         private const float RightWidth = 420f;
         private const float RightHeight = 830f;
-        private const float ListWidth = 928f; // os cartões ficam 26 px dentro da lista e 34 px mais estreitos: alinham com a linha divisória
-        /// <summary>A lista termina acima da barra de controle (que fica por cima da tela cheia até x≈560).</summary>
+        private const float ListWidth = 928f; // cards sit 26 px inside the list and are 34 px narrower: they line up with the divider line
+        /// <summary>The list ends above the control bar (which stays on top of the full screen up to x≈560).</summary>
         private const float ListHeight = 756f;
         private const float ComposeListWidth = 398f;
         private const float ComposeListHeight = 720f;
-        /// <summary>Cartas recebidas mais antigas que isso saem de "A responder" (ninguém responde carta de 20 turnos atrás).</summary>
+        /// <summary>Received letters older than this leave "To answer" (nobody answers a letter from 20 turns ago).</summary>
         private const int AnswerWindowTurns = 20;
         private const int MaxLettersListed = 60;
 
@@ -56,7 +56,7 @@ namespace CurrencyMod.Diplomacia.UI
 
         internal enum Section { New, ToAnswer, Read, Answered, Sent, Public, Nations, Groups }
 
-        // Textos marcados com L.N: traduzidos com L.T (ou SectionHelpText) na hora de mostrar.
+        // Texts marked with L.N: translated with L.T (or SectionHelpText) at display time.
         private static readonly string[] SectionNames = { L.N("Novas"), L.N("A responder"), L.N("Lidas"), L.N("Respondidas"), L.N("Enviadas"), L.N("Comunicados públicos"), L.N("Nações"), L.N("Grupos") };
         private static readonly string[] SectionHelp =
         {
@@ -74,8 +74,8 @@ namespace CurrencyMod.Diplomacia.UI
         private static readonly int[] PeriodTurns = { 0, 5, 15, 30 };
         private static readonly string[] PeriodNames = { L.N("Período: tudo"), L.N("Últimos 5 turnos"), L.N("Últimos 15 turnos"), L.N("Últimos 30 turnos") };
 
-        /// <summary>Ajuda da seção, traduzida (a de "A responder" leva a janela de turnos no {0}).</summary>
-        private static string SectionHelpText(int index) => L.F(SectionHelp[index], AnswerWindowTurns); // SectionHelp: conjunto L.N
+        /// <summary>Section help, translated (the "To answer" one takes the turn window in {0}).</summary>
+        private static string SectionHelpText(int index) => L.F(SectionHelp[index], AnswerWindowTurns); // SectionHelp: L.N set
 
         private UILabel titleLabel;
         private UILabel descriptionLabel;
@@ -95,14 +95,14 @@ namespace CurrencyMod.Diplomacia.UI
         private float nextRefresh;
         private bool pendingOpen;
         private int pendingSection = -1;
-        /// <summary>Cartas mostradas em "Novas" nesta visita: continuam na lista depois de marcadas como lidas.</summary>
+        /// <summary>Letters shown in "New" during this visit: they stay in the list after being marked as read.</summary>
         private readonly HashSet<int> freshShown = new HashSet<int>();
 
         private readonly List<LetterRow> letterRows = new List<LetterRow>();
         private readonly List<NationRow> nationRows = new List<NationRow>();
         private Transform emptyCard;
 
-        // Escrever.
+        // Compose.
         private Transform recipientCard;
         private Transform typeCard;
         private Transform replyCard;
@@ -120,13 +120,13 @@ namespace CurrencyMod.Diplomacia.UI
         private UITextField demandField;
         private UISlider deadlineSlider;
         private int composeTo = -1;
-        /// <summary>Grupo do painel de escrever (tipo "grupo"); -1 = criar um grupo novo com newGroupMembers.</summary>
+        /// <summary>Group of the compose panel (type "grupo"); -1 = create a new group with newGroupMembers.</summary>
         private int composeGroup = -1;
         private readonly HashSet<int> newGroupMembers = new HashSet<int>();
         private readonly List<NationRow> groupRows = new List<NationRow>();
         private int composeType;
         private int replyToId = -1;
-        /// <summary>"Soltar": a carta sai sem ligação (senão o módulo liga sozinho à última carta deles que pedia resposta).</summary>
+        /// <summary>"Detach": the letter goes out unlinked (otherwise the module links it by itself to their last letter that asked for a reply).</summary>
         private bool replyDetached;
         private string feedback;
         private bool feedbackIsError;
@@ -148,11 +148,11 @@ namespace CurrencyMod.Diplomacia.UI
             public UIButton WriteButton;
             public UIButton BlockButton;
             public int Empire = -1;
-            /// <summary>Só nos cartões de grupo: as últimas mensagens.</summary>
+            /// <summary>Only on group cards: the latest messages.</summary>
             public Transform Body;
         }
 
-        // ---------------- Criação ----------------
+        // ---------------- Creation ----------------
 
         internal static MailScreen Create()
         {
@@ -164,7 +164,7 @@ namespace CurrencyMod.Diplomacia.UI
                 return null;
             }
 
-            // Tudo é montado sob um pai inativo: nada carrega até a tela estar limpa e registrada.
+            // Everything is built under an inactive parent: nothing loads until the screen is clean and registered.
             var stash = new GameObject("CurrencyMod_Stash");
             stash.SetActive(false);
             MailScreen window;
@@ -194,11 +194,11 @@ namespace CurrencyMod.Diplomacia.UI
             group.AddDebugWindowImplementation(window);
             Destroy(stash);
             Instance = window;
-            Plugin.Log.LogInfo("Tela cheia do Correio Diplomático criada.");
+            Plugin.Log.LogInfo("Diplomatic Mail full screen created.");
             return window;
         }
 
-        /// <summary>Tira da cópia os painéis de configuração, o "pool" de itens e os scripts das configurações.</summary>
+        /// <summary>Removes from the copy the settings panels, the item "pool" and the settings scripts.</summary>
         internal static void StripSettings(Transform root)
         {
             Transform groups = root.Find("Center/GroupsContainer");
@@ -211,8 +211,8 @@ namespace CurrencyMod.Diplomacia.UI
             {
                 DestroyImmediate(pool.gameObject);
             }
-            // Botões das configurações ("Padrão", "Desvincular"): a tela de configurações os mostra ou esconde conforme o
-            // grupo aberto, e a cópia herda o estado do momento. Na primeira abertura da sessão eles ficavam à mostra.
+            // Settings buttons ("Default", "Unbind"): the settings screen shows or hides them depending on the open
+            // group, and the copy inherits the current state. On the session's first opening they were left visible.
             foreach (string name in new[] { "ResetToDefaultButton", "KeyBindingClearButton" })
             {
                 Transform button = root.Find("Center/" + name);
@@ -245,7 +245,7 @@ namespace CurrencyMod.Diplomacia.UI
             titleLabel = left.Find("Title").GetComponent<UILabel>();
             descriptionLabel = left.Find("ScreenDescription").GetComponent<UILabel>();
             closeButton = left.Find("CloseMenuButton").GetComponent<UIButton>();
-            // A barra de controle fica por cima da tela cheia no canto de baixo: o botão de voltar sobe.
+            // The control bar stays on top of the full screen in the bottom corner: the back button moves up.
             UITransform closeUi = closeButton.GetComponent<UITransform>();
             NativeUIKit.Place(closeButton.transform, closeUi.X, 836f, closeUi.Width, closeUi.Height);
 
@@ -255,7 +255,7 @@ namespace CurrencyMod.Diplomacia.UI
             {
                 all.Add(child);
             }
-            // A tela de configurações pode ter menos botões que as seções do correio: clona o último até dar.
+            // The settings screen may have fewer buttons than the mail sections: clone the last one until there are enough.
             while (all.Count > 0 && all.Count < SectionNames.Length)
             {
                 all.Add(toggles.GetComponent<UITransform>().InstantiateChild(all[all.Count - 1], "Section" + all.Count).transform);
@@ -273,7 +273,7 @@ namespace CurrencyMod.Diplomacia.UI
                 }
             }
 
-            // Centro: lista de cartas. Direita: escrever (cópia do painel central, ainda vazio).
+            // Center: letter list. Right: compose (copy of the central panel, still empty).
             Transform center = root.Find("Center");
             UITransform centerUi = center.GetComponent<UITransform>();
             Transform rightPanel = Instantiate(center.gameObject, root).transform;
@@ -281,8 +281,8 @@ namespace CurrencyMod.Diplomacia.UI
             NativeUIKit.Place(center, CenterX, centerUi.Y, CenterWidth, centerUi.Height);
             NativeUIKit.Place(rightPanel, RightX, 56f, RightWidth, RightHeight);
 
-            // O brasão do império (canto de cima) fica por cima da coluna da esquerda: título e descrição vão para o
-            // painel central.
+            // The empire emblem (top corner) sits on top of the left column: title and description move to the
+            // central panel.
             titleLabel.transform.SetParent(center, false);
             NativeUIKit.Place(titleLabel.transform, 64f, 26f, 700f, 60f);
             descriptionLabel.transform.SetParent(center, false);
@@ -305,7 +305,7 @@ namespace CurrencyMod.Diplomacia.UI
             compose.name = "ComposeList";
             PrepareList(compose, ComposeListWidth + 8f, ComposeListHeight, out composeTable, out composeSample);
 
-            // Filtros (nação e período) na linha do título da seção: botões pequenos dos cartões.
+            // Filters (nation and period) on the section title row: the cards' small buttons.
             Transform buttonDonor = cardSample.Find("Table/Top/LiberateButton");
             nationFilterButton = Instantiate(buttonDonor.gameObject, center).GetComponent<UIButton>();
             nationFilterButton.name = "NationFilter";
@@ -314,14 +314,14 @@ namespace CurrencyMod.Diplomacia.UI
         }
 
         /// <summary>
-        /// Lista com rolagem da janela de cidades num tamanho novo: a tabela vertical da lista desliga (o tamanho é
-        /// nosso) e o cartão modelo ganha a largura da lista, menos a barra de rolagem.
+        /// Scrolling list from the cities window at a new size: the list's vertical table is turned off (we own the
+        /// size) and the template card gets the list width, minus the scrollbar.
         /// </summary>
         internal static void PrepareList(Transform list, float width, float height, out UITransform table, out Transform sample)
         {
             NativeUIKit.Place(list, 0f, 0f, width, height);
-            // A lista de cidades fica escondida até a janela dela abrir pela primeira vez na sessão, e a cópia herda isso
-            // (lista vazia na primeira abertura): mostra sempre e tira a animação de mostrar/esconder da janela de origem.
+            // The cities list stays hidden until its window opens for the first time in the session, and the copy inherits
+            // that (empty list on first opening): always show it and remove the source window's show/hide animation.
             list.GetComponent<UITransform>().VisibleSelf = true;
             var animator = list.GetComponent<UIAnimatorComponent>();
             if (animator != null)
@@ -335,7 +335,7 @@ namespace CurrencyMod.Diplomacia.UI
             }
             Transform scroll = list.Find("Scrollview");
             NativeUIKit.Place(scroll, 0f, 0f, width, height);
-            // A rolagem da lista de cidades cresce com o conteúdo até 540: aqui a altura é fixa, a da tela.
+            // The cities list scroll grows with its content up to 540: here the height is fixed, the screen's.
             var scrollView = scroll.GetComponent<UIScrollView>();
             if (scrollView != null)
             {
@@ -386,14 +386,14 @@ namespace CurrencyMod.Diplomacia.UI
             }
             catch (Exception ex)
             {
-                Plugin.Log.LogError($"Correio: falha ao montar o painel de escrever: {ex}");
+                Plugin.Log.LogError($"Mail: failed to build the compose panel: {ex}");
             }
             emptyCard = listTable.InstantiateChild(cardSample, "EmptyCard").transform;
             SelectSection(pendingSection >= 0 ? (Section)pendingSection : Section.New);
             pendingSection = -1;
         }
 
-        /// <summary>Tooltips herdados das configurações e da janela de cidades: limpa todos.</summary>
+        /// <summary>Tooltips inherited from the settings and the cities window: clears them all.</summary>
         private void ClearInheritedTooltips()
         {
             foreach (UITooltip tooltip in GetComponentsInChildren<UITooltip>(true))
@@ -419,7 +419,7 @@ namespace CurrencyMod.Diplomacia.UI
             tooltip?.Bind(TooltipUtils.TitleAndDescription, new Amplitude.Mercury.UI.Tooltips.TitleAndDescription(title, description));
         }
 
-        // ---------------- Escrever ----------------
+        // ---------------- Compose ----------------
 
         private void BuildCompose()
         {
@@ -454,11 +454,11 @@ namespace CurrencyMod.Diplomacia.UI
                 demandField = demandItem.GetComponent<UITextField>();
                 bodyItem = CloneField(fieldDonor, "BodyField", 300f, multiline: true, maxChars: IaConfig.PlayerLetterLimit, hint: L.T("Escreva sua carta como o líder do seu povo…"));
                 bodyField = bodyItem.GetComponent<UITextField>();
-                // TextChange é ligado em Update (EnsureTextChange), depois que o campo carrega.
+                // TextChange is bound in Update (EnsureTextChange), after the field loads.
             }
             else
             {
-                Plugin.Log.LogWarning("Correio: doador do campo de texto não encontrado.");
+                Plugin.Log.LogWarning("Mail: text field donor not found.");
             }
 
             Transform sliderDonor = DevTools.FindByPath(SliderDonor);
@@ -484,11 +484,11 @@ namespace CurrencyMod.Diplomacia.UI
             B.SetVisible(composeSample, false);
         }
 
-        /// <summary>Campo de texto nativo (o das anotações do save) com a largura dos cartões do painel; opcionalmente multilinha.</summary>
+        /// <summary>Native text field (the save-notes one) with the width of the panel cards; optionally multiline.</summary>
         private Transform CloneField(Transform donor, string name, float height, bool multiline, int maxChars, string hint)
         {
             Transform item = NativeUIKit.Clone(donor, composeTable.transform, name);
-            item.gameObject.SetActive(true); // o doador fica inativo enquanto a tela de saves está fechada
+            item.gameObject.SetActive(true); // the donor stays inactive while the saves screen is closed
             UITransform sampleUi = composeSample.GetComponent<UITransform>();
             UITransform ui = item.GetComponent<UITransform>();
             ui.Width = sampleUi.Width;
@@ -499,13 +499,13 @@ namespace CurrencyMod.Diplomacia.UI
             field.whiteList = string.Empty;
             field.BlackList = "<>{}";
             field.InstructionText = $"<c=F5EBE166><i>{hint}</i></c>";
-            // Digitar não pode disparar atalhos do jogo; clicar no texto põe o cursor ali (não seleciona tudo).
+            // Typing must not fire game shortcuts; clicking the text places the cursor there (does not select all).
             NativeUIKit.BlockGameShortcuts(field);
             field.actionOnFocus = UITextFieldFocusAction.PlaceCaretAtCursor;
             if (multiline)
             {
                 field.multiline = true;
-                field.OnMultilineChanged(false, true); // liga quebra de linha, altura automática e Enter = nova linha
+                field.OnMultilineChanged(false, true); // turns on word wrap, auto height and Enter = new line
             }
             NativeUIKit.Tip(item, name == "BodyField" ? L.T("Texto da carta") : name == "SubjectField" ? L.T("Assunto") : L.T("Exigência"),
                 name == "BodyField" ? L.F("Enter quebra a linha. Até {0} caracteres.", IaConfig.PlayerLetterLimit)
@@ -538,7 +538,7 @@ namespace CurrencyMod.Diplomacia.UI
         {
             if (TypeIds[composeType] == "grupo")
             {
-                // Os grupos do jogador e, por último, "Novo grupo" (-1).
+                // The player's groups and, last, "New group" (-1).
                 int me = IaModule.Instance?.PlayerIndex ?? -1;
                 List<int> options = IaModule.World?.Groups.Where(g => g.Members.Contains(me)).Select(g => g.Id).ToList() ?? new List<int>();
                 options.Add(-1);
@@ -608,7 +608,7 @@ namespace CurrencyMod.Diplomacia.UI
             }
         }
 
-        /// <summary>Mensagem ao grupo escolhido, ou cria o grupo novo (nome no assunto, membros marcados em Nações) e manda.</summary>
+        /// <summary>Message to the chosen group, or creates the new group (name in the subject, members ticked in Nations) and sends.</summary>
         private void SendToGroup(IaModule module)
         {
             string text = IaModule.CleanPlayerText(bodyField.Text);
@@ -663,7 +663,7 @@ namespace CurrencyMod.Diplomacia.UI
             nextRefresh = 0;
         }
 
-        /// <summary>Endereça o painel de escrever a uma nação (Escrever, na seção Nações).</summary>
+        /// <summary>Addresses the compose panel to a nation (Write, in the Nations section).</summary>
         internal void ComposeTo(int empire, string subject)
         {
             composeTo = empire;
@@ -681,7 +681,7 @@ namespace CurrencyMod.Diplomacia.UI
             nextRefresh = 0;
         }
 
-        /// <summary>Responder: destinatário, assunto "Re:" e a ligação com a carta original.</summary>
+        /// <summary>Reply: recipient, "Re:" subject and the link to the original letter.</summary>
         internal void StartReply(Letter letter)
         {
             if (letter == null)
@@ -694,7 +694,7 @@ namespace CurrencyMod.Diplomacia.UI
             nextRefresh = 0;
         }
 
-        // ---------------- Abertura, seções e entrada ----------------
+        // ---------------- Opening, sections and input ----------------
 
         internal static void SetOpen(bool open)
         {
@@ -714,13 +714,13 @@ namespace CurrencyMod.Diplomacia.UI
             }
             if (Instance.LoadingState != Amplitude.UI.Windows.LoadingState.Loaded)
             {
-                // Recém-criada (ou recriada numa recarga), a tela só aceita abrir depois do PostLoad.
+                // Freshly created (or recreated on a reload), the screen only accepts opening after PostLoad.
                 Instance.pendingOpen = true;
                 return;
             }
             Instance.pendingOpen = false;
-            // O grupo das telas cheias se esconde sozinho com cursor de diplomacia, comércio ou furtividade, e os menus
-            // da barra ficariam por cima: cursor normal, menus fechados e as outras janelas do mod fechadas.
+            // The full-screen group hides itself with a diplomacy, trade or stealth cursor, and the bar menus would stay
+            // on top: normal cursor, menus closed and the mod's other windows closed.
             ExclusiveWindows.BeforeOpen(Instance);
             Instance.openedAt = Time.unscaledTime;
             WindowsUtils.ShowWindow(Instance);
@@ -734,7 +734,7 @@ namespace CurrencyMod.Diplomacia.UI
         {
             if (sectionToggles.Count < SectionNames.Length || emptyCard == null)
             {
-                pendingSection = (int)section; // ainda carregando
+                pendingSection = (int)section; // still loading
                 return;
             }
             if (section != currentSection || section != Section.New)
@@ -779,7 +779,7 @@ namespace CurrencyMod.Diplomacia.UI
             base.PreUnload();
         }
 
-        // ---------------- Conteúdo ----------------
+        // ---------------- Content ----------------
 
         private Action<Amplitude.UI.Interactables.IUITextField, string> bodyChanged;
 
@@ -789,14 +789,14 @@ namespace CurrencyMod.Diplomacia.UI
             NativeUIKit.FixLayoutAfterPaste(bodyField);
             if (wasShown && !Shown)
             {
-                NativeUIKit.ReleaseTextFocus(); // o jogo escondeu a tela sem passar por SetOpen
+                NativeUIKit.ReleaseTextFocus(); // the game hid the screen without going through SetOpen
             }
             wasShown = Shown;
             if (pendingOpen && LoadingState == Amplitude.UI.Windows.LoadingState.Loaded)
             {
                 SetOpen(true);
             }
-            // Menu da barra aberto (Fé, Sociedade...) ou outra coisa selecionada: fecha, como as telas do jogo.
+            // A bar menu open (Faith, Society...) or something else selected: close, like the game's screens.
             if (Shown && ExclusiveWindows.Interrupted(this, openedAt))
             {
                 SetOpen(false);
@@ -813,7 +813,7 @@ namespace CurrencyMod.Diplomacia.UI
             }
             catch (Exception ex)
             {
-                Plugin.Log.LogError($"Correio Diplomático: {ex}");
+                Plugin.Log.LogError($"Diplomatic Mail: {ex}");
                 nextRefresh = Time.unscaledTime + 5f;
             }
         }
@@ -871,7 +871,7 @@ namespace CurrencyMod.Diplomacia.UI
                 string label = counts[i] > 0 ? $"{L.T(SectionNames[i])} ({counts[i]})" : L.T(SectionNames[i]);
                 if (i == (int)Section.Public && publicCitesMe > 0)
                 {
-                    // Comunicado novo que fala de você: a contagem ganha a parte em dourado.
+                    // A new statement that talks about you: the count gets the golden part.
                     label = $"{L.T(SectionNames[i])} ({counts[i]} · <c={Gold}>" + (publicCitesMe == 1 ? L.T("1 cita você") : L.F("{0} citam você", publicCitesMe)) + "</c>)";
                 }
                 UILabel toggleLabel = sectionToggles[i].GetComponent<UILabel>();
@@ -899,7 +899,7 @@ namespace CurrencyMod.Diplomacia.UI
             B.Tip(periodFilterButton.transform, string.Empty, L.T("Filtrar por período"), L.T("Tudo, ou só as cartas dos últimos 5, 15 ou 30 turnos."));
         }
 
-        /// <summary>Botão pequeno na linha do título da seção, alinhado pela direita em "right".</summary>
+        /// <summary>Small button on the section title row, right-aligned at "right".</summary>
         private static void PlaceHeaderButton(UIButton button, string text, float right)
         {
             UILabel label = button.GetComponent<UILabel>();
@@ -933,8 +933,8 @@ namespace CurrencyMod.Diplomacia.UI
                     {
                         freshShown.Add(letter.Id);
                     }
-                    // As que chegaram neste turno ficam em "Novas" o turno todo, mesmo já lidas: na virada de turno a tela
-                    // podia marcar como lidas cartas que o jogador nunca viu, e "Novas" ficava vazia.
+                    // Those that arrived this turn stay in "New" for the whole turn, even once read: at turn change the screen
+                    // could mark as read letters the player never saw, and "New" ended up empty.
                     letters = inbox.Where(l => freshShown.Contains(l.Id) || l.DeliverTurn >= turn);
                     break;
                 case Section.ToAnswer:
@@ -998,8 +998,8 @@ namespace CurrencyMod.Diplomacia.UI
                 }
                 B.HideOutputs(top);
             }
-            // Ler é abrir a seção: o que aparece aqui fica lido (em "Novas" continua listado até sair dela). Só com a
-            // lista visível de verdade: na virada de turno a janela continua "Shown" com o grupo das telas escondido.
+            // Reading is opening the section: what shows up here becomes read (in "New" it stays listed until leaving it).
+            // Only with the list actually visible: at turn change the window stays "Shown" with the screens group hidden.
             if (NativeUIKit.IsReallyVisible(listTable))
             {
                 module.MarkReadByPlayer(letters.Where(l => l.From != me));
@@ -1025,14 +1025,14 @@ namespace CurrencyMod.Diplomacia.UI
             CapturedEmpire sender = capture.Empire(letter.From);
             bool fresh = !letter.ReadBy.Contains(me) || freshShown.Contains(letter.Id) && currentSection == Section.New;
             bool answered = !letter.IsPublic && module.PlayerAnswered(letter);
-            // Comunicado público que fala de você (nome, povo de qualquer era ou cidade): título em dourado e chip "Cita você".
+            // A public statement that talks about you (name, people of any era or city): golden title and a "Mentions you" chip.
             bool citesMe = letter.IsPublic && Mentions.Cites(letter, capture, IaModule.World, me);
             string groupName = letter.IsGroup ? IaModule.World.Groups.FirstOrDefault(g => g.Id == letter.GroupId)?.Name ?? "GRP" + letter.GroupId : null;
             string title = NationAndLeader(capture, letter.From) + (letter.IsPublic ? " · " + L.T("a todos") : letter.IsGroup ? " · " + L.F("no grupo {0}", Escape(groupName)) : string.Empty);
             B.SetLabel(top, "TitleGroup/Title", citesMe ? $"<c={Gold}>{title}</c>" : title);
             B.SetChip(top, "StatsTable/PopCount", fresh ? $"<c={Green}>{L.T("Nova")}</c> · " + L.F("chegou no turno {0}", letter.DeliverTurn) : L.F("Chegou no turno {0}", letter.DeliverTurn));
             B.SetChip(top, "StatsTable/Fortification", TypeChip(letter.Type));
-            // O líder já está no título: o chip mostra só a situação, quando há uma.
+            // The leader is already in the title: the chip only shows the situation, when there is one.
             bool hasState = answered || !letter.IsPublic && letter.ExpectsReply;
             B.SetVisible(top.Find("StatsTable/ExtensionsCount"), hasState || citesMe);
             if (hasState)
@@ -1044,13 +1044,13 @@ namespace CurrencyMod.Diplomacia.UI
             {
                 B.SetChip(top, "StatsTable/ExtensionsCount", $"<c={Gold}>{L.T("Cita você")}</c>");
             }
-            // Só responde a quem ainda existe: sem o remetente na lista, o Escrever trocaria o destinatário calado.
+            // Only reply to someone who still exists: without the sender in the list, Compose would silently switch the recipient.
             bool canReply = ai.Contains(letter.From);
             B.SetVisible(row.Primary.transform, canReply);
             if (canReply)
             {
                 B.SetButtonText(row.Primary, answered ? L.T("Escrever de novo") : L.T("Responder"));
-                // Segundo botão: a conversa inteira com essa nação, na aba Cartas da diplomacia.
+                // Second button: the whole conversation with that nation, on the diplomacy Letters tab.
                 SetSecondButton(row.Secondary, row.Primary, L.T("Na diplomacia"));
             }
             else
@@ -1134,7 +1134,7 @@ namespace CurrencyMod.Diplomacia.UI
             return L.T("Entregue");
         }
 
-        /// <summary>Texto da carta: assunto, exigência, texto e, quando houver, a carta que ela responde e a resposta que recebeu.</summary>
+        /// <summary>Letter text: subject, demand, body and, when present, the letter it answers and the reply it received.</summary>
         internal static string LetterBody(IaModule module, WorldCapture capture, Letter letter, int me)
         {
             var parts = new List<string>();
@@ -1147,7 +1147,7 @@ namespace CurrencyMod.Diplomacia.UI
                 Letter original = module.LetterById(letter.InReplyTo);
                 if (original != null)
                 {
-                    // "Os Bizantinos" → "à carta dos Bizantinos" (crase e contração, não "a a carta de Os Bizantinos").
+                    // "Os Bizantinos" → "à carta dos Bizantinos" (Portuguese crasis and contraction, not "a a carta de Os Bizantinos").
                     string quoted = string.IsNullOrWhiteSpace(original.Subject) ? string.Empty : $" (“{Escape(original.Subject)}”)";
                     string line = original.From == me
                         ? L.F("Em resposta à sua carta do turno {0}{1}.", original.SentTurn, quoted)
@@ -1160,7 +1160,7 @@ namespace CurrencyMod.Diplomacia.UI
                 parts.Add($"<c={Red}>{L.F("Exigência: {0} — prazo de {1} turnos (vence no turno {2}).", Escape(letter.Demand), letter.DeadlineTurns, letter.SentTurn + letter.DeadlineTurns)}</c>");
             }
             parts.Add(Escape(letter.Text));
-            // O que isso significa no jogo: o que o remetente fez com você no turno da carta e as regras que ela cita.
+            // What this means in the game: what the sender did to you on the letter's turn and the rules it cites.
             List<string> context = LetterContext.For(IaModule.World, letter, me);
             if (context.Count > 0)
             {
@@ -1169,15 +1169,15 @@ namespace CurrencyMod.Diplomacia.UI
             return string.Join("\n\n", parts);
         }
 
-        /// <summary>Texto da IA ou do jogador não pode virar marcação de texto rico por acidente.</summary>
+        /// <summary>AI or player text must not turn into rich-text markup by accident.</summary>
         internal static string Escape(string text) => (text ?? string.Empty).Replace("<", "‹").Replace(">", "›");
 
-        /// <summary>"Os Micênicos · Māui": povo e líder, para o título dos cartões.</summary>
+        /// <summary>"Os Micênicos · Māui": people and leader, for the card title.</summary>
         internal static string NationAndLeader(WorldCapture capture, int empire, bool inline = false)
         {
             CapturedEmpire nation = capture.Empire(empire);
             string raw = nation?.Culture ?? DossierBuilder.Name(capture, empire);
-            // No começo do título o artigo fica maiúsculo ("Os Garamantes"); no meio da frase, minúsculo ("Para os Garamantes").
+            // At the start of the title the article is capitalized ("Os Garamantes"); mid-sentence, lowercase ("Para os Garamantes").
             string culture = inline ? GameText.InlineUi(raw) : raw;
             return string.IsNullOrWhiteSpace(nation?.Leader) ? culture : culture + " · " + GameText.InlineUi(nation.Leader);
         }
@@ -1221,7 +1221,7 @@ namespace CurrencyMod.Diplomacia.UI
                     Letter clicked = letterRows[index].Letter;
                     if (clicked != null && clicked.IsGroup)
                     {
-                        ComposeToGroup(clicked.GroupId); // responder no grupo, para todos os membros
+                        ComposeToGroup(clicked.GroupId); // reply in the group, to all members
                         return;
                     }
                     StartReply(clicked);
@@ -1245,8 +1245,8 @@ namespace CurrencyMod.Diplomacia.UI
         }
 
         /// <summary>
-        /// Texto corrido da carta dentro do cartão: um rótulo (fonte do jogo, quebra de linha, altura automática) logo
-        /// abaixo da linha de título e chips. A tabela do cartão empilha e o cartão cresce junto.
+        /// The letter's running text inside the card: a label (game font, word wrap, auto height) right
+        /// below the title-and-chips row. The card's table stacks and the card grows with it.
         /// </summary>
         internal static Transform AddBody(Transform card)
         {
@@ -1273,7 +1273,7 @@ namespace CurrencyMod.Diplomacia.UI
             body.BottomAnchor = body.BottomAnchor.SetAttach(false);
             body.X = 0f;
             body.Width = top.GetComponent<UITransform>().Width;
-            // O título doador tem peso de redimensionamento 1; com um filho "elástico" a tabela não cresce sozinha.
+            // The donor title has resize weight 1; with a "stretchy" child the table does not grow by itself.
             body.ResizeWeight = 0;
             body.VisibleSelf = true;
             var tableLayout = table.GetComponent<Amplitude.UI.Layouts.UITable1D>();
@@ -1300,8 +1300,8 @@ namespace CurrencyMod.Diplomacia.UI
         }
 
         /// <summary>
-        /// Título que divide a linha com botões: o grupo do título termina antes dos botões, e o rótulo corta com
-        /// reticências, como no jogo.
+        /// Title that shares the row with buttons: the title group ends before the buttons, and the label is cut with
+        /// an ellipsis, as in the game.
         /// </summary>
         internal static void FitTitle(Transform top, float rightReserved)
         {
@@ -1344,7 +1344,7 @@ namespace CurrencyMod.Diplomacia.UI
             B.SetVisible(emptyCard, true);
         }
 
-        // ---------------- Escrever (painel da direita) ----------------
+        // ---------------- Compose (right panel) ----------------
 
         private void FillCompose(IaModule module, WorldCapture capture, int me, int turn, int era, int delay)
         {
@@ -1361,12 +1361,12 @@ namespace CurrencyMod.Diplomacia.UI
                 replying = null;
             }
             composeTitleLabel.Text = replying != null ? L.T("Responder") : L.T("Escrever");
-            // Os cartões nascem escondidos como o modelo da lista do jogo.
+            // The cards are born hidden, like the game's list template.
             B.SetVisible(recipientCard, true);
             B.SetVisible(typeCard, true);
             B.SetVisible(sendCard, true);
 
-            // Destinatário.
+            // Recipient.
             Transform top = recipientCard.Find("Table/Top");
             CapturedEmpire them = capture.Empire(composeTo);
             int arrives = turn + delay;
@@ -1408,7 +1408,7 @@ namespace CurrencyMod.Diplomacia.UI
             B.Tip(top, "StatsTable/Fortification", type == "publica" ? L.T("Leitores") : L.T("Relação atual"), type == "publica" ? L.T("Nações que conhecem você e vão ler a declaração.") : them?.FullName ?? string.Empty);
             B.Tip(recipientButton.transform, string.Empty, L.T("Trocar destinatário"), L.T("Passa para a próxima nação que você conhece. Na seção Nações dá para escolher direto."));
 
-            // Tipo.
+            // Type.
             Transform typeTop = typeCard.Find("Table/Top");
             B.SetLabel(typeTop, "TitleGroup/Title", L.T(TypeNames[composeType]));
             B.SetChip(typeTop, "StatsTable/PopCount", type == "ultimato" ? L.T("Exigência com prazo") : type == "publica" ? L.T("Todos leem") : type == "grupo" ? L.T("Os membros leem") : L.T("Só ele lê"));
@@ -1420,7 +1420,7 @@ namespace CurrencyMod.Diplomacia.UI
             B.Tip(typeTop, "StatsTable/PopCount", L.T(TypeNames[composeType]), TypeHelp(type));
             B.Tip(typeButton.transform, string.Empty, L.T("Trocar tipo"), L.T("Carta privada → Ultimato → Declaração pública."));
 
-            // Em resposta a.
+            // In reply to.
             B.SetVisible(replyCard, replying != null);
             if (replying != null)
             {
@@ -1444,7 +1444,7 @@ namespace CurrencyMod.Diplomacia.UI
                 NativeUIKit.Tip(deadlineItem, L.T("Prazo do ultimato"), L.T("Turnos que a nação tem para cumprir a exigência, contados a partir do envio."));
             }
 
-            // Envio.
+            // Send.
             Transform sendTop = sendCard.Find("Table/Top");
             int words = bodyField != null ? IaModule.PlayerTextLength(bodyField.Text) : 0;
             int max = IaConfig.PlayerLetterLimit;
@@ -1479,7 +1479,7 @@ namespace CurrencyMod.Diplomacia.UI
             return L.T("Paz");
         }
 
-        /// <summary>Nações do computador vivas que você conhece (mesma regra de conhecimento do jogo).</summary>
+        /// <summary>Living computer nations you know (same knowledge rule as the game).</summary>
         internal static List<int> KnownNations(WorldCapture capture)
         {
             IaModule module = IaModule.Instance;
@@ -1491,7 +1491,7 @@ namespace CurrencyMod.Diplomacia.UI
             return capture.AiEmpires().Where(e => me?.RelationWith(e)?.Knows ?? false).ToList();
         }
 
-        // ---------------- Nações ----------------
+        // ---------------- Nations ----------------
 
         private void FillNations(IaModule module, WorldCapture capture, int me)
         {
@@ -1541,9 +1541,9 @@ namespace CurrencyMod.Diplomacia.UI
             }
         }
 
-        // ---------------- Grupos (melhorias-jogando item 15) ----------------
+        // ---------------- Groups (melhorias-jogando item 15) ----------------
 
-        /// <summary>Um cartão por grupo do jogador: membros, últimas mensagens, Escrever e Sair. O topo explica como criar.</summary>
+        /// <summary>One card per player group: members, latest messages, Write and Leave. The top explains how to create one.</summary>
         private void FillGroups(IaModule module, WorldCapture capture, int me, int turn)
         {
             B.SetVisible(emptyCard, false);
@@ -1590,7 +1590,7 @@ namespace CurrencyMod.Diplomacia.UI
                 }
                 SetBody(row.Body, string.Join("\n", lines));
             }
-            // Ver o grupo é ler as mensagens dele.
+            // Viewing the group means reading its messages.
             if (NativeUIKit.IsReallyVisible(listTable))
             {
                 module.MarkReadByPlayer(IaModule.World.Letters.Where(l => l.IsGroup && l.IsFor(me) && l.DeliverTurn <= turn));
@@ -1623,7 +1623,7 @@ namespace CurrencyMod.Diplomacia.UI
             B.SetVisible(cardSample, false);
         }
 
-        /// <summary>Cartão "Para" no tipo grupo: o grupo escolhido ou o grupo novo, com os membros marcados em Nações.</summary>
+        /// <summary>"To" card for the group type: the chosen group or the new group, with the members ticked in Nations.</summary>
         private void FillGroupRecipient(Transform top, WorldCapture capture, int me, int arrives)
         {
             ChatGroup group = composeGroup >= 0 ? IaModule.World.Groups.FirstOrDefault(g => g.Id == composeGroup && g.Members.Contains(me)) : null;
@@ -1655,7 +1655,7 @@ namespace CurrencyMod.Diplomacia.UI
             B.SetButtonText(recipientButton, L.T("Trocar"));
         }
 
-        /// <summary>Painel de escrever endereçado a um grupo (ou a um grupo novo, com -1).</summary>
+        /// <summary>Compose panel addressed to a group (or to a new group, with -1).</summary>
         internal void ComposeToGroup(int groupId)
         {
             composeType = Array.IndexOf(TypeIds, "grupo");
@@ -1677,7 +1677,7 @@ namespace CurrencyMod.Diplomacia.UI
                 var row = new NationRow { Card = card, WriteButton = write, BlockButton = block };
                 write.LeftClick += b =>
                 {
-                    // Criando um grupo novo: o botão marca ou desmarca a nação como membro.
+                    // Creating a new group: the button ticks or unticks the nation as a member.
                     if (TypeIds[composeType] == "grupo" && composeGroup < 0)
                     {
                         int empire = nationRows[index].Empire;
@@ -1704,7 +1704,7 @@ namespace CurrencyMod.Diplomacia.UI
             B.SetVisible(cardSample, false);
         }
 
-        /// <summary>Segundo botão do cartão, à esquerda do primeiro, na mesma linha do título.</summary>
+        /// <summary>The card's second button, left of the first, on the same row as the title.</summary>
         internal static void SetSecondButton(UIButton button, UIButton primary, string text)
         {
             UITransform ui = button.GetComponent<UITransform>();
@@ -1728,9 +1728,9 @@ namespace CurrencyMod.Diplomacia.UI
             }
         }
 
-        // ---------------- Desenvolvimento e remoção ----------------
+        // ---------------- Development and teardown ----------------
 
-        /// <summary>Comandos: "open", "close", "secao 0..6", "to E#", "responder &lt;id&gt;", "texto ...".</summary>
+        /// <summary>Commands: "open", "close", "secao 0..6", "to E#", "responder &lt;id&gt;", "texto ...".</summary>
         internal static string DevCommand(string args)
         {
             string[] parts = (args ?? string.Empty).Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
@@ -1767,12 +1767,12 @@ namespace CurrencyMod.Diplomacia.UI
                     }
                     else if (Instance.letterRows.Count > 0 && Instance.letterRows[0].Letter != null)
                     {
-                        // Sem id: a primeira carta da lista que está na tela (o mesmo que clicar em Responder nela).
+                        // No id: the first letter of the list on screen (same as clicking Reply on it).
                         Instance.StartReply(Instance.letterRows[0].Letter);
                     }
                     return "ok";
                 case "limpar":
-                    // Apaga o rascunho (texto, assunto, exigência) e a ligação de resposta, sem enviar.
+                    // Clears the draft (text, subject, demand) and the reply link, without sending.
                     Instance.bodyField?.ReplaceText(string.Empty);
                     Instance.subjectField?.ReplaceText(string.Empty);
                     Instance.demandField?.ReplaceText(string.Empty);
@@ -1782,8 +1782,8 @@ namespace CurrencyMod.Diplomacia.UI
                     return "ok: rascunho apagado";
                 case "colar":
                 {
-                    // "ia correio colar <arquivo>": cola o conteúdo do arquivo (relativo a _Modding\dev) no campo da carta pelo
-                    // mesmo caminho do Ctrl+V (foco + TryInsertString), para reproduzir o texto colado que sumia. Não envia.
+                    // "ia correio colar <arquivo>": pastes the file content (relative to _Modding\dev) into the letter field through
+                    // the same path as Ctrl+V (focus + TryInsertString), to reproduce the pasted text that vanished. Does not send.
                     SetOpen(true);
                     UITextField field = Instance.bodyField;
                     if (field == null)
@@ -1801,12 +1801,12 @@ namespace CurrencyMod.Diplomacia.UI
                     return $"ok: colado={inserted}, {field.Text?.Length ?? 0} caracteres no campo, editando={field.IsEditing}, rótulo y={field.label?.UITransform.Y:0}";
                 }
                 case "grupo":
-                    // "grupo N" escreve ao grupo N; "grupo novo" abre a criação (membros com "membro E#", nome no assunto).
+                    // "grupo N" writes to group N; "grupo novo" opens creation (members with "membro E#", name in the subject).
                     SetOpen(true);
                     Instance.ComposeToGroup(parts.Length > 1 && int.TryParse(parts[1], out int groupId) ? groupId : -1);
                     return "ok";
                 case "membro":
-                    // O mesmo clique de "+ Grupo" na linha da nação.
+                    // Same as clicking "+ Group" on the nation's row.
                     if (parts.Length > 1 && int.TryParse(parts[1].TrimStart('E', 'e'), out int member) && Instance.composeGroup < 0
                         && !Instance.newGroupMembers.Remove(member) && Instance.newGroupMembers.Count + 1 < ChatGroup.MaxMembers)
                     {
@@ -1818,11 +1818,11 @@ namespace CurrencyMod.Diplomacia.UI
                     Instance.subjectField?.ReplaceText(string.Join(" ", parts.Skip(1)));
                     return "ok";
                 case "enviar":
-                    // O mesmo que o botão Enviar (manda de verdade).
+                    // Same as the Send button (really sends).
                     Instance.Send();
                     return "ok: " + (Instance.feedback ?? "?");
                 case "texto":
-                    // Só preenche o campo (teste visual do texto multilinha); não envia nada.
+                    // Only fills the field (visual test of multiline text); sends nothing.
                     SetOpen(true);
                     Instance.bodyField?.ReplaceText(string.Join(" ", parts.Skip(1)).Replace("\\n", "\n"));
                     return "ok: texto no campo (não enviado)";
@@ -1833,8 +1833,8 @@ namespace CurrencyMod.Diplomacia.UI
         }
 
         /// <summary>
-        /// Remoção segura (recarga do núcleo, saída da partida). Uma tela cheia destruída aberta deixaria o grupo achando
-        /// que há tela aberta: o HUD e as janelas da partida sumiriam para sempre. Esconde, limpa o grupo e solta o teclado.
+        /// Safe teardown (core reload, leaving the match). A full screen destroyed while open would leave the group thinking
+        /// a screen is open: the HUD and the match windows would vanish forever. Hides, clears the group and releases the keyboard.
         /// </summary>
         internal static void DestroyWindow()
         {
@@ -1863,7 +1863,7 @@ namespace CurrencyMod.Diplomacia.UI
             }
             catch (Exception ex)
             {
-                Plugin.Log.LogWarning($"Remoção da tela do correio: {ex.Message}");
+                Plugin.Log.LogWarning($"Mail screen teardown: {ex.Message}");
             }
             window.gameObject.SetActive(false);
             Destroy(window.gameObject);

@@ -15,10 +15,10 @@ using UnityEngine;
 namespace CurrencyMod.Diplomacia.UI
 {
     /// <summary>
-    /// Botão do conselho na barra de controle, ao lado do correio: clone do botão "Comercializar" com o ícone de três
-    /// bustos e um selo "!" quando a reunião do turno está pronta e você ainda não viu. Quando a reunião fica pronta, a
-    /// tela abre sozinha se o mapa estiver livre ([IA] ConselhoAbreSozinho), uma vez por turno e só nos 2 minutos
-    /// seguintes (depois disso, fica só o selo).
+    /// Council button in the control bar, next to the mail: clone of the "Trade" button with the three-busts icon and a
+    /// "!" badge when the turn's meeting is ready and you have not seen it yet. When the meeting becomes ready, the
+    /// screen opens by itself if the map is free ([IA] ConselhoAbreSozinho), once per turn and only within the next 2
+    /// minutes (after that, only the badge remains).
     /// </summary>
     internal class CouncilButton : MonoBehaviour
     {
@@ -60,7 +60,7 @@ namespace CurrencyMod.Diplomacia.UI
                 }
                 catch (Exception ex)
                 {
-                    Plugin.Log.LogError($"Falha ao criar a tela do conselho: {ex}");
+                    Plugin.Log.LogError($"Failed to create the council screen: {ex}");
                     enabled = false;
                     return;
                 }
@@ -127,7 +127,7 @@ namespace CurrencyMod.Diplomacia.UI
             button.Tooltip.Bind(TooltipUtils.TitleAndDescription, tooltipTarget);
             badge = NativeUIKit.CreateBadge(cloneTransform.transform, "CouncilBadge");
             button.Show(instant: true);
-            Plugin.Log.LogInfo("Botão do conselho criado na barra de controle.");
+            Plugin.Log.LogInfo("Council button created in the control bar.");
         }
 
         private void RefreshBadge()
@@ -157,7 +157,7 @@ namespace CurrencyMod.Diplomacia.UI
             tooltipTarget.Description = state + "\n" + L.T("Ouça a Mão e os ministros, responda a eles e demita quem não serve mais.");
         }
 
-        /// <summary>Abre a tela quando a reunião fica pronta, se o jogador não estiver mexendo em nada.</summary>
+        /// <summary>Opens the screen when the meeting becomes ready, if the player is not busy with anything.</summary>
         private void TryAutoOpen()
         {
             if (!PlayerCouncil.AutoOpenPending)
@@ -180,7 +180,7 @@ namespace CurrencyMod.Diplomacia.UI
             CouncilScreen.SetOpen(true);
         }
 
-        /// <summary>Mapa livre: turno principal, cursor normal, nenhum menu da barra e nenhuma janela aberta.</summary>
+        /// <summary>Free map: main turn, default cursor, no bar menu and no window open.</summary>
         private static bool MapIsFree()
         {
             try
@@ -263,7 +263,7 @@ namespace CurrencyMod.Diplomacia.UI
             }
         }
 
-        /// <summary>Ao sair da partida, o jogo reconstrói a barra; o botão e a tela saem junto.</summary>
+        /// <summary>When leaving the game, the game rebuilds the bar; the button and the screen go along with it.</summary>
         [HarmonyPatch(typeof(ControlBanner), nameof(ControlBanner.OnPresentationShuttingDown))]
         private static class ShutdownPatch
         {

@@ -6,32 +6,32 @@ using Newtonsoft.Json;
 
 namespace CurrencyMod.Diplomacia.Council
 {
-    /// <summary>Uma personalidade do banco: quem a pessoa é, antes de virar ministro de alguma nação.</summary>
+    /// <summary>A personality from the bank: who the person is, before becoming a minister of some nation.</summary>
     internal sealed class Personality
     {
         public string Id;
         public string Name;
-        /// <summary>"m" ou "f" (o título da pasta concorda).</summary>
+        /// <summary>"m" or "f" (the portfolio title agrees with it).</summary>
         public string Gender;
         public List<string> Traits = new List<string>();
-        /// <summary>Como fala: entra no texto do conselho.</summary>
+        /// <summary>How they speak: goes into the council text.</summary>
         public string Voice;
     }
 
     /// <summary>
-    /// Banco de personalidades dos conselhos (design §10.5) e títulos das pastas por era (§10.0). O banco fica em
-    /// BepInEx\DiplomaciaIA\ministros.json: o mod escreve o padrão na primeira vez e depois só lê, então dá para editar à
-    /// mão (nomes, traços, voz). Nada disso custa chamada à IA.
+    /// Bank of council personalities (design §10.5) and portfolio titles by era (§10.0). The bank lives in
+    /// BepInEx\DiplomaciaIA\ministros.json: the mod writes the default the first time and afterwards only reads it, so it
+    /// can be edited by hand (names, traits, voice). None of this costs an AI call.
     /// </summary>
     internal static class CouncilBank
     {
-        /// <summary>As 12 cadeiras: a Mão e as 11 pastas, na ordem em que aparecem.</summary>
+        /// <summary>The 12 seats: the Hand and the 11 portfolios, in the order they appear.</summary>
         internal static readonly string[] Portfolios =
         {
             "mao", "chanceler", "guerra", "financas", "agricultura", "obras", "comercio", "ciencia", "fe", "interior", "cultura", "espionagem",
         };
 
-        /// <summary>Nome curto da pasta (para o dossiê e as ferramentas). Na tela: L.T(nome).</summary>
+        /// <summary>Short portfolio name (for the dossier and the tools). On screen: L.T(name).</summary>
         internal static readonly Dictionary<string, string> PortfolioNames = new Dictionary<string, string>
         {
             ["mao"] = L.N("Mão"), ["chanceler"] = L.N("Relações"), ["guerra"] = L.N("Guerra"), ["financas"] = L.N("Finanças"), ["agricultura"] = L.N("Agricultura"),
@@ -39,7 +39,7 @@ namespace CurrencyMod.Diplomacia.Council
             ["cultura"] = L.N("Cultura"), ["espionagem"] = L.N("Espionagem"),
         };
 
-        /// <summary>Títulos por era (Neolítica, Antiga, Clássica, Medieval, Moderna, Industrial, Contemporânea), no masculino.</summary>
+        /// <summary>Titles by era (Neolithic, Ancient, Classical, Medieval, Early Modern, Industrial, Contemporary), masculine form.</summary>
         private static readonly Dictionary<string, string[]> Titles = new Dictionary<string, string[]>
         {
             ["mao"] = new[] { L.N("Braço Direito"), L.N("Mão do Trono"), L.N("Mão do Trono"), L.N("Mão do Trono"), L.N("Primeiro Conselheiro"), L.N("Chefe de Gabinete"), L.N("Chefe de Gabinete") },
@@ -57,10 +57,10 @@ namespace CurrencyMod.Diplomacia.Council
         };
 
         /// <summary>
-        /// Só para a extração das traduções: as formas femininas que o Feminine produz a partir dos títulos acima (o
-        /// TitleUi traduz o título já no feminino). Mudou um título ou um par do Feminine: atualize esta lista.
+        /// Only for translation extraction: the feminine forms Feminine produces from the titles above (TitleUi
+        /// translates the title already in the feminine). If a title or a Feminine pair changes: update this list.
         /// </summary>
-        /// <summary>Erros técnicos fixos (em português, vão para o log e para a IA): a tela os mostra com L.T.</summary>
+        /// <summary>Fixed technical errors (in Portuguese, they go to the log and to the AI): the screen shows them with L.T.</summary>
         internal static readonly string[] ErrorKeys =
         {
             L.N("resposta vazia"), L.N("resposta cortada por ficar longa demais"), L.N("resposta inválida depois de todas as tentativas"),
@@ -88,7 +88,7 @@ namespace CurrencyMod.Diplomacia.Council
             L.N("Ministra da Cultura"), L.N("Batedora-Mor"), L.N("Mestra dos Sussurros"), L.N("Diretora de Inteligência"),
         };
 
-        /// <summary>Título da pasta na era, concordando com o gênero de quem ocupa.</summary>
+        /// <summary>Portfolio title in the era, agreeing with the holder's gender.</summary>
         internal static string Title(string portfolio, int era, string gender)
         {
             if (!Titles.TryGetValue(portfolio ?? string.Empty, out string[] titles))
@@ -99,15 +99,15 @@ namespace CurrencyMod.Diplomacia.Council
             return gender == "f" ? Feminine(title) : title;
         }
 
-        /// <summary>O título para a tela, no idioma do jogo (o Title, em português, segue para a IA).</summary>
-        internal static string TitleUi(string portfolio, int era, string gender) => L.T(Title(portfolio, era, gender)); // valores do conjunto marcado com L.N acima
+        /// <summary>The title for the screen, in the game's language (Title, in Portuguese, goes to the AI).</summary>
+        internal static string TitleUi(string portfolio, int era, string gender) => L.T(Title(portfolio, era, gender)); // values from the set marked with L.N above
 
-        /// <summary>Traço para a tela (os traços do banco padrão estão marcados com L.N; os editados à mão ficam como estão).</summary>
+        /// <summary>Trait for the screen (the default bank's traits are marked with L.N; hand-edited ones stay as they are).</summary>
         internal static string TraitUi(string trait) => L.T(trait);
 
         /// <summary>
-        /// Erro técnico para a tela: o texto em português segue para a IA (ela lê "Sua resposta tem um problema: …"), então a
-        /// tradução só entra aqui. Os erros com detalhe ("json inválido: …") traduzem o prefixo e mantêm o resto.
+        /// Technical error for the screen: the Portuguese text goes to the AI (it reads "Sua resposta tem um problema: …"),
+        /// so translation only happens here. Errors with detail ("json inválido: …") translate the prefix and keep the rest.
         /// </summary>
         internal static string ErrorUi(string error)
         {
@@ -151,7 +151,7 @@ namespace CurrencyMod.Diplomacia.Council
 
         internal static string FilePath => Path.Combine(BepInEx.Paths.BepInExRootPath, "DiplomaciaIA", "ministros.json");
 
-        /// <summary>O banco: lido do ministros.json (escrito na primeira vez com o padrão abaixo).</summary>
+        /// <summary>The bank: read from ministros.json (written the first time with the default below).</summary>
         internal static List<Personality> All()
         {
             if (loaded != null)
@@ -176,13 +176,13 @@ namespace CurrencyMod.Diplomacia.Council
                 Directory.CreateDirectory(Path.GetDirectoryName(FilePath));
                 if (File.Exists(FilePath))
                 {
-                    File.Copy(FilePath, FilePath + ".bak", true); // arquivo editado à mão e curto demais: não perde o trabalho
+                    File.Copy(FilePath, FilePath + ".bak", true); // hand-edited file that is too short: do not lose the work
                 }
                 File.WriteAllText(FilePath, JsonConvert.SerializeObject(Defaults(), Formatting.Indented));
             }
             catch (Exception ex)
             {
-                Plugin.Log?.LogWarning($"[IA] Banco de ministros não lido ({ex.Message}); usando o padrão.");
+                Plugin.Log?.LogWarning($"[IA] Minister bank not read ({ex.Message}); using the default.");
             }
             loaded = Defaults();
             return loaded;
@@ -190,7 +190,7 @@ namespace CurrencyMod.Diplomacia.Council
 
         internal static Personality ById(string id) => All().FirstOrDefault(p => p.Id == id);
 
-        /// <summary>Traço na forma masculina, para as regras (o texto mostra o traço como está no banco).</summary>
+        /// <summary>Trait in the masculine form, for the rules (the text shows the trait as it is in the bank).</summary>
         internal static string TraitKey(string trait)
         {
             switch ((trait ?? string.Empty).Trim().ToLowerInvariant())
@@ -213,7 +213,7 @@ namespace CurrencyMod.Diplomacia.Council
             }
         }
 
-        /// <summary>Banco padrão: nomes de muitas tradições (as cortes recebem gente de todo canto), traços e voz.</summary>
+        /// <summary>Default bank: names from many traditions (courts take in people from everywhere), traits and voice.</summary>
         private static List<Personality> Defaults()
         {
             var raw = new[]

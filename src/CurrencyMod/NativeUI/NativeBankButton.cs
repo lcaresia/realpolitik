@@ -11,9 +11,9 @@ using UnityEngine;
 namespace CurrencyMod.NativeUI
 {
     /// <summary>
-    /// Botão do Banco Central na barra de controle inferior esquerda, ao lado de "Comercializar".
-    /// É um clone do próprio botão de comércio do jogo (mesmos estilos, animações e sons),
-    /// com ícone SDF próprio e tooltip nativo.
+    /// Central Bank button in the bottom-left control bar, next to "Trade".
+    /// It is a clone of the game's own trade button (same styles, animations and sounds),
+    /// with its own SDF icon and a native tooltip.
     /// </summary>
     internal class NativeBankButton : MonoBehaviour
     {
@@ -26,14 +26,14 @@ namespace CurrencyMod.NativeUI
         private Amplitude.Framework.Guid iconGuid;
         private readonly TitleAndDescription tooltipTarget = new TitleAndDescription();
         private float nextAttempt;
-        /// <summary>Selo "!" quando a economia está em situação grave (dívida, inflação alta, desemprego forte).</summary>
+        /// <summary>"!" badge when the economy is in a severe state (debt, high inflation, heavy unemployment).</summary>
         private Transform badge;
         private string alert;
         private float nextAlert;
 
         public static event Action<bool> Clicked;
 
-        /// <summary>Alerta forçado por comando de teste ("jogo alerta"), para conferir o selo sem esperar uma crise.</summary>
+        /// <summary>Alert forced by a test command ("jogo alerta"), to check the badge without waiting for a crisis.</summary>
         internal static string TestAlert;
 
         public static bool Exists => instance != null && instance.button != null;
@@ -57,11 +57,11 @@ namespace CurrencyMod.NativeUI
                 return;
             }
 
-            // O botão aceso acompanha a janela aberta.
+            // The lit button follows the open window.
             if (NativeBankWindow.Instance == null && Time.unscaledTime >= nextWindowTry)
             {
-                // Tenta uma vez por segundo (a doadora ou o grupo podem ainda não estar prontos) e, se a montagem estourar
-                // (uma atualização do jogo mexendo na tela de Configurações), espera 30 s em vez de desligar o botão.
+                // Tries once per second (the donor or the group may not be ready yet) and, if building throws
+                // (a game update changing the Settings screen), waits 30 s instead of disabling the button.
                 nextWindowTry = Time.unscaledTime + 1f;
                 try
                 {
@@ -69,7 +69,7 @@ namespace CurrencyMod.NativeUI
                 }
                 catch (Exception ex)
                 {
-                    Plugin.Log.LogError($"Falha ao criar a tela do Banco Central: {ex}");
+                    Plugin.Log.LogError($"Failed to create the Central Bank screen: {ex}");
                     nextWindowTry = Time.unscaledTime + 30f;
                 }
             }
@@ -87,7 +87,7 @@ namespace CurrencyMod.NativeUI
             RefreshTooltip();
         }
 
-        /// <summary>O mesmo diagnóstico da aba Ciclo; só os casos graves acendem o selo.</summary>
+        /// <summary>The same diagnosis as the Cycle tab; only severe cases light the badge.</summary>
         private void RefreshAlert()
         {
             string current = null;
@@ -149,7 +149,7 @@ namespace CurrencyMod.NativeUI
                 return;
             }
 
-            // Remove sobras de uma geração anterior do mod (recarga a quente).
+            // Removes leftovers from a previous generation of the mod (hot reload).
             Transform leftover = banner.layerTogglesTable.transform.Find(CloneName);
             if (leftover != null)
             {
@@ -160,7 +160,7 @@ namespace CurrencyMod.NativeUI
             button = cloneTransform.GetComponent<ControlBannerLayerToggle>();
             if (button == null)
             {
-                Plugin.Log.LogError("Clone do botão de comércio sem ControlBannerLayerToggle.");
+                Plugin.Log.LogError("Trade button clone without ControlBannerLayerToggle.");
                 DestroyClone(cloneTransform.gameObject);
                 return;
             }
@@ -168,7 +168,7 @@ namespace CurrencyMod.NativeUI
 
             if (button.Stamp.IsLoaded)
             {
-                button.Stamp.ClearTags(); // não herdar marcações do tutorial
+                button.Stamp.ClearTags(); // do not inherit tutorial tags
             }
 
             if (iconTexture == null)
@@ -185,7 +185,7 @@ namespace CurrencyMod.NativeUI
             badge = NativeUIKit.CreateBadge(cloneTransform.transform, "BankBadge");
             alert = null;
             button.Show(instant: true);
-            Plugin.Log.LogInfo("Botão do Banco Central criado na barra de controle.");
+            Plugin.Log.LogInfo("Central Bank button created in the control bar.");
         }
 
         private void RefreshTooltip()
@@ -231,7 +231,7 @@ namespace CurrencyMod.NativeUI
 
         private static void DestroyClone(GameObject clone)
         {
-            // Componentes da UI precisam descarregar (desativar) antes de serem destruídos.
+            // UI components must unload (deactivate) before being destroyed.
             clone.SetActive(false);
             Destroy(clone);
         }
@@ -256,7 +256,7 @@ namespace CurrencyMod.NativeUI
             }
         }
 
-        /// <summary>Ao sair da partida, o jogo reconstrói a barra; o clone sai junto.</summary>
+        /// <summary>When leaving the game, the game rebuilds the bar; the clone goes with it.</summary>
         [HarmonyPatch(typeof(ControlBanner), nameof(ControlBanner.OnPresentationShuttingDown))]
         private static class ShutdownPatch
         {

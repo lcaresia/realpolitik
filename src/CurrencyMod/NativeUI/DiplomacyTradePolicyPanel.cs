@@ -12,15 +12,15 @@ using UnityEngine;
 namespace CurrencyMod.NativeUI
 {
     /// <summary>
-    /// Bloco "Seus Postos Comerciais" na aba Comércio da diplomacia: atalho para deixar Livre, Taxar ou
-    /// Bloquear o império selecionado em todos os seus postos de uma vez. Feito com peças da própria aba:
-    /// título "Seus Recursos", caixa arredondada de recursos, rótulos em versalete e os botões de preço da
-    /// tabela de comércio (UIToggle com fundo arredondado).
+    /// "Your Trade Posts" block in the diplomacy Trade tab: shortcut to set the selected empire to Free, Toll or
+    /// Blocked at all your posts at once. Built from pieces of the tab itself: the "Your Resources" title, the
+    /// rounded resource box, small-caps labels and the price buttons of the trade table (UIToggle with a rounded
+    /// background).
     /// </summary>
     internal class DiplomacyTradePolicyPanel : MonoBehaviour
     {
         private const string PanelName = "CurrencyMod_TradePolicyPanel";
-        private const float Left = 24f;      // relativo a Content (x 372 na tela): alinha com "Seus Recursos"
+        private const float Left = 24f;      // relative to Content (x 372 on screen): aligns with "Your Resources"
         private const float Width = 540f;
         private const float TitleTop = 180f;
         private const float BoxTop = 212f;
@@ -56,7 +56,7 @@ namespace CurrencyMod.NativeUI
             nextUpdate = Time.unscaledTime + 0.5f;
             try
             {
-                // No começo do jogo o serviço de janelas ainda não existe (ver DiplomacyEconomyPanel).
+                // At game start the window service does not exist yet (see DiplomacyEconomyPanel).
                 if (WindowsUtils.WindowsService == null || !Diplomacia.GameAccess.TryGetSession(out _, out _, out _))
                 {
                     return;
@@ -68,7 +68,7 @@ namespace CurrencyMod.NativeUI
                 }
                 if (root == null)
                 {
-                    // A busca do doador varre a tela inteira: só com a aba Comércio aberta, e se falhar espera 2 s.
+                    // The donor search scans the whole screen: only with the Trade tab open, and if it fails, wait 2 s.
                     if (screen.currentMode != DiplomaticScreenMode.Trade)
                     {
                         return;
@@ -99,11 +99,11 @@ namespace CurrencyMod.NativeUI
             }
             catch (Exception ex)
             {
-                // Um erro passageiro (tela da diplomacia trocando de estado) não desliga o painel até a recarga:
-                // tenta de novo em 5 s e só loga a primeira falha seguida.
+                // A transient error (diplomacy screen changing state) does not disable the panel until reload:
+                // retry in 5 s and only log the first of consecutive failures.
                 if (!failed)
                 {
-                    Plugin.Log.LogError($"Postos comerciais na diplomacia: {ex}");
+                    Plugin.Log.LogError($"Trade posts in diplomacy: {ex}");
                 }
                 failed = true;
                 nextUpdate = Time.unscaledTime + 5f;
@@ -117,10 +117,10 @@ namespace CurrencyMod.NativeUI
             Transform toggleDonor = FindPurchaseToggle(screen);
             if (mySide == null || toggleDonor == null)
             {
-                return false; // a tabela ainda não tem itens para servir de modelo; tenta de novo depois
+                return false; // the table has no items yet to serve as a template; try again later
             }
 
-            // Restos de uma geração anterior do mod (recarga a quente).
+            // Leftovers from a previous generation of the mod (hot reload).
             for (int i = content.childCount - 1; i >= 0; i--)
             {
                 if (content.GetChild(i).name.StartsWith(PanelName))
@@ -151,8 +151,8 @@ namespace CurrencyMod.NativeUI
                 UILabel label = NativeUIKit.Label(button);
                 label.AutoAdjustWidth = false;
                 label.Alignment = new Alignment(HorizontalAlignment.Center, VerticalAlignment.Center);
-                label.Text = L.T(ModeLabels[i]); // ModeLabels: marcados com L.N
-                // O rótulo ajustava a largura do botão ao texto: com o ajuste desligado, posiciona de novo.
+                label.Text = L.T(ModeLabels[i]); // ModeLabels: marked with L.N
+                // The label used to fit the button width to the text: with fitting off, reposition it.
                 NativeUIKit.Place(button, buttonsLeft + i * (ButtonWidth + ButtonGap), BoxTop + 34, ButtonWidth, ButtonHeight);
                 FitLabel(label, ButtonWidth);
                 buttons[i] = button.GetComponent<UIToggle>();
@@ -161,11 +161,11 @@ namespace CurrencyMod.NativeUI
                 BindTooltip(button, i);
             }
 
-            // Preço geral do pedágio desse império: texto no meio, − e + na ponta direita da linha.
+            // General toll price for this empire: text in the middle, − and + at the right end of the row.
             float upLeft = Left + Width - 16f - PriceButtonWidth;
             float downLeft = upLeft - 6f - PriceButtonWidth;
             priceLabel = Part(smallCaps, "Price");
-            // Largura fixa: com o ajuste automático o texto crescia por baixo dos botões e para fora do cartão.
+            // Fixed width: with auto-fit the text grew under the buttons and out of the card.
             UILabel priceText = NativeUIKit.Label(priceLabel);
             if (priceText != null)
             {
@@ -183,12 +183,12 @@ namespace CurrencyMod.NativeUI
             Brighten(footer);
             Brighten(priceLabel);
 
-            Plugin.Log.LogInfo("Bloco de postos comerciais criado na aba Comércio da diplomacia.");
+            Plugin.Log.LogInfo("Trade posts block created in the diplomacy Trade tab.");
             return true;
         }
 
-        /// <summary>Linha de texto de largura fixa que corta com reticências (o doador crescia para os dois lados e saía da caixa).</summary>
-        /// <summary>As linhas do bloco ficam sobre o mapa: o doador vem a 50% de opacidade e perde a leitura.</summary>
+        /// <summary>Fixed-width text line that truncates with an ellipsis (the donor grew to both sides and left the box).</summary>
+        /// <summary>The block's rows sit over the map: the donor comes at 50% opacity and becomes unreadable.</summary>
         private static void Brighten(Transform target)
         {
             UILabel label = NativeUIKit.Label(target);
@@ -209,8 +209,8 @@ namespace CurrencyMod.NativeUI
         }
 
         /// <summary>
-        /// O botão doador tem largura automática de 65 a 80: o texto continuava centrado nessa faixa (e não no botão
-        /// de verdade), então "+" caía fora do botão e "Livre" ficava à esquerda. Faixa = largura do botão e texto de novo.
+        /// The donor button has an automatic width from 65 to 80: the text stayed centered in that range (and not on the
+        /// actual button), so "+" fell outside the button and "Livre" sat to the left. Range = button width, and text again.
         /// </summary>
         private static void FitLabel(UILabel label, float width)
         {
@@ -222,7 +222,7 @@ namespace CurrencyMod.NativeUI
             label.Text = text;
         }
 
-        /// <summary>− ou + do preço geral: o mesmo botão da tabela de comércio, usado como botão (volta a desligado no clique).</summary>
+        /// <summary>− or + of the general price: the same button as the trade table, used as a button (turns back off on click).</summary>
         private UIToggle PriceButton(Transform donor, string name, string text, float left, int direction)
         {
             Transform button = Part(donor, name);
@@ -271,12 +271,12 @@ namespace CurrencyMod.NativeUI
                 double current = TradePolicy.GeneralPriceOrDefault(me, otherEmpire, era);
                 double next = TradePolicy.StepPrice(current, direction);
                 TradePolicy.SetGeneralPrice(world, me, otherEmpire, next);
-                Plugin.Log.LogInfo($"Diplomacia: pedágio geral do império {otherEmpire} → {next} por recurso.");
+                Plugin.Log.LogInfo($"Diplomacy: general toll for empire {otherEmpire} → {next} per resource.");
             }
             nextUpdate = 0;
         }
 
-        /// <summary>Botão de preço de um item da tabela de comércio (existe só quando o outro vende algo).</summary>
+        /// <summary>Price button of a trade table item (only exists when the other side sells something).</summary>
         private static Transform FindPurchaseToggle(Transform screen)
         {
             var item = screen.GetComponentsInChildren<TradeTableItem>(true).FirstOrDefault()
@@ -332,7 +332,7 @@ namespace CurrencyMod.NativeUI
                     }
                 }
             }
-            Plugin.Log.LogInfo($"Diplomacia: império {otherEmpire} → {TradePolicy.ModeName(Modes[index])} em {territories.Count} território(s) ({changed} mudança(s)).");
+            Plugin.Log.LogInfo($"Diplomacy: empire {otherEmpire} → {TradePolicy.ModeName(Modes[index])} in {territories.Count} territory(ies) ({changed} change(s)).");
             nextUpdate = 0;
         }
 
@@ -395,12 +395,12 @@ namespace CurrencyMod.NativeUI
                 L.T("Quanto esse império paga, por recurso transportado e por turno, para passar pelos seus postos com pedágio. Os botões mudam o preço em todos os postos; na janela do Posto Comercial (visão Comercializar) dá para pôr um preço só naquele posto."));
 
             NativeUIKit.SetText(title, L.T("Seus Postos Comerciais"));
-            // Com pedágio ou bloqueio em todos os postos: prévia de desvio pelo caminho do próprio jogo (quantas rotas deles
-            // pagam e quantas desviam ou ficam barradas), que muda na hora com os botões de preço.
+            // With toll or blockade at all posts: detour preview through the game's own pathing (how many of their routes
+            // pay and how many detour or get blocked), which updates instantly with the price buttons.
             if (uniform.HasValue && uniform.Value != TradeMode.Free)
             {
-                // Com postos de preço próprio, a prévia mostra a situação de hoje (cada posto com o seu preço); sem eles,
-                // o preço geral em todos os postos, que é o que os botões aplicam.
+                // With posts that have their own price, the preview shows today's situation (each post with its price);
+                // without them, the general price at all posts, which is what the buttons apply.
                 var ask = new TollPreview.Ask
                 {
                     Owner = me,
@@ -441,7 +441,7 @@ namespace CurrencyMod.NativeUI
             {
                 state += " · " + L.F("pagaram {0} {1}", symbol, Format.Money(paid));
             }
-            // A escolha deles diante dos seus pedágios (rota_pedagio da IA de linguagem).
+            // Their choice in the face of your tolls (rota_pedagio of the language-model AI).
             TollChoiceKind theirChoice = TradePolicy.GetTollChoice(other, me);
             if (theirChoice == TollChoiceKind.Pay)
             {
@@ -469,7 +469,7 @@ namespace CurrencyMod.NativeUI
 
         private readonly List<Transform> parts = new List<Transform>();
 
-        /// <summary>Peça clonada direto na aba (aparece e some junto com ela).</summary>
+        /// <summary>Piece cloned directly into the tab (shows and hides together with it).</summary>
         private Transform Part(Transform donor, string name)
         {
             Transform part = NativeUIKit.Clone(donor, root, PanelName + "_" + name);

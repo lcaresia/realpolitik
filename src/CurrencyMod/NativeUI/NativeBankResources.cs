@@ -8,14 +8,14 @@ using UnityEngine;
 namespace CurrencyMod.NativeUI
 {
     /// <summary>
-    /// Seção "Recursos" do Banco Central: os recursos estratégicos e de luxo que o império acessa agora (um cartão por
-    /// recurso: quantos acessos e de onde vêm — jazida própria, comprado de alguém, vendido a alguém) e um gráfico dos
-    /// acessos ao longo dos turnos. O histórico é gravado no fim de cada turno (HistoryPoint.Resources, só humanos);
-    /// saves anteriores começam sem histórico.
+    /// "Resources" section of the Central Bank: the strategic and luxury resources the empire accesses now (one card per
+    /// resource: how many accesses and where they come from — own deposit, bought from someone, sold to someone) and a
+    /// chart of the accesses over the turns. The history is recorded at the end of each turn (HistoryPoint.Resources,
+    /// humans only); older saves start with no history.
     /// </summary>
     internal partial class NativeBankWindow
     {
-        /// <summary>Linhas do gráfico: os recursos com mais acessos agora (o resto entra só no total).</summary>
+        /// <summary>Chart lines: the resources with the most accesses now (the rest only count in the total).</summary>
         private const int ResourceChartLines = 5;
 
         private static readonly Color[] ResourceColors =
@@ -25,7 +25,7 @@ namespace CurrencyMod.NativeUI
         };
         private static readonly string[] ResourceHex = { "66B5ED", "8FD18A", "E8685E", "C78FE8", "F5A854" };
 
-        /// <summary>Acessos atuais (tipo → quantidade): a foto do turno, senão o último ponto do histórico.</summary>
+        /// <summary>Current accesses (type → count): the turn snapshot, otherwise the last history point.</summary>
         private static Dictionary<int, int> CurrentResources(EmpireCurrency mine, int localIndex, out WorldCapture capture)
         {
             capture = TurnCapture.Latest;
@@ -103,7 +103,7 @@ namespace CurrencyMod.NativeUI
 
         private const int TrendTurns = 5;
 
-        /// <summary>Acessos do recurso TrendTurns pontos atrás no histórico (-1 sem histórico).</summary>
+        /// <summary>Accesses of the resource TrendTurns points back in the history (-1 with no history).</summary>
         private static int Before(EmpireCurrency mine, int type)
         {
             List<HistoryPoint> points = mine.History.Where(h => h.Resources != null).ToList();
@@ -115,7 +115,7 @@ namespace CurrencyMod.NativeUI
             return old.Resources.TryGetValue(type, out int value) ? value : 0;
         }
 
-        /// <summary>"Jazida própria", "Comprado de X" ou "Vendido a X" pela foto do turno (null sem foto).</summary>
+        /// <summary>"Own deposit", "Bought from X" or "Sold to X" from the turn snapshot (null with no snapshot).</summary>
         private static string Origin(WorldCapture capture, int localIndex, int type, out string help)
         {
             help = null;

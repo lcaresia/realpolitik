@@ -12,9 +12,9 @@ using B = CurrencyMod.NativeUI.NativeBankWindow;
 namespace CurrencyMod.Diplomacia.UI
 {
     /// <summary>
-    /// Entradas da tela Realpolitik: um botão no menu principal (clone de "Meu Perfil", depois de "Cenários") e outro
-    /// no menu de pausa da partida (clone de "Configurações", logo abaixo dele). Pelo menu de pausa, a coluna do menu
-    /// some enquanto a tela está aberta e volta ao fechar, como nas Configurações do jogo.
+    /// Entry points of the Realpolitik screen: a button in the main menu (clone of "My Profile", after "Scenarios") and
+    /// another in the in-game pause menu (clone of "Settings", right below it). From the pause menu, the menu column
+    /// disappears while the screen is open and comes back on close, as in the game's Settings.
     /// </summary>
     internal class ProvidersButtons : MonoBehaviour
     {
@@ -47,7 +47,7 @@ namespace CurrencyMod.Diplomacia.UI
             }
             catch (Exception ex)
             {
-                Plugin.Log.LogError($"Botões da Diplomacia IA: {ex}");
+                Plugin.Log.LogError($"AI Diplomacy buttons: {ex}");
                 nextAttempt = Time.unscaledTime + 30f;
             }
         }
@@ -73,7 +73,7 @@ namespace CurrencyMod.Diplomacia.UI
             }
             UIButton button = Clone(donor, buttons, MainName, after.GetSiblingIndex() + 1);
             button.LeftClick += b => ProvidersScreen.SetOpen(true);
-            Plugin.Log.LogInfo("Botão Diplomacia IA criado no menu principal.");
+            Plugin.Log.LogInfo("AI Diplomacy button created in the main menu.");
             return button;
         }
 
@@ -94,7 +94,7 @@ namespace CurrencyMod.Diplomacia.UI
             pauseMenu = menu;
             UIButton button = Clone(donor, parent, PauseName, donor.GetSiblingIndex() + 1);
             button.LeftClick += b => OpenFromPause();
-            Plugin.Log.LogInfo("Botão Diplomacia IA criado no menu de pausa.");
+            Plugin.Log.LogInfo("AI Diplomacy button created in the pause menu.");
             return button;
         }
 
@@ -125,8 +125,8 @@ namespace CurrencyMod.Diplomacia.UI
         private void OpenFromPause() => OpenInGame(pauseMenu);
 
         /// <summary>
-        /// Na partida, a tela sempre abre por cima do menu de pausa (que esconde o HUD, como nas Configurações). Se o
-        /// menu ainda não estiver aberto (ex.: comando de teste), abre antes.
+        /// In game, the screen always opens on top of the pause menu (which hides the HUD, as in Settings). If the menu
+        /// is not open yet (e.g. a test command), it opens it first.
         /// </summary>
         internal static void OpenInGame(PauseMenuModalWindow menu = null, string section = null)
         {
@@ -137,7 +137,7 @@ namespace CurrencyMod.Diplomacia.UI
             }
             if (menu != null)
             {
-                // Igual às Configurações: a coluna do menu de pausa sai e volta ao fechar.
+                // Same as Settings: the pause menu column goes away and comes back on close.
                 menu.leftContentShowable?.Hide(instant: true);
                 ProvidersScreen.Closed = () =>
                 {

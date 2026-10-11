@@ -13,10 +13,10 @@ using UnityEngine;
 namespace CurrencyMod.Diplomacia
 {
     /// <summary>
-    /// Orquestra a diplomacia com IA. Na thread principal: detecta a partida e o turno, monta o dossiê de cada nação
-    /// do computador, despacha as chamadas para threads de trabalho, aplica as respostas (diário, sentimentos,
-    /// memória, cartas), manda as ações que viram ordens do jogo para o ActionExecutor e publica tudo no
-    /// visualizador F10.
+    /// Orchestrates the AI diplomacy. On the main thread: detects the game and the turn, builds the dossier of each
+    /// computer nation, dispatches the calls to worker threads, applies the responses (diary, feelings, memory,
+    /// letters), sends the actions that become game orders to the ActionExecutor and publishes everything to the F10
+    /// viewer.
     /// </summary>
     internal sealed class IaModule : MonoBehaviour
     {
@@ -25,7 +25,7 @@ namespace CurrencyMod.Diplomacia
         internal static IaModule Instance;
         internal static IaWorld World;
         internal static IaRuntime Runtime = new IaRuntime();
-        /// <summary>Última serialização do mundo (lida pelo patch de save em outra thread).</summary>
+        /// <summary>Latest world serialization (read by the save patch on another thread).</summary>
         internal static volatile string LatestWorldJson;
         internal static volatile string LatestWorldGuid;
 
@@ -61,7 +61,7 @@ namespace CurrencyMod.Diplomacia
         internal string StatusText => statusText;
         internal ViewerServer Viewer => viewer;
 
-        // ---------------- Ciclo de vida ----------------
+        // ---------------- Lifecycle ----------------
 
         private void Awake()
         {
@@ -71,17 +71,17 @@ namespace CurrencyMod.Diplomacia
             viewer = new ViewerServer(IaConfig.ViewerPort.Value);
             if (viewer.Start())
             {
-                Runtime.Event($"Visualizador em {viewer.Url} ({IaConfig.ViewerKey.Value} abre).");
+                Runtime.Event($"Viewer at {viewer.Url} ({IaConfig.ViewerKey.Value} opens it).");
             }
             else
             {
-                Runtime.Event($"Visualizador não subiu na porta {IaConfig.ViewerPort.Value}: {viewer.LastError}");
-                Plugin.Log.LogWarning($"[IA] Visualizador não subiu na porta {IaConfig.ViewerPort.Value}: {viewer.LastError}");
+                Runtime.Event($"Viewer did not start on port {IaConfig.ViewerPort.Value}: {viewer.LastError}");
+                Plugin.Log.LogWarning($"[IA] Viewer did not start on port {IaConfig.ViewerPort.Value}: {viewer.LastError}");
             }
             dirty = true;
         }
 
-        /// <summary>Chamado pelo ModEntry.Stop antes de destruir os componentes (recarga a quente).</summary>
+        /// <summary>Called by ModEntry.Stop before destroying the components (hot reload).</summary>
         internal static void Shutdown()
         {
             IaModule module = Instance;
@@ -102,7 +102,7 @@ namespace CurrencyMod.Diplomacia
             }
             catch (Exception ex)
             {
-                Plugin.Log?.LogWarning($"[IA] Falha ao guardar estado para recarga: {ex.Message}");
+                Plugin.Log?.LogWarning($"[IA] Failed to save state for reload: {ex.Message}");
             }
             Instance = null;
         }
@@ -143,15 +143,15 @@ namespace CurrencyMod.Diplomacia
                         }
                     }
                 }
-                Runtime.Event("Núcleo recarregado; estado da IA restaurado.");
+                Runtime.Event("Core reloaded; AI state restored.");
             }
             catch (Exception ex)
             {
-                Plugin.Log?.LogWarning($"[IA] Estado anterior não pôde ser restaurado: {ex.Message}");
+                Plugin.Log?.LogWarning($"[IA] Previous state could not be restored: {ex.Message}");
             }
         }
 
-        /// <summary>Patch de load (pode rodar fora da thread principal): guarda para a thread principal adotar.</summary>
+        /// <summary>Load patch (may run off the main thread): stores it for the main thread to adopt.</summary>
         internal static void OnSaveLoaded(string guid, string json)
         {
             lock (LoadGate)
@@ -160,8 +160,8 @@ namespace CurrencyMod.Diplomacia
                 loadedGuid = guid;
                 loadedJson = json;
             }
-            // Ações decididas antes do load são da linha do tempo abandonada: no save carregado (mesmo GUID) elas
-            // executariam, e os resultados cairiam em outras ações com o mesmo id (NextActionId volta com o save).
+            // Actions decided before the load belong to the abandoned timeline: in the loaded save (same GUID) they
+            // would execute, and the results would land on other actions with the same id (NextActionId rolls back with the save).
             while (ActionExecutor.Pending.TryDequeue(out _))
             {
             }
@@ -170,13 +170,13 @@ namespace CurrencyMod.Diplomacia
             }
         }
 
-        // ---------------- Laço principal ----------------
+        // ---------------- Main loop ----------------
 
         private void Update()
         {
             if (stopped)
             {
-                return; // geração antiga, esperando o Destroy do fim do frame
+                return; // old generation, waiting for the end-of-frame Destroy
             }
             try
             {
@@ -190,7 +190,7 @@ namespace CurrencyMod.Diplomacia
                 }
                 while (Llm.Providers.ProviderRouter.Notices.TryDequeue(out string notice))
                 {
-                    // "!" = todos os provedores falharam: um aviso na tela (uma vez até algum voltar).
+                    // "!" = all providers failed: one on-screen notice (once until one comes back).
                     bool alert = notice.StartsWith("!");
                     Runtime.Event(alert ? notice.Substring(1) : notice);
                     if (alert)
@@ -239,7 +239,7 @@ namespace CurrencyMod.Diplomacia
                 if (Time.unscaledTime - lastErrorLogAt > 10f)
                 {
                     lastErrorLogAt = Time.unscaledTime;
-                    Plugin.Log.LogError($"[IA] Erro no laço principal: {ex}");
+                    Plugin.Log.LogError($"[IA] Error in the main loop: {ex}");
                 }
             }
         }
@@ -248,7 +248,7 @@ namespace CurrencyMod.Diplomacia
         {
             if (viewer == null || !viewer.IsRunning)
             {
-                Runtime.Event("Visualizador não está rodando (porta ocupada?).");
+                Runtime.Event("Viewer is not running (port in use?).");
                 return;
             }
             Application.OpenURL(viewer.Url);
@@ -270,7 +270,7 @@ namespace CurrencyMod.Diplomacia
             }
             catch (Exception ex)
             {
-                Plugin.Log.LogWarning($"[IA] Aviso na tela falhou: {ex.Message}");
+                Plugin.Log.LogWarning($"[IA] On-screen notice failed: {ex.Message}");
             }
         }
 
@@ -280,7 +280,7 @@ namespace CurrencyMod.Diplomacia
             {
                 if (World != null && currentTurn >= 0)
                 {
-                    Runtime.Event("Saiu da partida.");
+                    Runtime.Event("Left the game.");
                     currentTurn = -1;
                     session++;
                 }
@@ -297,11 +297,11 @@ namespace CurrencyMod.Diplomacia
             {
                 lastTurnSeen = turn;
                 turnSeenAt = Time.unscaledTime;
-                Runtime.Event($"Turno {turn}.");
+                Runtime.Event($"Turn {turn}.");
                 IaLog.Prune(World.GameGuid, turn);
                 dirty = true;
             }
-            // Interceptação antes de tudo: carta privada só "chega" (correio, dossiê) depois do sorteio do turno.
+            // Interception before everything: a private letter only "arrives" (mail, dossier) after the turn's roll.
             WorldCapture capture = CurrentCapture(guid, turn);
             if (capture != null)
             {
@@ -319,15 +319,15 @@ namespace CurrencyMod.Diplomacia
                 }
                 catch (Exception ex)
                 {
-                    Plugin.Log.LogWarning($"[IA] Notícias do Congresso: {ex.Message}");
+                    Plugin.Log.LogWarning($"[IA] Congress news: {ex.Message}");
                 }
             }
             ProcessPlayerInbox();
-            // Bônus de veterano dos ministros: vale mesmo com a IA de linguagem desligada (o conselho é do mod).
+            // Ministers' veteran bonus: applies even with the language AI off (the council belongs to the mod).
             Council.VeteranEffects.Publish(World, turn);
             try
             {
-                // Blocos (item 16): passo do turno e o retrato que o pedágio e a defesa mútua leem na thread da simulação.
+                // Blocs (item 16): the turn step and the snapshot that the toll and mutual defense read on the simulation thread.
                 if (Blocs.BlocEngine.Step(World, turn))
                 {
                     dirty = true;
@@ -337,7 +337,7 @@ namespace CurrencyMod.Diplomacia
             }
             catch (Exception ex)
             {
-                Plugin.Log.LogWarning($"Blocos: {ex.Message}");
+                Plugin.Log.LogWarning($"Blocs: {ex.Message}");
             }
             UpdateLocks(turn);
             ResumeMissions(turn);
@@ -369,7 +369,7 @@ namespace CurrencyMod.Diplomacia
             }
             catch (Exception ex)
             {
-                Plugin.Log.LogError($"[IA] Conselho do jogador: {ex}");
+                Plugin.Log.LogError($"[IA] Player council: {ex}");
             }
             if (consecutiveFailures >= 3)
             {
@@ -382,9 +382,9 @@ namespace CurrencyMod.Diplomacia
         }
 
         /// <summary>
-        /// Quais nações a IA de linguagem está comandando agora, para as travas da IA nativa (design §11.0): as que
-        /// decidiram neste turno ou no anterior, com a IA ligada, executando ações e a API respondendo. Se a API cair,
-        /// a nação deixa de contar depois de um turno e a IA nativa volta a decidir tudo (F1).
+        /// Which nations the language AI is commanding now, for the native AI locks (design §11.0): those that decided
+        /// this turn or the previous one, with the AI on, executing actions and the API responding. If the API goes down,
+        /// the nation stops counting after one turn and the native AI goes back to deciding everything (F1).
         /// </summary>
         private void UpdateLocks(int turn)
         {
@@ -410,7 +410,7 @@ namespace CurrencyMod.Diplomacia
             }
             catch (Exception ex)
             {
-                Plugin.Log.LogWarning($"[IA] Rendições pendentes: {ex.Message}");
+                Plugin.Log.LogWarning($"[IA] Pending surrenders: {ex.Message}");
             }
             try
             {
@@ -418,16 +418,16 @@ namespace CurrencyMod.Diplomacia
             }
             catch (Exception ex)
             {
-                Plugin.Log.LogWarning($"[IA] Congresso (voltas à IA nativa): {ex.Message}");
+                Plugin.Log.LogWarning($"[IA] Congress (fallbacks to the native AI): {ex.Message}");
             }
 
-            // Patrocínios escolhidos pela IA de linguagem (só povos que ainda existem na foto do turno).
+            // Patronages chosen by the language AI (only peoples that still exist in the turn snapshot).
             var patronage = new Dictionary<int, int>();
             WorldCapture capture = TurnCapture.Latest;
             foreach (IaNation nation in World?.Nations ?? new List<IaNation>())
             {
-                // O jogo reaproveita o índice de um povo que sumiu para o próximo que nasce: a escolha do povo morto é
-                // esquecida, senão travaria o patrocínio do povo novo.
+                // The game reuses the index of a people that disappeared for the next one born: the dead people's
+                // choice is forgotten, otherwise it would lock the patronage of the new people.
                 if (capture != null)
                 {
                     foreach (int gone in nation.MinorPatronage.Keys.Where(m => capture.Minor(m) == null).ToList())
@@ -443,7 +443,7 @@ namespace CurrencyMod.Diplomacia
             }
             NativeAiLocks.SetPatronageTable(patronage);
 
-            // Política comercial escolhida pela IA de linguagem (politica_comercial): a revisão nativa dos postos segue.
+            // Trade policy chosen by the language AI (politica_comercial): the native post review follows it.
             var trade = new Dictionary<int, TradeMode>();
             foreach (IaNation nation in World?.Nations ?? new List<IaNation>())
             {
@@ -461,8 +461,8 @@ namespace CurrencyMod.Diplomacia
         }
 
         /// <summary>
-        /// Foto do turno atual. Normalmente vem do gancho no começo do turno (thread do jogo). Se o núcleo foi
-        /// recarregado no meio do turno, tira uma na thread principal (plano B), só no turno principal e com calma.
+        /// Snapshot of the current turn. Normally it comes from the hook at the start of the turn (game thread). If the core
+        /// was reloaded mid-turn, takes one on the main thread (plan B), only on the main turn and without hurry.
         /// </summary>
         internal WorldCapture CurrentCapture(string guid, int turn)
         {
@@ -484,13 +484,13 @@ namespace CurrencyMod.Diplomacia
                 {
                     World?.FixNames(capture);
                     TurnCapture.Latest = capture;
-                    Runtime.Event($"Foto do turno {turn} tirada na thread principal (núcleo recarregado no meio do turno).");
+                    Runtime.Event($"Turn {turn} snapshot taken on the main thread (core reloaded mid-turn).");
                     return capture;
                 }
             }
             catch (Exception ex)
             {
-                Plugin.Log.LogWarning($"[IA] Foto do turno pela thread principal falhou, tento de novo: {ex.Message}");
+                Plugin.Log.LogWarning($"[IA] Turn snapshot on the main thread failed, retrying: {ex.Message}");
             }
             return null;
         }
@@ -508,7 +508,7 @@ namespace CurrencyMod.Diplomacia
             }
             if (generation != seenLoadGeneration)
             {
-                // Um save acabou de ser carregado: o estado dele manda (mesmo voltando no tempo).
+                // A save was just loaded: its state rules (even going back in time).
                 seenLoadGeneration = generation;
                 IaWorld loaded = null;
                 if (!string.IsNullOrEmpty(json) && jsonGuid == guid)
@@ -519,7 +519,7 @@ namespace CurrencyMod.Diplomacia
                     }
                     catch (Exception ex)
                     {
-                        Plugin.Log.LogError($"[IA] Estado da IA no save está corrompido, começando do zero: {ex.Message}");
+                        Plugin.Log.LogError($"[IA] AI state in the save is corrupted, starting from scratch: {ex.Message}");
                     }
                 }
                 World = loaded ?? new IaWorld { GameGuid = guid };
@@ -528,7 +528,7 @@ namespace CurrencyMod.Diplomacia
                 session++;
                 inFlight.Clear();
                 lastTurnSeen = -1;
-                Runtime.Event(loaded != null ? $"Save carregado: memória de {World.Nations.Count} nações restaurada." : "Save carregado sem dados da IA: começando do zero.");
+                Runtime.Event(loaded != null ? $"Save loaded: memory of {World.Nations.Count} nations restored." : "Save loaded without AI data: starting from scratch.");
                 dirty = true;
                 return;
             }
@@ -538,7 +538,7 @@ namespace CurrencyMod.Diplomacia
                 session++;
                 inFlight.Clear();
                 lastTurnSeen = -1;
-                Runtime.Event("Nova partida detectada.");
+                Runtime.Event("New game detected.");
                 dirty = true;
             }
         }
@@ -554,16 +554,16 @@ namespace CurrencyMod.Diplomacia
             }
         }
 
-        // ---------------- Despacho ----------------
+        // ---------------- Dispatch ----------------
 
-        /// <summary>Despacha as nações que ainda não pensaram neste turno (ou só uma, se forçado).</summary>
+        /// <summary>Dispatches the nations that have not thought yet this turn (or just one, if forced).</summary>
         internal int Schedule(WorldCapture capture, bool force, int only)
         {
             if (World == null || capture == null)
             {
                 return 0;
             }
-            // IA desconectada (fila inteira falhando): só uma chamada de teste de tempos em tempos, nada de rajada de erros.
+            // AI disconnected (whole queue failing): only one test call every so often, no burst of errors.
             bool probing = !force && Llm.Providers.ProviderRouter.AllDown;
             if (probing && (inFlight.Count > 0 || !Llm.Providers.ProviderRouter.MayCall()))
             {
@@ -598,7 +598,7 @@ namespace CurrencyMod.Diplomacia
                 }
                 candidates.Add(nation);
             }
-            // Quem pensou há mais tempo vai primeiro (importa quando há limite por turno).
+            // Whoever thought longest ago goes first (matters when there is a per-turn limit).
             candidates.Sort((a, b) => a.LastDecisionTurn.CompareTo(b.LastDecisionTurn));
             int dispatched = 0;
             foreach (IaNation nation in candidates)
@@ -645,7 +645,7 @@ namespace CurrencyMod.Diplomacia
                 }
                 nation.FailuresThisTurn++;
                 retryAt[empire] = Time.unscaledTime + 10f;
-                Plugin.Log.LogError($"[IA] Falha ao montar o dossiê do império {empire}: {ex}");
+                Plugin.Log.LogError($"[IA] Failed to build the dossier of empire {empire}: {ex}");
                 dirty = true;
                 return false;
             }
@@ -655,7 +655,7 @@ namespace CurrencyMod.Diplomacia
             }
             else if (!string.IsNullOrEmpty(build.Facts.LeaderName) && nation.Persona.LeaderName != build.Facts.LeaderName)
             {
-                // O título muda com a era ("Líder" → "Rei"); o nome vem sempre do jogo.
+                // The title changes with the era ("Líder" → "Rei"); the name always comes from the game.
                 nation.Persona.LeaderName = build.Facts.LeaderName;
             }
             string persona = Prompts.PersonaSection(build.Facts, nation.Persona);
@@ -704,7 +704,7 @@ namespace CurrencyMod.Diplomacia
             return true;
         }
 
-        // ---------------- Aplicar respostas ----------------
+        // ---------------- Applying responses ----------------
 
         private void Apply(DecisionResult result)
         {
@@ -712,8 +712,8 @@ namespace CurrencyMod.Diplomacia
             dirty = true;
             if (job.Session != session || World == null)
             {
-                // Resposta de outra partida ou de antes de um load. O load já limpou o inFlight; tirar a nação dele
-                // aqui apagaria a chamada nova dela, e ela pensaria duas vezes no mesmo turno.
+                // Response from another game or from before a load. The load already cleared inFlight; removing the
+                // nation from it here would erase its new call, and it would think twice in the same turn.
                 return;
             }
             inFlight.Remove(job.EmpireIndex);
@@ -738,8 +738,8 @@ namespace CurrencyMod.Diplomacia
 
             if (result.Decision == null)
             {
-                // Só a API fora do ar conta para soltar as travas de todas as nações. Uma resposta que chegou mas
-                // não passou na validação é problema daquela nação, não da API.
+                // Only the API being down counts for releasing the locks of all nations. A response that arrived but
+                // failed validation is that nation's problem, not the API's.
                 bool apiDown = result.Calls.Count == 0 || !result.Calls[result.Calls.Count - 1].Ok;
                 consecutiveFailures = apiDown ? consecutiveFailures + 1 : 0;
                 if (nation.FailedTurn != job.Turn)
@@ -751,8 +751,8 @@ namespace CurrencyMod.Diplomacia
                 retryAt[job.EmpireIndex] = Time.unscaledTime + 30f * nation.FailuresThisTurn;
                 detail.State = "erro";
                 detail.LastError = result.FatalError;
-                Runtime.Event($"{job.NationName} (E{job.EmpireIndex}) falhou no turno {job.Turn}: {result.FatalError}");
-                Plugin.Log.LogWarning($"[IA] E{job.EmpireIndex} falhou no turno {job.Turn}: {result.FatalError}");
+                Runtime.Event($"{job.NationName} (E{job.EmpireIndex}) failed on turn {job.Turn}: {result.FatalError}");
+                Plugin.Log.LogWarning($"[IA] E{job.EmpireIndex} failed on turn {job.Turn}: {result.FatalError}");
                 IaLog.Write(World.GameGuid, job, result);
                 return;
             }
@@ -801,7 +801,7 @@ namespace CurrencyMod.Diplomacia
                 };
                 if (draft.Type == "grupo")
                 {
-                    // Conversa em grupo: todos os membros de agora leem (quem entrar depois não vê o passado).
+                    // Group conversation: all current members read it (whoever joins later does not see the past).
                     ChatGroup group = World.Groups.FirstOrDefault(g => g.Id == draft.GroupId);
                     if (group == null || !group.Members.Contains(job.EmpireIndex))
                     {
@@ -818,7 +818,7 @@ namespace CurrencyMod.Diplomacia
                 {
                     nation.LastPublicDeclarationTurn = turn;
                 }
-                Runtime.Event($"Carta {letter.Type} de {job.NationName} para {(letter.IsPublic ? "todos" : letter.IsGroup ? "o grupo GRP" + letter.GroupId : "E" + letter.To)} (chega no turno {letter.DeliverTurn}).");
+                Runtime.Event($"Letter {letter.Type} from {job.NationName} to {(letter.IsPublic ? "everyone" : letter.IsGroup ? "group GRP" + letter.GroupId : "E" + letter.To)} (arrives on turn {letter.DeliverTurn}).");
             }
             foreach (ActionDraft action in decision.Actions)
             {
@@ -830,7 +830,7 @@ namespace CurrencyMod.Diplomacia
                 }
                 else if (action.Name == "demitir_ministro")
                 {
-                    // Conselho é do mod: aplica na hora, sem ordem do jogo.
+                    // The council belongs to the mod: apply right away, with no game order.
                     string portfolio = ((string)JObject.Parse(action.Json)["pasta"])?.Trim().ToLowerInvariant();
                     string fired = Council.CouncilEngine.Fire(World, nation, TurnCapture.Latest, portfolio, turn);
                     status = fired != null ? "feito: " + fired : "não aplicada: pasta sem ministro";
@@ -856,7 +856,7 @@ namespace CurrencyMod.Diplomacia
                 }
                 else if (action.Name == "politica_comercial")
                 {
-                    // Regra do mod (bloqueio comercial): aplica na hora em todos os postos da nação.
+                    // Mod rule (trade blockade): apply right away on all the nation's posts.
                     status = ApplyTradeStance(nation, action.Json, turn);
                 }
                 else if (action.Name == "rota_pedagio")
@@ -865,7 +865,7 @@ namespace CurrencyMod.Diplomacia
                 }
                 else if (action.Name == "definir_postura" || action.Name == "definir_foco")
                 {
-                    // Estado da nação (vale até mudar); o NativeAiBias lê na thread da IA nativa (design §11.1).
+                    // Nation state (valid until it changes); NativeAiBias reads it on the native AI thread (design §11.1).
                     status = nation.RememberStance(action.Name, action.Json, turn) == null ? "não aplicada: faltam campos"
                         : IaConfig.StanceBias.Value && IaConfig.ExecuteActions.Value ? "aplicada: seus generais, diplomatas e governadores seguem até você mudar"
                         : "registrada (o viés na IA nativa está desligado no .cfg)";
@@ -896,14 +896,14 @@ namespace CurrencyMod.Diplomacia
                 Runtime.Event($"{job.NationName}: {action.Summary} — {status}.");
             }
             Trim(nation.Actions, 60);
-            // O conselho percebe se o líder seguiu ou ignorou os conselhos do turno.
+            // The council notices whether the leader followed or ignored the turn's advice.
             try
             {
                 Council.CouncilEngine.React(nation, decision.Actions, turn);
             }
             catch (Exception ex)
             {
-                Plugin.Log.LogWarning($"[IA] Reação do conselho de E{job.EmpireIndex}: {ex.Message}");
+                Plugin.Log.LogWarning($"[IA] Council reaction of E{job.EmpireIndex}: {ex.Message}");
             }
             foreach (NoteDraft note in decision.Notes)
             {
@@ -924,7 +924,7 @@ namespace CurrencyMod.Diplomacia
                 if (letter != null && !letter.RejectedBy.Contains(job.EmpireIndex))
                 {
                     letter.RejectedBy.Add(job.EmpireIndex);
-                    Runtime.Event($"{job.NationName} recusou a carta {letter.Id} de E{letter.From} (correspondência bloqueada).");
+                    Runtime.Event($"{job.NationName} refused letter {letter.Id} from E{letter.From} (correspondence blocked).");
                 }
             }
             foreach (int id in job.InterceptedLetterIds)
@@ -935,18 +935,18 @@ namespace CurrencyMod.Diplomacia
                     letter.InterceptorRead = true;
                 }
             }
-            Runtime.Event($"{job.NationName} (E{job.EmpireIndex}) decidiu o turno {turn}: {decision.Letters.Count} carta(s), {decision.Actions.Count} ação(ões), US$ {result.CostUsd:0.0000}.");
+            Runtime.Event($"{job.NationName} (E{job.EmpireIndex}) decided turn {turn}: {decision.Letters.Count} letter(s), {decision.Actions.Count} action(s), US$ {result.CostUsd:0.0000}.");
             IaLog.Write(World.GameGuid, job, result);
         }
 
         /// <summary>
-        /// politica_comercial: o que os postos comerciais da nação fazem com as rotas de outra (livre, pedágio, bloqueio), em
-        /// todos os territórios dela. Fica guardado na nação: a IA nativa de comércio (TradeAi) segue a escolha, inclusive
-        /// nos territórios novos.
+        /// politica_comercial: what the nation's trade posts do with another nation's routes (free, toll, blockade), in
+        /// all its territories. Stored in the nation: the native trade AI (TradeAi) follows the choice, including in new
+        /// territories.
         /// </summary>
-        // ---------------- Conversas em grupo (melhorias-jogando item 15) ----------------
+        // ---------------- Group conversations (melhorias-jogando item 15) ----------------
 
-        /// <summary>Cria um grupo (quem cria entra junto). Devolve o grupo, ou null com o motivo.</summary>
+        /// <summary>Creates a group (the creator joins too). Returns the group, or null with the reason.</summary>
         internal ChatGroup CreateGroup(int creator, string name, IEnumerable<int> others, int turn, out string problem)
         {
             problem = null;
@@ -968,12 +968,12 @@ namespace CurrencyMod.Diplomacia
             }
             var group = new ChatGroup { Id = World.NextGroupId++, Name = name, Creator = creator, CreatedTurn = turn, Members = members };
             World.Groups.Add(group);
-            Runtime.Event($"Grupo {group.Handle} '{name}' criado por E{creator}: {string.Join(", ", members.Select(m => "E" + m))}.");
+            Runtime.Event($"Group {group.Handle} '{name}' created by E{creator}: {string.Join(", ", members.Select(m => "E" + m))}.");
             dirty = true;
             return group;
         }
 
-        /// <summary>Sai do grupo; grupo com menos de 2 membros acaba.</summary>
+        /// <summary>Leaves the group; a group with fewer than 2 members ends.</summary>
         internal string LeaveGroup(int empire, int groupId)
         {
             ChatGroup group = World?.Groups.FirstOrDefault(g => g.Id == groupId);
@@ -993,7 +993,7 @@ namespace CurrencyMod.Diplomacia
             return null;
         }
 
-        /// <summary>Mensagem de grupo, com o mesmo tempo de entrega das cartas de quem escreve (sem interceptação, por ora).</summary>
+        /// <summary>Group message, with the same delivery time as the writer's letters (no interception, for now).</summary>
         internal Letter SendGroupMessage(int from, ChatGroup group, string subject, string text, int turn, int delay)
         {
             var letter = new Letter
@@ -1015,7 +1015,7 @@ namespace CurrencyMod.Diplomacia
             return letter;
         }
 
-        /// <summary>O jogador cria um grupo com as nações escolhidas e manda a primeira mensagem. "ok: …" ou "erro: …".</summary>
+        /// <summary>The player creates a group with the chosen nations and sends the first message. "ok: …" or "erro: …".</summary>
         internal string CreatePlayerGroup(string name, List<int> others, string firstMessage)
         {
             WorldCapture capture = TurnCapture.Latest;
@@ -1036,7 +1036,7 @@ namespace CurrencyMod.Diplomacia
             return SendPlayerGroupLetter(group.Id, name, firstMessage);
         }
 
-        /// <summary>Mensagem do jogador a um grupo dele, pela regra de entrega da era. "ok: … turno N" ou "erro: …".</summary>
+        /// <summary>Player message to one of their groups, by the era's delivery rule. "ok: … turno N" or "erro: …".</summary>
         internal string SendPlayerGroupLetter(int groupId, string subject, string text)
         {
             ChatGroup group = World?.Groups.FirstOrDefault(g => g.Id == groupId);
@@ -1056,7 +1056,7 @@ namespace CurrencyMod.Diplomacia
             }
             int delay = Delivery.TurnsFor(TurnCapture.Latest, playerIndex);
             Letter letter = SendGroupMessage(playerIndex, group, string.IsNullOrWhiteSpace(subject) ? null : subject.Replace("<", "‹").Replace(">", "›"), text, currentTurn, delay);
-            Runtime.Event($"Mensagem do jogador ao grupo {group.Handle} (chega no turno {letter.DeliverTurn}).");
+            Runtime.Event($"Player message to group {group.Handle} (arrives on turn {letter.DeliverTurn}).");
             return "ok: " + L.F("mensagem ao grupo; chega no turno {0}", letter.DeliverTurn);
         }
 
@@ -1084,7 +1084,7 @@ namespace CurrencyMod.Diplomacia
             return $"feito: grupo {group.Handle} '{group.Name}' criado";
         }
 
-        /// <summary>nomear_ministro: um dos candidatos da pasta vaga, pagando a influência pela ordem do jogo.</summary>
+        /// <summary>nomear_ministro: one of the candidates for the vacant portfolio, paying the influence through the game's order.</summary>
         private string ApplyAppoint(IaNation nation, string json, int turn)
         {
             JObject item = JObject.Parse(json);
@@ -1107,8 +1107,8 @@ namespace CurrencyMod.Diplomacia
         }
 
         /// <summary>
-        /// rota_pedagio: nos postos em que a outra nação cobra pedágio desta, as rotas desta pagam sempre, desviam sempre ou
-        /// comparam o custo (automático). Vale na hora: as rotas são recalculadas na próxima ordem.
+        /// rota_pedagio: at the posts where the other nation charges this one a toll, this nation's routes always pay, always
+        /// detour or compare the cost (automatic). Takes effect right away: routes are recomputed on the next order.
         /// </summary>
         private string ApplyTollChoice(IaNation nation, string json, int turn)
         {
@@ -1192,9 +1192,9 @@ namespace CurrencyMod.Diplomacia
         }
 
         /// <summary>
-        /// Ação que vira ordem do jogo (design §7): guerra, paz, acordos e aliança, reclamações e exigências, presente,
-        /// renomear. Devolve null para o que ainda é só registro (postura, foco, ordem a exército) ou quando falta um
-        /// dado (problem).
+        /// Action that becomes a game order (design §7): war, peace, agreements and alliance, grievances and demands, gift,
+        /// rename. Returns null for what is still only a record (stance, focus, army order) or when a piece of data is
+        /// missing (problem).
         /// </summary>
         private ActionIntent BuildIntent(DecisionJob job, ActionDraft action, out string problem)
         {
@@ -1284,7 +1284,7 @@ namespace CurrencyMod.Diplomacia
                         }
                     }
                     intent.TargetLabel = TargetLabel(target, goal);
-                    return intent; // não envolve nação maior diretamente
+                    return intent; // does not involve a major nation directly
                 }
                 case "patrocinar":
                 case "tratado_povo":
@@ -1299,7 +1299,7 @@ namespace CurrencyMod.Diplomacia
                     intent.MoneyInvestment = ((string)item["dinheiro"])?.Trim().ToLowerInvariant();
                     intent.InfluenceInvestment = ((string)item["influencia"])?.Trim().ToLowerInvariant();
                     intent.MinorTreatyIndex = Array.IndexOf(DecisionParser.MinorTreatyIds, ((string)item["tratado"])?.Trim().ToLowerInvariant());
-                    return intent; // sem nação maior envolvida
+                    return intent; // no major nation involved
                 }
                 case "ceder_territorio":
                 {
@@ -1394,7 +1394,7 @@ namespace CurrencyMod.Diplomacia
                         return null;
                     }
                     intent.CivicName = civic;
-                    return intent; // sem nação maior envolvida
+                    return intent; // no major nation involved
                 }
                 case "votar_congresso":
                 {
@@ -1404,7 +1404,7 @@ namespace CurrencyMod.Diplomacia
                         string option = ((string)item["opcao"])?.Trim().ToUpperInvariant();
                         intent.LawVote = true;
                         intent.Choice = option == "A" ? 0 : option == "B" ? 1 : -1;
-                        // Postura sobre a lei imposta, se a opção dela perder: os governadores seguem (NativeAiLocks.ImposedLawPatch).
+                        // Stance on the imposed law, if its option loses: the governors follow it (NativeAiLocks.ImposedLawPatch).
                         string ifLost = ((string)item["se_perder"])?.Trim().ToLowerInvariant();
                         CongressLaw law = TurnCapture.Latest?.Congress?.LawVote?.Law;
                         string civic = job.Context.LawVoteCivic ?? law?.Civic;
@@ -1505,8 +1505,8 @@ namespace CurrencyMod.Diplomacia
         }
 
         /// <summary>
-        /// Teste ("ia exercito E# A# objetivo destino [turnos]"): a mesma ordem que a IA de linguagem daria, com registro
-        /// na memória da nação (o resultado aparece no "ia acoes").
+        /// Test ("ia exercito E# A# objetivo destino [turnos]"): the same order the language AI would give, recorded in
+        /// the nation's memory (the result shows up in "ia acoes").
         /// </summary>
         internal string DevArmyOrder(int empire, string armyHandle, string goal, string target, int turns)
         {
@@ -1531,8 +1531,8 @@ namespace CurrencyMod.Diplomacia
         }
 
         /// <summary>
-        /// Teste ("ia teste carta-de E# texto"): carta privada de uma nação para você, entregue agora e pedindo resposta.
-        /// Serve também com nação eliminada, para conferir que o correio não oferece "Responder" a quem não existe mais.
+        /// Test ("ia teste carta-de E# texto"): a private letter from a nation to you, delivered now and asking for a reply.
+        /// Also works with an eliminated nation, to check that the mail does not offer "Reply" to someone who no longer exists.
         /// </summary>
         internal string DevLetterFrom(int from, string text)
         {
@@ -1540,7 +1540,7 @@ namespace CurrencyMod.Diplomacia
             {
                 return "erro: sem partida";
             }
-            // "[Assunto] texto": assunto e tipo opcionais ("[Assunto|publica] texto" faz a carta pública).
+            // "[Assunto] texto": optional subject and type ("[Assunto|publica] texto" makes the letter public).
             string devSubject = "Carta de teste";
             string devType = "privada";
             string devText = text ?? string.Empty;
@@ -1572,8 +1572,8 @@ namespace CurrencyMod.Diplomacia
         }
 
         /// <summary>
-        /// Teste ("ia teste parser E#"): uma decisão com cartas erradas (destinatário desconhecido, longa demais, vazia,
-        /// ultimato sem exigência) e uma carta boa, validada como na 1ª tentativa e como na última (lenient).
+        /// Test ("ia teste parser E#"): a decision with bad letters (unknown recipient, too long, empty, ultimatum without
+        /// a demand) and one good letter, validated as on the 1st attempt and as on the last one (lenient).
         /// </summary>
         internal string DevParserTest(int empire)
         {
@@ -1612,8 +1612,8 @@ namespace CurrencyMod.Diplomacia
         }
 
         /// <summary>
-        /// Teste ("ia acao E# {json}"): uma ação qualquer de uma nação da IA, como se ela tivesse decidido (sem passar pela
-        /// validação do dossiê; o executor confere tudo no jogo). Registrada na memória da nação, aparece no "ia acoes".
+        /// Test ("ia acao E# {json}"): any action of an AI nation, as if it had decided it (without going through the
+        /// dossier validation; the executor checks everything in the game). Recorded in the nation's memory, shows up in "ia acoes".
         /// </summary>
         internal string DevAction(int empire, string json)
         {
@@ -1637,13 +1637,13 @@ namespace CurrencyMod.Diplomacia
             }
             if (name == "politica_comercial" || name == "rota_pedagio")
             {
-                // Regra do mod, aplicada na hora (como na decisão do turno).
+                // Mod rule, applied right away (as in the turn decision).
                 string applied = name == "rota_pedagio" ? ApplyTollChoice(World.Ensure(empire), item.ToString(Formatting.None), currentTurn) : ApplyTradeStance(World.Ensure(empire), item.ToString(Formatting.None), currentTurn);
                 World.Ensure(empire).Actions.Add(new ActionRecord { Id = 0, Turn = currentTurn, Name = name, Json = item.ToString(Formatting.None), Status = applied + " (teste)" });
                 dirty = true;
                 return "ok: " + applied;
             }
-            // Contexto do dossiê do turno (códigos G, V, K, I...), com todas as nações liberadas para o teste.
+            // Context from the turn dossier (codes G, V, K, I...), with all nations unlocked for the test.
             ValidationContext context = null;
             try
             {
@@ -1664,7 +1664,7 @@ namespace CurrencyMod.Diplomacia
             }
             if (Blocs.BlocActions.Handles(name))
             {
-                // Ações de bloco: pelo mesmo validador da decisão do turno e pelo mesmo aplicador.
+                // Bloc actions: through the same validator as the turn decision and the same applier.
                 var errors = new List<string>();
                 string decisionJson = new JObject { ["diario"] = "Teste.", ["acoes"] = new JArray { item } }.ToString(Formatting.None);
                 Decision decision = DecisionParser.Parse(decisionJson, context, errors, false);
@@ -1691,7 +1691,7 @@ namespace CurrencyMod.Diplomacia
             return $"ok: ação #{intent.Id} ({name}) de E{empire} enviada";
         }
 
-        /// <summary>Teste ("ia exercitos E#"): os exércitos da nação com o código A (cria o código se ainda não houver).</summary>
+        /// <summary>Test ("ia exercitos E#"): the nation's armies with their A code (creates the code if there is none yet).</summary>
         internal string DevListArmies(int empire)
         {
             WorldCapture capture = TurnCapture.Latest;
@@ -1712,7 +1712,7 @@ namespace CurrencyMod.Diplomacia
             return text.Length > 0 ? text.ToString().TrimEnd() : "nenhum exército";
         }
 
-        /// <summary>Nome legível do alvo de uma ordem a exército, para os relatórios e o dossiê ("Harappa (T137)").</summary>
+        /// <summary>Readable name of an army order's target, for the reports and the dossier ("Harappa (T137)").</summary>
         private static string TargetLabel(string target, string goal)
         {
             if (goal == "parar" || target == null)
@@ -1734,8 +1734,8 @@ namespace CurrencyMod.Diplomacia
         }
 
         /// <summary>
-        /// Ordem a exército aceita: vira missão salva (o dossiê mostra a situação) e fica marcada como enviada, para o
-        /// reenvio automático não duplicar antes de o executor aceitar.
+        /// Accepted army order: becomes a saved mission (the dossier shows its status) and is marked as sent, so the
+        /// automatic resend does not duplicate it before the executor accepts.
         /// </summary>
         private void RememberMission(ActionIntent intent, int turn)
         {
@@ -1770,7 +1770,7 @@ namespace CurrencyMod.Diplomacia
         private readonly Dictionary<string, float> missionSubmitted = new Dictionary<string, float>();
 
         /// <summary>
-        /// Missões salvas que o executor não conhece (save carregado, núcleo recarregado): manda de novo, até o prazo.
+        /// Saved missions the executor does not know (save loaded, core reloaded): sends them again, until the deadline.
         /// </summary>
         private void ResumeMissions(int turn)
         {
@@ -1782,11 +1782,11 @@ namespace CurrencyMod.Diplomacia
             {
                 if (!ulong.TryParse(mission.ArmyKey, System.Globalization.NumberStyles.HexNumber, null, out ulong guid) || ArmyOrders.IsKnown(guid))
                 {
-                    continue; // em curso no executor: ele mesmo encerra
+                    continue; // in progress in the executor: it ends it itself
                 }
                 if (!NativeAiLocks.IsLlmActive(mission.Empire))
                 {
-                    continue; // F1: sem a IA de linguagem no comando, o exército é da IA nativa
+                    continue; // F1: without the language AI in command, the army belongs to the native AI
                 }
                 if (turn > mission.HoldUntil)
                 {
@@ -1800,8 +1800,8 @@ namespace CurrencyMod.Diplomacia
                 {
                     continue;
                 }
-                // Ainda na fila (fim de turno longo, fora do turno principal): a cópia "retomada" substituiria a original
-                // sem o ajuste de prazo pela viagem.
+                // Still in the queue (long end of turn, outside the main turn): the "resumed" copy would replace the
+                // original without the deadline adjustment for the travel.
                 if (ActionExecutor.Pending.Any(p => p.Name == "ordem_exercito" && p.ArmyKey == mission.ArmyKey))
                 {
                     continue;
@@ -1830,8 +1830,8 @@ namespace CurrencyMod.Diplomacia
         }
 
         /// <summary>
-        /// Guarda o patrocínio escolhido (o nível que a IA não disse fica o atual, da foto do turno): a IA nativa deixa esse
-        /// povo em paz enquanto a IA de linguagem decide pela nação. "nenhum" nos dois esquece a escolha.
+        /// Stores the chosen patronage (a level the AI did not state stays at the current one, from the turn snapshot): the
+        /// native AI leaves that people alone while the language AI decides for the nation. "nenhum" in both forgets the choice.
         /// </summary>
         private static void RememberPatronage(IaNation nation, ActionIntent intent)
         {
@@ -1847,7 +1847,7 @@ namespace CurrencyMod.Diplomacia
             nation.MinorPatronage[intent.Minor] = (money << 8) | influence;
         }
 
-        /// <summary>Nível de investimento (PatronageInvestment: 0 nenhum, 1 baixo, 2 médio, 3 alto).</summary>
+        /// <summary>Investment level (PatronageInvestment: 0 none, 1 low, 2 medium, 3 high).</summary>
         private static int InvestmentCode(string requested, string current)
         {
             switch (requested ?? string.Empty)
@@ -1873,7 +1873,7 @@ namespace CurrencyMod.Diplomacia
                 : 0;
         }
 
-        /// <summary>Resultado de uma ordem vindo da thread do jogo: atualiza a memória da nação.</summary>
+        /// <summary>Result of an order coming from the game thread: updates the nation's memory.</summary>
         private void ApplyOutcome(ActionOutcome outcome)
         {
             ActionRecord record = World?.Get(outcome.Empire)?.Actions.LastOrDefault(a => a.Id == outcome.Id);
@@ -1882,7 +1882,7 @@ namespace CurrencyMod.Diplomacia
                 return;
             }
             record.Status = (outcome.Ok ? "executada: " : "recusada pelo jogo: ") + outcome.Detail;
-            Runtime.Event($"E{outcome.Empire} {record.Name} (turno {record.Turn}): {record.Status}.");
+            Runtime.Event($"E{outcome.Empire} {record.Name} (turn {record.Turn}): {record.Status}.");
             Plugin.Log.LogInfo($"[IA] E{outcome.Empire} {record.Name}: {record.Status}");
             MarkDirty();
         }
@@ -1921,11 +1921,11 @@ namespace CurrencyMod.Diplomacia
             }
         }
 
-        // ---------------- Cartas do jogador (debug pelo visualizador) ----------------
+        // ---------------- Player letters (debug via the viewer) ----------------
 
         /// <summary>
-        /// A carta que uma nova carta de "writer" para "other" responde: a mais recente de "other" para "writer" que já
-        /// chegou, pedia resposta, não foi recusada e ainda não teve resposta. -1 se não houver.
+        /// The letter that a new letter from "writer" to "other" replies to: the most recent one from "other" to "writer" that
+        /// has arrived, asked for a reply, was not refused and has not been answered yet. -1 if there is none.
         /// </summary>
         internal static int AnswerableLetter(IaWorld world, int writer, int other, int turn)
         {
@@ -1934,7 +1934,7 @@ namespace CurrencyMod.Diplomacia
                 return -1;
             }
             var answered = new HashSet<int>(world.Letters.Where(l => l.From == writer && l.InReplyTo >= 0).Select(l => l.InReplyTo));
-            // Só carta que chegou: a interceptada o destinatário nunca viu.
+            // Only letters that arrived: the recipient never saw an intercepted one.
             Letter best = world.Letters
                 .Where(l => l.From == other && l.To == writer && l.ExpectsReply && l.Arrived(turn)
                     && !l.RejectedBy.Contains(writer) && !answered.Contains(l.Id))
@@ -1943,13 +1943,13 @@ namespace CurrencyMod.Diplomacia
             return best?.Id ?? -1;
         }
 
-        /// <summary>Se o jogador já respondeu a esta carta (alguma carta dele aponta para ela).</summary>
+        /// <summary>Whether the player has already replied to this letter (one of their letters points to it).</summary>
         internal bool PlayerAnswered(Letter letter)
         {
             return World != null && letter != null && World.Letters.Any(l => l.From == playerIndex && l.InReplyTo == letter.Id);
         }
 
-        /// <summary>A resposta que uma carta enviada pelo jogador recebeu, se houver.</summary>
+        /// <summary>The reply a letter sent by the player received, if any.</summary>
         internal Letter ReplyTo(Letter letter)
         {
             return World == null || letter == null ? null : World.Letters.FirstOrDefault(l => l.InReplyTo == letter.Id && l.From != letter.From);
@@ -1958,8 +1958,8 @@ namespace CurrencyMod.Diplomacia
         internal Letter LetterById(int id) => World?.Letters.FirstOrDefault(l => l.Id == id);
 
         /// <summary>
-        /// Texto do jogador como vai para a carta: quebras de linha só com \n (o campo grava \r ao apertar Enter), tab vira
-        /// espaço, sem caracteres de controle nem invisíveis (largura zero, BOM), sem espaços no fim das linhas.
+        /// The player's text as it goes into the letter: line breaks only with \n (the field stores \r when Enter is pressed),
+        /// tab becomes a space, no control or invisible characters (zero width, BOM), no trailing spaces on lines.
         /// </summary>
         internal static string CleanPlayerText(string text)
         {
@@ -1979,12 +1979,12 @@ namespace CurrencyMod.Diplomacia
             return string.Join("\n", clean.ToString().Split('\n').Select(line => line.TrimEnd())).Trim();
         }
 
-        /// <summary>Tamanho da carta do jogador como é contado no limite (caracteres do texto limpo).</summary>
+        /// <summary>Length of the player's letter as counted against the limit (characters of the cleaned text).</summary>
         internal static int PlayerTextLength(string text) => CleanPlayerText(text).Length;
 
         internal string SendPlayerLetter(int to, string type, string subject, string text, string demand, int deadline, bool immediate = false, int inReplyTo = -1)
         {
-            // Os textos depois de "erro: " aparecem para o jogador (aviso da aba Cartas e do Correio).
+            // The texts after "erro: " are shown to the player (notice in the Letters tab and the Mail).
             if (World == null || playerIndex < 0 || currentTurn < 0)
             {
                 return "erro: " + L.T("sem partida");
@@ -2026,21 +2026,21 @@ namespace CurrencyMod.Diplomacia
                 ExpectsReply = type != "publica",
                 SentTurn = currentTurn,
                 DeliverTurn = immediate ? currentTurn : currentTurn + Delivery.TurnsFor(capture, playerIndex),
-                // inReplyTo: id da carta (Responder), -1 = liga sozinho à última carta deles que pedia resposta, -2 = sem ligação ("Soltar").
+                // inReplyTo: letter id (Reply), -1 = links automatically to their latest letter asking for a reply, -2 = no link ("Soltar").
                 InReplyTo = type == "publica" || inReplyTo == -2 ? -1 : inReplyTo >= 0 ? inReplyTo : AnswerableLetter(World, playerIndex, to, currentTurn),
             };
             Espionage.StampOrigin(letter, capture, World);
             World.Letters.Add(letter);
-            Runtime.Event($"Você enviou uma carta {letter.Type} para {(letter.IsPublic ? "todos" : "E" + to)} (chega no turno {letter.DeliverTurn}).");
+            Runtime.Event($"You sent a {letter.Type} letter to {(letter.IsPublic ? "everyone" : "E" + to)} (arrives on turn {letter.DeliverTurn}).");
             dirty = true;
             return $"ok: carta {letter.Id} chega no turno {letter.DeliverTurn}";
         }
 
-        // ---------------- Correio do jogador (tela nativa) ----------------
+        // ---------------- Player mail (native screen) ----------------
 
         /// <summary>
-        /// Cartas que já chegaram para você (privadas, ultimatos e declarações públicas), sem as recusadas e sem as que
-        /// espiões interceptaram no caminho (essas você nunca vê).
+        /// Letters that have already arrived for you (private, ultimatums and public declarations), without the refused
+        /// ones and without those spies intercepted on the way (you never see those).
         /// </summary>
         internal List<Letter> PlayerInbox()
         {
@@ -2053,7 +2053,7 @@ namespace CurrencyMod.Diplomacia
                 .ToList();
         }
 
-        /// <summary>Cartas entre outras nações que os seus espiões interceptaram (aba Cartas da espionagem).</summary>
+        /// <summary>Letters between other nations that your spies intercepted (espionage Letters tab).</summary>
         internal List<Letter> PlayerIntercepted()
         {
             return World == null || playerIndex < 0 ? new List<Letter>() : World.Letters.Where(l => l.InterceptedBy == playerIndex).ToList();
@@ -2099,7 +2099,7 @@ namespace CurrencyMod.Diplomacia
 
         internal bool IsBlockedByPlayer(int other) => World?.Get(playerIndex)?.BlockedEmpires.Contains(other) ?? false;
 
-        /// <summary>Recusar / voltar a aceitar as cartas privadas de uma nação. Ultimatos e declarações públicas sempre passam.</summary>
+        /// <summary>Refuse / accept again a nation's private letters. Ultimatums and public declarations always get through.</summary>
         internal bool TogglePlayerBlock(int other)
         {
             if (World == null || playerIndex < 0)
@@ -2116,13 +2116,13 @@ namespace CurrencyMod.Diplomacia
             {
                 me.BlockedEmpires.Remove(other);
             }
-            Runtime.Event(blocked ? $"Você passou a recusar as cartas privadas de E{other}." : $"Você voltou a aceitar as cartas de E{other}.");
+            Runtime.Event(blocked ? $"You now refuse private letters from E{other}." : $"You accept letters from E{other} again.");
             ProcessPlayerInbox();
             dirty = true;
             return blocked;
         }
 
-        /// <summary>Cartas privadas de quem você bloqueou voltam ao remetente (ele fica sabendo no próximo turno).</summary>
+        /// <summary>Private letters from those you blocked go back to the sender (who finds out next turn).</summary>
         private void ProcessPlayerInbox()
         {
             IaNation me = World?.Get(playerIndex);
@@ -2162,11 +2162,11 @@ namespace CurrencyMod.Diplomacia
             }
             catch (Exception ex)
             {
-                Runtime.Event($"Pedido do visualizador falhou: {ex.Message}");
+                Runtime.Event($"Viewer request failed: {ex.Message}");
             }
         }
 
-        // ---------------- Publicação ----------------
+        // ---------------- Publishing ----------------
 
         private void Publish()
         {
@@ -2194,13 +2194,13 @@ namespace CurrencyMod.Diplomacia
             }
             catch (Exception ex)
             {
-                Plugin.Log.LogWarning($"[IA] Falha ao publicar no visualizador: {ex.Message}");
+                Plugin.Log.LogWarning($"[IA] Failed to publish to the viewer: {ex.Message}");
             }
         }
 
         internal void MarkDirty() => dirty = true;
 
-        /// <summary>Apaga a memória da IA desta partida (só para testes). O save só muda no próximo salvamento.</summary>
+        /// <summary>Erases this game's AI memory (tests only). The save only changes on the next save.</summary>
         internal void ResetWorld()
         {
             string guid = World?.GameGuid;
@@ -2209,7 +2209,7 @@ namespace CurrencyMod.Diplomacia
             session++;
             inFlight.Clear();
             retryAt.Clear();
-            Runtime.Event("Memória da IA apagada (comando de teste).");
+            Runtime.Event("AI memory erased (test command).");
             dirty = true;
         }
     }

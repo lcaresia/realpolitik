@@ -5,7 +5,7 @@ using Newtonsoft.Json.Linq;
 
 namespace CurrencyMod.Diplomacia
 {
-    /// <summary>O que a nação decidiu no turno, já validado.</summary>
+    /// <summary>What the nation decided this turn, already validated.</summary>
     internal sealed class Decision
     {
         public string Diary;
@@ -13,7 +13,7 @@ namespace CurrencyMod.Diplomacia
         public List<LetterDraft> Letters = new List<LetterDraft>();
         public List<ActionDraft> Actions = new List<ActionDraft>();
         public List<NoteDraft> Notes = new List<NoteDraft>();
-        /// <summary>Problemas corrigidos sem pedir de novo (valores fora da faixa, excesso de cartas...).</summary>
+        /// <summary>Problems fixed without asking again (out-of-range values, too many letters...).</summary>
         public List<string> Warnings = new List<string>();
     }
 
@@ -36,7 +36,7 @@ namespace CurrencyMod.Diplomacia
         public bool ExpectsReply;
         public string Demand;
         public int DeadlineTurns;
-        /// <summary>Mensagem de grupo (tipo "grupo"): o id da conversa.</summary>
+        /// <summary>Group message (type "grupo"): the conversation id.</summary>
         public int GroupId = -1;
     }
 
@@ -54,8 +54,8 @@ namespace CurrencyMod.Diplomacia
     }
 
     /// <summary>
-    /// O que a nação pode citar neste turno (montado junto com o dossiê, na thread principal).
-    /// A validação roda na thread de trabalho e só consulta isto, nunca o jogo.
+    /// What the nation may reference this turn (built together with the dossier, on the main thread).
+    /// Validation runs on the worker thread and only consults this, never the game.
     /// </summary>
     internal sealed class ValidationContext
     {
@@ -65,72 +65,72 @@ namespace CurrencyMod.Diplomacia
         public HashSet<string> OwnCities = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         public HashSet<string> KnownCities = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         public HashSet<string> KnownTerritories = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-        /// <summary>Territórios das suas cidades e postos (para ceder_territorio).</summary>
+        /// <summary>Territories of its cities and outposts (for ceder_territorio).</summary>
         public HashSet<string> OwnTerritories = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-        /// <summary>Exércitos de outras nações à sua vista (códigos A), alvos de ordem_exercito "atacar".</summary>
+        /// <summary>Other nations' armies in sight (A codes), targets of ordem_exercito "atacar".</summary>
         public HashSet<string> SeenArmies = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-        /// <summary>Povos independentes que você conhece: código M → índice do império menor.</summary>
+        /// <summary>Independent peoples the nation knows: M code → minor empire index.</summary>
         public Dictionary<string, int> KnownMinors = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
         public HashSet<int> AtWar = new HashSet<int>();
         public bool PublicDeclarationAllowed = true;
         public int MaxLetters = 3;
         public int MaxLetterWords = 350;
         public int MaxDiaryWords = 120;
-        /// <summary>Palavras dos nomes reais do jogo (nações, líderes, povos, cidades, territórios, recursos), em
-        /// minúsculas. Vazio = não conferir nomes.</summary>
+        /// <summary>Words of the game's real names (nations, leaders, peoples, cities, territories, resources), in
+        /// lowercase. Empty = do not check names.</summary>
         public HashSet<string> KnownWords = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-        /// <summary>Palavras dos nomes de recurso: todos os do jogo e só os que a nação acessa (oferecer o que não tem volta).</summary>
+        /// <summary>Words of resource names: all of the game's and only those the nation has access to (offering what it lacks is sent back).</summary>
         public HashSet<string> AllResourceWords = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         public HashSet<string> OwnResourceWords = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-        /// <summary>Grupos de conversa da nação: código "GRP#" → id.</summary>
+        /// <summary>The nation's chat groups: "GRP#" code → id.</summary>
         public Dictionary<string, int> Groups = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
-        /// <summary>Bloco da nação (-1 = nenhum ou ainda em formação), convites abertos ("BLC#"), pautas abertas ("P#") e eleição.</summary>
+        /// <summary>The nation's bloc (-1 = none or still forming), open invitations ("BLC#"), open agenda items ("P#") and election.</summary>
         public int BlocId = -1;
         public HashSet<string> BlocInvites = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         public HashSet<string> BlocMotions = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         public bool BlocElection;
-        /// <summary>Sua última carta recente para cada destino (Letter.Everyone = declaração pública).</summary>
+        /// <summary>The nation's last recent letter to each destination (Letter.Everyone = public statement).</summary>
         public Dictionary<int, PreviousLetter> LastLetters = new Dictionary<int, PreviousLetter>();
-        /// <summary>Nações com proposta de tratado / de acordo esperando a sua resposta.</summary>
+        /// <summary>Nations with a treaty / deal proposal awaiting this nation's answer.</summary>
         public HashSet<int> TreatyToAnswer = new HashSet<int>();
         public HashSet<int> AgreementToAnswer = new HashSet<int>();
-        /// <summary>Reclamações suas mostradas no dossiê: código G → nação e tipo (o executor confere de novo no jogo).</summary>
+        /// <summary>The nation's grievances shown in the dossier: G code → nation and type (the executor re-checks in the game).</summary>
         public Dictionary<string, GrievanceRef> Grievances = new Dictionary<string, GrievanceRef>(StringComparer.OrdinalIgnoreCase);
-        /// <summary>Nações com exigências contra você que você ainda pode responder.</summary>
+        /// <summary>Nations with demands against this nation that it can still answer.</summary>
         public HashSet<int> DemandsToAnswer = new HashSet<int>();
-        /// <summary>Nações contra as quais você tem exigências em aberto.</summary>
+        /// <summary>Nations against which this nation has open demands.</summary>
         public HashSet<int> DemandsMade = new HashSet<int>();
-        /// <summary>Rendição: a quem você pode oferecer ou impor, e de quem há rendição esperando a sua resposta.</summary>
+        /// <summary>Surrender: to whom the nation can offer or impose it, and whose surrender awaits its answer.</summary>
         public HashSet<int> CanOfferSurrender = new HashSet<int>();
         public HashSet<int> CanForceSurrender = new HashSet<int>();
         public HashSet<int> SurrenderToAnswer = new HashSet<int>();
-        /// <summary>O que pode entrar como termo, por nação: se você oferecer (seus territórios) e se impuser (os deles).</summary>
+        /// <summary>What can go in as a term, per nation: when offering (its own territories) and when imposing (theirs).</summary>
         public Dictionary<int, SurrenderLimits> OfferLimits = new Dictionary<int, SurrenderLimits>();
         public Dictionary<int, SurrenderLimits> ForceLimits = new Dictionary<int, SurrenderLimits>();
-        /// <summary>O Congresso mundial existe e já aceita crises (DLC Together We Rule; research\congress.md).</summary>
+        /// <summary>The World Congress exists and already accepts crises (Together We Rule DLC; research\congress.md).</summary>
         public bool CongressCrisisOpen;
-        /// <summary>Congresso mundial (preenchido pelo dossiê): a partida tem o Congresso; a nação preside agora e as leis
-        /// que pode propor (código V → nome da definição); votação de lei aberta e se já votou; crises (código K); subornos
-        /// possíveis ("lei:E4" ou "K3:E4" → máximo agora); consulado; vereditos que ela precisa responder; eixos do consenso.</summary>
+        /// <summary>World Congress (filled by the dossier): the match has the Congress; the nation presides now and the laws
+        /// it can propose (V code → definition name); open law vote and whether it already voted; crises (K code); possible
+        /// bribes ("lei:E4" or "K3:E4" → current maximum); consulate; verdicts it must answer; consensus axes.</summary>
         public bool CongressExists;
         public bool PresideNow;
         public Dictionary<string, string> ProposableLaws = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
         public bool LawVoteOpen;
         public bool LawVoted;
-        /// <summary>Lei em votação (nome da definição), para guardar a postura se_perder.</summary>
+        /// <summary>Law being voted (definition name), to store the se_perder stance.</summary>
         public string LawVoteCivic;
         public Dictionary<string, CrisisVoteRef> CrisisVotes = new Dictionary<string, CrisisVoteRef>(StringComparer.OrdinalIgnoreCase);
         public Dictionary<string, int> BribeLimits = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
         public bool HasConsulate;
-        /// <summary>Peso zero no Congresso: votar sem suborno é recusado pelo jogo.</summary>
+        /// <summary>Zero weight in the Congress: voting without a bribe is rejected by the game.</summary>
         public bool NoSway;
         public HashSet<int> VerdictAgainstMe = new HashSet<int>();
         public Dictionary<string, int> ConsensusAxes = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
-        /// <summary>Eixos do consenso que a nação ainda não pode pagar (a contribuição seria recusada).</summary>
+        /// <summary>Consensus axes the nation cannot afford yet (the contribution would be rejected).</summary>
         public HashSet<string> UnaffordableAxes = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
     }
 
-    /// <summary>Votação de crise mostrada no dossiê (código K).</summary>
+    /// <summary>Crisis vote shown in the dossier (K code).</summary>
     internal sealed class CrisisVoteRef
     {
         public int Pool;
@@ -139,11 +139,11 @@ namespace CurrencyMod.Diplomacia
         public bool Voted;
     }
 
-    /// <summary>Termos possíveis numa direção de rendição (da prévia exata do jogo).</summary>
+    /// <summary>Possible terms in one surrender direction (from the game's exact preview).</summary>
     internal sealed class SurrenderLimits
     {
         public HashSet<string> Territories = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-        /// <summary>Pontos livres depois das exigências obrigatórias (o resto vira ouro).</summary>
+        /// <summary>Free points after the mandatory demands (the rest becomes gold).</summary>
         public int Room;
         public bool Submission;
         public int SubmissionCost;
@@ -179,26 +179,26 @@ namespace CurrencyMod.Diplomacia
         private static readonly HashSet<string> TollChoices = new HashSet<string> { "pagar", "desviar", "automatico" };
         private const string NoCongress = "não há Congresso mundial nesta partida (ou ele ainda não se formou)";
 
-        /// <summary>Tratados com povos independentes, na ordem do enum MinorTreaty do jogo.</summary>
+        /// <summary>Treaties with independent peoples, in the order of the game's MinorTreaty enum.</summary>
         internal static readonly string[] MinorTreatyIds = { "contato", "comercio", "mercenarios", "ciencia", "lucros", "contrato", "intercambio", "vassalo", "anexar" };
 
-        /// <summary>A partir daqui uma carta conta como repetição da anterior para o mesmo destino.</summary>
+        /// <summary>From this point on a letter counts as a repeat of the previous one to the same destination.</summary>
         private const double RepeatThreshold = 0.5;
 
         private static readonly System.Text.RegularExpressions.Regex PlusNumbers =
             new System.Text.RegularExpressions.Regex(@"([:\[,]\s*)\+(\d)", System.Text.RegularExpressions.RegexOptions.Compiled);
 
         /// <summary>
-        /// Lê e valida a resposta. Devolve null e preenche errors quando é preciso pedir de novo.
-        /// <paramref name="lenient"/> = última tentativa: o que ainda estiver errado numa carta é resolvido aqui
-        /// (descartar ou só avisar) em vez de perder o turno inteiro.
+        /// Reads and validates the response. Returns null and fills errors when it must ask again.
+        /// <paramref name="lenient"/> = last attempt: whatever is still wrong in a letter is resolved here
+        /// (drop it or just warn) instead of losing the whole turn.
         /// </summary>
         internal static Decision Parse(string content, ValidationContext context, List<string> errors, bool lenient = false)
         {
             JObject root;
             try
             {
-                // "+10" não é json válido, mas a IA às vezes escreve assim os sentimentos positivos.
+                // "+10" is not valid JSON, but the AI sometimes writes positive sentiments that way.
                 root = JObject.Parse(PlusNumbers.Replace(StripFences(content ?? string.Empty), "$1$2"));
             }
             catch (Exception ex)
@@ -252,8 +252,8 @@ namespace CurrencyMod.Diplomacia
         }
 
         /// <summary>
-        /// Carta com problema: pede outra resposta; na última tentativa (lenient) só a carta cai, com aviso. Antes o
-        /// erro derrubava a decisão inteira e o turno da nação se perdia por uma carta.
+        /// Letter with a problem: asks for another response; on the last attempt (lenient) only the letter is dropped,
+        /// with a warning. Before, the error took down the whole decision and the nation's turn was lost over one letter.
         /// </summary>
         private static void Reject(Decision decision, List<string> errors, bool lenient, string message)
         {
@@ -288,8 +288,8 @@ namespace CurrencyMod.Diplomacia
                 int groupId = -1;
                 if (type == "grupo" || to.StartsWith("GRP", StringComparison.OrdinalIgnoreCase))
                 {
-                    // Conversa em grupo: só nos grupos de que a nação é membro (seção SEUS GRUPOS). A chave de destino
-                    // fica negativa para a regra de 1 carta por destinatário valer por grupo.
+                    // Group conversation: only in groups the nation is a member of (SEUS GRUPOS section). The destination
+                    // key is negative so the 1-letter-per-recipient rule applies per group.
                     if (!context.Groups.TryGetValue(to.ToUpperInvariant(), out groupId))
                     {
                         Reject(decision, errors, lenient, $"Mensagem para '{to}': você não está nesse grupo. Use o código GRP# de SEUS GRUPOS (ou crie um com criar_grupo).");
@@ -318,7 +318,7 @@ namespace CurrencyMod.Diplomacia
                     Reject(decision, errors, lenient, $"Carta para '{to}' sem texto.");
                     continue;
                 }
-                // Uma folga de 25% evita pedir de novo por poucas palavras (cada nova tentativa custa uma chamada).
+                // A 25% margin avoids asking again over a few words (each retry costs a call).
                 int words = Words(text);
                 if (words > context.MaxLetterWords * 5 / 4)
                 {
@@ -330,14 +330,14 @@ namespace CurrencyMod.Diplomacia
                     decision.Warnings.Add($"carta para '{to}' um pouco longa ({words} palavras)");
                 }
 
-                // Ancoragem no jogo (design §9.1) e anti-laço (§9): carta repetida ou com coisa que o jogo não tem
-                // volta para ser reescrita e, na última tentativa, é descartada. Nome desconhecido também volta, mas
-                // na última tentativa vira só aviso, para um falso alarme não custar a carta.
+                // Game anchoring (design §9.1) and anti-loop (§9): a repeated letter, or one with something the game
+                // does not have, is sent back to be rewritten and, on the last attempt, dropped. An unknown name is also
+                // sent back, but on the last attempt it becomes just a warning, so a false alarm does not cost the letter.
                 string[] fields = { text, Str(item["assunto"]), Str(item["exigencia"]) };
                 List<string> notInGame = Grounding.NotInGameWords(string.Join(" ", fields), context.KnownWords);
                 bool repeated = context.LastLetters.TryGetValue(recipient, out PreviousLetter previous)
                     && Grounding.Similarity(text, previous.Text) >= RepeatThreshold;
-                // Oferecer (ou dizer "meu") recurso que a nação não acessa: o Māui ofereceu cobre sem ter nenhum recurso.
+                // Offering (or calling "mine") a resource the nation has no access to: Māui offered copper without having any resource.
                 List<string> notOwned = Grounding.OfferedNotOwned(string.Join(" ", fields), context.OwnResourceWords, context.AllResourceWords);
                 if (repeated || notInGame.Count > 0 || notOwned.Count > 0)
                 {
@@ -356,15 +356,15 @@ namespace CurrencyMod.Diplomacia
                     }
                     continue;
                 }
-                // Cada campo à parte: o assunto colado no fim do texto viraria "meio de frase" e cada palavra com
-                // maiúscula dele pareceria um nome.
+                // Each field separately: the subject glued to the end of the text would become "mid-sentence" and each
+                // capitalized word in it would look like a name.
                 List<string> unknown = context.KnownWords.Count > 0
                     ? fields.SelectMany(f => Grounding.UnknownNames(f, context.KnownWords)).Distinct().ToList()
                     : new List<string>();
                 if (unknown.Count > 0)
                 {
-                    // Só nomes do jogo (design §9.1): se a IA insistir até a última tentativa, a carta cai (no teste
-                    // do turno 95, um enviado inventado sobreviveu às três tentativas).
+                    // Game names only (design §9.1): if the AI insists up to the last attempt, the letter is dropped (in
+                    // the turn 95 test, an invented envoy survived all three attempts).
                     if (lenient)
                     {
                         decision.Warnings.Add($"carta para '{to}' descartada: nomes fora do jogo ({string.Join(", ", unknown)})");
@@ -424,8 +424,8 @@ namespace CurrencyMod.Diplomacia
         }
 
         /// <summary>
-        /// Ações da lista fechada. Ação inválida pede outra resposta; na última tentativa (lenient) ela é descartada com
-        /// aviso, para o turno não se perder por uma ação só.
+        /// Actions from the closed list. An invalid action asks for another response; on the last attempt (lenient) it is
+        /// dropped with a warning, so the turn is not lost over a single action.
         /// </summary>
         private static void ParseActions(JArray array, ValidationContext context, Decision decision, List<string> errors, bool lenient)
         {
@@ -607,7 +607,7 @@ namespace CurrencyMod.Diplomacia
                         string bribePrefix = (vote != null && vote.Equals("lei", StringComparison.OrdinalIgnoreCase) ? "lei" : vote?.ToUpperInvariant()) + ":";
                         if (context.CongressExists && context.NoSway && !context.BribeLimits.Keys.Any(k => k.StartsWith(bribePrefix, StringComparison.OrdinalIgnoreCase)))
                         {
-                            // Peso zero e nada a subornar: o jogo recusaria. Sai sem pedir outra resposta (custaria uma chamada).
+                            // Zero weight and nothing to bribe: the game would reject it. Drop it without asking again (it would cost a call).
                             decision.Warnings.Add("voto no Congresso descartado: seu peso é zero");
                             continue;
                         }
@@ -696,7 +696,7 @@ namespace CurrencyMod.Diplomacia
                         string axis = Str(item["eixo"])?.Trim().ToUpperInvariant();
                         if (axis != null && context.UnaffordableAxes.Contains(axis))
                         {
-                            // Sem influência: o jogo recusaria. Sai sem pedir outra resposta.
+                            // No influence: the game would reject it. Drop it without asking again.
                             decision.Warnings.Add($"contribuição ao consenso {axis} descartada: influência insuficiente");
                             continue;
                         }
@@ -992,7 +992,7 @@ namespace CurrencyMod.Diplomacia
                 }
                 decision.Actions.Add(new ActionDraft { Name = name, Json = item.ToString(Newtonsoft.Json.Formatting.None), Summary = summary });
             }
-            // Suborno só vale antes do voto, e o executor processa na ordem: subornos sempre na frente.
+            // A bribe only counts before the vote, and the executor processes in order: bribes always go first.
             if (decision.Actions.Any(a => a.Name == "subornar"))
             {
                 decision.Actions = decision.Actions.Where(a => a.Name == "subornar").Concat(decision.Actions.Where(a => a.Name != "subornar")).ToList();
@@ -1039,7 +1039,7 @@ namespace CurrencyMod.Diplomacia
         }
 
         /// <summary>
-        /// "queixas": lista de códigos G do dossiê, um código só, ou "todas". codes = null quando são todas.
+        /// "queixas": a list of the dossier's G codes, a single code, or "todas". codes = null when it is all of them.
         /// </summary>
         internal static string GrievanceCodes(JObject item, ValidationContext context, int other, out List<string> codes)
         {
@@ -1086,7 +1086,7 @@ namespace CurrencyMod.Diplomacia
             return null;
         }
 
-        /// <summary>Lista de códigos (C#, A#…) num campo que pode vir como texto único ou lista; em maiúsculas.</summary>
+        /// <summary>List of codes (C#, A#…) in a field that may come as a single string or a list; uppercased.</summary>
         internal static List<string> Handles(JToken token)
         {
             var list = new List<string>();

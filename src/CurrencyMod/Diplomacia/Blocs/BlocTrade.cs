@@ -8,15 +8,15 @@ using Amplitude.Mercury.Simulation;
 namespace CurrencyMod.Diplomacia.Blocs
 {
     /// <summary>
-    /// Comércio interno do bloco: a manutenção das rotas entre membros sai 25% mais barata. O jogo cobra a manutenção
-    /// de quem compra; o mod devolve 25% dela no fim do turno (thread da simulação, no mesmo passo do pedágio).
-    /// O pedágio e o bloqueio entre membros já caem em TradePolicy.GetMode.
+    /// Intra-bloc trade: route upkeep between members is 25% cheaper. The game charges the upkeep to the buyer; the
+    /// mod refunds 25% of it at end of turn (simulation thread, in the same step as the toll).
+    /// Toll and blockade between members already fall away in TradePolicy.GetMode.
     /// </summary>
     internal static class BlocTrade
     {
         internal const double UpkeepDiscount = 0.25;
 
-        /// <summary>Devolvido no último turno, por império (para a tela Alianças). Trocado inteiro a cada turno.</summary>
+        /// <summary>Refunded last turn, per empire (for the Alliances screen). Replaced wholesale every turn.</summary>
         internal static volatile Dictionary<int, double> LastRefund = new Dictionary<int, double>();
 
         internal static void RefundUpkeep()
@@ -52,7 +52,7 @@ namespace CurrencyMod.Diplomacia.Blocs
                     continue;
                 }
                 TransferConversion.WithoutRecording(() => empire.DepartmentOfTheTreasury.GainMoney((FixedPoint)(float)amount));
-                Plugin.Log.LogInfo($"Bloco: império {refund.Key} recebeu {amount} de volta da manutenção das rotas com o bloco.");
+                Plugin.Log.LogInfo($"Bloc: empire {refund.Key} got {amount} back from route upkeep with the bloc.");
             }
             LastRefund = refunds;
         }

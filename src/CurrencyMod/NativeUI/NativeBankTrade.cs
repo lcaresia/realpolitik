@@ -9,11 +9,11 @@ using UnityEngine;
 namespace CurrencyMod.NativeUI
 {
     /// <summary>
-    /// Seção "Comércio" do Banco Central: o dinheiro que você ganha e paga a cada império por turno, num gráfico de linhas
-    /// (totais, média móvel de 5 turnos) e num cartão por país com duas barras (pago e ganho, média dos últimos 10 turnos).
-    /// Os números vêm do livro gravado pelo mod (CurrencyWorld.TradeHistory → MoneyFlow): compras de recursos (o comprador
-    /// paga na hora e o vendedor ganha uma parte, uma vez só), manutenção das rotas (por turno, só o comprador paga),
-    /// pedágios dos postos (por turno) e outras transferências (presentes, exigências). Tudo na sua moeda.
+    /// Central Bank "Trade" section: the money you earn from and pay to each empire per turn, in a line chart
+    /// (totals, 5-turn moving average) and in one card per country with two bars (paid and earned, average of the last 10 turns).
+    /// The numbers come from the ledger recorded by the mod (CurrencyWorld.TradeHistory → MoneyFlow): resource purchases (the
+    /// buyer pays upfront and the seller earns a share, only once), route upkeep (per turn, only the buyer pays),
+    /// post tolls (per turn) and other transfers (gifts, demands). All in your currency.
     /// </summary>
     internal partial class NativeBankWindow
     {
@@ -22,9 +22,9 @@ namespace CurrencyMod.NativeUI
         private const float TradeBarStep = 28f;
         private const string PaidColor = "E8685E";
         private const string GainColor = "8FD18A";
-        /// <summary>Quantos turnos a média dos cartões por país abrange.</summary>
+        /// <summary>How many turns the per-country card average covers.</summary>
         private const int TradeAverageTurns = 10;
-        /// <summary>Janela da média móvel das linhas do gráfico.</summary>
+        /// <summary>Moving-average window of the chart lines.</summary>
         private const int TradeSmoothTurns = 5;
 
         private sealed class TradeRow
@@ -34,7 +34,7 @@ namespace CurrencyMod.NativeUI
             public Transform GainBar;
         }
 
-        /// <summary>O que um império recebeu de você e o que você recebeu dele, por tipo, somado numa janela de turnos.</summary>
+        /// <summary>What an empire received from you and what you received from it, by kind, summed over a window of turns.</summary>
         private sealed class PartnerTotals
         {
             public int Empire;
@@ -66,11 +66,11 @@ namespace CurrencyMod.NativeUI
             }
         }
 
-        // ---------------- Números ----------------
+        // ---------------- Numbers ----------------
 
         private static string Signed(double value) => (value < 0 ? "−" : "+") + Format.Money(Math.Abs(value));
 
-        /// <summary>Soma do que passou entre você e cada império nos turnos de [from, to].</summary>
+        /// <summary>Sum of what flowed between you and each empire in turns [from, to].</summary>
         private static Dictionary<int, PartnerTotals> TotalsByPartner(List<TradePoint> history, int me, int from, int to)
         {
             var result = new Dictionary<int, PartnerTotals>();
@@ -120,8 +120,8 @@ namespace CurrencyMod.NativeUI
         }
 
         /// <summary>
-        /// Só os turnos já fechados: o ponto do turno em andamento tem os eventos de dinheiro (gravados na hora), mas a
-        /// manutenção e a contagem de recursos só entram no fim do turno, e a média oscilaria.
+        /// Only turns already closed: the point of the turn in progress has the money events (recorded immediately), but
+        /// upkeep and the resource count only come in at the end of the turn, and the average would fluctuate.
         /// </summary>
         private static List<TradePoint> CompleteHistory(CurrencyWorld world)
         {
@@ -129,14 +129,14 @@ namespace CurrencyMod.NativeUI
             return world.LastProcessedTurn < 0 ? all : all.Where(p => p.Turn <= world.LastProcessedTurn).ToList();
         }
 
-        /// <summary>Quantos turnos a janela de média cobre de fato (o histórico pode ser mais curto).</summary>
+        /// <summary>How many turns the average window actually covers (the history may be shorter).</summary>
         private static int WindowTurns(List<TradePoint> history, int last, int wanted)
         {
             int first = history.Count > 0 ? history[0].Turn : last;
             return Mathf.Max(1, Mathf.Min(wanted, last - first + 1));
         }
 
-        // ---------------- Cartões por país ----------------
+        // ---------------- Per-country cards ----------------
 
         private void FillTrade(GameSnapshot.Data game, CurrencyWorld world, EmpireCurrency mine, int localIndex)
         {
@@ -198,7 +198,7 @@ namespace CurrencyMod.NativeUI
             SetTradeVisible(true);
         }
 
-        /// <summary>Linhas do balão de uma barra: quanto vem de cada tipo de movimento (por turno).</summary>
+        /// <summary>Tooltip lines of a bar: how much comes from each kind of flow (per turn).</summary>
         private static string Breakdown(double[] byKind, int window, bool paid)
         {
             var lines = new List<string>();
@@ -219,7 +219,7 @@ namespace CurrencyMod.NativeUI
             return lines.Count > 0 ? string.Join("\n", lines) : L.T("Nada nesse período.");
         }
 
-        /// <summary>Título e dois chips (o terceiro fica escondido) do cartão de um país.</summary>
+        /// <summary>Title and two chips (the third stays hidden) of a country's card.</summary>
         private static void FillTextCardHeader(Transform top, string title, string chipA, string chipB)
         {
             SetLabel(top, "TitleGroup/Title", title);
@@ -245,7 +245,7 @@ namespace CurrencyMod.NativeUI
             return row;
         }
 
-        /// <summary>Barra horizontal feita com a peça "chip" do jogo: a largura acompanha o valor e o texto vai dentro.</summary>
+        /// <summary>Horizontal bar made from the game's "chip" piece: the width follows the value and the text goes inside.</summary>
         private static void FillTradeBar(Transform bar, float y, float cardWidth, double value, double max, string colorHex, string text, string tipTitle, string tipText)
         {
             UILabel label = NativeUIKit.Label(bar);
@@ -258,7 +258,7 @@ namespace CurrencyMod.NativeUI
             label.Margins = new RectMargins(10f, 10f, label.Margins.Top, label.Margins.Bottom);
             label.Alignment = new Alignment(HorizontalAlignment.Left, VerticalAlignment.Center);
             float full = cardWidth - 24f;
-            float minimum = Mathf.Max(230f, text.Length * 8.5f + 28f); // o texto vai dentro da barra: a largura mínima segue o texto
+            float minimum = Mathf.Max(230f, text.Length * 8.5f + 28f); // the text goes inside the bar: the minimum width follows the text
             float width = value <= 1e-9 ? minimum : Mathf.Lerp(minimum, full, Mathf.Clamp01((float)(value / Math.Max(1e-9, max))));
             UITransform ui = bar.GetComponent<UITransform>();
             if (Mathf.Abs(ui.X - 8f) > 0.5f || Mathf.Abs(ui.Y - y) > 0.5f || Mathf.Abs(ui.Width - width) > 0.5f || Mathf.Abs(ui.Height - 24f) > 0.5f)
@@ -291,9 +291,9 @@ namespace CurrencyMod.NativeUI
             return new Color(r / 255f, g / 255f, b / 255f, 1f);
         }
 
-        // ---------------- Gráfico ----------------
+        // ---------------- Chart ----------------
 
-        /// <summary>Linhas do que você paga e do que você ganha por turno (soma de todos os impérios), média móvel de 5 turnos.</summary>
+        /// <summary>Lines of what you pay and what you earn per turn (sum over all empires), 5-turn moving average.</summary>
         private void FillTradeChart(CurrencyWorld world, EmpireCurrency mine, int localIndex)
         {
             Transform top = chartCard.Find("Table/Top");
@@ -339,7 +339,7 @@ namespace CurrencyMod.NativeUI
             };
             var references = new List<BankChart.Reference>();
             BankChart.Range(series, references, out double min, out double max);
-            min = 0; // o dinheiro que passa não é negativo: o eixo começa no zero
+            min = 0; // money flowing is never negative: the axis starts at zero
             double checksum = paidLine.Concat(gainLine).Where(v => !double.IsNaN(v)).Sum();
             string signature = "trade|" + count + "|" + first + "|" + max.ToString("0.0000") + "|" + checksum.ToString("0.0000");
             if (signature != chartSignature)
@@ -394,7 +394,7 @@ namespace CurrencyMod.NativeUI
             });
         }
 
-        /// <summary>Média móvel dos últimos TradeSmoothTurns turnos (só com os que existem no histórico).</summary>
+        /// <summary>Moving average of the last TradeSmoothTurns turns (only those present in the history).</summary>
         private static double[] Smooth(double[] values, bool[] present)
         {
             var result = new double[values.Length];
@@ -415,11 +415,11 @@ namespace CurrencyMod.NativeUI
             return result;
         }
 
-        // ---------------- Teste (ferramenta de desenvolvimento) ----------------
+        // ---------------- Test (development tool) ----------------
 
         /// <summary>
-        /// "nbank fake": enche o livro do jogador com dados inventados (compras de vez em quando, manutenção e pedágios por
-        /// turno), para conferir a tela sem esperar dezenas de turnos. Só serve em partida de teste.
+        /// "nbank fake": fills the player's ledger with made-up data (occasional purchases, upkeep and tolls every
+        /// turn), to check the screen without waiting dozens of turns. Only meant for test games.
         /// </summary>
         internal static string FakeTradeHistory()
         {

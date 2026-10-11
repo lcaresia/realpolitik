@@ -20,12 +20,12 @@ using B = CurrencyMod.NativeUI.NativeBankWindow;
 namespace CurrencyMod.Diplomacia.UI
 {
     /// <summary>
-    /// Tela "Diplomacia IA": onde o jogador liga a IA sem editar arquivo nenhum. Clone da tela de Configurações do jogo,
-    /// registrado no grupo das telas cheias do sistema (o mesmo das Configurações), então abre igual no menu principal e
-    /// no menu de pausa da partida, e o ESC fecha.
-    ///   esquerda: "Em uso" (resumo e limites) e um botão por provedor, com o estado embaixo do nome;
-    ///   centro: as linhas nativas das configurações (lista suspensa e botão) do item escolhido.
-    /// Chave e token nunca aparecem: só os 4 últimos caracteres. Tudo é gravado em Credentials (DPAPI) e no .cfg.
+    /// "Diplomacia IA" screen: where the player turns the AI on without editing any file. Clone of the game's Settings
+    /// screen, registered in the system full-screen group (the same as Settings), so it opens the same way in the main
+    /// menu and in the in-game pause menu, and ESC closes it.
+    ///   left: "Em uso" (summary and limits) and one button per provider, with the state under the name;
+    ///   center: the native settings rows (dropdown and button) of the chosen item.
+    /// Key and token never show: only the last 4 characters. Everything is saved in Credentials (DPAPI) and in the .cfg.
     /// </summary>
     internal class ProvidersScreen : UIWindow
     {
@@ -36,7 +36,7 @@ namespace CurrencyMod.Diplomacia.UI
         private const string Red = "E8685E";
         private const string Grey = "D2CBBE";
 
-        // Geometria do painel central (relativa a ele, 1080 de largura).
+        // Geometry of the central panel (relative to it, 1080 wide).
         private const float RowsLeft = 64f;
         private const float RowsTop = 134f;
         private const float RowWidth = 952f;
@@ -48,7 +48,7 @@ namespace CurrencyMod.Diplomacia.UI
         internal static ProvidersScreen Instance;
         internal static bool IsOpen => Instance != null && Instance.Shown;
 
-        /// <summary>Ao fechar: volta o menu de pausa (aberta por ele).</summary>
+        /// <summary>On close: the pause menu comes back (when opened from it).</summary>
         internal static Action Closed;
 
         private UILabel titleLabel;
@@ -63,7 +63,7 @@ namespace CurrencyMod.Diplomacia.UI
         private Transform textSample;
         private Transform fieldDonor;
         private readonly List<UIToggle> toggles = new List<UIToggle>();
-        /// <summary>null = "Em uso"; senão, o id do provedor.</summary>
+        /// <summary>null = "Em uso"; otherwise, the provider id.</summary>
         private readonly List<string> toggleIds = new List<string>();
         private string section;
         private bool pendingOpen;
@@ -71,7 +71,7 @@ namespace CurrencyMod.Diplomacia.UI
         private float nextRefresh;
         private bool built;
 
-        // Linhas da seção atual (recriadas ao trocar de seção).
+        // Rows of the current section (recreated when switching sections).
         private readonly List<Transform> rows = new List<Transform>();
         private readonly Dictionary<Transform, float> rowHeights = new Dictionary<Transform, float>();
         private readonly HashSet<Transform> textRows = new HashSet<Transform>();
@@ -94,7 +94,7 @@ namespace CurrencyMod.Diplomacia.UI
         private ProviderDef keyProvider;
         private UITextFieldResponder hookedResponder;
 
-        // Estado do provedor aberto.
+        // State of the open provider.
         private TestOutcome test;
         private string testProvider;
         private float deleteArmedUntil;
@@ -112,14 +112,14 @@ namespace CurrencyMod.Diplomacia.UI
             public List<Choice> Choices = new List<Choice>();
         }
 
-        /// <summary>Uma opção de lista suspensa: o texto mostrado e o valor.</summary>
+        /// <summary>A dropdown option: the displayed text and the value.</summary>
         private sealed class Choice
         {
             public string Text;
             public string Value;
         }
 
-        // ---------------- Criação ----------------
+        // ---------------- Creation ----------------
 
         internal static ProvidersScreen Create()
         {
@@ -140,7 +140,7 @@ namespace CurrencyMod.Diplomacia.UI
                 UIAnimatorComponent showAnimator = donorScreen.showAnimator;
                 UIAnimatorComponent hideAnimator = donorScreen.hideAnimator;
 
-                // As linhas nativas (lista suspensa e botão) saem do "pool" das configurações antes de ele ser apagado.
+                // The native rows (dropdown and button) are taken from the settings "pool" before it is deleted.
                 Transform centerPanel = clone.transform.Find("Center");
                 var samples = new GameObject("CurrencyMod_Samples", typeof(RectTransform));
                 samples.transform.SetParent(centerPanel, false);
@@ -169,21 +169,21 @@ namespace CurrencyMod.Diplomacia.UI
             group.AddDebugWindowImplementation(window);
             Destroy(stash);
             Instance = window;
-            // No menu principal, o grupo das telas de fora da partida esconde o menu enquanto uma tela "externa"
-            // (Configurações, saves) está aberta e o devolve depois. A nossa entra na mesma lista.
+            // In the main menu, the out-of-game screens group hides the menu while an "external" screen (Settings,
+            // saves) is open and brings it back afterwards. Ours joins the same list.
             OutGameScreensGroup outGame = WindowsManager.Instance?.GetWindowsGroup<OutGameScreensGroup>();
             if (outGame != null)
             {
                 outGame.externalScreens.Add(window);
                 HookExternal(window, outGame, add: true);
             }
-            Plugin.Log.LogInfo("Tela Diplomacia IA (provedores) criada.");
+            Plugin.Log.LogInfo("Diplomacia IA screen (providers) created.");
             return window;
         }
 
         /// <summary>
-        /// Liga a tela ao "ExternalScreen_VisibilityChange" do grupo de fora da partida. Por reflexão: com o Publicizer,
-        /// o evento VisibilityChange e o campo dele têm o mesmo nome e o compilador não sabe qual é qual.
+        /// Hooks the screen to the out-of-game group's "ExternalScreen_VisibilityChange". Through reflection: with the
+        /// Publicizer, the VisibilityChange event and its field have the same name and the compiler cannot tell them apart.
         /// </summary>
         private static void HookExternal(UIWindow window, OutGameScreensGroup group, bool add)
         {
@@ -219,7 +219,7 @@ namespace CurrencyMod.Diplomacia.UI
             var layout = toggleTable.GetComponent<Amplitude.UI.Layouts.UILayout>();
             if (layout != null)
             {
-                layout.enabled = false; // posições nossas: provedores escondidos não deixam buraco
+                layout.enabled = false; // our own positions: hidden providers leave no gap
             }
             var existing = new List<Transform>();
             foreach (Transform child in toggleTable)
@@ -243,7 +243,7 @@ namespace CurrencyMod.Diplomacia.UI
             }
             dropSample = samples.Find("Item002");
             buttonSample = samples.Find("SettingButton");
-            // Texto corrido (introdução e privacidade): cópia da descrição da coluna da esquerda.
+            // Running text (introduction and privacy): copy of the left column's description.
             textSample = Instantiate(descriptionLabel.gameObject, samples).transform;
             textSample.name = "TextSample";
             B.SetVisible(samples, false);
@@ -280,7 +280,7 @@ namespace CurrencyMod.Diplomacia.UI
             }
         }
 
-        /// <summary>"Em uso" + um botão por provedor (os que dependem de aprovação só existem com o identificador no .cfg).</summary>
+        /// <summary>"Em uso" + one button per provider (those that depend on approval only exist with the identifier in the .cfg).</summary>
         private void BuildToggles()
         {
             var ids = new List<string> { null };
@@ -307,11 +307,11 @@ namespace CurrencyMod.Diplomacia.UI
 
         private static string DefaultSection()
         {
-            // Sem nada configurado, abre no sugerido (OpenRouter); senão, no resumo.
+            // With nothing configured, opens on the suggested one (OpenRouter); otherwise, on the summary.
             return ProviderRouter.Ready().Count == 0 ? ProviderCatalog.Suggested : null;
         }
 
-        // ---------------- Abrir e fechar ----------------
+        // ---------------- Open and close ----------------
 
         internal static void SetOpen(bool open, string sectionId = null)
         {
@@ -330,7 +330,7 @@ namespace CurrencyMod.Diplomacia.UI
             }
             if (Instance == null && Create() == null)
             {
-                Plugin.Log.LogWarning("Tela Diplomacia IA: o doador (Configurações) ainda não está pronto.");
+                Plugin.Log.LogWarning("Diplomacia IA screen: the donor (Settings) is not ready yet.");
                 return;
             }
             Instance.pendingSection = sectionId;
@@ -343,7 +343,7 @@ namespace CurrencyMod.Diplomacia.UI
             Credentials.Forget();
             if (CodexCli.Installed)
             {
-                CodexCli.RefreshLoginAsync(force: true); // o jogador pode ter entrado ou saído pelo Codex
+                CodexCli.RefreshLoginAsync(force: true); // the player may have logged in or out through Codex
             }
             WindowsUtils.ShowWindow(Instance);
             Instance.SelectSection(sectionId ?? Instance.section ?? DefaultSection());
@@ -370,7 +370,7 @@ namespace CurrencyMod.Diplomacia.UI
             }
             if (wasShown && !Shown)
             {
-                // Fechou (botão, ESC ou o grupo): solta o teclado e devolve o menu de pausa, se veio dele.
+                // Closed (button, ESC or the group): releases the keyboard and brings back the pause menu, if it came from there.
                 NativeUIKit.ReleaseTextFocus();
                 OAuthLogin.Cancel();
                 Action closed = Closed;
@@ -389,12 +389,12 @@ namespace CurrencyMod.Diplomacia.UI
             }
             catch (Exception ex)
             {
-                Plugin.Log.LogError($"Tela Diplomacia IA: {ex}");
+                Plugin.Log.LogError($"Diplomacia IA screen: {ex}");
                 nextRefresh = Time.unscaledTime + 5f;
             }
         }
 
-        // ---------------- Seções ----------------
+        // ---------------- Sections ----------------
 
         internal void SelectSection(string id)
         {
@@ -474,7 +474,7 @@ namespace CurrencyMod.Diplomacia.UI
                 pasteRow = AddButton(ref y, () => PasteKey(provider));
             }
             modelRow = AddDrop(ref y, OnModelChanged);
-            WidenDrop(modelRow, 520f); // nome do modelo + estimativa por turno
+            WidenDrop(modelRow, 520f); // model name + per-turn estimate
             testRow = AddButton(ref y, () => StartTest(provider));
             siteRow = AddButton(ref y, () => OAuthLogin.OpenUrl(provider.KeyUrl));
             deleteRow = AddButton(ref y, () => DeleteCredential(provider));
@@ -483,7 +483,7 @@ namespace CurrencyMod.Diplomacia.UI
             FillModelChoices(provider, force: true);
         }
 
-        // ---------------- Montagem das linhas ----------------
+        // ---------------- Building the rows ----------------
 
         private Row AddButton(ref float y, Action onClick)
         {
@@ -523,7 +523,7 @@ namespace CurrencyMod.Diplomacia.UI
                     nextRefresh = 0;
                 }
             };
-            // A lista aberta passa por cima das linhas de baixo.
+            // The open list goes over the rows below.
             row.Drop.DropDownToggle.Switch += (toggle, state) =>
             {
                 if (state)
@@ -534,7 +534,7 @@ namespace CurrencyMod.Diplomacia.UI
             return row;
         }
 
-        /// <summary>Lista suspensa mais larga que os 310 px nativos (a caixa, o item atual e a lista aberta acompanham).</summary>
+        /// <summary>Dropdown wider than the native 310 px (the box, the current item and the open list follow).</summary>
         private static void WidenDrop(Row row, float width)
         {
             UITransform drop = row.Drop.GetComponent<UITransform>();
@@ -562,7 +562,7 @@ namespace CurrencyMod.Diplomacia.UI
             label.WordWrap = true;
             label.Alignment = new Alignment(HorizontalAlignment.Left, VerticalAlignment.Top);
             root.GetComponent<UITransform>().VisibleSelf = true;
-            textRows.Add(root); // a altura vem do texto (o do Codex e o do modelo local passam de 60 px)
+            textRows.Add(root); // the height comes from the text (the Codex and local model ones exceed 60 px)
             rows.Add(root);
             rowHeights[root] = height;
             y += height + RowGap;
@@ -570,7 +570,7 @@ namespace CurrencyMod.Diplomacia.UI
         }
 
         /// <summary>
-        /// Linha de botão com o campo de texto nativo (anotações do save) no lugar do botão, em modo senha para a chave de API.
+        /// Button row with the native text field (save notes) in place of the button, in password mode for the API key.
         /// </summary>
         private Row AddKeyField(ref float y, ProviderDef provider)
         {
@@ -595,18 +595,18 @@ namespace CurrencyMod.Diplomacia.UI
             keyField.BlackList = " <>{}\"'";
             keyField.PasswordChar = '*';
             keyField.multiline = false;
-            keyField.actionOnReturn = UITextFieldKeyAction.Validate; // o doador (anotações do save) não valida no Enter
+            keyField.actionOnReturn = UITextFieldKeyAction.Validate; // the donor (save notes) does not validate on Enter
             keyField.InstructionText = KeyHint();
             NativeUIKit.BlockGameShortcuts(keyField);
             keyProvider = provider;
-            hookedResponder = null; // ligado no Refresh, depois que o campo carregar (HookKeyField)
+            hookedResponder = null; // hooked in Refresh, after the field loads (HookKeyField)
             NativeUIKit.Tip(item, L.T("Chave de API"), L.T("Fica criptografada neste PC (Windows, só o seu usuário). A tela mostra só os 4 últimos caracteres."));
             return row;
         }
 
         /// <summary>
-        /// O campo cria o "responder" (quem trata o Enter) ao carregar, depois de clonado: a assinatura feita antes se
-        /// perde. Aqui ela é refeita sempre que o responder muda.
+        /// The field creates the "responder" (what handles Enter) on load, after being cloned: a subscription made before
+        /// is lost. Here it is redone whenever the responder changes.
         /// </summary>
         private void HookKeyField()
         {
@@ -615,7 +615,7 @@ namespace CurrencyMod.Diplomacia.UI
             {
                 return;
             }
-            // O evento do campo vai para o responder atual (o do responder, com o Publicizer, fica ambíguo).
+            // The field's event goes to the current responder (the responder's own, with the Publicizer, is ambiguous).
             keyField.TextValidation -= KeyField_TextValidation;
             keyField.TextValidation += KeyField_TextValidation;
             hookedResponder = responder;
@@ -637,7 +637,7 @@ namespace CurrencyMod.Diplomacia.UI
             UITransform ui = root.GetComponent<UITransform>();
             ui.VisibleSelf = true;
             ui.InteractiveSelf = true;
-            // O texto da linha não pode correr por baixo do botão ou da lista (310 px à direita).
+            // The row's text must not run under the button or the list (310 px on the right).
             UILabel label = root.GetComponent<UILabel>();
             if (label != null)
             {
@@ -649,7 +649,7 @@ namespace CurrencyMod.Diplomacia.UI
             y += RowHeight + RowGap;
         }
 
-        /// <summary>Linhas escondidas (ex.: "Apagar" sem chave) não deixam buraco: as de baixo sobem.</summary>
+        /// <summary>Hidden rows (e.g. "Apagar" without a key) leave no gap: the ones below move up.</summary>
         private void Relayout()
         {
             float y = RowsTop + 12f;
@@ -696,13 +696,13 @@ namespace CurrencyMod.Diplomacia.UI
 
         private static Choice C(string text, string value) => new Choice { Text = text, Value = value };
 
-        // ---------------- Atualização ----------------
+        // ---------------- Refresh ----------------
 
         private void Refresh()
         {
             titleLabel.Text = L.T("Realpolitik");
             descriptionLabel.Text = L.T("Escolha onde as nações do computador pensam. Nada de editar arquivos.");
-            // Os mesmos textos do botão das Configurações: "Menu principal" fora da partida, "Voltar" no menu de pausa.
+            // The same texts as the Settings button: "Menu principal" outside the game, "Voltar" in the pause menu.
             bool inGame = CentralBankWindow.IsInGame;
             B.SetLabel(closeButton.transform, string.Empty, inGame ? "%SystemSettingPauseMenuButtonTitle" : "%SystemSettingMainMenuButtonTitle");
             B.Tip(closeButton.transform, string.Empty, L.T("Voltar"), L.T("Fecha esta tela. O ESC também fecha. Tudo já fica salvo."));
@@ -761,7 +761,7 @@ namespace CurrencyMod.Diplomacia.UI
             return color;
         }
 
-        /// <summary>Chip de estado: Conectado/Sem chave/Erro, com a posição na fila.</summary>
+        /// <summary>State chip: Conectado/Sem chave/Erro, with the position in the queue.</summary>
         private static string StateText(ProviderDef provider, List<ProviderDef> chain, out string color)
         {
             int position = chain.IndexOf(provider);
@@ -773,7 +773,7 @@ namespace CurrencyMod.Diplomacia.UI
             }
             if (provider.Local && LocalLlm.Reachable != true)
             {
-                // Ainda sem procurar (null) não vale "Conectado": a procura começa quando a seção abre.
+                // Not probed yet (null) does not count as "Conectado": the probe starts when the section opens.
                 color = position >= 0 ? Red : Grey;
                 return (LocalLlm.Reachable == false ? L.T("Sem servidor") : L.T("Não conectado")) + place;
             }
@@ -834,7 +834,7 @@ namespace CurrencyMod.Diplomacia.UI
             }
         }
 
-        // ---------------- Resumo ("Em uso") ----------------
+        // ---------------- Summary ("Em uso") ----------------
 
         private void FillSummaryChoices()
         {
@@ -939,7 +939,7 @@ namespace CurrencyMod.Diplomacia.UI
 
         private void OnReasoningChanged(Row row, Choice choice) => IaConfig.Reasoning.Value = choice.Value;
 
-        // ---------------- Um provedor ----------------
+        // ---------------- One provider ----------------
 
         private void FillQueueChoices(ProviderDef provider)
         {
@@ -969,7 +969,7 @@ namespace CurrencyMod.Diplomacia.UI
             ProviderRouter.SetChain(ids);
             if (ids.Count == 0)
             {
-                // Fila vazia de propósito: sem isso, o DeepSeek com chave voltaria sozinho como padrão.
+                // Deliberately empty queue: without this, DeepSeek with a key would come back on its own as the default.
                 IaConfig.ProviderOrder.Value = "nenhum";
             }
             ProviderRouter.ResetHealth();
@@ -990,7 +990,7 @@ namespace CurrencyMod.Diplomacia.UI
             {
                 choices.Add(C(ModelText(provider, model.Id), model.Id));
             }
-            // Os da conta (lista do provedor) vêm depois dos recomendados; no OpenRouter, só os que aceitam json.
+            // The account's models (provider list) come after the recommended ones; on OpenRouter, only those that accept json.
             foreach (string id in fetched.Where(id => provider.Model(id) == null).Take(80))
             {
                 choices.Add(C(ModelText(provider, id), id));
@@ -1006,7 +1006,7 @@ namespace CurrencyMod.Diplomacia.UI
         {
             ModelDef model = provider.Model(id);
             string star = model != null && model.Recommended ? " ★" : string.Empty;
-            // No OpenRouter o id leva a empresa ("deepseek/..."): na lista, só o nome do modelo.
+            // On OpenRouter the id carries the company ("deepseek/..."): in the list, only the model name.
             string name = id != null && id.Contains("/") ? id.Substring(id.LastIndexOf('/') + 1) : id;
             if (provider.Subscription)
             {
@@ -1039,11 +1039,11 @@ namespace CurrencyMod.Diplomacia.UI
             bool codex = provider.Format == WireFormat.CodexCli;
             if (provider.Local)
             {
-                LocalLlm.Probe(provider); // procura o servidor e a lista de modelos (no máximo a cada 20 s)
+                LocalLlm.Probe(provider); // probes the server and the model list (at most every 20 s)
             }
             string state = StateText(provider, chain, out string color);
             sectionTitleLabel.Text = provider.Name;
-            // O estado (Conectado, Sem chave, posição na fila) fica no botão da esquerda, em cores fortes.
+            // The state (Conectado, Sem chave, queue position) lives on the left button, in strong colors.
             introLabel.Text = ProviderHelp(provider) + (has && !string.IsNullOrEmpty(credential?.Key) ? "\n" + L.F("Chave salva neste PC: …{0}", credential.Tail) : string.Empty);
 
             SetRowLabel(queueRow, L.T("Na fila"), L.T("Posição na fila"),
@@ -1060,7 +1060,7 @@ namespace CurrencyMod.Diplomacia.UI
                 string hint = KeyHint();
                 if (keyField != null && keyField.InstructionText != hint)
                 {
-                    keyField.InstructionText = hint; // troca de idioma com a tela aberta
+                    keyField.InstructionText = hint; // language change with the screen open
                 }
                 SetRowLabel(keyRow, has && !string.IsNullOrEmpty(credential?.Key) ? L.F("Chave de API: salva (…{0})", credential.Tail) : L.T("Chave de API"),
                     L.T("Chave de API"), L.T("Cole a chave no campo e tecle Enter. Ela fica criptografada neste PC; a tela mostra só os 4 últimos caracteres."));
@@ -1086,7 +1086,7 @@ namespace CurrencyMod.Diplomacia.UI
             SetRowLabel(deleteRow, isLogin ? L.T("Sair desta conta") : L.T("Apagar a chave"),
                 isLogin ? L.T("Sair") : L.T("Apagar"), L.T("Apaga deste PC a chave ou o login deste provedor. Clique duas vezes para confirmar."));
             B.SetLabel(deleteRow.Button.transform, string.Empty, armed ? L.T("Confirmar") : isLogin ? L.T("Sair") : L.T("Apagar"));
-            // O login do Codex é do Codex (o jogador sai por ele): aqui não tem o que apagar.
+            // The Codex login belongs to Codex (the player logs out through it): nothing to delete here.
             B.SetVisible(deleteRow.Root, has && !codex && !provider.Local);
 
             string extra = provider.Id == "gemini" ? " " + L.T("No nível grátis do Gemini, o Google pode usar esses textos para treinar os modelos dele.") : string.Empty;
@@ -1156,7 +1156,7 @@ namespace CurrencyMod.Diplomacia.UI
             AutoQueue(provider);
         }
 
-        /// <summary>Ao conectar o primeiro provedor, ele entra na fila sozinho (o jogador não precisa saber da fila).</summary>
+        /// <summary>When the first provider connects, it joins the queue on its own (the player need not know about the queue).</summary>
         private void AutoQueue(ProviderDef provider)
         {
             List<ProviderDef> chain = ProviderRouter.Chain();
@@ -1214,7 +1214,7 @@ namespace CurrencyMod.Diplomacia.UI
             catch (Exception ex)
             {
                 SetFeedback(L.F("Não consegui salvar a chave: {0}", ex.Message), true);
-                return; // o campo mantém o texto para tentar de novo
+                return; // the field keeps the text to try again
             }
             if (keyField != null)
             {
@@ -1273,9 +1273,9 @@ namespace CurrencyMod.Diplomacia.UI
             nextRefresh = 0;
         }
 
-        // ---------------- Comandos de teste e remoção ----------------
+        // ---------------- Test commands and removal ----------------
 
-        /// <summary>"ia provedor tela abrir [id]|fechar|secao id": controla a tela pelo canal de desenvolvimento.</summary>
+        /// <summary>"ia provedor tela abrir [id]|fechar|secao id": drives the screen through the dev channel.</summary>
         internal static string DevCommand(string args)
         {
             string[] parts = (args ?? string.Empty).Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
@@ -1286,7 +1286,7 @@ namespace CurrencyMod.Diplomacia.UI
                 case "abrir":
                     if (CentralBankWindow.IsInGame)
                     {
-                        ProvidersButtons.OpenInGame(section: id); // na partida, sempre por cima do menu de pausa
+                        ProvidersButtons.OpenInGame(section: id); // in game, always on top of the pause menu
                     }
                     else
                     {
@@ -1301,7 +1301,7 @@ namespace CurrencyMod.Diplomacia.UI
                     return Instance == null ? "erro: tela não criada" : "ok: seção " + (id ?? "uso");
                 case "lista":
                 {
-                    // "ia provedor tela lista 2": abre a lista suspensa da linha N (para fotografar).
+                    // "ia provedor tela lista 2": opens the dropdown of row N (for screenshots).
                     int index = parts.Length > 1 && int.TryParse(parts[1], out int n) ? n : 0;
                     Row row = Instance?.DropRows().ElementAtOrDefault(index);
                     if (row == null)
@@ -1318,7 +1318,7 @@ namespace CurrencyMod.Diplomacia.UI
                 }
                 case "escolher":
                 {
-                    // "ia provedor tela escolher <linha> <índice>": o mesmo que clicar numa opção da lista.
+                    // "ia provedor tela escolher <row> <index>": the same as clicking an option in the list.
                     int index = parts.Length > 1 && int.TryParse(parts[1], out int n) ? n : -1;
                     int option = parts.Length > 2 && int.TryParse(parts[2], out int o) ? o : -1;
                     Row row = Instance?.DropRows().ElementAtOrDefault(index);
@@ -1331,7 +1331,7 @@ namespace CurrencyMod.Diplomacia.UI
                 }
                 case "enter":
                 {
-                    // O mesmo caminho do Enter no campo da chave (o responder do jogo valida o texto).
+                    // The same path as Enter in the key field (the game's responder validates the text).
                     UITextFieldResponder responder = Instance?.keyField?.TextFieldResponder;
                     if (responder == null)
                     {
@@ -1383,7 +1383,7 @@ namespace CurrencyMod.Diplomacia.UI
             }
             catch (Exception ex)
             {
-                Plugin.Log.LogWarning($"Remoção da tela Realpolitik: {ex.Message}");
+                Plugin.Log.LogWarning($"Realpolitik screen removal: {ex.Message}");
             }
             window.gameObject.SetActive(false);
             Destroy(window.gameObject);

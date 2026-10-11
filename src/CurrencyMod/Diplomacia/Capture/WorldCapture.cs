@@ -4,43 +4,43 @@ using System.Collections.Generic;
 namespace CurrencyMod.Diplomacia.Capture
 {
     /// <summary>
-    /// Fotografia do mundo tirada no começo do turno, na thread do jogo (TurnCapture). Só tipos simples: depois de
-    /// pronta, pode ser lida em qualquer thread sem tocar na simulação.
+    /// Snapshot of the world taken at the start of the turn, on the game thread (TurnCapture). Simple types only: once
+    /// ready, it can be read on any thread without touching the simulation.
     /// </summary>
     internal sealed class WorldCapture
     {
         public string Guid;
         public int Turn;
         public int LocalEmpire;
-        /// <summary>true = tirada na thread principal (recarga a quente no meio do turno): melhor esforço.</summary>
+        /// <summary>true = taken on the main thread (hot reload mid-turn): best effort.</summary>
         public bool FromMainThread;
-        /// <summary>Crise no Congresso mundial possível: DLC Together We Rule, opção da partida e votação de crise liberada.</summary>
+        /// <summary>World Congress crisis possible: Together We Rule DLC, game option and crisis vote unlocked.</summary>
         public bool CongressCrisisOpen;
-        /// <summary>Congresso mundial (research\congress.md). Null quando a partida não tem a expansão ou o Congresso está
-        /// desligado nas opções.</summary>
+        /// <summary>World Congress (research\congress.md). Null when the game does not have the expansion or the Congress
+        /// is turned off in the options.</summary>
         public CapturedCongress Congress;
         public DateTime CapturedAtUtc;
         public CapturedEmpire[] Empires = new CapturedEmpire[0];
         public string[] TerritoryNames = new string[0];
-        /// <summary>Dono de cada território: índice do império maior, ou -1 (sem dono / povo independente).</summary>
+        /// <summary>Owner of each territory: major empire index, or -1 (no owner / independent people).</summary>
         public int[] TerritoryOwner = new int[0];
         public bool[] TerritoryOcean = new bool[0];
         public int[][] Adjacent = new int[0][];
-        /// <summary>Jazidas de cada recurso no mapa (índice = ResourceType; 0 = o recurso não existe neste mundo).</summary>
+        /// <summary>Deposits of each resource on the map (index = ResourceType; 0 = the resource does not exist in this world).</summary>
         public int[] ResourceDeposits = new int[0];
-        /// <summary>Compras das rotas comerciais entre impérios maiores: quem compra quais recursos de quem.</summary>
+        /// <summary>Trade route purchases between major empires: who buys which resources from whom.</summary>
         public List<CapturedTrade> Trades = new List<CapturedTrade>();
-        /// <summary>Pedágios cobrados no fim do turno anterior pelo bloqueio comercial do mod.</summary>
+        /// <summary>Tolls charged at the end of the previous turn by the mod's trade blockade.</summary>
         public List<CapturedToll> Tolls = new List<CapturedToll>();
-        /// <summary>Postos com pedágio ou bloqueio, somados por dono e império afetado.</summary>
+        /// <summary>Posts with a toll or blockade, summed per owner and affected empire.</summary>
         public List<CapturedTradeRule> TradeRules = new List<CapturedTradeRule>();
-        /// <summary>Espiões (exércitos com unidade agente) de todos os impérios, com o que a interceptação de cartas usa.</summary>
+        /// <summary>Spies (armies with an agent unit) of all empires, with what letter interception uses.</summary>
         public List<CapturedSpy> Spies = new List<CapturedSpy>();
-        /// <summary>Territórios onde o jogo marcou atividade de espiões estrangeiros neste turno (o dono recebeu o aviso).</summary>
+        /// <summary>Territories where the game flagged foreign spy activity this turn (the owner got the notice).</summary>
         public List<int> StealthActivity = new List<int>();
-        /// <summary>Detecção de furtividade do dono em cada território (0 sem dono).</summary>
+        /// <summary>The owner's stealth detection in each territory (0 with no owner).</summary>
         public float[] OwnerDetection = new float[0];
-        /// <summary>Povos independentes vivos com assentamento, e a relação de cada império maior com eles.</summary>
+        /// <summary>Living independent peoples with a settlement, and each major empire's relation with them.</summary>
         public List<CapturedMinor> Minors = new List<CapturedMinor>();
 
         public CapturedMinor Minor(int index) => Minors.Find(m => m.Index == index);
@@ -102,21 +102,21 @@ namespace CurrencyMod.Diplomacia.Capture
         public int TerritoryCount;
         public double MilitaryStrength;
         public int UnitCount;
-        /// <summary>Acesso a cada recurso (índice = ResourceType): jazidas exploradas mais o que compra.</summary>
+        /// <summary>Access to each resource (index = ResourceType): exploited deposits plus what it buys.</summary>
         public int[] ResourceAccess = new int[0];
-        /// <summary>Moeda do império no CurrencyMod (plural, ex.: "Reais"); null se o mod de moeda não tiver dados.</summary>
+        /// <summary>The empire's currency in CurrencyMod (plural, e.g. "Reais"); null if the currency mod has no data.</summary>
         public string CurrencyName;
         public string CurrencySymbol;
 
         public List<CapturedCity> Cities = new List<CapturedCity>();
         public List<CapturedArmy> Armies = new List<CapturedArmy>();
-        /// <summary>Relação com cada outro império maior (null no próprio índice).</summary>
+        /// <summary>Relation with each other major empire (null at its own index).</summary>
         public CapturedRelation[] Relations = new CapturedRelation[0];
-        /// <summary>Exércitos de outros impérios que esta nação está vendo agora (névoa e furtividade aplicadas).</summary>
+        /// <summary>Armies of other empires that this nation sees now (fog and stealth applied).</summary>
         public List<SeenArmy> SeenArmies = new List<SeenArmy>();
-        /// <summary>Assentamentos de outros impérios em tiles que esta nação já explorou.</summary>
+        /// <summary>Settlements of other empires on tiles this nation has already explored.</summary>
         public List<SeenCity> SeenCities = new List<SeenCity>();
-        /// <summary>Impérios maiores com território vizinho a um território desta nação.</summary>
+        /// <summary>Major empires with a territory adjacent to a territory of this nation.</summary>
         public List<int> Neighbors = new List<int>();
 
         public CapturedRelation RelationWith(int other) => other >= 0 && other < Relations.Length ? Relations[other] : null;
@@ -130,14 +130,14 @@ namespace CurrencyMod.Diplomacia.Capture
         public bool Capital;
         public int Population;
         public double PublicOrder;
-        /// <summary>Indústria líquida e crescimento (comida que sobra) por turno.</summary>
+        /// <summary>Net industry and growth (surplus food) per turn.</summary>
         public double Production;
         public double Growth;
         public int CenterTerritory = -1;
         public List<int> Territories = new List<int>();
         public bool Besieged;
         public bool Captured;
-        /// <summary>Tem distrito de porto: só então a nação pode falar de "abrir o porto", frota de comércio etc.</summary>
+        /// <summary>Has a harbor district: only then can the nation talk about "opening the port", a trade fleet, etc.</summary>
         public bool HasHarbour;
         public int OriginalOwner = -1;
     }
@@ -158,8 +158,8 @@ namespace CurrencyMod.Diplomacia.Capture
     }
 
     /// <summary>
-    /// Espião: exército com pelo menos uma unidade agente (UnitTagAsAbility.Agent). Os campos de furtividade são em
-    /// relação ao dono do território onde ele está (pesquisa: research\espionage-interception.md).
+    /// Spy: an army with at least one agent unit (UnitTagAsAbility.Agent). The stealth fields are relative to the owner
+    /// of the territory it is in (research: research\espionage-interception.md).
     /// </summary>
     internal sealed class CapturedSpy
     {
@@ -167,28 +167,28 @@ namespace CurrencyMod.Diplomacia.Capture
         public string Key;
         public string Name;
         public int Territory = -1;
-        /// <summary>Dono do território onde o espião está (-1 = sem dono ou povo independente).</summary>
+        /// <summary>Owner of the territory the spy is in (-1 = no owner or independent people).</summary>
         public int TerritoryOwner = -1;
         public int Agents;
-        /// <summary>Menor veterania entre as unidades (o jogo usa o mínimo para o exército).</summary>
+        /// <summary>Lowest veterancy among the units (the game uses the minimum for the army).</summary>
         public double Veterancy;
         public double Stealth;
         public double StealthMax;
-        /// <summary>Oculto do dono do território (furtivo e sem visão compartilhada de aliança).</summary>
+        /// <summary>Hidden from the territory owner (stealthy and without shared alliance vision).</summary>
         public bool Hidden;
-        /// <summary>Pode agir contra o dono do território: oculto e sem acordo que proíba ações de agente.</summary>
+        /// <summary>Can act against the territory owner: hidden and with no agreement forbidding agent actions.</summary>
         public bool CanAct;
-        /// <summary>Detecção do dono do território ali.</summary>
+        /// <summary>The territory owner's detection there.</summary>
         public double OwnerDetection;
-        /// <summary>Maior detecção hostil contra o espião ali.</summary>
+        /// <summary>Highest hostile detection against the spy there.</summary>
         public double HostileDetection;
-        /// <summary>Turnos até a furtividade acabar com a detecção atual (int.MaxValue = ninguém detecta ali).</summary>
+        /// <summary>Turns until stealth runs out with the current detection (int.MaxValue = nobody detects there).</summary>
         public int TurnsBeforeRevealed = int.MaxValue;
-        /// <summary>O dono do território caça espiões revelados (habilidade do jogo).</summary>
+        /// <summary>The territory owner hunts revealed spies (game ability).</summary>
         public bool OwnerHuntsSpies;
-        /// <summary>Missão "Vigiar cidade" ativa.</summary>
+        /// <summary>"Watch city" mission active.</summary>
         public bool WatchingCity;
-        /// <summary>Infiltração em curso ou concluída (WatchCity, ExploitDistrict...); null = nenhuma.</summary>
+        /// <summary>Infiltration in progress or completed (WatchCity, ExploitDistrict...); null = none.</summary>
         public string Infiltration;
         public int InfiltrationTarget = -1;
         public string InfiltrationSettlement;
@@ -196,58 +196,58 @@ namespace CurrencyMod.Diplomacia.Capture
         public int InfiltrationTurnsLeft;
     }
 
-    /// <summary>Povo independente (império menor). O índice é reaproveitado quando um povo some e outro aparece.</summary>
+    /// <summary>Independent people (minor empire). The index is reused when one people disappears and another appears.</summary>
     internal sealed class CapturedMinor
     {
         public int Index;
         public string Name;
-        /// <summary>Young, Zenith, InDecline ou Dying.</summary>
+        /// <summary>Young, Zenith, InDecline or Dying.</summary>
         public string Status;
         public bool Peaceful;
         public int CenterTerritory = -1;
         public string CityName;
         public List<int> Territories = new List<int>();
-        /// <summary>Império maior com mais patrocínio (-1 = ninguém).</summary>
+        /// <summary>Major empire with the most patronage (-1 = nobody).</summary>
         public int TopPatron = -1;
-        /// <summary>Relação com cada império maior (índice = império maior; null se não conhece).</summary>
+        /// <summary>Relation with each major empire (index = major empire; null if not known).</summary>
         public CapturedMinorRelation[] Relations = new CapturedMinorRelation[0];
     }
 
     internal sealed class CapturedMinorRelation
     {
         public double Patronage;
-        /// <summary>Parte do patrocínio total (0 a 1).</summary>
+        /// <summary>Share of the total patronage (0 to 1).</summary>
         public double Share;
         public string MoneyInvestment;
         public string InfluenceInvestment;
-        /// <summary>Motivo do jogo para não poder patrocinar agora (null = pode).</summary>
+        /// <summary>The game's reason for not being able to patronize now (null = can).</summary>
         public string PatronizeBlocked;
         public List<CapturedMinorTreaty> Treaties = new List<CapturedMinorTreaty>();
     }
 
     internal sealed class CapturedMinorTreaty
     {
-        /// <summary>Valor de MinorTreaty.</summary>
+        /// <summary>MinorTreaty value.</summary>
         public int Treaty;
-        /// <summary>Nome da definição do jogo (traduzido no dossiê pela GameGlossary).</summary>
+        /// <summary>Game definition name (translated in the dossier by GameGlossary).</summary>
         public string Definition;
         public bool Enacted;
         public bool Available;
         public double Cost;
-        /// <summary>Por que não dá agora ("falta patrocínio", "falta influência", "outro tratado do grupo já escolhido").</summary>
+        /// <summary>Why it is not possible now ("falta patrocínio", "falta influência", "outro tratado do grupo já escolhido").</summary>
         public string Blocked;
     }
 
     internal sealed class SeenArmy
     {
-        /// <summary>GUID do exército (hex), para o código A# de alvo de ataque.</summary>
+        /// <summary>Army GUID (hex), for the A# attack target code.</summary>
         public string Key;
         public int Owner;
         public int Units;
         public double Strength;
         public int Territory = -1;
         public bool Naval;
-        /// <summary>Parte do exército é furtiva e não foi detectada: os números são só da parte visível.</summary>
+        /// <summary>Part of the army is stealthy and undetected: the numbers are only for the visible part.</summary>
         public bool Partial;
     }
 
@@ -259,7 +259,7 @@ namespace CurrencyMod.Diplomacia.Capture
         public bool IsCity;
         public bool Capital;
         public int CenterTerritory = -1;
-        /// <summary>O tile está visível agora (população e cerco valem só nesse caso).</summary>
+        /// <summary>The tile is visible now (population and siege are valid only in that case).</summary>
         public bool Visible;
         public int Population;
         public bool Besieged;
@@ -281,54 +281,54 @@ namespace CurrencyMod.Diplomacia.Capture
         public double TheirMoral;
         public double MyWarScore;
         public double TheirWarScore;
-        /// <summary>Reclamações desta nação contra a outra que ainda não viraram exigência.</summary>
+        /// <summary>This nation's grievances against the other that have not become demands yet.</summary>
         public List<CapturedGrievance> MyGrievances = new List<CapturedGrievance>();
-        /// <summary>Tipos das reclamações da outra contra esta nação.</summary>
+        /// <summary>Types of the other's grievances against this nation.</summary>
         public List<string> TheirGrievances = new List<string>();
         public bool DemandsAgainstThem;
         public bool DemandsAgainstMe;
-        /// <summary>Exigências em aberto desta nação contra a outra, e da outra contra esta.</summary>
+        /// <summary>Open demands of this nation against the other, and of the other against this one.</summary>
         public List<CapturedDemand> MyDemands = new List<CapturedDemand>();
         public List<CapturedDemand> TheirDemands = new List<CapturedDemand>();
-        /// <summary>Quem já pediu prazo ("enrolar") nesta crise: só uma vez por crise.</summary>
+        /// <summary>Who already asked for more time ("enrolar") in this crisis: only once per crisis.</summary>
         public bool IStalled;
         public bool TheyStalled;
-        /// <summary>Exigência forçada pelo consulado: quem precisa responder no mesmo turno (-1 = nenhuma). Fica com a IA nativa.</summary>
+        /// <summary>Demand forced by the consulate: who must answer on the same turn (-1 = none). Left to the native AI.</summary>
         public int EnforcedDemandOn = -1;
         public string Crisis;
-        /// <summary>Quem recusou as exigências por último (o outro lado ganha pretexto para guerra formal).</summary>
+        /// <summary>Who refused the demands last (the other side gains a pretext for formal war).</summary>
         public int CrisisRefuser = -1;
         public List<LogItem> Log = new List<LogItem>();
-        /// <summary>Proposta de tratado pendente ("paz", "aliança", "fim da crise"): quem propôs, quem responde e quando.</summary>
+        /// <summary>Pending treaty proposal ("paz", "aliança", "fim da crise"): who proposed, who answers and when.</summary>
         public PendingProposal Treaty;
-        /// <summary>Proposta de acordo pendente ("acordo econômico (comércio)" etc.).</summary>
+        /// <summary>Pending agreement proposal ("acordo econômico (comércio)" etc.).</summary>
         public PendingProposal Agreement;
-        /// <summary>Rendição nesta guerra (research\surrender.md): só com AtWar.</summary>
+        /// <summary>Surrender in this war (research\surrender.md): only with AtWar.</summary>
         public CapturedSurrender Surrender;
-        /// <summary>Veredito do Congresso sobre a disputa (crise com status InternationalCrisisVoteEnded): quem venceu (-1 =
-        /// nenhum) e, se esta nação perdeu, por que ela não pode cumprir ou ir à guerra surpresa agora (null = pode).</summary>
+        /// <summary>Congress verdict on the dispute (crisis with status InternationalCrisisVoteEnded): who won (-1 = none)
+        /// and, if this nation lost, why it cannot comply or go to surprise war now (null = can).</summary>
         public int CongressWinner = -1;
         public string VerdictAcceptBlocked;
         public string VerdictWarBlocked;
     }
 
-    /// <summary>Rendição numa guerra, do ponto de vista de uma nação (a "minha" é a dona da relação).</summary>
+    /// <summary>Surrender in a war, from one nation's point of view ("mine" is the owner of the relation).</summary>
     internal sealed class CapturedSurrender
     {
-        /// <summary>Posso impor rendição (AllowToForceOtherToSurrender sem falha: apoio deles em 0, o meu acima de 0).</summary>
+        /// <summary>I can force surrender (AllowToForceOtherToSurrender without failure: their support at 0, mine above 0).</summary>
         public bool CanForce;
         public string ForceBlocked;
-        /// <summary>Eles podem me impor rendição agora.</summary>
+        /// <summary>They can force surrender on me now.</summary>
         public bool CanBeForced;
-        /// <summary>Posso oferecer rendição (StartToFillSurrenderProposition sem falha).</summary>
+        /// <summary>I can offer surrender (StartToFillSurrenderProposition without failure).</summary>
         public bool CanOffer;
         public string OfferBlocked;
-        /// <summary>Rascunhos meus abertos (de oferta e forçado, este também pela variante "ao aliado").</summary>
+        /// <summary>My open drafts (offer and forced, the latter also via the "to the ally" variant).</summary>
         public bool MyOfferDraft;
         public bool MyForcedDraft;
-        /// <summary>Proposta enviada nesta guerra, esperando resposta.</summary>
+        /// <summary>Proposal sent in this war, awaiting an answer.</summary>
         public CapturedSurrenderPending Pending;
-        /// <summary>Prévia exata (InitializeSurrenderProposition) se eu me render a eles / se eu impuser a eles.</summary>
+        /// <summary>Exact preview (InitializeSurrenderProposition) if I surrender to them / if I force it on them.</summary>
         public CapturedSurrenderPreview IfIOffer;
         public CapturedSurrenderPreview IfIForce;
     }
@@ -338,7 +338,7 @@ namespace CurrencyMod.Diplomacia.Capture
         public int Winner;
         public int Loser;
         public bool Forced;
-        /// <summary>Quem responde: o perdedor na forçada, o vencedor na oferta.</summary>
+        /// <summary>Who answers: the loser in a forced one, the winner in an offer.</summary>
         public int Responder;
         public int Score;
         public int Cost;
@@ -350,11 +350,11 @@ namespace CurrencyMod.Diplomacia.Capture
 
     internal sealed class CapturedSurrenderPreview
     {
-        /// <summary>Placar do vencedor: o preço que os termos têm de gastar (sobra máxima de 5).</summary>
+        /// <summary>Winner's score: the price the terms must spend (maximum leftover of 5).</summary>
         public int Budget;
         public int DemandCount;
         public int DemandCost;
-        /// <summary>Placar acima do custo das exigências: as exigências entram todas e o resto fica livre.</summary>
+        /// <summary>Score above the cost of the demands: all demands are included and the rest is free.</summary>
         public bool DemandsFixed;
         public List<CapturedSurrenderTerritory> Territories = new List<CapturedSurrenderTerritory>();
         public bool SubmissionAvailable;
@@ -368,14 +368,14 @@ namespace CurrencyMod.Diplomacia.Capture
         public int Territory;
         /// <summary>"centro de São Paulo (ocupada)", "anexo de Santa Catarina", "posto".</summary>
         public string Detail;
-        /// <summary>Pode entrar já (encosta na fronteira do vencedor ou é cidade ocupada); senão, só junto com Via.</summary>
+        /// <summary>Can be included right away (touches the winner's border or is an occupied city); otherwise only together with Via.</summary>
         public bool Ready;
         public int Via = -1;
     }
 
     /// <summary>
-    /// Reclamação do jogo (DiplomaticGrievanceInfo). Pool = índice no GrievanceAllocator do dono; o código no dossiê é
-    /// "G" + Pool. O executor confere o tipo de novo antes de agir, porque o jogo reaproveita índices.
+    /// Game grievance (DiplomaticGrievanceInfo). Pool = index in the owner's GrievanceAllocator; the code in the dossier is
+    /// "G" + Pool. The executor checks the type again before acting, because the game reuses indices.
     /// </summary>
     internal sealed class CapturedGrievance
     {
@@ -383,11 +383,11 @@ namespace CurrencyMod.Diplomacia.Capture
         public string Type;
         public int TurnsLeft;
         public CapturedGain Gain;
-        /// <summary>Motivo do jogo para não poder exigir agora (null = pode).</summary>
+        /// <summary>The game's reason for not being able to demand now (null = can).</summary>
         public string Blocked;
     }
 
-    /// <summary>Exigência em aberto (DiplomaticDemandInfo).</summary>
+    /// <summary>Open demand (DiplomaticDemandInfo).</summary>
     internal sealed class CapturedDemand
     {
         public string Type;
@@ -395,20 +395,20 @@ namespace CurrencyMod.Diplomacia.Capture
         public CapturedGain Gain;
     }
 
-    /// <summary>O que a exigência entrega a quem exige (DemandGainType + DemandGain).</summary>
+    /// <summary>What the demand delivers to the demander (DemandGainType + DemandGain).</summary>
     internal sealed class CapturedGain
     {
-        /// <summary>Money, Territory, ForceCivic, ForceReligion ou DiplomaticAction.</summary>
+        /// <summary>Money, Territory, ForceCivic, ForceReligion or DiplomaticAction.</summary>
         public string Kind;
         public int Amount;
         public int Territory = -1;
-        /// <summary>Nomes de definição do cívico e da escolha (null = revogar o cívico); traduzidos no dossiê.</summary>
+        /// <summary>Definition names of the civic and the choice (null = revoke the civic); translated in the dossier.</summary>
         public string Civic;
         public string CivicChoice;
-        /// <summary>Ação diplomática exigida (DiplomaticAction) contra a nação Third.</summary>
+        /// <summary>Demanded diplomatic action (DiplomaticAction) against the Third nation.</summary>
         public string Action;
         public int Third = -1;
-        /// <summary>false = o jogo já não consegue entregar isso (vira dinheiro).</summary>
+        /// <summary>false = the game can no longer deliver this (it becomes money).</summary>
         public bool Valid = true;
     }
 
@@ -427,7 +427,7 @@ namespace CurrencyMod.Diplomacia.Capture
         public string Action;
     }
 
-    /// <summary>Um lado de uma rota comercial: o comprador e os recursos (ResourceType) que compra do vendedor.</summary>
+    /// <summary>One side of a trade route: the buyer and the resources (ResourceType) it buys from the seller.</summary>
     internal sealed class CapturedTrade
     {
         public int Buyer;
@@ -436,7 +436,7 @@ namespace CurrencyMod.Diplomacia.Capture
         public List<int> Resources = new List<int>();
     }
 
-    /// <summary>Pedágio de um turno: cada lado na sua moeda.</summary>
+    /// <summary>One turn's toll: each side in its own currency.</summary>
     internal sealed class CapturedToll
     {
         public int Owner;
@@ -446,51 +446,51 @@ namespace CurrencyMod.Diplomacia.Capture
         public int Routes;
     }
 
-    // ---------------- Congresso mundial (research\congress.md) ----------------
+    // ---------------- World Congress (research\congress.md) ----------------
 
     internal sealed class CapturedCongress
     {
         public bool CivicUnlocked;
         public bool CrisisUnlocked;
         public bool ConsensusUnlocked;
-        /// <summary>Quem formou o Congresso (preside a primeira sessão).</summary>
+        /// <summary>Who formed the Congress (presides over the first session).</summary>
         public int Unlocker = -1;
-        /// <summary>Ordem fixa da presidência das sessões.</summary>
+        /// <summary>Fixed order of the session presidency.</summary>
         public int[] LeaderOrder = new int[0];
-        /// <summary>Peso no Congresso de cada nação maior (o peso do voto).</summary>
+        /// <summary>Congress weight of each major nation (the vote weight).</summary>
         public double[] Sway = new double[0];
-        /// <summary>Consulado funcionando (exigido para subornar e declarar crise).</summary>
+        /// <summary>Consulate operating (required to bribe and to declare a crisis).</summary>
         public bool[] Consulate = new bool[0];
-        /// <summary>Alavancagem de cada nação contra cada outra: Leverage[i][j] = a da embaixada de i com j.</summary>
+        /// <summary>Leverage of each nation against each other: Leverage[i][j] = that of i's embassy with j.</summary>
         public double[][] Leverage = new double[0][];
-        /// <summary>Antes de o Congresso existir: o que falta a cada nação para formá-lo ("era", "consulado", "contatos").</summary>
+        /// <summary>Before the Congress exists: what each nation still lacks to form it ("era", "consulado", "contatos").</summary>
         public string[] UnlockBlocked = new string[0];
-        /// <summary>Era mínima e fração de nações conhecidas exigidas (RPN; -1 quando a foto veio da thread principal).</summary>
+        /// <summary>Minimum era and required fraction of known nations (RPN; -1 when the snapshot came from the main thread).</summary>
         public int MinEra = -1;
         public double MinMetFraction = -1;
-        /// <summary>Sessões de lei até agora (0 = a primeira ainda não abriu e espera o primeiro presidente).</summary>
+        /// <summary>Law sessions so far (0 = the first has not opened yet and awaits the first president).</summary>
         public int SessionCount;
         public int NextLeader = -1;
         public int NextSessionTurn = -1;
-        /// <summary>Leis que o próximo presidente pode propor.</summary>
+        /// <summary>Laws the next president can propose.</summary>
         public List<CongressLaw> Proposable = new List<CongressLaw>();
         public CongressLawVote LawVote;
-        /// <summary>Últimas votações de lei encerradas (a mais recente primeiro).</summary>
+        /// <summary>Latest closed law votes (most recent first).</summary>
         public List<CongressLawVote> LawHistory = new List<CongressLawVote>();
         public List<CongressCrisis> Crises = new List<CongressCrisis>();
         public List<CongressAxis> Consensus = new List<CongressAxis>();
-        /// <summary>Leis impostas pelo Congresso esperando adotar ou recusar (eventos de osmose CivicsShakedown).</summary>
+        /// <summary>Laws imposed by the Congress awaiting adoption or refusal (CivicsShakedown osmosis events).</summary>
         public List<CongressImposedLaw> ImposedLaws = new List<CongressImposedLaw>();
     }
 
-    /// <summary>Lei internacional (cívico com IsInternational). O código no dossiê é "V" + Code (índice do cívico).</summary>
+    /// <summary>International law (civic with IsInternational). The code in the dossier is "V" + Code (civic index).</summary>
     internal sealed class CongressLaw
     {
         public int Code;
         public string Civic;
         public string ChoiceA;
         public string ChoiceB;
-        /// <summary>Opção em vigor em cada nação maior: 0 = A, 1 = B, -1 = sem a lei.</summary>
+        /// <summary>Option in force in each major nation: 0 = A, 1 = B, -1 = without the law.</summary>
         public int[] Current = new int[0];
     }
 
@@ -502,37 +502,37 @@ namespace CurrencyMod.Diplomacia.Capture
         public int TurnEnd;
         public string State;
         public bool Active;
-        /// <summary>Nas encerradas: 0 = A venceu, 1 = B venceu, -1 = empate (nada muda).</summary>
+        /// <summary>For closed ones: 0 = A won, 1 = B won, -1 = tie (nothing changes).</summary>
         public int Winner = -1;
         public CongressBallot[] Ballots = new CongressBallot[0];
     }
 
     internal sealed class CongressBallot
     {
-        /// <summary>Lei: 0 = A, 1 = B. Crise: a nação apoiada. -1 = não votou.</summary>
+        /// <summary>Law: 0 = A, 1 = B. Crisis: the supported nation. -1 = did not vote.</summary>
         public int Choice = -1;
-        /// <summary>Peso gravado no voto (só de quem votou).</summary>
+        /// <summary>Weight recorded in the vote (only for those who voted).</summary>
         public double Sway;
-        /// <summary>Peso extra já comprado com suborno (entra no voto) e o bônus que entra no começo do próximo turno.</summary>
+        /// <summary>Extra weight already bought with bribes (counts in the vote) and the bonus that applies at the start of next turn.</summary>
         public double BribeBonus;
         public double BribePending;
-        /// <summary>Subornos possíveis agora contra cada alvo (índice = alvo; null = nenhum). Só para as nações do computador.</summary>
+        /// <summary>Bribes possible now against each target (index = target; null = none). Only for computer nations.</summary>
         public CongressBribe[] Bribes;
     }
 
     internal sealed class CongressBribe
     {
-        /// <summary>Quantos subornos ainda dá para comprar contra esse alvo nesta votação.</summary>
+        /// <summary>How many bribes can still be bought against this target in this vote.</summary>
         public int Remaining;
         public int Purchased;
-        /// <summary>Alavancagem por suborno e peso ganho por suborno.</summary>
+        /// <summary>Leverage per bribe and weight gained per bribe.</summary>
         public double Cost;
         public double Bonus;
-        /// <summary>Quantos a alavancagem atual paga (limitado ao que resta).</summary>
+        /// <summary>How many the current leverage pays for (limited to what remains).</summary>
         public int Affordable;
     }
 
-    /// <summary>Votação de crise no Congresso. O código no dossiê é "K" + Pool.</summary>
+    /// <summary>Crisis vote in the Congress. The code in the dossier is "K" + Pool.</summary>
     internal sealed class CongressCrisis
     {
         public int Pool;
@@ -542,14 +542,14 @@ namespace CurrencyMod.Diplomacia.Capture
         public int TurnEnd;
         public string State;
         public bool Active;
-        /// <summary>Encerrada, esperando o perdedor cumprir ou ir à guerra surpresa.</summary>
+        /// <summary>Closed, waiting for the loser to comply or go to surprise war.</summary>
         public bool WaitingLoser;
         public int Winner = -1;
         public int Loser = -1;
         public CongressBallot[] Ballots = new CongressBallot[0];
     }
 
-    /// <summary>Eixo do consenso ideológico. O código no dossiê é "I" + Index.</summary>
+    /// <summary>Ideological consensus axis. The code in the dossier is "I" + Index.</summary>
     internal sealed class CongressAxis
     {
         public int Index;
@@ -559,7 +559,7 @@ namespace CurrencyMod.Diplomacia.Capture
         public int Count;
         public int Required;
         public string Orientation;
-        /// <summary>Custo em influência da próxima contribuição de cada nação maior (-1 = não lido) e quantas ela já fez.</summary>
+        /// <summary>Influence cost of each major nation's next contribution (-1 = not read) and how many it has made.</summary>
         public double[] Cost = new double[0];
         public int[] Contributions = new int[0];
     }
@@ -575,14 +575,14 @@ namespace CurrencyMod.Diplomacia.Capture
         public bool CanDiscard;
     }
 
-    /// <summary>Quantos postos do dono cobram pedágio de (ou bloqueiam) o império afetado.</summary>
+    /// <summary>How many of the owner's posts charge a toll on (or block) the affected empire.</summary>
     internal sealed class CapturedTradeRule
     {
         public int Owner;
         public int Target;
         public bool Block;
         public int Posts;
-        /// <summary>Pedágio por recurso e por turno, na moeda do dono: menor e maior entre os postos (só pedágio).</summary>
+        /// <summary>Toll per resource per turn, in the owner's currency: lowest and highest among the posts (toll only).</summary>
         public double MinPrice;
         public double MaxPrice;
     }

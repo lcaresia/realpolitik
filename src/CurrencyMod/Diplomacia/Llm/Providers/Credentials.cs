@@ -8,15 +8,15 @@ using Newtonsoft.Json.Linq;
 
 namespace CurrencyMod.Diplomacia.Llm.Providers
 {
-    /// <summary>Chave de API ou tokens de login de um provedor. Nunca vai para log, F10, save, backup ou pacote.</summary>
+    /// <summary>A provider's API key or login tokens. Never goes to the log, F10, save, backup or package.</summary>
     internal sealed class Credential
     {
         public string Key;
         public string AccessToken;
         public string RefreshToken;
-        /// <summary>Validade do token de acesso (UTC). DateTime.MinValue = não expira (chave).</summary>
+        /// <summary>Access token expiry (UTC). DateTime.MinValue = never expires (key).</summary>
         public DateTime ExpiresUtc;
-        /// <summary>Identificador de cliente emitido no login (o do ChatGPT muda por instalação).</summary>
+        /// <summary>Client identifier issued at login (ChatGPT's changes per installation).</summary>
         public string ClientId;
         public string Account;
 
@@ -26,7 +26,7 @@ namespace CurrencyMod.Diplomacia.Llm.Providers
 
         internal bool NeedsRefresh => IsLogin && ExpiresUtc != DateTime.MinValue && DateTime.UtcNow > ExpiresUtc.AddMinutes(-5);
 
-        /// <summary>Os 4 últimos caracteres, a única parte que a tela mostra.</summary>
+        /// <summary>The last 4 characters, the only part the screen shows.</summary>
         internal string Tail
         {
             get
@@ -62,8 +62,8 @@ namespace CurrencyMod.Diplomacia.Llm.Providers
     }
 
     /// <summary>
-    /// Um arquivo por provedor em BepInEx\config\credenciais\, criptografado pelo Windows (DPAPI, usuário atual): só
-    /// abre no mesmo usuário do mesmo PC. O deepseek.key antigo é importado uma vez e continua valendo.
+    /// One file per provider in BepInEx\config\credenciais\, encrypted by Windows (DPAPI, current user): it only
+    /// opens for the same user on the same PC. The legacy deepseek.key is imported once and keeps working.
     /// </summary>
     internal static class Credentials
     {
@@ -84,7 +84,7 @@ namespace CurrencyMod.Diplomacia.Llm.Providers
                     return cached;
                 }
                 Credential credential = Read(provider);
-                // O deepseek.key antigo continua valendo: importado na primeira vez e de novo se for editado depois.
+                // The legacy deepseek.key keeps working: imported the first time and again if it is edited later.
                 if (provider == "deepseek" && (credential == null || LegacyIsNewer()))
                 {
                     credential = ImportLegacyDeepSeek() ?? credential;
@@ -111,7 +111,7 @@ namespace CurrencyMod.Diplomacia.Llm.Providers
             }
         }
 
-        /// <summary>Apaga a credencial. No DeepSeek, também esvazia o deepseek.key antigo (senão ele voltaria).</summary>
+        /// <summary>Deletes the credential. For DeepSeek, also clears the legacy deepseek.key (otherwise it would come back).</summary>
         internal static void Delete(string provider)
         {
             lock (Gate)
@@ -130,13 +130,13 @@ namespace CurrencyMod.Diplomacia.Llm.Providers
                 }
                 catch (Exception ex)
                 {
-                    Plugin.Log.LogWarning($"[IA] Não consegui apagar a credencial de {provider}: {ex.GetType().Name}");
+                    Plugin.Log.LogWarning($"[IA] Could not delete the {provider} credential: {ex.GetType().Name}");
                 }
                 Cache[provider] = null;
             }
         }
 
-        /// <summary>Esquece o que está na memória (o arquivo mudou por fora, ou recarga).</summary>
+        /// <summary>Forgets what is in memory (the file changed externally, or a reload).</summary>
         internal static void Forget()
         {
             lock (Gate)
@@ -159,8 +159,8 @@ namespace CurrencyMod.Diplomacia.Llm.Providers
             }
             catch (Exception ex)
             {
-                // Arquivo de outro usuário ou outro PC: não abre. Não mostrar detalhes (nada da chave sai daqui).
-                Plugin.Log.LogWarning($"[IA] Credencial de {provider} ilegível neste usuário/PC ({ex.GetType().Name}); conecte de novo.");
+                // File from another user or another PC: it won't open. Show no details (nothing of the key leaves here).
+                Plugin.Log.LogWarning($"[IA] {provider} credential unreadable for this user/PC ({ex.GetType().Name}); connect again.");
                 return null;
             }
         }
@@ -192,17 +192,17 @@ namespace CurrencyMod.Diplomacia.Llm.Providers
                 Directory.CreateDirectory(Folder);
                 File.WriteAllBytes(FileFor("deepseek"), Dpapi.Protect(
                     Encoding.UTF8.GetBytes(credential.ToJson().ToString(Newtonsoft.Json.Formatting.None)), Entropy));
-                Plugin.Log.LogInfo("[IA] Chave do DeepSeek importada do deepseek.key para as credenciais criptografadas.");
+                Plugin.Log.LogInfo("[IA] DeepSeek key imported from deepseek.key into the encrypted credentials.");
             }
             catch (Exception ex)
             {
-                Plugin.Log.LogWarning($"[IA] Não consegui importar o deepseek.key ({ex.GetType().Name}); ele continua valendo.");
+                Plugin.Log.LogWarning($"[IA] Could not import deepseek.key ({ex.GetType().Name}); it still applies.");
             }
             return credential;
         }
     }
 
-    /// <summary>CryptProtectData/CryptUnprotectData do Windows, direto (o Mono da Unity não garante o ProtectedData).</summary>
+    /// <summary>Windows CryptProtectData/CryptUnprotectData, called directly (Unity's Mono does not guarantee ProtectedData).</summary>
     internal static class Dpapi
     {
         [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
@@ -269,7 +269,7 @@ namespace CurrencyMod.Diplomacia.Llm.Providers
         {
             if (blob.Data != IntPtr.Zero)
             {
-                // Zera antes de soltar: a memória teve a chave em texto puro.
+                // Zero before freeing: the memory held the key in plain text.
                 Marshal.Copy(new byte[blob.Size], 0, blob.Data, blob.Size);
                 Marshal.FreeHGlobal(blob.Data);
             }

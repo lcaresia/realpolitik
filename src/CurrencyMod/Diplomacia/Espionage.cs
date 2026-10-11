@@ -7,48 +7,48 @@ using CurrencyMod.Diplomacia.Capture;
 namespace CurrencyMod.Diplomacia
 {
     /// <summary>
-    /// Interceptação de cartas por espiões (design §8.3.1; pesquisa research\espionage-interception.md §3).
-    /// - Só cartas privadas. Ultimatos e declarações públicas vão por enviado formal ou praça pública.
-    /// - Quem intercepta: um império C que não é nenhuma das pontas, com espiões de verdade (exército com unidade agente,
-    ///   oculto e capaz de agir; aliados com operações furtivas compartilhadas não agem um contra o outro) num território
-    ///   de quem escreveu (risco guardado quando a carta foi escrita) ou de quem ia receber (no turno da chegada).
-    /// - A carta interceptada nunca chega; quem interceptou lê inteira. O remetente não fica sabendo.
-    /// - Sorteio determinístico (partida, carta, império): recarregar o save dá o mesmo resultado se os espiões não se
-    ///   moveram. Cada espião intercepta no máximo [IA] CartasInterceptadasPorEspiao cartas por turno.
+    /// Letter interception by spies (design §8.3.1; research research\espionage-interception.md §3).
+    /// - Private letters only. Ultimatums and public declarations go by formal envoy or the public square.
+    /// - Who intercepts: an empire C that is neither end, with real spies (an army with an agent unit, hidden and able to
+    ///   act; allies with shared covert operations do not act against each other) in a territory of the writer (risk
+    ///   stored when the letter was written) or of the intended recipient (on the arrival turn).
+    /// - The intercepted letter never arrives; the interceptor reads it whole. The sender never finds out.
+    /// - Deterministic roll (game, letter, empire): reloading the save gives the same result if the spies did not move.
+    ///   Each spy intercepts at most [IA] CartasInterceptadasPorEspiao letters per turn.
     /// </summary>
     internal static class Espionage
     {
         /// <summary>
-        /// Espiões simulados (comando "ia espionagem simular ... fixar"): só na memória do mod, para testar o sorteio
-        /// sem mexer no jogo. Somem na recarga do núcleo ou com "ia espionagem limpar".
+        /// Simulated spies (command "ia espionagem simular ... fixar"): only in the mod's memory, to test the roll
+        /// without touching the game. They vanish on core reload or with "ia espionagem limpar".
         /// </summary>
         internal static readonly List<CapturedSpy> TestSpies = new List<CapturedSpy>();
 
-        /// <summary>Últimos sorteios (para o comando "ia espionagem"): carta, império, chance e número tirado.</summary>
+        /// <summary>Latest rolls (for the "ia espionagem" command): letter, empire, chance and number drawn.</summary>
         internal static readonly List<string> LastRolls = new List<string>();
 
-        /// <summary>Espiões da foto do turno mais os simulados.</summary>
+        /// <summary>Spies from the turn snapshot plus the simulated ones.</summary>
         internal static IEnumerable<CapturedSpy> AllSpies(WorldCapture capture)
         {
             return TestSpies.Count == 0 ? capture.Spies : capture.Spies.Concat(TestSpies);
         }
 
-        /// <summary>Peso de um espião contra o dono do território onde ele está, e por quê.</summary>
+        /// <summary>Weight of a spy against the owner of the territory it is in, and why.</summary>
         internal sealed class SpyWeight
         {
             public CapturedSpy Spy;
             public double Weight;
-            /// <summary>"capital", "cidade" ou "território".</summary>
+            /// <summary>"capital", "cidade" or "território".</summary>
             public string Place;
-            /// <summary>"vigiando a capital", "vigiando uma cidade", "infiltrado", "infiltrando" ou "presença".</summary>
+            /// <summary>"vigiando a capital", "vigiando uma cidade", "infiltrado", "infiltrando" or "presença".</summary>
             public string Mission;
         }
 
-        // ---------------- Pesos ----------------
+        // ---------------- Weights ----------------
 
         /// <summary>
-        /// peso = local × missão × qualidade × cobertura × tempo (tabela da pesquisa, §3). Null quando o espião não conta:
-        /// fora de território de império maior, no próprio território, revelado ou impedido de agir por acordo.
+        /// weight = place × mission × quality × cover × time (research table, §3). Null when the spy does not count:
+        /// outside a major empire's territory, in its own territory, revealed or prevented from acting by an agreement.
         /// </summary>
         internal static SpyWeight Weigh(WorldCapture capture, IaWorld world, CapturedSpy spy)
         {
@@ -63,7 +63,7 @@ namespace CurrencyMod.Diplomacia
                 return null;
             }
 
-            // Local: região da capital 1; região de outra cidade 0,5; posto avançado ou território solto 0,25.
+            // Place: capital region 1; another city's region 0.5; outpost or loose territory 0.25.
             double local = 0.25;
             string place = "território";
             CapturedCity capital = null;
@@ -85,7 +85,7 @@ namespace CurrencyMod.Diplomacia
                 }
             }
 
-            // Missão: vigiar a cidade é o que mais rende (a correspondência passa pelo palácio).
+            // Mission: watching the city yields the most (correspondence passes through the palace).
             double mission = 1.0;
             string missionName = "presença";
             bool againstEnd = spy.InfiltrationTarget == end;
@@ -101,23 +101,23 @@ namespace CurrencyMod.Diplomacia
                 missionName = spy.Infiltrated ? "infiltrado" : "infiltrando";
             }
 
-            // Qualidade: mais agentes e veteranos.
+            // Quality: more agents and veterans.
             double quality = Math.Min(2.0, (1 + 0.25 * Math.Max(0, spy.Agents - 1)) * (1 + 0.1 * Math.Max(0.0, spy.Veterancy)));
 
-            // Cobertura: sob detecção vale menos quanto mais perto de ser revelado; detecção alta do dono atrapalha.
+            // Cover: under detection it is worth less the closer it is to being revealed; the owner's high detection hinders.
             double coverage = spy.HostileDetection > 0 ? Math.Min(1.0, spy.TurnsBeforeRevealed / 4.0) : 1.0;
             coverage /= 1 + 0.15 * Math.Max(0.0, spy.OwnerDetection);
 
-            // Tempo no lugar: quem acabou de chegar ainda não conhece os mensageiros.
+            // Time in place: a spy that just arrived does not know the messengers yet.
             int age = SpyAge(world, spy, capture.Turn);
             double time = age <= 0 ? 0.6 : age <= 2 ? 0.8 : 1.0;
 
-            // Mestre dos Sussurros veterano: os espiões da nação pesam mais (melhorias-jogando item 3).
+            // Veteran Master of Whispers: the nation's spies weigh more (melhorias-jogando item 3).
             double weight = local * mission * quality * coverage * time * Council.VeteranEffects.Factor(spy.Owner, Council.VeteranEffects.Area.Spy);
             return weight > 0 ? new SpyWeight { Spy = spy, Weight = weight, Place = place, Mission = missionName } : null;
         }
 
-        /// <summary>Exposição → chance numa ponta: Pmax × (1 − e^(−k × exposição)).</summary>
+        /// <summary>Exposure → chance at one end: Pmax × (1 − e^(−k × exposure)).</summary>
         internal static double Chance(double exposure)
         {
             double max = Clamp01(IaConfig.InterceptionMaxChance.Value);
@@ -126,8 +126,8 @@ namespace CurrencyMod.Diplomacia
         }
 
         /// <summary>
-        /// Risco de cada império interceptar uma carta na ponta "end" (os territórios desse império), tirando as duas
-        /// pontas da carta. Só impérios com chance acima de zero.
+        /// Risk of each empire intercepting a letter at the "end" side (that empire's territories), excluding the letter's
+        /// two ends. Only empires with a chance above zero.
         /// </summary>
         internal static List<InterceptRisk> Risks(WorldCapture capture, IaWorld world, int end, int from, int to)
         {
@@ -173,7 +173,7 @@ namespace CurrencyMod.Diplomacia
             return risks;
         }
 
-        /// <summary>Guarda o risco na origem quando a carta é escrita (os espiões de lá podem sair antes da entrega).</summary>
+        /// <summary>Stores the risk at the origin when the letter is written (the spies there may leave before delivery).</summary>
         internal static void StampOrigin(Letter letter, WorldCapture capture, IaWorld world)
         {
             letter.InterceptionChecked = letter.Type != "privada" || letter.IsPublic;
@@ -189,15 +189,15 @@ namespace CurrencyMod.Diplomacia
             }
             catch (Exception ex)
             {
-                Plugin.Log.LogWarning($"[IA] Risco de interceptação da carta {letter.Id} não calculado: {ex.Message}");
+                Plugin.Log.LogWarning($"[IA] Interception risk for letter {letter.Id} not computed: {ex.Message}");
             }
         }
 
-        // ---------------- Sorteio ----------------
+        // ---------------- Roll ----------------
 
         /// <summary>
-        /// Confere as cartas privadas que chegam neste turno (em ordem de id) e decide quais foram interceptadas.
-        /// Precisa da foto deste turno. Devolve as interceptadas agora.
+        /// Checks the private letters arriving this turn (in id order) and decides which were intercepted.
+        /// Needs this turn's snapshot. Returns the ones intercepted now.
         /// </summary>
         internal static List<Letter> Resolve(IaWorld world, WorldCapture capture, int turn)
         {
@@ -267,7 +267,7 @@ namespace CurrencyMod.Diplomacia
             public bool ViaDestination;
         }
 
-        /// <summary>p = 1 − (1 − p_origem)(1 − p_destino), com teto; em ordem de chance (empate: menor índice).</summary>
+        /// <summary>p = 1 − (1 − p_origin)(1 − p_destination), capped; in chance order (tie: lowest index).</summary>
         private static IEnumerable<Candidate> Combine(List<InterceptRisk> origin, List<InterceptRisk> destination, double cap)
         {
             var all = new Dictionary<int, Candidate>();
@@ -294,7 +294,7 @@ namespace CurrencyMod.Diplomacia
             return all.Values.Where(c => c.Chance > 0).OrderByDescending(c => c.Chance).ThenBy(c => c.Empire).ToList();
         }
 
-        /// <summary>Cartas que cada império ainda pode interceptar neste turno: espiões em ação × limite por espião.</summary>
+        /// <summary>Letters each empire can still intercept this turn: active spies × limit per spy.</summary>
         private static Dictionary<int, int> Budgets(IaWorld world, WorldCapture capture, int turn)
         {
             int perSpy = Math.Max(1, IaConfig.InterceptionPerSpy.Value);
@@ -306,7 +306,7 @@ namespace CurrencyMod.Diplomacia
                     budget[spy.Owner] = (budget.TryGetValue(spy.Owner, out int value) ? value : 0) + perSpy;
                 }
             }
-            // Espiões que saíram da origem depois que a carta foi escrita ainda contam pela carta que viram sair.
+            // Spies that left the origin after the letter was written still count for the letter they saw leave.
             foreach (Letter letter in world.Letters.Where(l => !l.InterceptionChecked && l.DeliverTurn <= turn && l.OriginRisks != null))
             {
                 foreach (InterceptRisk risk in letter.OriginRisks)
@@ -327,7 +327,7 @@ namespace CurrencyMod.Diplomacia
             return budget;
         }
 
-        /// <summary>Número em [0, 1) fixo para (partida, carta, império): FNV-1a de 64 bits.</summary>
+        /// <summary>Number in [0, 1) fixed for (game, letter, empire): 64-bit FNV-1a.</summary>
         internal static double Roll(string guid, int letterId, int empire)
         {
             ulong hash = 14695981039346656037UL;
@@ -339,16 +339,16 @@ namespace CurrencyMod.Diplomacia
             return (hash >> 11) / (double)(1UL << 53);
         }
 
-        // ---------------- Onde estão os espiões ----------------
+        // ---------------- Where the spies are ----------------
 
-        /// <summary>Atualiza, uma vez por turno, há quanto tempo cada espião está no território atual.</summary>
+        /// <summary>Updates, once per turn, how long each spy has been in its current territory.</summary>
         internal static void TrackSpies(IaWorld world, WorldCapture capture)
         {
             if (world == null || capture == null || world.SpyTracksTurn == capture.Turn)
             {
                 return;
             }
-            // Primeira vez (partida antiga): quem já estava em campo conta como instalado.
+            // First time (old game): spies already in the field count as settled.
             bool first = world.SpyTracksTurn < 0;
             foreach (CapturedSpy spy in AllSpies(capture))
             {
@@ -381,16 +381,16 @@ namespace CurrencyMod.Diplomacia
             return 0;
         }
 
-        // ---------------- Textos ----------------
+        // ---------------- Texts ----------------
 
-        /// <summary>Linha do registro de eventos (visualizador e log).</summary>
+        /// <summary>Event log line (viewer and log).</summary>
         internal static string Describe(WorldCapture capture, Letter letter)
         {
             string where = letter.InterceptedTerritory >= 0 ? capture?.TerritoryName(letter.InterceptedTerritory) ?? "T" + letter.InterceptedTerritory : "?";
             return $"Carta {letter.Id} de E{letter.From} para E{letter.To} interceptada por E{letter.InterceptedBy} ({letter.InterceptedVia}: {letter.InterceptedSpy ?? "espião"} em {where}).";
         }
 
-        /// <summary>Cobertura qualitativa de uma chance (para o dossiê e a interface).</summary>
+        /// <summary>Qualitative coverage of a chance (for the dossier and the UI).</summary>
         internal static string Level(double chance)
         {
             return chance >= 0.3 ? "alta" : chance >= 0.15 ? "média" : chance > 0 ? "baixa" : "nenhuma";
@@ -407,7 +407,7 @@ namespace CurrencyMod.Diplomacia
             }
         }
 
-        /// <summary>Tabela para o comando "ia espionagem": espiões, pesos e chance de cada império em cada ponta.</summary>
+        /// <summary>Table for the "ia espionagem" command: spies, weights and each empire's chance at each end.</summary>
         internal static string Report(IaWorld world, WorldCapture capture)
         {
             var text = new StringBuilder();
@@ -470,8 +470,8 @@ namespace CurrencyMod.Diplomacia
         }
 
         /// <summary>
-        /// "ia espionagem simular E# T# [vigiar] [fixar]": peso e chance de um espião de teste (1 agente, furtividade 8)
-        /// num território estrangeiro, com a detecção real do dono ali. "fixar" deixa o espião valendo no sorteio.
+        /// "ia espionagem simular E# T# [vigiar] [fixar]": weight and chance of a test spy (1 agent, stealth 8) in a
+        /// foreign territory, with the owner's real detection there. "fixar" keeps the spy active in the roll.
         /// </summary>
         internal static string Simulate(IaWorld world, WorldCapture capture, int owner, int territory, bool watch, bool keep)
         {

@@ -6,15 +6,15 @@ using Amplitude.Mercury.Sandbox;
 namespace CurrencyMod.Diplomacia
 {
     /// <summary>
-    /// O pouco que a IA lê do jogo fora da foto do turno, na thread principal e só pelos snapshots de apresentação
-    /// (cópias seguras que a própria interface usa).
+    /// The little the AI reads from the game outside the turn snapshot, on the main thread and only through the
+    /// presentation snapshots (safe copies the UI itself uses).
     /// </summary>
     internal static class GameAccess
     {
         private static readonly Regex RichTextTags = new Regex("<[^>]+>", RegexOptions.Compiled);
         private static readonly Regex Symbols = new Regex(@"\[[^\]]*\]", RegexOptions.Compiled);
 
-        /// <summary>Partida carregada: GUID, turno (o mesmo número que o jogador vê) e índice do jogador local.</summary>
+        /// <summary>Loaded game: GUID, turn (the same number the player sees) and local player index.</summary>
         internal static bool TryGetSession(out string guid, out int turn, out int playerIndex)
         {
             guid = null;
@@ -38,7 +38,7 @@ namespace CurrencyMod.Diplomacia
                     return false;
                 }
                 guid = sandbox.GUID.ToString();
-                // A tela de fim de turno mostra CurrentTurn direto (EndTurnWindow); o primeiro turno é 1.
+                // The end-of-turn screen shows CurrentTurn directly (EndTurnWindow); the first turn is 1.
                 turn = game.CurrentTurn;
                 return true;
             }
@@ -48,7 +48,7 @@ namespace CurrencyMod.Diplomacia
             }
         }
 
-        /// <summary>O jogo está no turno principal (jogadores agindo), não no meio da virada ou do autosave.</summary>
+        /// <summary>The game is in the main turn phase (players acting), not mid turn change or autosave.</summary>
         internal static bool IsTurnMain() => SandboxStateName() == "SandboxState_TurnMain";
 
         internal static string SandboxStateName()
@@ -63,7 +63,7 @@ namespace CurrencyMod.Diplomacia
             }
         }
 
-        /// <summary>Tira marcações de texto rico (&lt;color&gt;) e de ícones ([EmpireSymbol_...]).</summary>
+        /// <summary>Strips rich-text markup (&lt;color&gt;) and icon tags ([EmpireSymbol_...]).</summary>
         internal static string Clean(string text) => Symbols.Replace(RichTextTags.Replace(text ?? string.Empty, string.Empty), string.Empty).Trim();
     }
 }

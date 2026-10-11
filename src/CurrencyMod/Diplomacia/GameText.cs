@@ -1,9 +1,9 @@
 namespace CurrencyMod.Diplomacia
 {
     /// <summary>
-    /// Textos fixos em português para o dossiê e o visualizador (EraName, Of, Inline: sempre português).
-    /// Na interface, use EraNameUi, OfUi e InlineUi: fora do português eles devolvem o nome como está, e a preposição
-    /// fica na tradução ("Carta {0}" com OfUi → "Carta dos Chou" / "Letter from {0}").
+    /// Fixed Portuguese texts for the dossier and the viewer (EraName, Of, Inline: always Portuguese).
+    /// In the UI, use EraNameUi, OfUi and InlineUi: outside Portuguese they return the name as is, and the preposition
+    /// lives in the translation ("Carta {0}" with OfUi → "Carta dos Chou" / "Letter from {0}").
     /// </summary>
     internal static class GameText
     {
@@ -23,7 +23,7 @@ namespace CurrencyMod.Diplomacia
             return eraIndex < EraNames.Length ? EraNames[eraIndex] : $"Era {eraIndex}";
         }
 
-        /// <summary>Nome da era no idioma da interface.</summary>
+        /// <summary>Era name in the UI language.</summary>
         internal static string EraNameUi(int eraIndex)
         {
             if (eraIndex < 0)
@@ -47,10 +47,10 @@ namespace CurrencyMod.Diplomacia
             return "de " + name;
         }
 
-        /// <summary>Of na interface: em português "dos Chou"; nos outros idiomas só o nome.</summary>
+        /// <summary>Of in the UI: in Portuguese "dos Chou"; in other languages just the name.</summary>
         internal static string OfUi(string name) => L.IsPortuguese ? Of(name) : (string.IsNullOrEmpty(name) ? "?" : name);
 
-        /// <summary>Nome no meio da frase: "Os Chou" → "os Chou" ("com os Chou", "para os Chou").</summary>
+        /// <summary>Name in mid-sentence: "Os Chou" → "os Chou" ("com os Chou", "para os Chou").</summary>
         internal static string Inline(string name)
         {
             if (string.IsNullOrEmpty(name))
@@ -62,7 +62,7 @@ namespace CurrencyMod.Diplomacia
             return name;
         }
 
-        /// <summary>Inline na interface: em português "os Chou"; nos outros idiomas só o nome.</summary>
+        /// <summary>Inline in the UI: in Portuguese "os Chou"; in other languages just the name.</summary>
         internal static string InlineUi(string name) => L.IsPortuguese ? Inline(name) : (string.IsNullOrEmpty(name) ? "?" : name);
     }
 }

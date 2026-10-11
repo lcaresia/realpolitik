@@ -8,15 +8,15 @@ using HarmonyLib;
 namespace CurrencyMod.Diplomacia
 {
     /// <summary>
-    /// Opção B do F3 (design §15.1; research\diplomacy-native-timers.md): uma proposta de tratado ou acordo que uma
-    /// nação comandada pela IA de linguagem precisa responder fica pendente de verdade, na tela nativa, até ela
-    /// responder no turno seguinte (responder_tratado / responder_acordo).
-    /// O jogo resolve propostas sozinho em dois lugares, e os dois são contornados escondendo essas propostas só
-    /// durante a chamada (prefix esconde, postfix e finalizer devolvem; tudo na thread do sandbox):
-    /// - DiplomaticAncillary.ReadyForTurnFinishCompletion: segura o fim do turno e, com "impaciência", ignora ou recusa;
-    /// - DiplomaticAncillary.NewTurnBegin_ResetTreatyStatus: zera tudo na virada.
-    /// Depois de [IA] TurnosParaResponderPropostas turnos sem resposta, ou se a IA de linguagem parar (F1), a regra
-    /// nativa volta.
+    /// F3 option B (design §15.1; research\diplomacy-native-timers.md): a treaty or agreement proposal that a nation
+    /// driven by the language AI must answer stays truly pending, on the native screen, until it answers on the next
+    /// turn (responder_tratado / responder_acordo).
+    /// The game resolves proposals on its own in two places, and both are worked around by hiding these proposals only
+    /// during the call (prefix hides, postfix and finalizer restore; all on the sandbox thread):
+    /// - DiplomaticAncillary.ReadyForTurnFinishCompletion: holds the end of turn and, with "impatience", ignores or refuses;
+    /// - DiplomaticAncillary.NewTurnBegin_ResetTreatyStatus: resets everything at the turn change.
+    /// After [IA] TurnosParaResponderPropostas turns without an answer, or if the language AI stops (F1), the native
+    /// rule comes back.
     /// </summary>
     internal static class ProposalHold
     {
@@ -25,23 +25,23 @@ namespace CurrencyMod.Diplomacia
             public DiplomaticRelation Relation;
             public bool Treaty;
             public TreatyStatus Status;
-            /// <summary>Rendição escondida: o índice da proposta (DiplomaticState_War.ProposedSurrenderIndex), -1 = não é.</summary>
+            /// <summary>Hidden surrender: the proposal index (DiplomaticState_War.ProposedSurrenderIndex), -1 = not one.</summary>
             public int Surrender;
         }
 
-        // ---------------- Rendição (research\surrender.md §5.4) ----------------
+        // ---------------- Surrender (research\surrender.md §5.4) ----------------
 
         /// <summary>
-        /// Turno em que cada rendição pendente apareceu, por (vencedor, perdedor, forçada): o jogo não salva o turno do
-        /// envio. Atualizado pela thread principal; lido pela do sandbox (dicionário trocado inteiro).
+        /// Turn in which each pending surrender appeared, by (winner, loser, forced): the game does not save the turn it
+        /// was sent. Updated by the main thread; read by the sandbox thread (the whole dictionary is swapped).
         /// </summary>
         private static volatile Dictionary<long, int> surrenderSeen = new Dictionary<long, int>();
 
         private static long SurrenderKey(int winner, int loser, bool forced) => ((long)winner << 32) | ((long)(loser & 0xFFFF) << 1) | (forced ? 1L : 0L);
 
         /// <summary>
-        /// Thread principal, a cada segundo (IaModule.UpdateLocks): guarda quando cada rendição pendente apareceu e publica
-        /// as relações em que a IA nativa volta a responder (a IA de linguagem não respondeu no prazo).
+        /// Main thread, every second (IaModule.UpdateLocks): records when each pending surrender appeared and publishes
+        /// the relations in which the native AI answers again (the language AI did not answer in time).
         /// </summary>
         internal static void TrackSurrenders(int turn)
         {
@@ -75,7 +75,7 @@ namespace CurrencyMod.Diplomacia
             NativeAiLocks.SetSurrenderFallback(fallback);
         }
 
-        /// <summary>Rendição que a nação da IA de linguagem ainda vai responder (no prazo): o fim do turno não a resolve sozinho.</summary>
+        /// <summary>Surrender the language AI nation will still answer (within the deadline): the end of turn does not resolve it on its own.</summary>
         private static bool ShouldHoldSurrender(DiplomaticAncillary ancillary, DiplomaticState_War war, int turn)
         {
             if (war == null || war.ProposedSurrenderIndex < 0)
@@ -106,7 +106,7 @@ namespace CurrencyMod.Diplomacia
             return info.TurnWhenProposed < 0 || turn - info.TurnWhenProposed < maxTurns;
         }
 
-        /// <summary>Rendição só se esconde no fim do turno; a virada de turno não a zera (research\surrender.md §5.4).</summary>
+        /// <summary>Surrenders are only hidden at the end of turn; the turn change does not reset them (research\surrender.md §5.4).</summary>
         [ThreadStatic]
         private static bool hideSurrenders;
 
@@ -186,8 +186,8 @@ namespace CurrencyMod.Diplomacia
             }
             catch (Exception ex)
             {
-                Plugin.Log?.LogError($"[IA] Propostas em análise (esconder): {ex}");
-                // O que já tinha sido escondido antes da exceção volta, senão a proposta sumiria de vez.
+                Plugin.Log?.LogError($"[IA] Proposals under review (hide): {ex}");
+                // Whatever was already hidden before the exception is restored, otherwise the proposal would vanish for good.
                 Restore(held);
                 return null;
             }
@@ -219,10 +219,11 @@ namespace CurrencyMod.Diplomacia
         }
 
         /// <summary>
-        /// Bug do jogo (research\surrender.md §2.7): quem impõe rendição fica preso no popup obrigatório até o perdedor
-        /// responder, porque IsOtherSurrenderPropositionPending só olha "o vencedor sou eu" e ignora se a rendição é
-        /// forçada. Com a IA nativa a resposta vem na hora; com a IA de linguagem, só no turno seguinte. Aqui o popup deixa
-        /// de cobrar resposta de quem só está esperando (forçada, vencedor = jogador, sem rascunho dele aberto).
+        /// Game bug (research\surrender.md §2.7): whoever imposes a surrender gets stuck in the mandatory popup until the
+        /// loser answers, because IsOtherSurrenderPropositionPending only checks "I am the winner" and ignores whether the
+        /// surrender is forced. With the native AI the answer comes right away; with the language AI, only on the next
+        /// turn. Here the popup stops demanding an answer from whoever is just waiting (forced, winner = player, no draft
+        /// of theirs open).
         /// </summary>
         [HarmonyPatch(typeof(Amplitude.Mercury.UI.MandatoryDiplomaticPropositionPending), "RefreshData")]
         private static class MandatorySurrenderPatch
@@ -258,7 +259,7 @@ namespace CurrencyMod.Diplomacia
                 }
                 catch (Exception)
                 {
-                    // em dúvida, o comportamento do jogo
+                    // when in doubt, the game's behavior
                 }
             }
         }

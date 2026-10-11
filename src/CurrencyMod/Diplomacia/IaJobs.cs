@@ -4,7 +4,7 @@ using CurrencyMod.Diplomacia.Llm;
 
 namespace CurrencyMod.Diplomacia
 {
-    /// <summary>Uma nação pensando num turno: tudo que a thread de trabalho precisa, já pronto.</summary>
+    /// <summary>One nation thinking for one turn: everything the worker thread needs, already prepared.</summary>
     internal sealed class DecisionJob
     {
         public int Session;
@@ -16,7 +16,7 @@ namespace CurrencyMod.Diplomacia
         public ValidationContext Context;
         public List<int> DeliveredLetterIds = new List<int>();
         public List<int> RejectedLetterIds = new List<int>();
-        /// <summary>Cartas interceptadas pelos espiões desta nação que o dossiê mostrou (ficam lidas ao aplicar).</summary>
+        /// <summary>Letters intercepted by this nation's spies that the dossier showed (marked as read when applied).</summary>
         public List<int> InterceptedLetterIds = new List<int>();
         public int SenderEra;
 
@@ -43,7 +43,7 @@ namespace CurrencyMod.Diplomacia
         public int ReasoningTokens;
     }
 
-    /// <summary>Roda numa thread de trabalho: chama a API, valida e pede de novo se precisar.</summary>
+    /// <summary>Runs on a worker thread: calls the API, validates and asks again if needed.</summary>
     internal static class DecisionRunner
     {
         internal static DecisionResult Run(DecisionJob job)
@@ -98,7 +98,7 @@ namespace CurrencyMod.Diplomacia
                 var errors = new List<string>();
                 if (chat.FinishReason == "length")
                 {
-                    // Quase sempre é o raciocínio que estoura o teto, não as cartas (estudo-custo-ia.md §4).
+                    // It is almost always the reasoning that blows the cap, not the letters (estudo-custo-ia.md §4).
                     errors.Add("A resposta foi cortada: você pensou demais e o json não chegou a sair. Pense pouco desta vez e escreva o json direto.");
                 }
                 else

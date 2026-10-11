@@ -3,8 +3,8 @@
 namespace CurrencyMod
 {
     /// <summary>
-    /// Diagnóstico da economia de um império: o problema mais urgente, com uma frase do que fazer. Usado pela aba Ciclo
-    /// do Banco Central e pelo selo de alerta no botão do Banco Central (só os casos graves acendem o selo).
+    /// Diagnosis of an empire's economy: the most urgent problem, with one sentence on what to do. Used by the Central
+    /// Bank's Cycle tab and by the alert badge on the Central Bank button (only severe cases light the badge).
     /// </summary>
     internal sealed class EconomyDiagnosis
     {
@@ -14,7 +14,7 @@ namespace CurrencyMod
         internal string Headline;
         internal string Advice;
 
-        /// <summary>Perda total na meta de estabilidade a partir da qual o caso conta como grave.</summary>
+        /// <summary>Total stability target loss from which the case counts as severe.</summary>
         private const double SevereStabilityLoss = 10.0;
 
         internal static EconomyDiagnosis For(EmpireCurrency mine, double stock)
@@ -34,7 +34,7 @@ namespace CurrencyMod
             double threshold1 = EconomyConfig.InflationStabilityThreshold1.Value;
             double threshold2 = EconomyConfig.InflationStabilityThreshold2.Value;
 
-            // O que os juros fariam (ou a regra faria): fecha os conselhos.
+            // What the interest rate would do (or the rule would do): closes the advice.
             string InterestAdvice(bool raise)
             {
                 if (mine.ForcedInterest)
@@ -109,7 +109,7 @@ namespace CurrencyMod
                 result.Headline = L.T("Economia equilibrada");
                 result.Advice = L.F("Inflação perto da meta ({0}) e produção ×{1}. Nada a corrigir agora.", Pct(meta), Format.Rate(credit));
             }
-            // Desemprego forte também é grave, mesmo sem inflação alta.
+            // Heavy unemployment is also severe, even without high inflation.
             if (result.Severity != Level.Bad && inflationLoss + unemploymentLoss >= SevereStabilityLoss)
             {
                 result.Severity = Level.Bad;

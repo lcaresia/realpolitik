@@ -5,7 +5,7 @@ using System.Linq;
 
 namespace CurrencyMod.Diplomacia.Llm.Providers
 {
-    /// <summary>Estado de um provedor para a tela e o F10 (nada de chave aqui).</summary>
+    /// <summary>State of a provider for the screen and F10 (no key here).</summary>
     internal sealed class ProviderHealth
     {
         public DateTime LastOkUtc;
@@ -18,9 +18,9 @@ namespace CurrencyMod.Diplomacia.Llm.Providers
     }
 
     /// <summary>
-    /// Fila de provedores ([IA.Provedores] Ordem): o primeiro é o principal; se ele der qualquer erro (depois das
-    /// tentativas normais de rede), fica de fora por alguns minutos e o próximo assume. Se todos falharem, a chamada
-    /// falha e a IA nativa do jogo continua jogando (travas soltas pelo IaModule), sem travar o turno.
+    /// Provider queue ([IA.Provedores] Ordem): the first one is the primary; if it returns any error (after the normal
+    /// network retries), it sits out for a few minutes and the next one takes over. If all fail, the call fails and the
+    /// game's native AI keeps playing (locks released by IaModule), without stalling the turn.
     /// </summary>
     internal static class ProviderRouter
     {
@@ -29,10 +29,10 @@ namespace CurrencyMod.Diplomacia.Llm.Providers
         private static string lastUsed;
         private static bool allDownNotified;
 
-        // ---------------- IA desconectada (melhorias-jogando item 19) ----------------
-        // Quando a fila inteira falha, a IA fica "desconectada": nações e conselho param de chamar a API e só uma chamada de
-        // teste sai de tempos em tempos (2, 4, 8, até 10 min). A primeira resposta boa reconecta. O aviso na tela aparece
-        // uma vez por queda (e não de novo se a IA cair outra vez em menos de 15 min); o botão das cartas mostra um X vermelho.
+        // ---------------- AI disconnected (melhorias-jogando item 19) ----------------
+        // When the whole queue fails, the AI becomes "disconnected": nations and council stop calling the API and only a
+        // probe call goes out from time to time (2, 4, 8, up to 10 min). The first good response reconnects. The on-screen
+        // notice appears once per outage (and not again if the AI drops again within 15 min); the letters button shows a red X.
         private static volatile bool allDown;
         private static DateTime allDownSinceUtc;
         private static DateTime nextProbeUtc;
@@ -40,19 +40,19 @@ namespace CurrencyMod.Diplomacia.Llm.Providers
         private static DateTime lastDownPopupUtc = DateTime.MinValue;
         private static string allDownReason;
 
-        /// <summary>Todos os provedores da fila falharam na última tentativa e nenhum respondeu desde então.</summary>
+        /// <summary>All providers in the queue failed on the last attempt and none has responded since.</summary>
         internal static bool AllDown => allDown;
 
         internal static string AllDownReason => allDownReason;
 
         internal static DateTime AllDownSinceUtc => allDownSinceUtc;
 
-        /// <summary>Minutos até a próxima chamada de teste (0 = pode testar agora).</summary>
+        /// <summary>Minutes until the next probe call (0 = can probe now).</summary>
         internal static int MinutesToProbe => allDown ? Math.Max(0, (int)Math.Ceiling((nextProbeUtc - DateTime.UtcNow).TotalMinutes)) : 0;
 
         /// <summary>
-        /// Pode chamar a API agora? Conectada: sempre. Desconectada: só uma chamada de teste quando o prazo vence (quem pega
-        /// a vez segura o próximo teste por 3 min, até a resposta chegar e remarcar).
+        /// Can the API be called now? Connected: always. Disconnected: only one probe call when the deadline expires (whoever
+        /// takes the turn holds off the next probe for 3 min, until the response arrives and reschedules it).
         /// </summary>
         internal static bool MayCall()
         {
@@ -71,10 +71,10 @@ namespace CurrencyMod.Diplomacia.Llm.Providers
             }
         }
 
-        /// <summary>Avisos para a thread principal (Runtime.Event, aviso na tela).</summary>
+        /// <summary>Notices for the main thread (Runtime.Event, on-screen notice).</summary>
         internal static readonly ConcurrentQueue<string> Notices = new ConcurrentQueue<string>();
 
-        /// <summary>A fila configurada, só com provedores conhecidos e visíveis. Vazia = DeepSeek, se houver chave.</summary>
+        /// <summary>The configured queue, only with known and visible providers. Empty = DeepSeek, if there is a key.</summary>
         internal static List<ProviderDef> Chain()
         {
             var chain = new List<ProviderDef>();
@@ -98,13 +98,13 @@ namespace CurrencyMod.Diplomacia.Llm.Providers
             IaConfig.ProviderOrder.Value = string.Join(",", ids.Where(id => ProviderCatalog.Get(id) != null).Distinct());
         }
 
-        /// <summary>Provedores da fila que têm chave ou login.</summary>
+        /// <summary>Providers in the queue that have a key or login.</summary>
         internal static List<ProviderDef> Ready() => Chain().Where(HasAccess).ToList();
 
-        /// <summary>Tem chave ou login. O Codex não guarda nada no mod: vale o login feito no próprio Codex.</summary>
+        /// <summary>Has a key or login. Codex stores nothing in the mod: the login done in Codex itself is what counts.</summary>
         internal static bool HasAccess(ProviderDef provider)
         {
-            // O modelo local não tem chave: se o servidor não estiver de pé, a chamada falha e a fila passa ao próximo.
+            // The local model has no key: if the server is not up, the call fails and the queue moves to the next one.
             return provider.Format == WireFormat.CodexCli ? CodexCli.Ready : provider.Local || Credentials.Has(provider.Id);
         }
 
@@ -133,7 +133,7 @@ namespace CurrencyMod.Diplomacia.Llm.Providers
             }
         }
 
-        /// <summary>O provedor que respondeu por último (ou o primeiro pronto da fila).</summary>
+        /// <summary>The provider that responded last (or the first ready one in the queue).</summary>
         internal static ProviderDef Current
         {
             get
@@ -147,7 +147,7 @@ namespace CurrencyMod.Diplomacia.Llm.Providers
             }
         }
 
-        /// <summary>Texto curto para o F10 e o "ia status": provedor e modelo em uso.</summary>
+        /// <summary>Short text for F10 and "ia status": provider and model in use.</summary>
         internal static string Describe()
         {
             List<ProviderDef> ready = Ready();
@@ -160,7 +160,7 @@ namespace CurrencyMod.Diplomacia.Llm.Providers
             return $"{current.Name} ({ModelFor(current)}){rest}";
         }
 
-        /// <summary>Thread de trabalho: manda pelo primeiro provedor que responder.</summary>
+        /// <summary>Worker thread: sends through the first provider that responds.</summary>
         internal static ChatResult Send(ChatRequest request, int timeoutSeconds)
         {
             List<ProviderDef> ready = Ready();
@@ -169,7 +169,7 @@ namespace CurrencyMod.Diplomacia.Llm.Providers
                 return new ChatResult { Ok = false, Kind = ErrorKind.Auth, Error = "nenhum provedor com chave ou login (tela Realpolitik)" };
             }
             DateTime now = DateTime.UtcNow;
-            // Quem está de fora por erro recente vai para o fim, mas ainda é tentado se todos estiverem de fora.
+            // Providers sitting out after a recent error go to the end, but are still tried if all are sitting out.
             List<ProviderDef> order = ready.Where(p => HealthOf(p.Id).OutUntilUtc <= now)
                 .Concat(ready.Where(p => HealthOf(p.Id).OutUntilUtc > now)).ToList();
 
@@ -208,7 +208,7 @@ namespace CurrencyMod.Diplomacia.Llm.Providers
             return last;
         }
 
-        /// <summary>Um provedor só (o "Testar conexão" e o roteador).</summary>
+        /// <summary>A single provider ("Test connection" and the router).</summary>
         internal static ChatResult SendWith(ProviderDef provider, ChatRequest request, int timeoutSeconds, Credential credential = null)
         {
             if (provider.Format == WireFormat.CodexCli)
@@ -228,7 +228,7 @@ namespace CurrencyMod.Diplomacia.Llm.Providers
                 LocalLlm.Apply(provider);
                 if (string.IsNullOrEmpty(request.Model) && string.IsNullOrEmpty(ModelFor(provider)))
                 {
-                    // Ainda não sabemos o modelo (nunca listou): procura o servidor e falha esta chamada, a fila segue.
+                    // We do not know the model yet (never listed): probe the server and fail this call, the queue moves on.
                     LocalLlm.Probe(provider, force: true);
                     return new ChatResult { Ok = false, Kind = ErrorKind.Network, ProviderId = provider.Id, Error = "servidor local sem modelo (ou fora do ar)" };
                 }
@@ -292,7 +292,7 @@ namespace CurrencyMod.Diplomacia.Llm.Providers
                 allDownReason = string.Join("; ", failed);
                 if (allDown)
                 {
-                    // Teste que falhou: espera o dobro até o próximo (no máximo 10 min).
+                    // Failed probe: wait twice as long until the next one (at most 10 min).
                     probeInterval = TimeSpan.FromMinutes(Math.Min(10, probeInterval.TotalMinutes * 2));
                     nextProbeUtc = DateTime.UtcNow + probeInterval;
                     return;
@@ -312,7 +312,7 @@ namespace CurrencyMod.Diplomacia.Llm.Providers
             }
         }
 
-        /// <summary>Motivo curto e traduzido de um erro.</summary>
+        /// <summary>Short, translated reason for an error.</summary>
         internal static string Short(ChatResult result)
         {
             switch (result.Kind)
@@ -327,7 +327,7 @@ namespace CurrencyMod.Diplomacia.Llm.Providers
             }
         }
 
-        /// <summary>Volta tudo ao normal (troca de provedores na tela).</summary>
+        /// <summary>Resets everything to normal (providers changed on the screen).</summary>
         internal static void ResetHealth()
         {
             lock (Gate)
@@ -338,7 +338,7 @@ namespace CurrencyMod.Diplomacia.Llm.Providers
                 }
                 lastUsed = null;
                 allDownNotified = false;
-                // Fila ou credenciais mudaram: tenta de novo na hora.
+                // Queue or credentials changed: retry right away.
                 nextProbeUtc = DateTime.MinValue;
                 probeInterval = TimeSpan.FromMinutes(2);
             }

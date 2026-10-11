@@ -25,31 +25,31 @@ namespace CurrencyMod.Diplomacia.Llm
 
     internal sealed class ChatRequest
     {
-        /// <summary>Preenchido pelo roteador com o modelo do provedor em uso.</summary>
+        /// <summary>Filled by the router with the model of the provider in use.</summary>
         public string Model;
         public List<ChatMessage> Messages = new List<ChatMessage>();
         public int MaxTokens = 8000;
         public float Temperature = 1f;
-        /// <summary>low/high/max, ou null para desligar o raciocínio.</summary>
+        /// <summary>low/high/max, or null to turn reasoning off.</summary>
         public string ReasoningEffort;
         public bool JsonMode = true;
     }
 
-    /// <summary>Tipo do erro, para a tela explicar e o roteador decidir.</summary>
+    /// <summary>Error type, so the screen can explain it and the router can decide.</summary>
     internal enum ErrorKind
     {
         None,
-        /// <summary>Chave errada, token vencido ou sem permissão (401/403).</summary>
+        /// <summary>Wrong key, expired token or no permission (401/403).</summary>
         Auth,
-        /// <summary>Sem crédito ou cota da assinatura esgotada (402, 429 insufficient_quota...).</summary>
+        /// <summary>No credit or subscription quota exhausted (402, 429 insufficient_quota...).</summary>
         Credit,
-        /// <summary>Limite de chamadas por minuto (429).</summary>
+        /// <summary>Calls-per-minute limit (429).</summary>
         Rate,
-        /// <summary>Pedido recusado (400, modelo inexistente, parâmetro não aceito).</summary>
+        /// <summary>Request rejected (400, nonexistent model, unsupported parameter).</summary>
         Request,
-        /// <summary>Servidor do provedor com problema (5xx).</summary>
+        /// <summary>Provider server having trouble (5xx).</summary>
         Server,
-        /// <summary>Sem internet, tempo esgotado, conexão caiu.</summary>
+        /// <summary>No internet, timeout, connection dropped.</summary>
         Network,
         Other,
     }
@@ -72,15 +72,15 @@ namespace CurrencyMod.Diplomacia.Llm
         public int CompletionTokens;
         public int ReasoningTokens;
         public double CostUsd;
-        /// <summary>Custo informado pelo próprio provedor (OpenRouter), em vez da tabela.</summary>
+        /// <summary>Cost reported by the provider itself (OpenRouter), instead of the table.</summary>
         public double? ReportedCostUsd;
         public double Seconds;
     }
 
     /// <summary>
-    /// Transporte HTTP para os provedores: chat/completions (formato da OpenAI, com as variações de cada um) e a API
-    /// pela fila (ProviderRouter); o Codex vai por CodexCli. Síncrono de propósito: roda nas threads de trabalho da IA, nunca na thread principal
-    /// da Unity. A chave só vai para o cabeçalho Authorization.
+    /// HTTP transport for the providers: chat/completions (OpenAI format, with each one's variations) and the API
+    /// through the queue (ProviderRouter); Codex goes through CodexCli. Synchronous on purpose: it runs on the AI worker
+    /// threads, never on Unity's main thread. The key only goes into the Authorization header.
     /// </summary>
     internal static class LlmClient
     {
@@ -91,7 +91,7 @@ namespace CurrencyMod.Diplomacia.Llm
             ChatResult result = null;
             if (provider.Local)
             {
-                // Conexão recusada = servidor fechado: tentar de novo só atrasa a fila. Timeout de modelo lento também não repete.
+                // Connection refused = server down: retrying only delays the queue. A slow model's timeout is not retried either.
                 transportRetries = 0;
             }
             for (int attempt = 0; attempt <= transportRetries; attempt++)
@@ -106,7 +106,7 @@ namespace CurrencyMod.Diplomacia.Llm
             return result;
         }
 
-        // ---------------- Corpo do pedido ----------------
+        // ---------------- Request body ----------------
 
         internal static string BuildBody(ChatRequest request, ProviderDef provider)
         {
@@ -130,8 +130,8 @@ namespace CurrencyMod.Diplomacia.Llm
             string effort = request.ReasoningEffort;
             if (provider.DeepSeekThinking)
             {
-                // O esforço vai no nível de cima do corpo. Dentro de "thinking" a API ignora e usa "high" (provado na
-                // bancada em 2026-10-06: aninhado ~9,1 mil tokens de raciocínio, "low" de verdade ~5,1 mil).
+                // The effort goes at the top level of the body. Inside "thinking" the API ignores it and uses "high" (proven
+                // on the bench on 2026-10-06: nested ~9.1k reasoning tokens, a real "low" ~5.1k).
                 body["thinking"] = new JObject { ["type"] = effort == null ? "disabled" : "enabled" };
                 if (effort != null)
                 {
@@ -151,11 +151,11 @@ namespace CurrencyMod.Diplomacia.Llm
             else if (effort != null && (provider.OpenAiStyle
                 || (provider.Id == "gemini" && request.Model != null && !request.Model.Contains("2.5"))))
             {
-                // Sem o campo, a OpenAI pensa em "medium" e o Gemini 3 em "high". O Gemini 2.5 Flash-Lite já vem sem
-                // raciocínio: mandar o nível lá ligaria o raciocínio e encareceria.
+                // Without the field, OpenAI thinks at "medium" and Gemini 3 at "high". Gemini 2.5 Flash-Lite comes without
+                // reasoning: sending the level there would turn reasoning on and make it more expensive.
                 body["reasoning_effort"] = effort == "max" ? "high" : effort;
             }
-            // Modelos de raciocínio da OpenAI recusam temperatura diferente de 1; nos outros, só manda se mudou.
+            // OpenAI reasoning models reject a temperature other than 1; for the others, only send it if it changed.
             if (effort == null && !provider.OpenAiStyle && (provider.DeepSeekThinking || Math.Abs(request.Temperature - 1f) > 0.001f))
             {
                 body["temperature"] = request.Temperature;
@@ -163,7 +163,7 @@ namespace CurrencyMod.Diplomacia.Llm
             return body.ToString(Newtonsoft.Json.Formatting.None);
         }
 
-        // ---------------- Envio ----------------
+        // ---------------- Sending ----------------
 
         private static ChatResult SendOnce(ChatRequest request, ProviderDef provider, string bearer, int timeoutSeconds)
         {
@@ -187,7 +187,7 @@ namespace CurrencyMod.Diplomacia.Llm
                 using (var reader = new StreamReader(response.GetResponseStream(), Encoding.UTF8))
                 {
                     result.HttpStatus = (int)response.StatusCode;
-                    // Enquanto a requisição espera na fila, o DeepSeek manda linhas vazias para manter a conexão.
+                    // While the request waits in the queue, DeepSeek sends empty lines to keep the connection alive.
                     ParseChat(reader.ReadToEnd().Trim(), result);
                 }
                 if (result.Ok && request.JsonMode)
@@ -249,7 +249,7 @@ namespace CurrencyMod.Diplomacia.Llm
             }
             if (provider?.Id == "openrouter")
             {
-                // Identificação do app no OpenRouter (opcional; aparece no painel do jogador).
+                // App identification on OpenRouter (optional; shows up on the player's dashboard).
                 http.Headers["X-OpenRouter-Title"] = "Realpolitik: Living Nations";
                 http.Headers["X-Title"] = "Realpolitik: Living Nations";
             }
@@ -260,14 +260,14 @@ namespace CurrencyMod.Diplomacia.Llm
             return http;
         }
 
-        // ---------------- Respostas ----------------
+        // ---------------- Responses ----------------
 
         private static void ParseChat(string text, ChatResult result)
         {
             JObject root = JObject.Parse(text);
             if (root["error"] is JObject error)
             {
-                // O OpenRouter às vezes devolve HTTP 200 com o erro no corpo.
+                // OpenRouter sometimes returns HTTP 200 with the error in the body.
                 Classify(result, (int?)error["code"] ?? 500, text);
                 return;
             }
@@ -297,8 +297,8 @@ namespace CurrencyMod.Diplomacia.Llm
         }
 
         /// <summary>
-        /// Deixa só o objeto json: tira blocos de raciocínio (&lt;think&gt;), cercas de código e texto em volta. Os modelos
-        /// sem json_object (xAI, Codex) às vezes escrevem uma frase antes do json.
+        /// Keeps only the JSON object: strips reasoning blocks (&lt;think&gt;), code fences and surrounding text. Models
+        /// without json_object (xAI, Codex) sometimes write a sentence before the JSON.
         /// </summary>
         internal static string ExtractJson(string content)
         {
@@ -312,7 +312,7 @@ namespace CurrencyMod.Diplomacia.Llm
             return start >= 0 && end > start ? text.Substring(start, end - start + 1) : text;
         }
 
-        /// <summary>Lê o erro do provedor e decide o tipo. O corpo pode ter a mensagem, nunca a chave.</summary>
+        /// <summary>Reads the provider error and decides its type. The body may contain the message, never the key.</summary>
         internal static void Classify(ChatResult result, int status, string body)
         {
             result.Ok = false;
@@ -349,8 +349,8 @@ namespace CurrencyMod.Diplomacia.Llm
         }
 
         /// <summary>
-        /// Tira pedaços de chave das mensagens de erro: a OpenAI, por exemplo, devolve "sk-proj-abc****wxyz". O erro vai
-        /// para o F10, os logs e a tela, e chave (nem pedaço dela) não pode ir.
+        /// Strips key fragments from error messages: OpenAI, for example, returns "sk-proj-abc****wxyz". The error goes
+        /// to F10, the logs and the screen, and the key (not even part of it) must never go there.
         /// </summary>
         internal static string Redact(string text)
         {
@@ -401,14 +401,14 @@ namespace CurrencyMod.Diplomacia.Llm
             {
                 if (ConfiguredHosts.Add(uri.Host))
                 {
-                    // O .NET Framework abre só 2 conexões por host por padrão; as nações pensam em paralelo.
+                    // .NET Framework opens only 2 connections per host by default; the nations think in parallel.
                     ServicePointManager.FindServicePoint(uri).ConnectionLimit = 16;
                 }
             }
         }
     }
 
-    /// <summary>Custo em dólares pela tabela do provedor/modelo, com desconto fora do horário de pico (DeepSeek).</summary>
+    /// <summary>Cost in dollars from the provider/model table, with the off-peak discount (DeepSeek).</summary>
     internal static class Pricing
     {
         internal static double Cost(ProviderDef provider, string model, int cacheHit, int cacheMiss, int output, DateTime utc)
@@ -423,7 +423,7 @@ namespace CurrencyMod.Diplomacia.Llm
             return perMillion / 1_000_000.0 * factor;
         }
 
-        /// <summary>Custo estimado de um turno com 16 impérios (15 nações + o conselho), pelo gasto medido no DeepSeek.</summary>
+        /// <summary>Estimated cost of a turn with 16 empires (15 nations + the council), from the spending measured on DeepSeek.</summary>
         internal static double TurnEstimate(ProviderDef provider, string model)
         {
             ModelDef price = ProviderCatalog.Price(provider, model);
@@ -431,11 +431,11 @@ namespace CurrencyMod.Diplomacia.Llm
             {
                 return -1;
             }
-            // Medido na bancada (estudo-custo-ia.md §0, 2026-10-06), depois da correção do reasoning_effort, do "pense
-            // pouco" e do dossiê enxuto: por decisão ~18 mil tokens de entrada com 16 impérios (≈ 35% do cache) e ~3,8
-            // mil gerados (~3 mil de raciocínio); ~17 chamadas por turno (15 nações, o conselho e poucas repetições) →
-            // ~US$ 0,12 no pico do DeepSeek (metade fora dele). Antes eram ~US$ 0,22. Modelos sem raciocínio geram bem
-            // menos: para eles a estimativa é um teto.
+            // Measured on the bench (estudo-custo-ia.md §0, 2026-10-06), after fixing reasoning_effort, the "think
+            // briefly" instruction and the trimmed dossier: per decision ~18k input tokens with 16 empires (≈ 35% cached)
+            // and ~3.8k generated (~3k of reasoning); ~17 calls per turn (15 nations, the council and a few retries) →
+            // ~US$ 0.12 at DeepSeek peak (half off-peak). It used to be ~US$ 0.22. Models without reasoning generate far
+            // less: for them the estimate is a ceiling.
             const double calls = 17, input = 18000, hitShare = 0.35, output = 3800;
             double perCall = input * hitShare * price.Hit + input * (1 - hitShare) * price.Miss + output * price.Out;
             return calls * perCall / 1_000_000.0;

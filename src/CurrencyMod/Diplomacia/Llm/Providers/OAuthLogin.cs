@@ -14,7 +14,7 @@ namespace CurrencyMod.Diplomacia.Llm.Providers
     internal enum LoginStage
     {
         Idle,
-        /// <summary>Navegador aberto, esperando o retorno.</summary>
+        /// <summary>Browser open, waiting for the callback.</summary>
         WaitingBrowser,
 
         Exchanging,
@@ -23,7 +23,7 @@ namespace CurrencyMod.Diplomacia.Llm.Providers
         Cancelled,
     }
 
-    /// <summary>Um login em andamento: a tela lê o estágio e a mensagem.</summary>
+    /// <summary>A login in progress: the screen reads the stage and the message.</summary>
     internal sealed class LoginSession
     {
         public string ProviderId;
@@ -33,26 +33,26 @@ namespace CurrencyMod.Diplomacia.Llm.Providers
         public DateTime DeadlineUtc;
         internal volatile bool CancelRequested;
         internal readonly List<TcpListener> Listeners = new List<TcpListener>();
-        /// <summary>O navegador que voltou fica esperando: a página só responde depois da troca do código.</summary>
+        /// <summary>The browser that came back keeps waiting: the page only responds after the code exchange.</summary>
         internal TcpClient PendingClient;
 
         internal bool Active => Stage == LoginStage.WaitingBrowser || Stage == LoginStage.Exchanging;
     }
 
     /// <summary>
-    /// Logins. OpenRouter: PKCE (S256) com state aleatório e retorno só no próprio PC (127.0.0.1/localhost), numa porta
-    /// livre; a chave devolvida vai direto para as credenciais criptografadas. Codex: o "codex login" do próprio Codex
-    /// (CodexCli). Tempo limite de 5 minutos, cancelável.
+    /// Logins. OpenRouter: PKCE (S256) with a random state and a callback only on the player's own PC (127.0.0.1/localhost),
+    /// on a free port; the returned key goes straight to the encrypted credentials. Codex: Codex's own "codex login"
+    /// (CodexCli). 5-minute timeout, cancellable.
     /// </summary>
     internal static class OAuthLogin
     {
         private const int TimeoutMinutes = 5;
         internal static LoginSession Current { get; private set; }
 
-        /// <summary>Só testes ("ia provedor login-teste"): não abre o navegador.</summary>
+        /// <summary>Tests only ("ia provedor login-teste"): does not open the browser.</summary>
         internal static bool SuppressBrowser;
 
-        /// <summary>Começa o login (thread principal). Devolve a sessão; o trabalho segue numa thread.</summary>
+        /// <summary>Starts the login (main thread). Returns the session; the work continues on a thread.</summary>
         internal static LoginSession Start(ProviderDef provider)
         {
             Cancel();
@@ -107,7 +107,7 @@ namespace CurrencyMod.Diplomacia.Llm.Providers
             }
         }
 
-        // ---------------- OpenRouter (PKCE, devolve uma chave do jogador) ----------------
+        // ---------------- OpenRouter (PKCE, returns a player key) ----------------
 
         private static void OpenRouter(LoginSession session)
         {
@@ -136,9 +136,9 @@ namespace CurrencyMod.Diplomacia.Llm.Providers
             Done(session, L.T("Conectado ao OpenRouter."));
         }
 
-        // ---------------- Retorno local ----------------
+        // ---------------- Local callback ----------------
 
-        /// <summary>Escuta só no próprio PC (IPv4 e IPv6, para "localhost" funcionar nos dois). 0 = porta livre.</summary>
+        /// <summary>Listens only on the local PC (IPv4 and IPv6, so "localhost" works on both). 0 = free port.</summary>
         private static int Listen(LoginSession session, int port)
         {
             var v4 = new TcpListener(IPAddress.Loopback, port);
@@ -153,12 +153,12 @@ namespace CurrencyMod.Diplomacia.Llm.Providers
             }
             catch (Exception)
             {
-                // Sem IPv6: o navegador cai no 127.0.0.1.
+                // No IPv6: the browser falls back to 127.0.0.1.
             }
             return chosen;
         }
 
-        /// <summary>Espera o navegador voltar com ?code=…&amp;state=…; responde a página "pode voltar ao jogo".</summary>
+        /// <summary>Waits for the browser to come back with ?code=…&amp;state=…; answers with the "you can return to the game" page.</summary>
         private static Dictionary<string, string> WaitCallback(LoginSession session, string state)
         {
             session.Stage = LoginStage.WaitingBrowser;
@@ -188,7 +188,7 @@ namespace CurrencyMod.Diplomacia.Llm.Providers
                     }
                     if (!ours)
                     {
-                        continue; // favicon.ico e afins
+                        continue; // favicon.ico and the like
                     }
                     if (!ok)
                     {
@@ -292,7 +292,7 @@ namespace CurrencyMod.Diplomacia.Llm.Providers
             return Execute(http, Encoding.UTF8.GetBytes(body.ToString(Newtonsoft.Json.Formatting.None)));
         }
 
-        /// <summary>Faz o pedido; erro OAuth vira OAuthError com o código (nunca com tokens).</summary>
+        /// <summary>Makes the request; an OAuth error becomes an OAuthError with the code (never with tokens).</summary>
         private static JObject Execute(HttpWebRequest http, byte[] payload)
         {
             try
@@ -341,7 +341,7 @@ namespace CurrencyMod.Diplomacia.Llm.Providers
             }
         }
 
-        // ---------------- Utilidades ----------------
+        // ---------------- Utilities ----------------
 
         private static void Pkce(out string verifier, out string challenge)
         {
@@ -375,7 +375,7 @@ namespace CurrencyMod.Diplomacia.Llm.Providers
             OpenUrl(url);
         }
 
-        /// <summary>Abre o navegador padrão (funciona fora da thread principal, ao contrário do Application.OpenURL).</summary>
+        /// <summary>Opens the default browser (works off the main thread, unlike Application.OpenURL).</summary>
         internal static void OpenUrl(string url)
         {
             if (string.IsNullOrEmpty(url) || !(url.StartsWith("https://") || url.StartsWith("http://localhost") || url.StartsWith("http://127.0.0.1")))
@@ -388,7 +388,7 @@ namespace CurrencyMod.Diplomacia.Llm.Providers
             }
             catch (Exception ex)
             {
-                Plugin.Log.LogWarning($"[IA] Não consegui abrir o navegador: {ex.Message}");
+                Plugin.Log.LogWarning($"[IA] Could not open the browser: {ex.Message}");
             }
         }
 
@@ -407,7 +407,7 @@ namespace CurrencyMod.Diplomacia.Llm.Providers
             Finish(session, ok: false);
         }
 
-        /// <summary>Responde ao navegador que esperava (depois da troca do código) e fecha a conexão.</summary>
+        /// <summary>Answers the waiting browser (after the code exchange) and closes the connection.</summary>
         private static void Finish(LoginSession session, bool ok)
         {
             TcpClient client = session.PendingClient;

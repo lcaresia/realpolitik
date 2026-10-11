@@ -6,9 +6,9 @@ using UnityEngine;
 namespace CurrencyMod.NativeUI
 {
     /// <summary>
-    /// Balão do gráfico: com o mouse em cima, mostra os valores do turno sob o cursor. O gráfico é uma imagem só, então a
-    /// posição do mouse (no espaço da interface, o mesmo dos retângulos) vira o índice do turno e o texto do balão nativo é
-    /// refeito quando o índice muda.
+    /// Chart tooltip: on mouse hover, shows the values of the turn under the cursor. The chart is a single image, so the
+    /// mouse position (in UI space, the same as the rects) becomes the turn index and the native tooltip text is
+    /// rebuilt when the index changes.
     /// </summary>
     internal partial class NativeBankWindow
     {
@@ -17,7 +17,7 @@ namespace CurrencyMod.NativeUI
         private Func<int, string[]> hoverText;
         private int hoverShown = -1;
 
-        /// <summary>Registra de onde vêm os textos do balão (turno inicial, quantos turnos, texto de um índice: título e descrição).</summary>
+        /// <summary>Registers where the tooltip texts come from (first turn, turn count, text for an index: title and description).</summary>
         private void SetChartHover(int first, int count, Func<int, string[]> describe)
         {
             if (first != hoverFirst || count != hoverCount)
@@ -47,7 +47,7 @@ namespace CurrencyMod.NativeUI
             }
             catch (Exception)
             {
-                // Um erro aqui rodaria a cada quadro: o balão do gráfico deixa de funcionar, o resto da tela não.
+                // An error here would run every frame: the chart tooltip stops working, the rest of the screen does not.
                 hoverText = null;
             }
         }
@@ -70,7 +70,7 @@ namespace CurrencyMod.NativeUI
                 hoverShown = -1;
                 return;
             }
-            // O desenho vai de uma ponta à outra da imagem: o primeiro turno na borda esquerda, o último na direita.
+            // The drawing spans the whole image: the first turn at the left edge, the last at the right.
             int index = Mathf.Clamp(Mathf.RoundToInt((mouse.x - rect.x) / Mathf.Max(1f, rect.width) * (hoverCount - 1)), 0, hoverCount - 1);
             if (index == hoverShown)
             {

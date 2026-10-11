@@ -8,13 +8,13 @@ using CurrencyMod.Diplomacia.Capture;
 namespace CurrencyMod.Diplomacia
 {
     /// <summary>
-    /// Se uma carta cita um império: o nome do líder, o nome do povo (atual ou de eras anteriores) ou uma cidade dele.
-    /// Sem acento e sem caixa; nomes de 5+ letras aceitam um erro de digitação ("Icaresia" por "lcaresia"). Usado para
-    /// destacar os comunicados públicos que falam do jogador. Sem custo de API.
+    /// Whether a letter cites an empire: the leader's name, the people's name (current or from earlier eras) or one of its
+    /// cities. Accent- and case-insensitive; names of 5+ letters accept one typo ("Icaresia" for "lcaresia"). Used to
+    /// highlight the public statements that talk about the player. No API cost.
     /// </summary>
     internal static class Mentions
     {
-        /// <summary>Palavras dos nomes de povo que não identificam ninguém ("Os Chou" → só "chou").</summary>
+        /// <summary>Words in people names that identify nobody ("Os Chou" → just "chou").</summary>
         private static readonly HashSet<string> Articles = new HashSet<string>
         {
             "os", "as", "o", "a", "de", "do", "da", "dos", "das", "e", "the", "of", "les", "le", "la", "los", "las", "el", "die", "der", "des",
@@ -47,7 +47,7 @@ namespace CurrencyMod.Diplomacia
             return cites;
         }
 
-        /// <summary>Alguma palavra significativa do nome aparece no texto (com tolerância de uma letra nas longas).</summary>
+        /// <summary>Some meaningful word of the name appears in the text (with one-letter tolerance for long ones).</summary>
         private static bool MatchesName(List<string> words, string name)
         {
             if (string.IsNullOrWhiteSpace(name))
@@ -64,7 +64,7 @@ namespace CurrencyMod.Diplomacia
             return false;
         }
 
-        /// <summary>O nome inteiro (todas as palavras, em sequência) aparece no texto: cidades como "São Paulo".</summary>
+        /// <summary>The whole name (all words, in sequence) appears in the text: cities like "São Paulo".</summary>
         private static bool MatchesPhrase(List<string> words, string phrase)
         {
             List<string> parts = Words(phrase);
@@ -100,7 +100,7 @@ namespace CurrencyMod.Diplomacia
                 UnicodeCategory category = CharUnicodeInfo.GetUnicodeCategory(c);
                 if (category == UnicodeCategory.NonSpacingMark)
                 {
-                    continue; // acento
+                    continue; // accent
                 }
                 if (char.IsLetterOrDigit(c))
                 {
@@ -119,7 +119,7 @@ namespace CurrencyMod.Diplomacia
             return words;
         }
 
-        /// <summary>Distância de edição (Levenshtein) entre duas palavras curtas.</summary>
+        /// <summary>Edit distance (Levenshtein) between two short words.</summary>
         private static int Distance(string a, string b)
         {
             int[] previous = Enumerable.Range(0, b.Length + 1).ToArray();

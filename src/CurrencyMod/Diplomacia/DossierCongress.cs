@@ -7,10 +7,10 @@ using CurrencyMod.Diplomacia.Capture;
 namespace CurrencyMod.Diplomacia
 {
     /// <summary>
-    /// Seção "CONGRESSO MUNDIAL" do dossiê (research\congress.md §7.6): como ele se forma, o peso de cada nação, a
-    /// presidência e as leis que dá para propor, a votação de lei aberta (placar, quem falta, subornos), as crises em
-    /// votação, os vereditos, a lei imposta, o consenso ideológico e as notícias. Preenche o ValidationContext com os
-    /// códigos V (leis), K (crises) e I (eixos) que as ferramentas usam. Só aparece nas partidas com o Congresso.
+    /// "CONGRESSO MUNDIAL" section of the dossier (research\congress.md §7.6): how it forms, each nation's weight, the
+    /// presidency and the laws that can be proposed, the open law vote (tally, who is missing, bribes), the crises being
+    /// voted, the verdicts, the imposed law, the ideological consensus and the news. Fills the ValidationContext with the
+    /// V (laws), K (crises) and I (axes) codes the tools use. Only appears in games with the Congress.
     /// </summary>
     internal static class DossierCongress
     {
@@ -196,7 +196,7 @@ namespace CurrencyMod.Diplomacia
             }
             if (context.NoSway && (mine?.BribeBonus ?? 0) <= 0 && !(HasBribes(mine) && context.HasConsulate))
             {
-                // Sem peso e sem como comprar peso: o voto seria recusado pelo jogo.
+                // No weight and no way to buy weight: the game would reject the vote.
                 context.LawVoteOpen = false;
                 text.AppendLine("   Você não vota: seu peso no Congresso é zero. Se a outra opção vencer, você recebe a lei imposta mesmo assim.");
                 return;
@@ -249,7 +249,7 @@ namespace CurrencyMod.Diplomacia
             }
         }
 
-        /// <summary>"A 210 (E4, E7) · B 95 (E1)" (lei) ou "E2 150 (E2, E8) × E5 120 (E5)" (crise).</summary>
+        /// <summary>"A 210 (E4, E7) · B 95 (E1)" (law) or "E2 150 (E2, E8) × E5 120 (E5)" (crisis).</summary>
         private static string Score(CongressBallot[] ballots, int first, string firstLabel, int second, string secondLabel)
         {
             string Side(int choice, string label)

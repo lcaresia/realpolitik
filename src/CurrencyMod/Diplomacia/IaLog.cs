@@ -8,8 +8,8 @@ using Newtonsoft.Json.Linq;
 namespace CurrencyMod.Diplomacia
 {
     /// <summary>
-    /// Log em disco de cada decisão (dossiê, prompt, respostas, uso e custo), um arquivo por nação por turno, em
-    /// BepInEx\DiplomaciaIA\logs\&lt;partida&gt;\. Nunca contém a chave da API (ela só vai no cabeçalho HTTP).
+    /// On-disk log of every decision (dossier, prompt, responses, usage and cost), one file per nation per turn, in
+    /// BepInEx\DiplomaciaIA\logs\&lt;game&gt;\. Never contains the API key (it only goes in the HTTP header).
     /// </summary>
     internal static class IaLog
     {
@@ -53,11 +53,11 @@ namespace CurrencyMod.Diplomacia
             }
             catch (Exception ex)
             {
-                Plugin.Log.LogWarning($"[IA] Falha ao gravar log: {ex.Message}");
+                Plugin.Log.LogWarning($"[IA] Failed to write log: {ex.Message}");
             }
         }
 
-        /// <summary>Log de uma chamada do conselho do jogador (reunião ou resposta): T&lt;turno&gt;_E&lt;jogador&gt;_conselho_&lt;rótulo&gt;.json.</summary>
+        /// <summary>Log of one call of the player's council (meeting or reply): T&lt;turn&gt;_E&lt;player&gt;_conselho_&lt;label&gt;.json.</summary>
         internal static void WriteCouncil(string gameGuid, int turn, int player, string label, string system, string user, string raw, string reasoning, string error, double cost)
         {
             if (!IaConfig.SaveLogs.Value)
@@ -85,14 +85,14 @@ namespace CurrencyMod.Diplomacia
             }
             catch (Exception ex)
             {
-                Plugin.Log.LogWarning($"[IA] Falha ao gravar log do conselho: {ex.Message}");
+                Plugin.Log.LogWarning($"[IA] Failed to write council log: {ex.Message}");
             }
         }
 
         /// <summary>
-        /// Apaga os logs de turnos antigos da partida (mantém os últimos N do .cfg). Os turnos "do futuro" (de quando um
-        /// save mais antigo é carregado) ficam: são o material da bancada (_Modding\tools\ia-bench) e o mesmo turno jogado
-        /// de novo sobrescreve o arquivo. Antes eles eram apagados, e assim se perderam os logs da Teste16.
+        /// Deletes the game's logs from old turns (keeps the last N from the .cfg). Turns "from the future" (from when an
+        /// older save is loaded) are kept: they are the bench material (_Modding\tools\ia-bench), and the same turn played
+        /// again overwrites the file. They used to be deleted, and that is how the Teste16 logs were lost.
         /// </summary>
         internal static void Prune(string gameGuid, int currentTurn)
         {

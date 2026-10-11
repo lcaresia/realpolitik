@@ -8,23 +8,23 @@ using CurrencyMod.Diplomacia.Llm;
 namespace CurrencyMod.Diplomacia
 {
     /// <summary>
-    /// Comandos de desenvolvimento da IA, pelo canal _Modding\dev\cmd.txt (prefixo "ia"):
-    ///   ia status                 situação, gasto, nações
-    ///   ia dossie &lt;n|todas&gt;      monta o dossiê agora (sem chamar a API) e grava em dev\out
-    ///   ia prompt &lt;n&gt;            grava o prompt completo (sistema + dossiê) da nação n
-    ///   ia agora [n]              faz a nação n (ou todas) pensar agora, mesmo já tendo pensado no turno
-    ///   ia carta &lt;n&gt; &lt;texto&gt;     carta privada sua para a nação n (chega pela regra de entrega)
-    ///   ia carta! &lt;n&gt; &lt;texto&gt;    o mesmo, mas entregue no turno atual (testes)
-    ///   ia foto                   tira uma foto do turno agora, na thread principal (testes)
-    ///   ia on | ia off            liga/desliga a IA (grava [IA] Ativo no .cfg)
-    ///   ia viewer                 abre o visualizador no navegador
-    ///   ia reset                  apaga a memória da IA desta partida (testes)
-    ///   ia correio open|close|secao N|to E#|responder [id]|limpar|texto ...   controla a tela do Correio Diplomático
-    ///   ia cartas E#              abre a diplomacia da nação já na aba Cartas
-    ///   ia espionagem             espiões, pesos, chance de interceptar em cada ponta e interceptações recentes
-    ///   ia interceptar &lt;id&gt; E#   força a interceptação de uma carta privada (testes)
-    ///   ia acoes [turnos]         ações das nações nos últimos turnos (padrão 3) e o que o jogo fez com elas
-    ///   ia mencoes [texto]        comunicados públicos que citam você; com texto, testa o detector nesse texto
+    /// AI development commands, through the _Modding\dev\cmd.txt channel ("ia" prefix):
+    ///   ia status                 state, spending, nations
+    ///   ia dossie &lt;n|todas&gt;      builds the dossier now (without calling the API) and writes it to dev\out
+    ///   ia prompt &lt;n&gt;            writes the full prompt (system + dossier) of nation n
+    ///   ia agora [n]              makes nation n (or all) think now, even if it already thought this turn
+    ///   ia carta &lt;n&gt; &lt;texto&gt;     your private letter to nation n (arrives by the delivery rule)
+    ///   ia carta! &lt;n&gt; &lt;texto&gt;    the same, but delivered on the current turn (tests)
+    ///   ia foto                   takes a turn snapshot now, on the main thread (tests)
+    ///   ia on | ia off            turns the AI on/off (writes [IA] Ativo to the .cfg)
+    ///   ia viewer                 opens the viewer in the browser
+    ///   ia reset                  erases this match's AI memory (tests)
+    ///   ia correio open|close|secao N|to E#|responder [id]|limpar|texto ...   controls the Diplomatic Mail screen
+    ///   ia cartas E#              opens the nation's diplomacy directly on the Letters tab
+    ///   ia espionagem             spies, weights, interception chance at each end and recent interceptions
+    ///   ia interceptar &lt;id&gt; E#   forces the interception of a private letter (tests)
+    ///   ia acoes [turnos]         nations' actions in the last turns (default 3) and what the game did with them
+    ///   ia mencoes [texto]        public statements that mention you; with text, tests the detector on that text
     /// </summary>
     internal static class IaCommands
     {
@@ -44,7 +44,7 @@ namespace CurrencyMod.Diplomacia
                 case "status":
                     return Status(module);
                 case "raciocinio":
-                    // Troca o [IA] Raciocinio sem reiniciar (testes de custo e qualidade); vale a partir das próximas decisões.
+                    // Changes [IA] Raciocinio without restarting (cost and quality tests); applies from the next decisions on.
                     if (rest.Length == 0)
                     {
                         return $"raciocínio: {IaConfig.Reasoning.Value} (uso: ia raciocinio low|high|max|desligado)";
@@ -144,7 +144,7 @@ namespace CurrencyMod.Diplomacia
                     return UI.MailScreen.DevCommand(rest);
                 case "grupo":
                 {
-                    // "ia grupo criar <nome> E1 E2 [...]" | "ia grupo msg GRP# <texto>" | "ia grupo ver": conversas em grupo do jogador.
+                    // "ia grupo criar <nome> E1 E2 [...]" | "ia grupo msg GRP# <texto>" | "ia grupo ver": the player's group conversations.
                     string[] bits = (rest ?? string.Empty).Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
                     if (IaModule.World == null || bits.Length == 0 || bits[0] == "ver")
                     {
@@ -168,8 +168,8 @@ namespace CurrencyMod.Diplomacia
                     return UI.AlliancesScreen.DevCommand(rest);
                 case "mencoes":
                 {
-                    // Detector de menções (Mentions): sem texto, os comunicados públicos que citam o jogador; com texto, testa
-                    // esse texto como se fosse um comunicado público de outra nação.
+                    // Mention detector (Mentions): without text, the public statements that mention the player; with text,
+                    // tests that text as if it were a public statement from another nation.
                     WorldCapture capture = CaptureFor(module);
                     if (capture == null || IaModule.World == null || module.PlayerIndex < 0)
                     {
@@ -186,7 +186,7 @@ namespace CurrencyMod.Diplomacia
                 }
                 case "espionagem":
                 {
-                    // Espiões, pesos, chance de cada império em cada ponta e as interceptações recentes.
+                    // Spies, weights, each empire's chance at each end and the recent interceptions.
                     WorldCapture capture = CaptureFor(module);
                     if (IaModule.World == null || capture == null)
                     {
@@ -232,8 +232,8 @@ namespace CurrencyMod.Diplomacia
                 }
                 case "congresso":
                 {
-                    // Diagnóstico do Congresso: "ia congresso" usa a foto do turno; "ia congresso agora" tira uma foto nova
-                    // na thread principal (sem os números que só a thread do jogo calcula).
+                    // Congress diagnostics: "ia congresso" uses the turn snapshot; "ia congresso agora" takes a new snapshot
+                    // on the main thread (without the numbers only the game thread computes).
                     if (Amplitude.Mercury.Sandbox.Sandbox.InternationalAncillary == null)
                     {
                         return "erro: sem partida";
@@ -245,8 +245,8 @@ namespace CurrencyMod.Diplomacia
                 }
                 case "interceptar":
                 {
-                    // "ia interceptar <carta> E#": força a interceptação (testes), como se o espião daquele império
-                    // tivesse pegado a carta no destino. Só carta privada que o destinatário ainda não leu.
+                    // "ia interceptar <carta> E#": forces the interception (tests), as if that empire's spy had
+                    // caught the letter at the destination. Only a private letter the recipient has not read yet.
                     string[] items = rest.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
                     if (items.Length < 2 || !int.TryParse(items[0], out int id) || !int.TryParse(items[1].TrimStart('E', 'e'), out int spyOwner))
                     {
@@ -283,7 +283,7 @@ namespace CurrencyMod.Diplomacia
                     return Llm.Providers.ProviderCommands.Execute(rest);
                 case "acao":
                 {
-                    // "ia acao E7 {"acao":"oferecer_rendicao","nacao":"E1"}": ação de teste pelo mesmo caminho das decisões.
+                    // "ia acao E7 {"acao":"oferecer_rendicao","nacao":"E1"}": test action through the same path as the decisions.
                     string[] pieces = rest.Split(new[] { ' ' }, 2, StringSplitOptions.RemoveEmptyEntries);
                     return pieces.Length == 2 && int.TryParse(pieces[0].TrimStart('E', 'e'), out int actor)
                         ? module.DevAction(actor, pieces[1])
@@ -291,7 +291,7 @@ namespace CurrencyMod.Diplomacia
                 }
                 case "teste":
                 {
-                    // Cenários de teste da revisão de bugs (docs\diplomacia-ia.md §7).
+                    // Test scenarios from the bug review (docs\diplomacia-ia.md §7).
                     string[] testArgs = (rest ?? string.Empty).Split(new[] { ' ' }, 3, StringSplitOptions.RemoveEmptyEntries);
                     string what = testArgs.Length > 0 ? testArgs[0].ToLowerInvariant() : string.Empty;
                     int nation = testArgs.Length > 1 && int.TryParse(testArgs[1].TrimStart('E', 'e'), out int n) ? n : -1;
@@ -311,7 +311,7 @@ namespace CurrencyMod.Diplomacia
                 }
                 case "cartas":
                 {
-                    // "ia cartas E7": abre a diplomacia com a nação já na aba Cartas (o mesmo do botão "Na diplomacia").
+                    // "ia cartas E7": opens diplomacy with the nation directly on the Letters tab (same as the "In diplomacy" button).
                     if (!int.TryParse((rest ?? string.Empty).Trim().TrimStart('E', 'e'), out int empire))
                     {
                         return "uso: ia cartas E#";
@@ -325,8 +325,8 @@ namespace CurrencyMod.Diplomacia
         }
 
         /// <summary>
-        /// "ia conselho [ver|abrir|fechar|secao n|falar &lt;texto&gt;|demitir &lt;pasta&gt;|reunir|convocar]": o conselho do jogador (reunir/convocar = audiência, ou de novo depois de uma falha).
-        /// "ver" (padrão) mostra a reunião do turno em texto.
+        /// "ia conselho [ver|abrir|fechar|secao n|falar &lt;texto&gt;|demitir &lt;pasta&gt;|reunir|convocar]": the player's council (reunir/convocar = audience, or again after a failure).
+        /// "ver" (default) shows the turn's meeting as text.
         /// </summary>
         private static string CouncilCommand(IaModule module, string rest)
         {
@@ -342,7 +342,7 @@ namespace CurrencyMod.Diplomacia
                     return Council.PlayerCouncil.Fire(arg);
                 case "nomear":
                 {
-                    // "ia conselho nomear <pasta> <id|1|2|3>": nomeia um dos candidatos (pelo id do banco ou pela posição).
+                    // "ia conselho nomear <pasta> <id|1|2|3>": appoints one of the candidates (by pool id or by position).
                     string[] bits = (arg ?? string.Empty).Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
                     if (bits.Length < 2 || world == null)
                     {
@@ -359,13 +359,13 @@ namespace CurrencyMod.Diplomacia
                     return Council.PlayerCouncil.Appoint(pasta, pick);
                 }
                 case "fe":
-                    // "ia conselho fe T#": força de crença do território sem e com o bônus do veterano da Fé.
+                    // "ia conselho fe T#": the territory's belief strength without and with the Faith veteran bonus.
                     return int.TryParse((arg ?? string.Empty).Trim().TrimStart('T', 't'), out int faithTerritory)
                         ? Council.VeteranEffects.MeasureFaith(faithTerritory)
                         : "uso: ia conselho fe T#";
                 case "veterano":
                 {
-                    // "ia conselho veterano <pasta> <turnos>": teste do bônus; põe o ministro há N turnos no cargo.
+                    // "ia conselho veterano <pasta> <turnos>": bonus test; sets the minister as N turns in office.
                     string[] bits = (arg ?? string.Empty).Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
                     Council.Minister vet = world?.Ensure(module.PlayerIndex).Council.FirstOrDefault(m => bits.Length > 0 && m.Portfolio == bits[0].ToLowerInvariant());
                     if (vet == null || bits.Length < 2 || !int.TryParse(bits[1], out int years))
@@ -441,8 +441,8 @@ namespace CurrencyMod.Diplomacia
         }
 
         /// <summary>
-        /// Diagnóstico: unidades do jogo com a marca de agente (espião) e a era delas, e os exércitos furtivos em campo
-        /// (furtividade máxima acima de zero), agentes ou não. Lido na thread principal (só leitura).
+        /// Diagnostics: game units with the agent (spy) mark and their era, and the stealthy armies in the field
+        /// (max stealth above zero), agents or not. Read on the main thread (read-only).
         /// </summary>
         private static string AgentUnits()
         {

@@ -4,21 +4,21 @@ using UnityEngine;
 namespace CurrencyMod.NativeUI
 {
     /// <summary>
-    /// Ícones no mesmo formato dos pictogramas do jogo: textura Alpha8 com campo de distância
-    /// (SDF), borda em alfa 0,5 e faixa de transição de ~10% do tamanho. Assim o material
-    /// "DistanceField" da UI nativa desenha o ícone nítido em qualquer escala e com a cor do estilo.
+    /// Icons in the same format as the game's pictograms: Alpha8 texture with a distance field
+    /// (SDF), edge at alpha 0.5 and a transition band of ~10% of the size. That way the native UI's
+    /// "DistanceField" material draws the icon sharp at any scale and with the style's color.
     /// </summary>
     internal static class SdfIcons
     {
         private const int Size = 128;
-        private const float SpreadPixels = 13f; // ±6,5 px num ícone de 64 px, como os nativos
+        private const float SpreadPixels = 13f; // ±6.5 px on a 64 px icon, like the native ones
 
-        /// <summary>Banco Central: templo clássico (frontão com moeda vazada, colunas, escadaria).</summary>
+        /// <summary>Central Bank: classical temple (pediment with a cut-out coin, columns, stairs).</summary>
         public static Texture2D CentralBank()
         {
             return Render("CurrencyMod_CentralBank", p =>
             {
-                // Coordenadas em 0..1 com y para baixo, como num desenho.
+                // Coordinates in 0..1 with y pointing down, like a drawing.
                 float roof = Triangle(p, new Vector2(0.10f, 0.37f), new Vector2(0.90f, 0.37f), new Vector2(0.50f, 0.10f));
                 float coinHole = Circle(p, new Vector2(0.50f, 0.285f), 0.052f);
                 roof = Mathf.Max(roof, -coinHole);
@@ -37,18 +37,18 @@ namespace CurrencyMod.NativeUI
             });
         }
 
-        /// <summary>Correio diplomático: envelope com a aba vazada e um lacre no centro.</summary>
+        /// <summary>Diplomatic mail: envelope with a cut-out flap and a seal in the center.</summary>
         public static Texture2D Letter()
         {
             return Render("CurrencyMod_Letter", p =>
             {
                 float body = Box(p, new Vector2(0.50f, 0.50f), new Vector2(0.38f, 0.27f));
-                // Aba: duas linhas vazadas que descem dos cantos de cima até o centro.
+                // Flap: two cut-out lines going down from the top corners to the center.
                 float flapLeft = Segment(p, new Vector2(0.13f, 0.24f), new Vector2(0.50f, 0.55f), 0.03f);
                 float flapRight = Segment(p, new Vector2(0.87f, 0.24f), new Vector2(0.50f, 0.55f), 0.03f);
                 body = Mathf.Max(body, -flapLeft);
                 body = Mathf.Max(body, -flapRight);
-                // Lacre: círculo cheio com uma folga em volta, onde as linhas se encontram.
+                // Seal: filled circle with a gap around it, where the lines meet.
                 var seal = new Vector2(0.50f, 0.57f);
                 body = Mathf.Max(body, -Circle(p, seal, 0.14f));
                 float wax = Circle(p, seal, 0.095f);
@@ -56,12 +56,12 @@ namespace CurrencyMod.NativeUI
             });
         }
 
-        /// <summary>Conselho: três bustos, o do meio (o líder) maior e à frente, com uma folga entre eles.</summary>
+        /// <summary>Council: three busts, the middle one (the leader) bigger and in front, with a gap between them.</summary>
         public static Texture2D Council()
         {
             return Render("CurrencyMod_Council", p =>
             {
-                // Busto = cabeça redonda + ombros (círculo grande cortado embaixo).
+                // Bust = round head + shoulders (large circle cut at the bottom).
                 float middle = Mathf.Min(
                     Circle(p, new Vector2(0.50f, 0.32f), 0.115f),
                     Mathf.Max(Circle(p, new Vector2(0.50f, 0.86f), 0.27f), p.y - 0.86f));
@@ -71,7 +71,7 @@ namespace CurrencyMod.NativeUI
                 float right = Mathf.Min(
                     Circle(p, new Vector2(0.79f, 0.42f), 0.09f),
                     Mathf.Max(Circle(p, new Vector2(0.79f, 0.86f), 0.20f), p.y - 0.86f));
-                // Os de trás perdem uma faixa em volta do líder: a figura do meio fica destacada.
+                // The back ones lose a band around the leader: the middle figure stands out.
                 float gap = middle - 0.04f;
                 left = Mathf.Max(left, -gap);
                 right = Mathf.Max(right, -gap);
@@ -79,7 +79,7 @@ namespace CurrencyMod.NativeUI
             });
         }
 
-        /// <summary>Alianças (blocos): três anéis entrelaçados em triângulo.</summary>
+        /// <summary>Alliances (blocs): three interlocking rings in a triangle.</summary>
         public static Texture2D Alliance()
         {
             return Render("CurrencyMod_Alliance", p =>
@@ -89,7 +89,7 @@ namespace CurrencyMod.NativeUI
             });
         }
 
-        /// <summary>Cotação: duas setas em sentidos opostos (troca de moeda).</summary>
+        /// <summary>Exchange rate: two arrows in opposite directions (currency exchange).</summary>
         public static Texture2D Exchange()
         {
             return Render("CurrencyMod_SortExchange", p =>
@@ -102,7 +102,7 @@ namespace CurrencyMod.NativeUI
             });
         }
 
-        /// <summary>Inflação: barras subindo com uma seta para cima.</summary>
+        /// <summary>Inflation: rising bars with an upward arrow.</summary>
         public static Texture2D Inflation()
         {
             return Render("CurrencyMod_SortInflation", p =>
@@ -117,7 +117,7 @@ namespace CurrencyMod.NativeUI
             });
         }
 
-        /// <summary>Juros: sinal de porcentagem.</summary>
+        /// <summary>Interest: percent sign.</summary>
         public static Texture2D Interest()
         {
             return Render("CurrencyMod_SortInterest", p =>
@@ -143,9 +143,9 @@ namespace CurrencyMod.NativeUI
             {
                 for (int x = 0; x < Size; x++)
                 {
-                    // Linha 0 da textura é a de baixo: inverte para o desenho de y para baixo.
+                    // Texture row 0 is the bottom one: flip for the y-down drawing.
                     var p = new Vector2((x + 0.5f) / Size, 1f - (y + 0.5f) / Size);
-                    float distancePixels = signedDistance(p) * Size; // negativo = dentro
+                    float distancePixels = signedDistance(p) * Size; // negative = inside
                     float alpha = Mathf.Clamp01(0.5f - distancePixels / SpreadPixels);
                     pixels[y * Size + x] = new Color32(0, 0, 0, (byte)Mathf.RoundToInt(alpha * 255));
                 }
@@ -167,7 +167,7 @@ namespace CurrencyMod.NativeUI
 
         private static float Circle(Vector2 p, Vector2 center, float radius) => (p - center).magnitude - radius;
 
-        /// <summary>Segmento com pontas arredondadas (cápsula) de raio <paramref name="radius"/>.</summary>
+        /// <summary>Segment with rounded ends (capsule) of radius <paramref name="radius"/>.</summary>
         private static float Segment(Vector2 p, Vector2 a, Vector2 b, float radius)
         {
             Vector2 pa = p - a, ba = b - a;
@@ -183,7 +183,7 @@ namespace CurrencyMod.NativeUI
 
         private static float Triangle(Vector2 p, Vector2 a, Vector2 b, Vector2 c)
         {
-            // Distância com sinal a um triângulo (Inigo Quilez).
+            // Signed distance to a triangle (Inigo Quilez).
             Vector2 e0 = b - a, e1 = c - b, e2 = a - c;
             Vector2 v0 = p - a, v1 = p - b, v2 = p - c;
             Vector2 pq0 = v0 - e0 * Mathf.Clamp01(Vector2.Dot(v0, e0) / Vector2.Dot(e0, e0));

@@ -13,22 +13,22 @@ using Utils = Amplitude.Mercury.UI.Utils;
 namespace CurrencyMod
 {
     /// <summary>
-    /// Crise "Bloqueio comercial". O jogo não aceita tipos novos de reclamação (enum fechado, tabelas de
-    /// tamanho fixo e saves guardam o número), então ela é uma reclamação "Comércio destruído" (ganho em
-    /// dinheiro, categoria agressão) marcada em DemandGain.GainParamName. A marca segue para a exigência e
-    /// para o save; sem o mod, a reclamação aparece como "Comércio destruído" comum.
-    /// Textos próprios na tela de crise; se a exigência for aceita, o bloqueio e o pedágio contra a vítima
-    /// são retirados. Recusar abre o caminho normal do jogo para a guerra justificada.
+    /// "Trade blockade" crisis. The game does not accept new grievance types (closed enum, fixed-size
+    /// tables and saves store the number), so it is a "Trade destroyed" grievance (money gain, aggression
+    /// category) marked in DemandGain.GainParamName. The mark carries over to the demand and to the
+    /// save; without the mod, the grievance shows up as a plain "Trade destroyed".
+    /// Custom texts on the crisis screen; if the demand is accepted, the blockade and the toll against the victim
+    /// are lifted. Refusing opens the game's normal path to a justified war.
     /// </summary>
     internal static class TradeGrievances
     {
         internal static readonly StaticString Marker = new StaticString("CurrencyMod_TradeBlockade");
-        // Na interface: L.T(Title) (o texto vai para a tela de crise nativa; o dossiê da IA usa texto próprio).
+        // In the UI: L.T(Title) (the text goes to the native crisis screen; the AI dossier uses its own text).
         internal static readonly string Title = L.N("Bloqueio comercial");
 
         internal static bool IsMarked(ref DemandGain gain) => gain.GainParamName == Marker;
 
-        /// <summary>Cria ou renova a reclamação da vítima contra quem bloqueia (thread do sandbox).</summary>
+        /// <summary>Creates or renews the victim's grievance against the blocker (sandbox thread).</summary>
         internal static void Ensure(CurrencyWorld world, int victimIndex, int offenderIndex)
         {
             MajorEmpire victim = Sandbox.MajorEmpires[victimIndex];
@@ -41,12 +41,12 @@ namespace CurrencyMod
             DiplomaticStateType state = relation.CurrentState;
             if (state != DiplomaticStateType.Peace && state != DiplomaticStateType.Alliance)
             {
-                return; // em guerra o jogo já bloqueia tudo; vassalos seguem as regras do suserano
+                return; // at war the game already blocks everything; vassals follow their overlord's rules
             }
             if ((victim.Liege.Entity != null && victim.Liege.Entity != offender) || (offender.Liege.Entity != null && offender.Liege.Entity != victim))
             {
-                // O jogo redireciona a reclamação de/para o suserano (CreateGrievance): ela iria para outro par, sem a
-                // marca do mod, e aceitar a exigência não tiraria o bloqueio.
+                // The game redirects the grievance from/to the overlord (CreateGrievance): it would go to another pair,
+                // without the mod's mark, and accepting the demand would not lift the blockade.
                 return;
             }
 
@@ -66,7 +66,7 @@ namespace CurrencyMod
                 return;
             }
 
-            // Mesmo GUID que o jogo usa em "Comércio destruído" (o império culpado): uma reclamação por par.
+            // Same GUID the game uses for "Trade destroyed" (the guilty empire): one grievance per pair.
             DiplomaticGrievanceHelper.CreateGrievance(DiplomaticGrievanceType.TradeDestroyed, victimIndex, offenderIndex, offender.GUID, tileIndex);
 
             DiplomaticAmbassy embassy = relation.GetEmpireEmbassy(victimIndex);
@@ -79,12 +79,12 @@ namespace CurrencyMod
                     info.DemandGain.GainParamName = Marker;
                     relation.Frame = Sandbox.Frame;
                     Sandbox.SimulationEntityRepository.SetSynchronizationDirty(victim);
-                    Plugin.Log.LogInfo($"Crise: império {victimIndex} tem a reclamação \"{Title}\" contra o império {offenderIndex}.");
+                    Plugin.Log.LogInfo($"Crisis: empire {victimIndex} has the \"{Title}\" grievance against empire {offenderIndex}.");
                 }
             }
         }
 
-        // ---------------- Exigência aceita: o bloqueio cai ----------------
+        // ---------------- Demand accepted: the blockade is lifted ----------------
 
         [HarmonyPatch(typeof(DiplomaticGrievanceHelper), nameof(DiplomaticGrievanceHelper.TryToApply))]
         private static class ApplyPatch
@@ -107,17 +107,17 @@ namespace CurrencyMod
                     lock (CurrencyManager.Lock)
                     {
                         int removed = TradePolicy.ClearRules(world, offender, victim);
-                        Plugin.Log.LogInfo($"Crise de bloqueio resolvida: império {offender} retirou {removed} bloqueio(s)/pedágio(s) contra o império {victim}.");
+                        Plugin.Log.LogInfo($"Blockade crisis resolved: empire {offender} lifted {removed} blockade(s)/toll(s) against empire {victim}.");
                     }
                 }
                 catch (Exception ex)
                 {
-                    Plugin.Log.LogError($"Bloqueio comercial (exigência aceita): {ex}");
+                    Plugin.Log.LogError($"Trade blockade (demand accepted): {ex}");
                 }
             }
         }
 
-        // ---------------- Textos na tela de crise ----------------
+        // ---------------- Texts on the crisis screen ----------------
 
         private static string ShortName(int empireIndex)
         {
@@ -212,7 +212,7 @@ namespace CurrencyMod
                 {
                     return;
                 }
-                // A linha "Origem: Comércio destruído" passa a dizer "Bloqueio comercial".
+                // The "Origin: Trade destroyed" line now reads "Trade blockade".
                 UIMapper mapper = Utils.DataUtils.EnumUIMappers.GetEnumUIMapper(DiplomaticGrievanceType.TradeDestroyed);
                 string vanilla = mapper != null ? Utils.TextUtils.Localize(mapper.Title) : null;
                 if (!string.IsNullOrEmpty(vanilla))

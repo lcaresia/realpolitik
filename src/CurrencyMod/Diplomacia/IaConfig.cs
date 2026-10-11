@@ -4,8 +4,8 @@ using UnityEngine;
 namespace CurrencyMod.Diplomacia
 {
     /// <summary>
-    /// Seção [IA] do .cfg: limites, cartas e visualizador; [IA.Provedores]: provedores e modelos. Chaves e tokens NÃO
-    /// ficam aqui: moram criptografados em BepInEx\config\credenciais (ver Credentials).
+    /// [IA] section of the .cfg: limits, letters and viewer; [IA.Provedores]: providers and models. Keys and tokens do
+    /// NOT live here: they are stored encrypted in BepInEx\config\credenciais (see Credentials).
     /// </summary>
     internal static class IaConfig
     {
@@ -14,7 +14,7 @@ namespace CurrencyMod.Diplomacia
         internal static ConfigEntry<int> ProposalTurns;
         internal static ConfigEntry<bool> StanceBias;
         internal static ConfigEntry<string> WritingLanguage;
-        /// <summary>Antigo: só lido uma vez para levar um modelo personalizado do DeepSeek para Modelo_deepseek.</summary>
+        /// <summary>Legacy: read only once to move a custom DeepSeek model into Modelo_deepseek.</summary>
         internal static ConfigEntry<string> Model;
         internal static ConfigEntry<string> Reasoning;
         internal static ConfigEntry<int> MaxTokens;
@@ -31,7 +31,7 @@ namespace CurrencyMod.Diplomacia
         internal static ConfigEntry<int> MaxLettersPerTurn;
         internal static ConfigEntry<int> LetterMaxWords;
         internal static ConfigEntry<int> PlayerLetterMaxChars;
-        /// <summary>Limite das cartas do jogador já com o teto do campo nativo (o rótulo some com pouco mais de 2050 caracteres).</summary>
+        /// <summary>Player letter limit, already clamped to the native field's cap (the label vanishes past roughly 2050 characters).</summary>
         internal static int PlayerLetterLimit => System.Math.Max(200, System.Math.Min(2000, PlayerLetterMaxChars?.Value ?? 2000));
         internal static ConfigEntry<int> DiaryMaxWords;
         internal static ConfigEntry<int> PublicDeclarationInterval;
@@ -50,7 +50,7 @@ namespace CurrencyMod.Diplomacia
 
         internal static ConfigEntry<bool> ExpansionInOldSaves;
 
-        // [IA.Provedores]: editados pela tela Realpolitik. Chaves e tokens NUNCA ficam no .cfg.
+        // [IA.Provedores]: edited by the Realpolitik screen. Keys and tokens NEVER go in the .cfg.
         internal static ConfigEntry<string> ProviderOrder;
         internal static readonly System.Collections.Generic.Dictionary<string, ConfigEntry<string>> ProviderModels =
             new System.Collections.Generic.Dictionary<string, ConfigEntry<string>>();
@@ -65,7 +65,7 @@ namespace CurrencyMod.Diplomacia
         internal static ConfigEntry<bool> SaveLogs;
         internal static ConfigEntry<int> LogTurnsKept;
 
-        /// <summary>Idioma em que as nações escrevem (pt, en, es, fr, de): o do .cfg ou, em Auto, o da interface.</summary>
+        /// <summary>Language the nations write in (pt, en, es, fr, de): the .cfg one or, on Auto, the interface's.</summary>
         internal static string WritingCode
         {
             get
@@ -187,7 +187,7 @@ namespace CurrencyMod.Diplomacia
                 "Caminho do codex.exe, para o provedor ChatGPT (Codex). Vazio = procura sozinho (app do Codex em %LOCALAPPDATA%\\OpenAI\\Codex e o PATH).");
         }
 
-        /// <summary>Valor de reasoning_effort para a API, ou null quando o raciocínio está desligado.</summary>
+        /// <summary>reasoning_effort value for the API, or null when reasoning is turned off.</summary>
         internal static string ReasoningEffort
         {
             get

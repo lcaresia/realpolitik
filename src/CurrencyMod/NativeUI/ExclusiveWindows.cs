@@ -8,22 +8,22 @@ using UnityEngine;
 namespace CurrencyMod.NativeUI
 {
     /// <summary>
-    /// As janelas do mod (Banco Central, posto comercial, correio) se comportam como as do jogo: uma de cada vez, e
-    /// fecham quando o jogador vai mexer em outra coisa (pedido do usuário em 2026-10-04: ESC fecha; abrir Fé ou outro
-    /// menu fecha; clicar numa tropa fecha; nunca duas abertas uma sobre a outra).
-    /// O jogo decide as janelas laterais pelo cursor (cidade, tropa, diplomacia...) e pelos menus da barra de controle;
-    /// as do mod não entram nessa conta, então esta classe faz as duas pontas:
-    /// - ao abrir: fecha as outras janelas do mod, as telas cheias, os menus da barra e volta ao cursor normal (o que
-    ///   fecha a janela da tropa ou da cidade selecionada) e esconde outras janelas laterais abertas;
-    /// - enquanto aberta: se o cursor deixa de ser o normal, um menu da barra abre ou outra janela lateral aparece, ela
-    ///   fecha.
+    /// The mod's windows (Central Bank, trade post, mail) behave like the game's: one at a time, and they close when the
+    /// player goes to do something else (user request on 2026-10-04: ESC closes; opening Faith or another menu closes;
+    /// clicking a unit closes; never two open on top of each other).
+    /// The game decides the side windows from the cursor (city, unit, diplomacy...) and from the control bar menus;
+    /// the mod's windows are not part of that, so this class handles both ends:
+    /// - on open: closes the other mod windows, the fullscreens, the bar menus and goes back to the default cursor (which
+    ///   closes the selected unit's or city's window) and hides other open side windows;
+    /// - while open: if the cursor stops being the default one, a bar menu opens or another side window appears, it
+    ///   closes.
     /// </summary>
     internal static class ExclusiveWindows
     {
-        /// <summary>Tempo depois de abrir em que as outras janelas ainda podem estar saindo (animação).</summary>
+        /// <summary>Time after opening during which the other windows may still be leaving (animation).</summary>
         private const float Grace = 0.5f;
 
-        /// <summary>Prepara a abertura de uma janela do mod. keepTradeView: o posto comercial vive na visão de comércio.</summary>
+        /// <summary>Prepares the opening of a mod window. keepTradeView: the trade post lives in the trade view.</summary>
         internal static void BeforeOpen(UIWindow opening, bool keepTradeView = false)
         {
             try
@@ -51,7 +51,7 @@ namespace CurrencyMod.NativeUI
                 if (opening != Diplomacia.UI.MailScreen.Instance)
                 {
                     Diplomacia.UI.MailScreen.SetOpen(false);
-                    // Uma janela lateral não aparece com tela cheia aberta (o grupo dela esconde tudo).
+                    // A side window does not show while a fullscreen is open (its group hides everything).
                     WindowsManager.Instance?.GetWindowsGroup<InGameFullscreenGroup>()?.HideAllFullscreens();
                 }
                 if (!keepTradeView)
@@ -77,13 +77,13 @@ namespace CurrencyMod.NativeUI
             }
             catch (Exception ex)
             {
-                Plugin.Log.LogWarning($"Janelas do mod: preparar a abertura: {ex.Message}");
+                Plugin.Log.LogWarning($"Mod windows: prepare opening: {ex.Message}");
             }
         }
 
         /// <summary>
-        /// Se o jogador foi mexer em outra coisa depois que a janela abriu: selecionou tropa, cidade ou nação (o cursor
-        /// mudou), abriu um menu da barra de controle ou outra janela lateral do jogo apareceu.
+        /// Whether the player went to do something else after the window opened: selected a unit, city or nation (the
+        /// cursor changed), opened a control bar menu, or another game side window appeared.
         /// </summary>
         internal static bool Interrupted(UIWindow window, float openedAt, bool tradeView = false)
         {

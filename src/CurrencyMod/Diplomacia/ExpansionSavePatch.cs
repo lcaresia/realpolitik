@@ -10,20 +10,20 @@ using DownloadableContents = Amplitude.Mercury.Data.Simulation.Prerequisites.Dow
 namespace CurrencyMod.Diplomacia
 {
     /// <summary>
-    /// Teste do Congresso em saves criados sem a expansão Together We Rule. A partida guarda as DLCs com que foi criada
-    /// (Sandbox.DownloadableContents) e o jogo nunca liga uma DLC nova num save antigo. Com [IA] ExpansaoEmSaveAntigo
-    /// ligado e a expansão comprada e ativada no menu de DLCs do jogo, o bit dela entra logo depois de ler o save, antes
-    /// de o jogo inicializar o Congresso (InternationalAncillary.InitializeOnLoad registra os passes conforme a DLC). O
-    /// save seguinte já sai com a expansão. Desligado por padrão: só para testes.
+    /// Congress testing on saves created without the Together We Rule expansion. A game stores the DLCs it was created
+    /// with (Sandbox.DownloadableContents) and the game never turns on a new DLC in an old save. With [IA]
+    /// ExpansaoEmSaveAntigo on and the expansion owned and enabled in the game's DLC menu, its bit is set right after the
+    /// save is read, before the game initializes the Congress (InternationalAncillary.InitializeOnLoad registers the
+    /// passes according to the DLC). The next save already comes out with the expansion. Off by default: testing only.
     /// </summary>
     internal static class ExpansionSavePatch
     {
-        /// <summary>A expansão foi ligada à força no save carregado agora.</summary>
+        /// <summary>The expansion was force-enabled in the save that was just loaded.</summary>
         internal static bool Forced;
 
         internal static int ExpansionBit => 1 << (int)DownloadableContents.DiplomacyExpansionPack;
 
-        /// <summary>A partida usa a expansão, mas a sessão foi criada sem ela (o "Forced" se perde numa recarga do núcleo).</summary>
+        /// <summary>The game uses the expansion, but the session was created without it ("Forced" is lost on a core reload).</summary>
         internal static bool ForcedBySession()
         {
             try
@@ -38,7 +38,7 @@ namespace CurrencyMod.Diplomacia
             }
         }
 
-        /// <summary>Situação da expansão na conta (comprada e ativada no menu de DLCs).</summary>
+        /// <summary>Status of the expansion on the account (owned and enabled in the DLC menu).</summary>
         internal static string Describe()
         {
             try
@@ -77,16 +77,16 @@ namespace CurrencyMod.Diplomacia
                     var service = Services.GetService<Amplitude.Mercury.DigitalDistribution.IDownloadableContentService>();
                     if (service == null || !service.IsAvailable((int)DownloadableContents.DiplomacyExpansionPack))
                     {
-                        Plugin.Log?.LogWarning("[IA] ExpansaoEmSaveAntigo ligado, mas a expansão Together We Rule não está comprada e ativada no menu de DLCs: o save abre sem ela.");
+                        Plugin.Log?.LogWarning("[IA] ExpansaoEmSaveAntigo is on, but the Together We Rule expansion is not owned and enabled in the DLC menu: the save opens without it.");
                         return;
                     }
                     Sandbox.DownloadableContents |= ExpansionBit;
                     Forced = true;
-                    Plugin.Log?.LogInfo("[IA] Expansão Together We Rule ligada neste save (criado sem ela), para o teste do Congresso.");
+                    Plugin.Log?.LogInfo("[IA] Together We Rule expansion enabled in this save (created without it), for Congress testing.");
                 }
                 catch (Exception ex)
                 {
-                    Plugin.Log?.LogError($"[IA] Falha ao ligar a expansão no save: {ex}");
+                    Plugin.Log?.LogError($"[IA] Failed to enable the expansion in the save: {ex}");
                 }
             }
         }

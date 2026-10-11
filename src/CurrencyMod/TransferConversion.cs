@@ -10,12 +10,12 @@ using HarmonyLib;
 namespace CurrencyMod
 {
     /// <summary>
-    /// Converte dinheiro entre moedas quando ele passa de um império para outro.
+    /// Converts money between currencies when it moves from one empire to another.
     ///
-    /// O jogo não tem "transferência": cada operação é um Pay/GainMoney separado em cada império.
-    /// Por isso os métodos que transferem dinheiro abrem um "contexto": dentro dele, todo Pay e
-    /// GainMoney é anotado. Ao sair, se houve exatamente um pagador, cada império que recebeu
-    /// tem o valor ajustado pelo câmbio (pagador -> recebedor).
+    /// The game has no "transfer": each operation is a separate Pay/GainMoney on each empire.
+    /// So the methods that transfer money open a "context": inside it, every Pay and
+    /// GainMoney is recorded. On exit, if there was exactly one payer, each empire that received
+    /// money has the amount adjusted by the exchange rate (payer -> receiver).
     /// </summary>
     internal static class TransferConversion
     {
@@ -30,7 +30,7 @@ namespace CurrencyMod
         [ThreadStatic] private static int depth;
         [ThreadStatic] private static bool suppressRecording;
 
-        // Métodos da simulação que movem dinheiro entre impérios.
+        // Simulation methods that move money between empires.
         private static readonly (string type, string method)[] TransferMethods =
         {
             ("Amplitude.Mercury.Simulation.TradeController", "OrderSetTradeResourceAccessCountFor"),
@@ -45,7 +45,7 @@ namespace CurrencyMod
             ("Amplitude.Mercury.Simulation.DepartmentOfIndustry", "OnConstructionCompleted"),
         };
 
-        /// <summary>Executa uma ação de dinheiro do próprio mod sem ela entrar na conversão.</summary>
+        /// <summary>Runs one of the mod's own money actions without it entering the conversion.</summary>
         public static void WithoutRecording(System.Action action)
         {
             bool previous = suppressRecording;
@@ -62,7 +62,7 @@ namespace CurrencyMod
 
         private static bool Active => EconomyConfig.EnableConversion.Value && !SavePatches.IsGameOnline();
 
-        // ---------- Contexto de transferência ----------
+        // ---------- Transfer context ----------
 
         [HarmonyPatch]
         private static class TransferScopePatch
@@ -74,13 +74,13 @@ namespace CurrencyMod
                     Type type = AccessTools.TypeByName(typeName);
                     if (type == null)
                     {
-                        Plugin.Log.LogWarning($"Conversão: tipo {typeName} não encontrado.");
+                        Plugin.Log.LogWarning($"Conversion: type {typeName} not found.");
                         continue;
                     }
                     List<MethodInfo> methods = AccessTools.GetDeclaredMethods(type).Where(m => m.Name == methodName && !m.IsAbstract).ToList();
                     if (methods.Count == 0)
                     {
-                        Plugin.Log.LogWarning($"Conversão: método {typeName}.{methodName} não encontrado.");
+                        Plugin.Log.LogWarning($"Conversion: method {typeName}.{methodName} not found.");
                     }
                     foreach (MethodInfo method in methods)
                     {
@@ -111,7 +111,7 @@ namespace CurrencyMod
                         }
                         catch (Exception ex)
                         {
-                            Plugin.Log.LogError($"Erro na conversão de moeda ({finished.Source}): {ex}");
+                            Plugin.Log.LogError($"Currency conversion error ({finished.Source}): {ex}");
                         }
                     }
                 }
@@ -151,7 +151,7 @@ namespace CurrencyMod
 
         private static void Settle(Context context)
         {
-            // Quem pagou mais do que recebeu é pagador líquido.
+            // Whoever paid more than they received is a net payer.
             List<int> payers = context.Paid
                 .Where(p => p.Value > (context.Received.TryGetValue(p.Key, out double r) ? r : 0))
                 .Select(p => p.Key)
@@ -179,7 +179,7 @@ namespace CurrencyMod
                 lock (CurrencyManager.Lock)
                 {
                     rate = world.Rate(payer, receiver);
-                    // Livro do Banco Central: quem pagou, quem ganhou e quanto (cada um na sua moeda).
+                    // Central Bank ledger: who paid, who received and how much (each in their own currency).
                     double totalReceived = context.Received.Where(r => r.Key != payer).Sum(r => r.Value);
                     double netPaid = Math.Max(0, context.Paid[payer] - (context.Received.TryGetValue(payer, out double back) ? back : 0));
                     double paidShare = totalReceived > 0 ? netPaid * (received.Value / totalReceived) : 0;
@@ -205,15 +205,15 @@ namespace CurrencyMod
                         receiverCurrency.LastConversionGain += adjustment;
                     }
                 }
-                Plugin.Log.LogInfo($"[{context.Source}] {received.Value:0.##} de #{payer} -> #{receiver} convertido a {rate:0.###} (ajuste {adjustment:+0.##;-0.##}).");
+                Plugin.Log.LogInfo($"[{context.Source}] {received.Value:0.##} from #{payer} -> #{receiver} converted at {rate:0.###} (adjustment {adjustment:+0.##;-0.##}).");
             }
         }
 
-        // ---------- Preço de recursos na moeda do comprador ----------
+        // ---------- Resource price in the buyer's currency ----------
 
         /// <summary>
-        /// O preço da licença é definido na moeda do vendedor; o comprador vê e paga convertido.
-        /// Este método é a fonte única do preço para simulação, interface e IA.
+        /// The license price is set in the seller's currency; the buyer sees and pays it converted.
+        /// This method is the single source of the price for simulation, UI and AI.
         /// </summary>
         [HarmonyPatch(typeof(TradeController), nameof(TradeController.GetSetupTradeBuyerCostPerResource))]
         private static class TradePricePatch

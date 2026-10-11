@@ -11,21 +11,21 @@ using CurrencyMod.Diplomacia.Capture;
 namespace CurrencyMod.Diplomacia
 {
     /// <summary>
-    /// Congresso mundial pelas ordens do jogo (research\congress.md §7.3). As ações rodam na thread do sandbox, só no
-    /// turno principal (as ordens internacionais são recusadas no fim do turno):
-    /// - propor_votacao: OrderStartCivicVote (só o presidente da sessão);
-    /// - votar_congresso: VoteForCivicChoiceIndex (lei) ou SideWithCrisisDeclarator/Targeted (crise); abster = não votar;
-    /// - subornar: BribeFor*Vote, com o número ajustado ao que resta e ao que a alavancagem paga (a validação do jogo
-    ///   estoura exceção com alvo fora da faixa, então tudo é conferido antes);
-    /// - responder_congresso: AcceptDemands (cumprir o veredito) ou DeclareSurpriseWar;
+    /// World Congress through the game's orders (research\congress.md §7.3). The actions run on the sandbox thread, only
+    /// during the main turn (international orders are rejected at end of turn):
+    /// - propor_votacao: OrderStartCivicVote (session president only);
+    /// - votar_congresso: VoteForCivicChoiceIndex (law) or SideWithCrisisDeclarator/Targeted (crisis); abstain = do not vote;
+    /// - subornar: BribeFor*Vote, with the number adjusted to what remains and to what the leverage pays for (the game's
+    ///   validation throws on an out-of-range target, so everything is checked first);
+    /// - responder_congresso: AcceptDemands (comply with the verdict) or DeclareSurpriseWar;
     /// - contribuir_consenso: ContributeToIdeologicalConsensus;
-    /// - crise_internacional: DeclareInternationalCrisis com o motivo certo quando o Congresso recusa.
-    /// TrackFallbacks (thread principal) devolve à IA nativa o veredito e a primeira sessão que a IA de linguagem deixou
-    /// parados por mais de [IA] TurnosParaResponderPropostas, e publica a postura sobre a lei imposta (se_perder).
+    /// - crise_internacional: DeclareInternationalCrisis with the right reason when the Congress refuses.
+    /// TrackFallbacks (main thread) hands back to the native AI the verdict and the first session that the language AI
+    /// left stalled for more than [IA] TurnosParaResponderPropostas, and publishes the stance on the imposed law (se_perder).
     /// </summary>
     internal static class CongressFlow
     {
-        // ---------------- Propor lei ----------------
+        // ---------------- Propose a law ----------------
 
         internal static void Propose(ActionIntent intent, MajorEmpire empire)
         {
@@ -66,7 +66,7 @@ namespace CurrencyMod.Diplomacia
             });
         }
 
-        // ---------------- Votar ----------------
+        // ---------------- Vote ----------------
 
         internal static void Vote(ActionIntent intent, MajorEmpire empire)
         {
@@ -142,7 +142,7 @@ namespace CurrencyMod.Diplomacia
             });
         }
 
-        // ---------------- Subornar ----------------
+        // ---------------- Bribe ----------------
 
         internal static void Bribe(ActionIntent intent, MajorEmpire empire)
         {
@@ -227,7 +227,7 @@ namespace CurrencyMod.Diplomacia
                 InternationalBribeInfo after = CurrentBribe(congress, next, target);
                 if (after.PurchasedBribeActionCount == before)
                 {
-                    Plugin.Log?.LogWarning($"[IA] Suborno de E{next.Empire} contra E{target} aceito pelo jogo sem efeito (NumberOfBribeActions perdido?)");
+                    Plugin.Log?.LogWarning($"[IA] Bribe by E{next.Empire} against E{target} accepted by the game with no effect (NumberOfBribeActions lost?)");
                     ActionExecutor.Report(next, false, "o jogo aceitou a ordem, mas o suborno não entrou");
                     return;
                 }
@@ -247,7 +247,7 @@ namespace CurrencyMod.Diplomacia
             return congress.CrisisVoteInfos.GetReferenceAt(intent.CrisisVote).MajorEmpireBallots[intent.Empire].BribeInfos[target];
         }
 
-        // ---------------- Veredito ----------------
+        // ---------------- Verdict ----------------
 
         internal static void AnswerVerdict(ActionIntent intent, MajorEmpire empire)
         {
@@ -269,7 +269,7 @@ namespace CurrencyMod.Diplomacia
                     : "guerra surpresa declarada contra o veredito do Congresso (não sancionada: as nações que não são suas aliadas ganham alavancagem e uma reclamação contra você)");
         }
 
-        // ---------------- Levar a disputa ao Congresso ----------------
+        // ---------------- Take the dispute to the Congress ----------------
 
         internal static void DeclareCrisis(ActionIntent intent, MajorEmpire empire)
         {
@@ -309,7 +309,7 @@ namespace CurrencyMod.Diplomacia
             });
         }
 
-        // ---------------- Consenso ideológico ----------------
+        // ---------------- Ideological consensus ----------------
 
         internal static void Contribute(ActionIntent intent, MajorEmpire empire)
         {
@@ -340,22 +340,22 @@ namespace CurrencyMod.Diplomacia
             });
         }
 
-        // ---------------- Voltas à IA nativa e postura sobre a lei imposta (thread principal) ----------------
+        // ---------------- Fallbacks to the native AI and stance on the imposed law (main thread) ----------------
 
         private static Dictionary<int, int> verdictSeen = new Dictionary<int, int>();
         private static int firstSessionSeen = -1;
         private static int firstSessionLeader = -1;
 
         /// <summary>
-        /// A cada segundo (IaModule.UpdateLocks): o veredito que a IA de linguagem deixou sem resposta por
-        /// TurnosParaResponderPropostas turnos volta para a IA nativa (que costuma cumprir); a primeira sessão do Congresso,
-        /// que espera o primeiro presidente para sempre, também; e cada lei imposta a uma nação da IA de linguagem ganha a
-        /// resposta que ela escolheu (votou na opção vencedora = adota; senão, a postura se_perder do voto).
+        /// Every second (IaModule.UpdateLocks): a verdict the language AI left unanswered for
+        /// TurnosParaResponderPropostas turns goes back to the native AI (which usually complies); so does the first
+        /// Congress session, which otherwise waits for the first president forever; and each law imposed on a language-AI
+        /// nation gets the response it chose (voted for the winning option = adopts; otherwise, the vote's se_perder stance).
         /// </summary>
         /// <summary>
-        /// Um passo da espera da primeira sessão: true quando o presidente já esperou o prazo e a IA nativa propõe por ele.
-        /// A espera conta por presidente: um presidente novo (o anterior morreu ou ficou sem lei para propor) não herda os
-        /// turnos do outro, e sem presidente nada conta.
+        /// One step of the first-session wait: true when the president has already waited out the deadline and the native AI
+        /// proposes on its behalf. The wait counts per president: a new president (the previous one died or ran out of laws
+        /// to propose) does not inherit the other's turns, and with no president nothing counts.
         /// </summary>
         internal static bool FirstSessionStep(int turn, int leader, int maxTurns, ref int seen, ref int seenLeader)
         {
@@ -367,7 +367,7 @@ namespace CurrencyMod.Diplomacia
             return leader >= 0 && turn - seen >= maxTurns;
         }
 
-        /// <summary>Teste ("ia teste congresso"): a espera da 1ª sessão numa sequência de turnos e presidentes.</summary>
+        /// <summary>Test ("ia teste congresso"): the 1st-session wait over a sequence of turns and presidents.</summary>
         internal static string SelfTestFirstSession()
         {
             int seen = -1, seenLeader = -1;
@@ -426,8 +426,8 @@ namespace CurrencyMod.Diplomacia
                 firstSessionSeen = -1;
             }
 
-            // Voto e postura de cada nação em cada lei, publicados antes de a votação fechar: a decisão sobre a lei imposta
-            // sai na hora da ordem da IA nativa (NativeAiLocks.ImposedLawPatch).
+            // Each nation's vote and stance on each law, published before the vote closes: the decision on the imposed law
+            // is taken at the moment of the native AI's order (NativeAiLocks.ImposedLawPatch).
             var stances = new Dictionary<string, NativeAiLocks.LawStance>();
             foreach (IaNation nation in world?.Nations ?? new List<IaNation>())
             {
@@ -443,11 +443,11 @@ namespace CurrencyMod.Diplomacia
             NativeAiLocks.SetLastLawResult(last?.Law.Civic, last == null || last.Winner < 0 ? null : last.Winner == 0 ? last.Law.ChoiceA : last.Law.ChoiceB, last?.Leader ?? -1);
         }
 
-        // ---------------- Notícias (thread principal) ----------------
+        // ---------------- News (main thread) ----------------
 
         /// <summary>
-        /// Guarda no IaWorld os resultados que aparecem na foto do turno: leis votadas (ficam no histórico do jogo) e crises
-        /// encerradas (o jogo libera o lugar delas logo depois). Devolve true se entrou notícia nova.
+        /// Stores in IaWorld the results that show up in the turn snapshot: voted laws (they stay in the game's history) and
+        /// closed crises (the game frees their slot right after). Returns true if new news came in.
         /// </summary>
         internal static bool RecordNews(IaWorld world, WorldCapture capture)
         {
@@ -516,9 +516,9 @@ namespace CurrencyMod.Diplomacia
             return added;
         }
 
-        // ---------------- Comandos de teste (thread principal) ----------------
+        // ---------------- Test commands (main thread) ----------------
 
-        /// <summary>"jogo congresso liberar E#": as três ordens de depuração do próprio jogo; quem posta preside a 1ª sessão.</summary>
+        /// <summary>"jogo congresso liberar E#": the game's own three debug orders; whoever posts presides over the 1st session.</summary>
         internal static string ForceUnlock(int empire)
         {
             InternationalAncillary congress = Sandbox.InternationalAncillary;
@@ -536,7 +536,7 @@ namespace CurrencyMod.Diplomacia
             return $"ok: Congresso forçado por E{empire} (ela preside a 1ª sessão). Todas as nações passam a se conhecer. Salve e recarregue para o consenso mostrar os valores certos.";
         }
 
-        /// <summary>"jogo congresso encerrar lei|K#": encerra a votação na hora (ordem de depuração do jogo).</summary>
+        /// <summary>"jogo congresso encerrar lei|K#": closes the vote immediately (game debug order).</summary>
         internal static string ForceEnd(string what)
         {
             InternationalAncillary congress = Sandbox.InternationalAncillary;
@@ -558,7 +558,7 @@ namespace CurrencyMod.Diplomacia
             return "uso: jogo congresso encerrar lei|K#";
         }
 
-        /// <summary>"jogo congresso consulado E#": cria o distrito Consulado numa casa livre do território da capital (ordem de editor).</summary>
+        /// <summary>"jogo congresso consulado E#": creates the Consulate district on a free tile of the capital's territory (editor order).</summary>
         internal static string CreateConsulate(int empire)
         {
             MajorEmpire major = Sandbox.MajorEmpires[empire];
@@ -607,21 +607,21 @@ namespace CurrencyMod.Diplomacia
             return $"erro: nenhuma casa livre no território da capital de E{empire}";
         }
 
-        /// <summary>"jogo congresso alavancagem E# E# n": dá (ou tira) alavancagem do primeiro contra o segundo (ordem de editor).</summary>
+        /// <summary>"jogo congresso alavancagem E# E# n": gives (or removes) leverage of the first against the second (editor order).</summary>
         internal static string AddLeverage(int empire, int other, int delta)
         {
             SandboxManager.PostOrder(new EditorOrderAddOrRemoveLeveragePointStock { EmpireIndex = empire, OtherEmpireIndex = other, PointDelta = delta }, empire);
             return $"ok: {delta:+0;-0} de alavancagem para E{empire} contra E{other}";
         }
 
-        /// <summary>"jogo congresso lei E# NomeDoCivico": deixa uma lei disponível para a nação (ordem de editor).</summary>
+        /// <summary>"jogo congresso lei E# NomeDoCivico": makes a law available to the nation (editor order).</summary>
         internal static string UnlockLaw(int empire, string civic)
         {
             SandboxManager.PostOrder(new EditorOrderUnlockCivic { EmpireIndex = empire, CivicName = new StaticString(civic) });
             return $"ok: lei {civic} liberada para E{empire}";
         }
 
-        /// <summary>"ia congresso": diagnóstico completo a partir da foto do turno (e da simulação, para o que muda no turno).</summary>
+        /// <summary>"ia congresso": full diagnostics from the turn snapshot (and from the simulation, for what changes during the turn).</summary>
         internal static string Describe(WorldCapture capture)
         {
             InternationalAncillary live = Sandbox.InternationalAncillary;
@@ -683,13 +683,13 @@ namespace CurrencyMod.Diplomacia
             return text.ToString().TrimEnd();
         }
 
-        /// <summary>Se a expansão foi ligada à força neste save (patch de teste em saves criados sem ela).</summary>
+        /// <summary>Whether the expansion was force-enabled in this save (test patch on saves created without it).</summary>
         internal static string ExpansionSaveHint() => ExpansionSavePatch.Forced || ExpansionSavePatch.ForcedBySession()
             ? "expansão LIGADA À FORÇA neste save ([IA] ExpansaoEmSaveAntigo)" : "expansão como o save foi criado";
 
-        // ---------------- Códigos do dossiê ----------------
+        // ---------------- Dossier codes ----------------
 
-        /// <summary>Lei pelo código V# (índice do cívico, igual em todas as nações) ou pelo nome interno: o nome da definição.</summary>
+        /// <summary>Law by its V# code (civic index, the same for every nation) or by internal name: the definition name.</summary>
         internal static string CivicForCode(string code)
         {
             if (string.IsNullOrEmpty(code) || Sandbox.MajorEmpires == null || Sandbox.MajorEmpires.Length == 0)
@@ -713,7 +713,7 @@ namespace CurrencyMod.Diplomacia
             return null;
         }
 
-        /// <summary>Votação de crise pelo código K# do dossiê (ou só o número, nos testes).</summary>
+        /// <summary>Crisis vote by the dossier's K# code (or just the number, in tests).</summary>
         internal static bool TryCrisisCode(string code, ValidationContext context, out int pool)
         {
             pool = -1;
@@ -730,7 +730,7 @@ namespace CurrencyMod.Diplomacia
             return int.TryParse(digits, out pool) && pool >= 0;
         }
 
-        // ---------------- Utilidades ----------------
+        // ---------------- Utilities ----------------
 
         private static InternationalAncillary Open(ActionIntent intent)
         {
@@ -784,12 +784,12 @@ namespace CurrencyMod.Diplomacia
             return $"E{crisis.DeclaratorEmpireIndex} {N(declarator)} × E{crisis.TargetedEmpireIndex} {N(target)}";
         }
 
-        /// <summary>Nome traduzido da lei (ou o nome interno, se a tradução não carregou).</summary>
+        /// <summary>Translated law name (or the internal name, if the translation did not load).</summary>
         internal static string LawLabel(string civic) => "«" + (GameGlossary.Title(civic) ?? civic ?? "?") + "»";
 
         private static string N(double value) => DossierBuilder.N(value);
 
-        /// <summary>Motivos de recusa do Congresso em português (research\congress.md §7.7).</summary>
+        /// <summary>Congress refusal reasons in Portuguese (research\congress.md §7.7).</summary>
         internal static string Explain(InternationalFailureFlags flags)
         {
             var reasons = new List<string>();

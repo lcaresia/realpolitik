@@ -4,8 +4,8 @@ using System.Collections.Generic;
 namespace CurrencyMod.Diplomacia
 {
     /// <summary>
-    /// Dados só para o visualizador e o log (não vão para o save): últimos dossiês, prompts, respostas
-    /// cruas e chamadas de cada nação, mais a lista de eventos. Só a thread principal mexe aqui.
+    /// Data only for the viewer and the log (not saved): latest dossiers, prompts, raw responses
+    /// and calls of each nation, plus the event list. Only the main thread touches this.
     /// </summary>
     internal sealed class IaRuntime
     {
@@ -64,7 +64,7 @@ namespace CurrencyMod.Diplomacia
         public int Reasoning;
         public double Cost;
         public string FinishReason;
-        /// <summary>Provedor e modelo que responderam (ou o último que falhou).</summary>
+        /// <summary>Provider and model that answered (or the last one that failed).</summary>
         public string Provider;
     }
 }

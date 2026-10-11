@@ -9,15 +9,15 @@ using HarmonyLib;
 namespace CurrencyMod.Diplomacia.Blocs
 {
     /// <summary>
-    /// Defesa mútua dos blocos: quando alguém de fora declara guerra a um membro, cada outro membro em paz com o
-    /// agressor ganha contra ele a reclamação nativa "Em guerra com aliado" (motivo de guerra), como o jogo faz com
-    /// os aliados de verdade. Ninguém é obrigado a lutar. Guerra entre membros não dá nada (e não expulsa).
-    /// O jogo marca quem começou a guerra em DiplomaticState_War.OnBegin (thread do sandbox).
+    /// Bloc mutual defense: when an outsider declares war on a member, every other member at peace with the
+    /// aggressor gains against it the native "At war with ally" grievance (a war reason), as the game does with
+    /// real allies. Nobody is forced to fight. War between members grants nothing (and does not expel).
+    /// The game marks who started the war in DiplomaticState_War.OnBegin (sandbox thread).
     /// </summary>
     [HarmonyPatch(typeof(DiplomaticState_War), "OnBegin")]
     internal static class BlocDefense
     {
-        /// <summary>(agressor, membro atacado, membros que ganharam a reclamação) para o histórico do bloco na thread principal.</summary>
+        /// <summary>(aggressor, attacked member, members that gained the grievance) for the bloc history on the main thread.</summary>
         internal static readonly ConcurrentQueue<Tuple<int, int, int[]>> Calls = new ConcurrentQueue<Tuple<int, int, int[]>>();
 
         private static void Postfix(DiplomaticState_War __instance, int initiatorEmpireIndex)
@@ -54,11 +54,11 @@ namespace CurrencyMod.Diplomacia.Blocs
                     called.Add(member);
                 }
                 Calls.Enqueue(Tuple.Create(aggressor, attacked, called.ToArray()));
-                Plugin.Log.LogInfo($"Bloco: E{aggressor} declarou guerra a E{attacked}; reclamação \"Em guerra com aliado\" para {string.Join(", ", called)}.");
+                Plugin.Log.LogInfo($"Bloc: E{aggressor} declared war on E{attacked}; \"At war with ally\" grievance for {string.Join(", ", called)}.");
             }
             catch (Exception ex)
             {
-                Plugin.Log.LogWarning($"Defesa mútua do bloco: {ex.Message}");
+                Plugin.Log.LogWarning($"Bloc mutual defense: {ex.Message}");
             }
         }
     }

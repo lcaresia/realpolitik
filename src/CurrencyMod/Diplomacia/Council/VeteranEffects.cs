@@ -9,17 +9,17 @@ using HarmonyLib;
 namespace CurrencyMod.Diplomacia.Council
 {
     /// <summary>
-    /// Bônus de veterano dos ministros (melhorias-jogando item 3): quem fica no cargo rende +1% a cada 5 turnos na área da
-    /// pasta, até +10%. Pelo mesmo caminho que a economia do mod já usa (Harmony nas contas do jogo, na thread do sandbox),
-    /// não por descritores: esses só entram na compilação do boot e não sobrevivem à recarga do núcleo.
-    /// - Fim de turno (antes dos passes): dinheiro, ciência, influência e comida ganham o bônus sobre o rendimento líquido
-    ///   positivo; Comércio ganha sobre o que o império vendeu pelas rotas no turno passado (livro do Banco Central).
-    /// - Indústria: o mesmo ComputeProductionIncome que o crédito usa (a fila de construção, a IA e as telas veem).
-    /// - Estabilidade: a meta de ordem pública sobe os pontos do bônus.
-    /// - Força de combate: BattleUnit.GetCombatStrength (só na batalha).
-    /// - Espionagem: peso dos espiões na interceptação (Espionage).
-    /// - Fé: sem efeito por enquanto (o jogo não tem estoque de fé para somar).
-    /// A tabela é montada na thread principal (IaModule, uma vez por segundo) e só lida nas outras.
+    /// Ministers' veteran bonus (melhorias-jogando item 3): whoever stays in office yields +1% every 5 turns in the
+    /// portfolio's area, up to +10%. Through the same path the mod economy already uses (Harmony on the game's math, on the
+    /// sandbox thread), not through descriptors: those only enter the boot compilation and do not survive a core reload.
+    /// - End of turn (before the passes): money, science, influence and food get the bonus on the positive net income;
+    ///   Trade gets it on what the empire sold through routes last turn (Central Bank ledger).
+    /// - Industry: the same ComputeProductionIncome that credit uses (the build queue, the AI and the screens see it).
+    /// - Stability: the public order target rises by the bonus points.
+    /// - Combat strength: BattleUnit.GetCombatStrength (only in battle).
+    /// - Espionage: spy weight in interception (Espionage).
+    /// - Faith: no effect for now (the game has no faith stock to add to).
+    /// The table is built on the main thread (IaModule, once per second) and only read on the others.
     /// </summary>
     internal static class VeteranEffects
     {
@@ -27,7 +27,7 @@ namespace CurrencyMod.Diplomacia.Council
 
         private static readonly int AreaCount = Enum.GetValues(typeof(Area)).Length;
 
-        /// <summary>empire → % por área. Trocada inteira a cada publicação.</summary>
+        /// <summary>empire → % per area. Replaced whole on every publish.</summary>
         private static volatile Dictionary<int, int[]> table = new Dictionary<int, int[]>();
 
         internal static Area? AreaOf(string portfolio)
@@ -49,7 +49,7 @@ namespace CurrencyMod.Diplomacia.Council
             }
         }
 
-        /// <summary>Thread principal: refaz a tabela com os conselhos atuais.</summary>
+        /// <summary>Main thread: rebuilds the table with the current councils.</summary>
         internal static void Publish(IaWorld world, int turn)
         {
             var built = new Dictionary<int, int[]>();
@@ -59,7 +59,7 @@ namespace CurrencyMod.Diplomacia.Council
                 {
                     if (nation.CouncilModel < 1)
                     {
-                        continue; // conselho antigo, ainda não zerado: sem bônus
+                        continue; // old council, not reset yet: no bonus
                     }
                     foreach (Minister minister in nation.Council)
                     {
@@ -81,7 +81,7 @@ namespace CurrencyMod.Diplomacia.Council
             table = built;
         }
 
-        /// <summary>Bônus em % do império na área (0 sem ministro veterano).</summary>
+        /// <summary>The empire's bonus in % for the area (0 with no veteran minister).</summary>
         internal static int Get(int empire, Area area)
         {
             return !SavePatches.IsGameOnline() && table.TryGetValue(empire, out int[] values) ? values[(int)area] : 0;
@@ -89,7 +89,7 @@ namespace CurrencyMod.Diplomacia.Council
 
         internal static double Factor(int empire, Area area) => 1.0 + Get(empire, area) / 100.0;
 
-        // ---------------- Fim de turno ----------------
+        // ---------------- End of turn ----------------
 
         [HarmonyPatch(typeof(SimulationPasses), nameof(SimulationPasses.InvokePasses))]
         private static class TurnEndPatch
@@ -118,7 +118,7 @@ namespace CurrencyMod.Diplomacia.Council
                 }
                 catch (Exception ex)
                 {
-                    Plugin.Log.LogWarning($"Bônus de veterano no fim do turno: {ex.Message}");
+                    Plugin.Log.LogWarning($"Veteran bonus at end of turn: {ex.Message}");
                 }
             }
         }
@@ -132,17 +132,17 @@ namespace CurrencyMod.Diplomacia.Council
             if (bonus[(int)Area.Money] > 0 && (float)empire.MoneyNet.Value > 0)
             {
                 empire.DepartmentOfTheTreasury.GainMoney((FixedPoint)((float)empire.MoneyNet.Value * Pct(Area.Money)));
-                log.Add($"dinheiro +{(float)empire.MoneyNet.Value * Pct(Area.Money):0.0}");
+                log.Add($"money +{(float)empire.MoneyNet.Value * Pct(Area.Money):0.0}");
             }
             if (bonus[(int)Area.Science] > 0 && (float)empire.ResearchNet.Value > 0)
             {
                 empire.DepartmentOfScience.GainResearch((FixedPoint)((float)empire.ResearchNet.Value * Pct(Area.Science)), raiseSimulationEvents: false);
-                log.Add($"ciência +{(float)empire.ResearchNet.Value * Pct(Area.Science):0.0}");
+                log.Add($"science +{(float)empire.ResearchNet.Value * Pct(Area.Science):0.0}");
             }
             if (bonus[(int)Area.Influence] > 0 && (float)empire.InfluenceNet.Value > 0)
             {
                 empire.DepartmentOfCulture.GainInfluence((FixedPoint)((float)empire.InfluenceNet.Value * Pct(Area.Influence)));
-                log.Add($"influência +{(float)empire.InfluenceNet.Value * Pct(Area.Influence):0.0}");
+                log.Add($"influence +{(float)empire.InfluenceNet.Value * Pct(Area.Influence):0.0}");
             }
             if (bonus[(int)Area.Food] > 0)
             {
@@ -153,13 +153,13 @@ namespace CurrencyMod.Diplomacia.Council
                     if (growth > 0)
                     {
                         empire.DepartmentOfTheInterior.AddGrowthToSettlement(settlement, (FixedPoint)(growth * Pct(Area.Food)), raiseSimulationEvents: false);
-                        log.Add($"comida +{growth * Pct(Area.Food):0.0} em {settlement.EntityName}");
+                        log.Add($"food +{growth * Pct(Area.Food):0.0} in {settlement.EntityName}");
                     }
                 }
             }
             if (bonus[(int)Area.Trade] > 0)
             {
-                // O que o império ganhou vendendo pelas rotas no turno passado (livro do Banco Central), na moeda dele.
+                // What the empire earned selling through routes last turn (Central Bank ledger), in its currency.
                 double sold = 0;
                 lock (CurrencyManager.Lock)
                 {
@@ -172,16 +172,16 @@ namespace CurrencyMod.Diplomacia.Council
                 if (sold > 0)
                 {
                     empire.DepartmentOfTheTreasury.GainMoney((FixedPoint)(float)(sold * Pct(Area.Trade)));
-                    log.Add($"comércio +{sold * Pct(Area.Trade):0.0}");
+                    log.Add($"trade +{sold * Pct(Area.Trade):0.0}");
                 }
             }
             if (log.Count > 0)
             {
-                Plugin.Log.LogInfo($"Veterano E{empire.Index}: {string.Join(", ", log)}");
+                Plugin.Log.LogInfo($"Veteran E{empire.Index}: {string.Join(", ", log)}");
             }
         }
 
-        // ---------------- Indústria ----------------
+        // ---------------- Industry ----------------
 
         [HarmonyPatch(typeof(DepartmentOfIndustry), nameof(DepartmentOfIndustry.ComputeProductionIncome))]
         private static class IndustryPatch
@@ -202,16 +202,16 @@ namespace CurrencyMod.Diplomacia.Council
                 }
                 catch (Exception)
                 {
-                    // Nunca atrapalhar a construção.
+                    // Never get in the way of construction.
                 }
             }
         }
 
-        // ---------------- Fé ----------------
+        // ---------------- Faith ----------------
 
         internal static bool FaithBypass;
 
-        /// <summary>Teste ("ia conselho fe T#"): força de crença do território sem e com o bônus do veterano da Fé.</summary>
+        /// <summary>Test ("ia conselho fe T#"): the territory's belief strength without and with the Faith veteran bonus.</summary>
         internal static string MeasureFaith(int territory)
         {
             ReligionManager manager = Sandbox.ReligionManager;
@@ -242,8 +242,8 @@ namespace CurrencyMod.Diplomacia.Council
         }
 
         /// <summary>
-        /// A fé no jogo não é estoque: cada território soma a "força de crença" de cada religião, e a maior se espalha.
-        /// O veterano da Fé aumenta em % a força da religião do império nos territórios dele.
+        /// Faith in the game is not a stock: each territory sums the "belief strength" of each religion, and the largest spreads.
+        /// The Faith veteran raises by % the strength of the empire's religion in its territories.
         /// </summary>
         [HarmonyPatch(typeof(ReligionManager), "ComputeTerritoryBeliefStrengths")]
         private static class FaithPatch
@@ -275,12 +275,12 @@ namespace CurrencyMod.Diplomacia.Council
                 }
                 catch (Exception)
                 {
-                    // Sem o bônus, fica a força calculada pelo jogo.
+                    // Without the bonus, the strength computed by the game stays.
                 }
             }
         }
 
-        // ---------------- Estabilidade ----------------
+        // ---------------- Stability ----------------
 
         [HarmonyPatch(typeof(DepartmentOfTheInterior), nameof(DepartmentOfTheInterior.GetSettlementPublicOrderGain))]
         private static class StabilityPatch
@@ -299,7 +299,7 @@ namespace CurrencyMod.Diplomacia.Council
                     {
                         return;
                     }
-                    // A meta sobe os pontos do bônus; o passo por turno respeita as tendências do jogo.
+                    // The target rises by the bonus points; the per-turn step respects the game's trends.
                     double target = Math.Min(100.0, (float)NativeEffects.EffectiveStabilityTarget(settlement, NativeEffects.StabilityLoss(settlement)) + bonus);
                     double current = (float)settlement.PublicOrderCurrent.Value;
                     double down = (float)settlement.PublicOrderNegativeTrend.Value;
@@ -308,12 +308,12 @@ namespace CurrencyMod.Diplomacia.Council
                 }
                 catch (Exception)
                 {
-                    // Sem o bônus, fica o ganho calculado antes.
+                    // Without the bonus, the gain computed before stays.
                 }
             }
         }
 
-        // ---------------- Combate ----------------
+        // ---------------- Combat ----------------
 
         [HarmonyPatch(typeof(BattleUnit), nameof(BattleUnit.GetCombatStrength))]
         private static class CombatPatch
@@ -330,7 +330,7 @@ namespace CurrencyMod.Diplomacia.Council
                 }
                 catch (Exception)
                 {
-                    // Sem o bônus, fica a força do jogo.
+                    // Without the bonus, the game's strength stays.
                 }
             }
         }

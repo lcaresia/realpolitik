@@ -14,24 +14,24 @@ using Math = System.Math;
 namespace CurrencyMod.Diplomacia
 {
     /// <summary>
-    /// ordem_exercito de verdade (pesquisa: research\army-orders.md). Roda na thread do sandbox, junto do
+    /// Real ordem_exercito (research: research\army-orders.md). Runs on the sandbox thread, alongside the
     /// ActionExecutor:
-    /// - a missão é avaliada pelo mesmo avaliador do clique direito do jogador (RequestArmyActionAt), com caminho de
-    ///   vários turnos, e vira OrderGoTo / OrderGoToAndCreateBattle / OrderCreateBattle / OrderGoToAndJoinBattle;
-    /// - o movimento só anda sozinho dentro do turno: a cada turno novo a missão é reavaliada e repostada até chegar;
-    /// - enquanto houver missão, a IA nativa não mexe no exército (três patches abaixo);
-    /// - chegada, combate e falha voltam como resultado da ação (memória da nação) e como situação da missão (dossiê).
+    /// - the mission is evaluated by the same evaluator as the player's right click (RequestArmyActionAt), with a
+    ///   multi-turn path, and becomes OrderGoTo / OrderGoToAndCreateBattle / OrderCreateBattle / OrderGoToAndJoinBattle;
+    /// - movement only proceeds on its own within the turn: each new turn the mission is re-evaluated and re-posted until it arrives;
+    /// - while there is a mission, the native AI does not touch the army (three patches below);
+    /// - arrival, combat and failure come back as the action's result (nation memory) and as the mission status (dossier).
     /// </summary>
     internal static class ArmyOrders
     {
-        /// <summary>Mudança na situação de uma missão, para a thread principal guardar no IaWorld.</summary>
+        /// <summary>Change in a mission's status, for the main thread to store in IaWorld.</summary>
         internal sealed class MissionUpdate
         {
             public string ArmyKey;
             public string Status;
             public bool Active;
             public int Turn;
-            /// <summary>Último turno da missão (prazo ou fim da posição segurada); 0 = sem mudança.</summary>
+            /// <summary>Mission's last turn (deadline or end of the held position); 0 = no change.</summary>
             public int Until;
         }
 
@@ -52,18 +52,18 @@ namespace CurrencyMod.Diplomacia
             public int LastIssued = -1;
             public int Attempts;
             public bool Reported;
-            /// <summary>Unidades do exército na última volta: se ele sumir, diz se foi fundido em outro ou desfeito.</summary>
+            /// <summary>The army's units on the last pass: if it vanishes, tells whether it was merged into another or disbanded.</summary>
             public ulong[] Units;
             public ArmyGoToAction Action;
-            /// <summary>nova, andando, segurando.</summary>
+            /// <summary>new, moving, holding.</summary>
             public string State = "nova";
         }
 
         internal static readonly ConcurrentQueue<MissionUpdate> Updates = new ConcurrentQueue<MissionUpdate>();
         private static readonly Dictionary<ulong, Mission> missions = new Dictionary<ulong, Mission>();
-        /// <summary>Exércitos sob ordem da IA de linguagem: lido pela thread da IA nativa (troca atômica).</summary>
+        /// <summary>Armies under language-model AI orders: read by the native AI thread (atomic swap).</summary>
         private static volatile HashSet<ulong> locked = new HashSet<ulong>();
-        /// <summary>Dono de cada exército sob ordem (a trava de ordens só vale para a IA nativa da própria nação).</summary>
+        /// <summary>Owner of each army under orders (the order lock only applies to the nation's own native AI).</summary>
         private static volatile Dictionary<ulong, int> owners = new Dictionary<ulong, int>();
         private static Sandbox lastSandbox;
         private static RequestArmyActionAt request;
@@ -82,9 +82,9 @@ namespace CurrencyMod.Diplomacia
             owners = missions.Values.ToDictionary(m => m.Army, m => m.Empire);
         }
 
-        // ---------------- Entrada ----------------
+        // ---------------- Input ----------------
 
-        /// <summary>Nova ordem (thread do sandbox, chamada pelo ActionExecutor). Uma missão por exército: a nova substitui.</summary>
+        /// <summary>New order (sandbox thread, called by ActionExecutor). One mission per army: the new one replaces the old.</summary>
         internal static void Accept(ActionIntent intent)
         {
             Sandbox sandbox = SandboxManager.Sandbox;
@@ -115,11 +115,11 @@ namespace CurrencyMod.Diplomacia
                 Until = intent.ResumeUntil > 0 ? intent.ResumeUntil : sandbox.Turn + turns - 1,
                 Reported = intent.Resume,
             };
-            // Trava antes de qualquer ordem: o ciclo da IA nativa que começar depois já não pega o exército.
+            // Lock before any order: a native AI cycle starting afterwards no longer picks up the army.
             Publish();
         }
 
-        // ---------------- Laço (thread do sandbox) ----------------
+        // ---------------- Loop (sandbox thread) ----------------
 
         internal static void Tick()
         {
@@ -130,7 +130,7 @@ namespace CurrencyMod.Diplomacia
             }
             if (!ReferenceEquals(lastSandbox, sandbox))
             {
-                // Partida nova ou save carregado: o sandbox é recriado. A thread principal reenvia as missões salvas.
+                // New game or loaded save: the sandbox is recreated. The main thread re-sends the saved missions.
                 lastSandbox = sandbox;
                 missions.Clear();
                 Publish();
@@ -146,8 +146,8 @@ namespace CurrencyMod.Diplomacia
             {
                 try
                 {
-                    // F1: sem a IA de linguagem no comando da nação (API fora, teto de gasto, IA desligada), a IA nativa
-                    // volta a mandar em tudo, inclusive nos exércitos.
+                    // F1: without the language-model AI in command of the nation (API down, spending cap, AI off), the
+                    // native AI takes back control of everything, armies included.
                     if (!NativeAiLocks.IsLlmActive(mission.Empire))
                     {
                         End(mission, false, "a IA de linguagem parou de comandar a nação; o exército volta à IA nativa", turn);
@@ -185,7 +185,7 @@ namespace CurrencyMod.Diplomacia
                     }
                     if (Sandbox.AIController != null && Sandbox.AIController.aiDecisionInProgress)
                     {
-                        continue; // ciclo da IA nativa em curso: espera a próxima volta (pesquisa §4.4)
+                        continue; // native AI cycle in progress: wait for the next pass (research §4.4)
                     }
                     if (budget-- <= 0)
                     {
@@ -200,7 +200,7 @@ namespace CurrencyMod.Diplomacia
             }
         }
 
-        /// <summary>Confere chegada, combate, prazo e a ação em curso. true = nada mais a fazer nesta volta.</summary>
+        /// <summary>Checks arrival, combat, deadline and the ongoing action. true = nothing more to do on this pass.</summary>
         private static bool Progress(Mission mission, Army army, int turn)
         {
             if (mission.State == "segurando")
@@ -232,13 +232,13 @@ namespace CurrencyMod.Diplomacia
                         End(mission, true, $"chegou e atacou {mission.TargetLabel}; a batalha segue com seus generais", turn);
                         return true;
                     }
-                    // Mover segura o lugar até o fim do turno seguinte; defender, até o prazo.
+                    // Move holds the spot until the end of the next turn; defend, until the deadline.
                     mission.State = "segurando";
                     mission.HoldUntil = mission.Goal == "defender" ? mission.Until : turn + 1;
                     Report(mission, true, $"chegou a {mission.TargetLabel}; segura a posição até o turno {mission.HoldUntil}", turn, active: true);
                     return true;
                 case ActionStatus.WaitingForFinishTurn:
-                    // Acabaram os pontos de movimento: no próximo turno a missão é reavaliada e repostada.
+                    // Out of movement points: next turn the mission is re-evaluated and re-posted.
                     if (mission.LastIssued < turn)
                     {
                         mission.Action = null;
@@ -247,7 +247,7 @@ namespace CurrencyMod.Diplomacia
                     }
                     return true;
                 default:
-                    // Failed, Canceled, Terminated: tenta de novo, até três vezes.
+                    // Failed, Canceled, Terminated: try again, up to three times.
                     mission.Action = null;
                     if (++mission.Attempts >= 3)
                     {
@@ -279,7 +279,7 @@ namespace CurrencyMod.Diplomacia
                 {
                     End(mission, false, problem, turn);
                 }
-                return; // sem problema = já estava no lugar (segurando)
+                return; // no problem = already in place (holding)
             }
             RequestArmyActionAt result = null;
             string refusal = null;
@@ -317,7 +317,7 @@ namespace CurrencyMod.Diplomacia
             }
             if ((result.PathActionConditionFlags & PathArmyActionConditionFlags.NeedToDeclareWar) != 0)
             {
-                // A guerra pode estar sendo declarada nesta mesma decisão: tenta de novo algumas voltas antes de desistir.
+                // War may be getting declared in this same decision: retry for a few passes before giving up.
                 if (++mission.Attempts >= 3)
                 {
                     End(mission, false, "precisa declarar guerra antes" + WarTarget(result) + " (use declarar_guerra)", turn);
@@ -342,7 +342,7 @@ namespace CurrencyMod.Diplomacia
                 return;
             }
             int eta = result.PathToTarget.StepCount > 0 ? result.PathToTarget.Steps[result.PathToTarget.StepCount - 1].Turn : 1;
-            // O prazo cobre a viagem que o jogo calculou (até 12 turnos a partir de agora): a ordem é chegar lá.
+            // The deadline covers the trip the game computed (up to 12 turns from now): the order is to get there.
             if (!mission.Reported && turn + eta > mission.Until)
             {
                 mission.Until = Math.Min(turn + eta + 1, turn + 12);
@@ -379,10 +379,10 @@ namespace CurrencyMod.Diplomacia
             });
         }
 
-        // ---------------- Destino ----------------
+        // ---------------- Destination ----------------
 
         /// <summary>
-        /// Tiles candidatos (o primeiro é a âncora), a ação forçada e a esperada, por objetivo (pesquisa §3 e §6).
+        /// Candidate tiles (the first is the anchor), the forced action and the expected one, per goal (research §3 and §6).
         /// </summary>
         private static bool ChooseTarget(Mission mission, Army army, out List<int> tiles, out PathArmyAction forced, out PathArmyAction expected, out string problem)
         {
@@ -410,7 +410,7 @@ namespace CurrencyMod.Diplomacia
                     }
                     if (enemy.SiegeAsDefender.Entity != null && JoinSiege(enemy.SiegeAsDefender.Entity, army, tiles))
                     {
-                        // Ele defende uma cidade cercada: só dá para chegar nele entrando no cerco pelo lado de fora.
+                        // It is defending a besieged city: it can only be reached by joining the siege from outside.
                         forced = PathArmyAction.None;
                         expected = PathArmyAction.JoinBattle;
                         return true;
@@ -428,8 +428,8 @@ namespace CurrencyMod.Diplomacia
                     }
                     if (target.Siege.Entity != null)
                     {
-                        // Cerco já existe: entra como reforço, pelo lado de quem cerca (o centro da cidade é a área interna
-                        // da batalha, fechada para quem chega de fora).
+                        // Siege already exists: join as reinforcement, on the besiegers' side (the city center is the
+                        // battle's inner area, closed to anyone arriving from outside).
                         forced = PathArmyAction.None;
                         expected = PathArmyAction.JoinBattle;
                         if (!JoinSiege(target.Siege.Entity, army, tiles))
@@ -447,7 +447,7 @@ namespace CurrencyMod.Diplomacia
                 problem = "alvo de ataque inválido (use uma cidade C ou um exército A à vista)";
                 return false;
             }
-            // mover / defender: cidade (centro ou vizinhança) ou território (âncora e tiles livres).
+            // mover / defender: city (center or surroundings) or territory (anchor and free tiles).
             int territory = mission.Territory;
             int anchor = -1;
             if (mission.City != 0 && Sandbox.SimulationEntityRepository.TryGetSimulationEntity((SimulationEntityGUID)mission.City, out Settlement city))
@@ -474,14 +474,14 @@ namespace CurrencyMod.Diplomacia
             {
                 expected = PathArmyAction.Move | PathArmyAction.JoinBattle;
             }
-            // Vizinhança da âncora dentro do território, do mais perto ao mais longe, só tiles que fazem sentido. Navio de
-            // verdade fica na água; tropa de terra embarcada (AtSea) desembarca: o destino dela é terra.
+            // Anchor's surroundings within the territory, nearest to farthest, only tiles that make sense. A real ship
+            // stays on water; an embarked land troop (AtSea) disembarks: its destination is land.
             bool naval = army.Units.Count > 0 && army.Units[0]?.UnitDefinition?.SpawnType == Amplitude.Mercury.Data.Simulation.UnitSpawnType.Maritime;
             int armyTile = army.WorldPosition.ToTileIndex();
             if (mission.City == 0 && Sandbox.World.TileInfo.Data[armyTile].TerritoryIndex == territory && (naval || !army.AtSea))
             {
                 tiles.Clear();
-                tiles.Add(armyTile); // destino é o território e o exército já está nele (em terra, se for tropa de terra)
+                tiles.Add(armyTile); // destination is the territory and the army is already in it (on land, if it is a land troop)
             }
             foreach (int tile in (info.TileIndexes ?? new int[0]).OrderBy(t => WorldPosition.GetTileIndexDistance(t, anchor)))
             {
@@ -489,15 +489,15 @@ namespace CurrencyMod.Diplomacia
                 {
                     continue;
                 }
-                // Mover não entra em batalha alheia: tile dentro da área de uma batalha em curso fica de fora (defender
-                // pode, é para reforçar a defesa).
+                // Move does not enter someone else's battle: a tile inside an ongoing battle's area is excluded (defend
+                // may, since it is to reinforce the defense).
                 if (mission.Goal == "mover" && tile != armyTile && Sandbox.BattleRepository.TryGetBattleAt(tile, out Amplitude.Mercury.Simulation.Battle battle) && battle != null && !battle.IsFinished)
                 {
                     continue;
                 }
                 if (tile == armyTile)
                 {
-                    tiles.Insert(0, tile); // já está lá
+                    tiles.Insert(0, tile); // already there
                     continue;
                 }
                 if (!visibility.IsWorldPositionExploredFor(tile, empire))
@@ -517,13 +517,13 @@ namespace CurrencyMod.Diplomacia
                 if (district.IsValid && Sandbox.SimulationEntityRepository.TryGetSimulationEntity(district, out District d)
                     && d.Empire?.Index != empire && d.Borough != null && d.Borough.IsMain)
                 {
-                    continue; // centro de cidade estrangeira
+                    continue; // foreign city center
                 }
                 tiles.Add(tile);
             }
             if (tiles.Count > 0 && tiles[0] == armyTile)
             {
-                // Já no lugar: segura sem andar (e desfaz movimento que tenha sobrado de antes).
+                // Already in place: hold without moving (and cancel any movement left over from before).
                 if (army.HasGoToAction())
                 {
                     SandboxManager.PostAndTrackOrder(new OrderCancelArmyMovement(army.GUID), empire);
@@ -546,10 +546,10 @@ namespace CurrencyMod.Diplomacia
         }
 
         /// <summary>
-        /// Tiles para entrar num cerco já montado como reforço, como a IA nativa faz (Nodes.FindJoinBattlePosition): um
-        /// tile livre da área da batalha (sem exército), fora dos distritos da cidade cercada (a área interna, fechada para
-        /// quem chega de fora), do mais perto ao mais longe do exército. Lá a ação é entrar na batalha
-        /// (OrderGoToAndJoinBattle com o GUID da batalha). O jogo só deixa entrar quem é o atacante ou o defensor principal.
+        /// Tiles to join an existing siege as reinforcement, as the native AI does (Nodes.FindJoinBattlePosition): a free
+        /// tile in the battle area (no army), outside the besieged city's districts (the inner area, closed to anyone
+        /// arriving from outside), nearest to farthest from the army. There the action is joining the battle
+        /// (OrderGoToAndJoinBattle with the battle's GUID). The game only lets the main attacker or defender join.
         /// </summary>
         private static bool JoinSiege(Siege siege, Army army, List<int> tiles)
         {
@@ -573,7 +573,7 @@ namespace CurrencyMod.Diplomacia
                 SimulationEntityGUID district = World.Maps.DistrictMap[tile];
                 if (district.IsValid && Sandbox.SimulationEntityRepository.TryGetSimulationEntity(district, out District d) && city != null && d.Settlement.Entity == city)
                 {
-                    continue; // área interna: a cidade cercada
+                    continue; // inner area: the besieged city
                 }
                 candidates.Add(tile);
             }
@@ -584,9 +584,9 @@ namespace CurrencyMod.Diplomacia
             return tiles.Count > 0;
         }
 
-        // ---------------- Avaliador ----------------
+        // ---------------- Evaluator ----------------
 
-        /// <summary>O mesmo pedido do clique direito, zerado a cada uso (pesquisa §1: o Evaluate só acumula flags).</summary>
+        /// <summary>The same request as the right click, reset on each use (research §1: Evaluate only accumulates flags).</summary>
         private static RequestArmyActionAt Evaluate(Army army, int tile, PathArmyAction forced)
         {
             RequestArmyActionAt r = request ?? (request = new RequestArmyActionAt());
@@ -615,7 +615,7 @@ namespace CurrencyMod.Diplomacia
             return r;
         }
 
-        /// <summary>Mesmos critérios da tela do jogador antes de mandar a ordem (BaseArmyCursor:322-336).</summary>
+        /// <summary>Same criteria as the player's screen before sending the order (BaseArmyCursor:322-336).</summary>
         private static bool Accepted(RequestArmyActionAt r, PathArmyAction expected, out string problem)
         {
             PathArmyAction action = r.PathArmyActionAtPosition;
@@ -643,10 +643,10 @@ namespace CurrencyMod.Diplomacia
         }
 
         /// <summary>
-        /// O caminho afoga o exército? O avaliador tenta primeiro um caminho que não mata em mar profundo e, se não acha,
-        /// devolve o que mata: a tela do jogador mostra a caveira e ele decide. A IA não vê a tela, então caminho mortal
-        /// é recusado. Conta os fins de turno em mar profundo (Unit.ComputeTurnsBeforeDyingInDeepWater: quantos o
-        /// exército aguenta) e parar em mar profundo sem poder navegar nele.
+        /// Does the path drown the army? The evaluator first tries a path that does not kill in deep sea and, if it finds
+        /// none, returns the deadly one: the player's screen shows the skull and the player decides. The AI does not see the
+        /// screen, so a deadly path is refused. Counts the turn ends in deep sea (Unit.ComputeTurnsBeforeDyingInDeepWater:
+        /// how many the army can survive) and stopping in deep sea without being able to sail it.
         /// </summary>
         private static bool Deadly(Army army, RequestArmyActionAt r)
         {
@@ -674,7 +674,7 @@ namespace CurrencyMod.Diplomacia
                 deep++;
                 if (i == count - 1)
                 {
-                    turnEnds = int.MaxValue; // para em mar profundo
+                    turnEnds = int.MaxValue; // stops in deep sea
                     break;
                 }
                 if (r.PathToTarget.Steps[i + 1].Turn > r.PathToTarget.Steps[i].Turn)
@@ -684,7 +684,7 @@ namespace CurrencyMod.Diplomacia
             }
             if (deep > 0)
             {
-                Plugin.Log?.LogInfo($"[IA] Caminho de {(ulong)army.GUID:x}: {deep} passo(s) em mar profundo, {(turnEnds == int.MaxValue ? "para lá" : turnEnds + " fim(ns) de turno")}, aguenta {survives}");
+                Plugin.Log?.LogInfo($"[IA] Path of {(ulong)army.GUID:x}: {deep} step(s) in deep sea, {(turnEnds == int.MaxValue ? "stops there" : turnEnds + " turn end(s)")}, survives {survives}");
             }
             return turnEnds > survives;
         }
@@ -707,7 +707,7 @@ namespace CurrencyMod.Diplomacia
             }
         }
 
-        /// <summary>Condições que a tela pergunta ao jogador e que a IA não aceita sem pedir (pesquisa §2.4).</summary>
+        /// <summary>Conditions the screen asks the player about and that the AI does not accept without asking (research §2.4).</summary>
         private static string Forbidden(PathArmyActionConditionFlags flags)
         {
             if ((flags & PathArmyActionConditionFlags.WillBreakSiege) != 0) return "o caminho romperia um cerco seu";
@@ -742,9 +742,9 @@ namespace CurrencyMod.Diplomacia
             return reasons.Count > 0 ? string.Join(", ", reasons) : flags.Trim();
         }
 
-        // ---------------- Relatório ----------------
+        // ---------------- Report ----------------
 
-        /// <summary>O que houve com um exército que sumiu: as unidades dele estão em outro exército da nação, ou não existem mais.</summary>
+        /// <summary>What happened to a vanished army: its units are in another of the nation's armies, or no longer exist.</summary>
         private static string Fate(Mission mission)
         {
             if (mission.Units != null && mission.Units.Length > 0 && mission.Empire >= 0 && mission.Empire < Sandbox.NumberOfMajorEmpires)
@@ -757,13 +757,13 @@ namespace CurrencyMod.Diplomacia
                     {
                         if (other.Units[u] != null && Array.IndexOf(mission.Units, (ulong)other.Units[u].GUID) >= 0)
                         {
-                            Plugin.Log?.LogInfo($"[IA] Exército {mission.ArmyKey} de E{mission.Empire} sumiu: unidades no exército {(ulong)other.GUID:x}");
+                            Plugin.Log?.LogInfo($"[IA] Army {mission.ArmyKey} of E{mission.Empire} vanished: units in army {(ulong)other.GUID:x}");
                             return "o exército foi fundido com outro exército seu; a ordem acabou";
                         }
                     }
                 }
             }
-            Plugin.Log?.LogInfo($"[IA] Exército {mission.ArmyKey} de E{mission.Empire} sumiu: unidades não encontradas");
+            Plugin.Log?.LogInfo($"[IA] Army {mission.ArmyKey} of E{mission.Empire} vanished: units not found");
             return "o exército não existe mais (unidades dispensadas, destruídas ou capturadas)";
         }
 
@@ -788,9 +788,9 @@ namespace CurrencyMod.Diplomacia
             }
         }
 
-        // ---------------- Trava da IA nativa (thread da IA) ----------------
+        // ---------------- Native AI lock (AI thread) ----------------
 
-        /// <summary>P1: tira do pool os exércitos sob ordem; a tarefa nativa deles falha e nenhuma nova é dada.</summary>
+        /// <summary>P1: removes armies under orders from the pool; their native task fails and no new one is given.</summary>
         [HarmonyPatch(typeof(Amplitude.Mercury.AI.Brain.Allocators.ArmyAllocator), "ComputeInstanceList")]
         private static class AllocatorPatch
         {
@@ -809,7 +809,7 @@ namespace CurrencyMod.Diplomacia
             }
         }
 
-        /// <summary>P2: missões específicas (reagrupar, dispersar…) não pegam exército sob ordem nem reagrupam dentro dele.</summary>
+        /// <summary>P2: specific missions (regroup, disperse…) do not pick an army under orders nor regroup into it.</summary>
         [HarmonyPatch(typeof(Amplitude.Mercury.AI.Brain.Generators.ArmySpecificMission), "GetContexts")]
         private static class SpecificMissionPatch
         {
@@ -843,12 +843,12 @@ namespace CurrencyMod.Diplomacia
                 }
                 catch (Exception)
                 {
-                    return true; // em dúvida, o original
+                    return true; // when in doubt, the original
                 }
             }
         }
 
-        /// <summary>P3: a IA nativa não divide exército sob ordem.</summary>
+        /// <summary>P3: the native AI does not split an army under orders.</summary>
         [HarmonyPatch(typeof(Amplitude.Mercury.AI.Brain.Generators.Military.SplitArmies), "IsArmyValid")]
         private static class SplitPatch
         {
@@ -861,17 +861,17 @@ namespace CurrencyMod.Diplomacia
             }
         }
 
-        // P4: rede de segurança no nível das ordens. Algum comportamento nativo que escape de P1-P3 (dispensar exército
-        // "preso", juntar unidades, oportunidades) ainda pode postar ordem para o exército sob ordem; a ordem é marcada
-        // quando o cérebro nativo da própria nação posta e recusada pela política de ordens do jogo (o mesmo caminho de
-        // uma ordem recusada qualquer: o comportamento nativo vê a falha e segue). Batalha em curso e melhoria de
-        // unidades passam.
+        // P4: safety net at the order level. Some native behavior that escapes P1-P3 (dismissing a "stuck" army,
+        // merging units, opportunities) may still post an order for the army under orders; the order is flagged
+        // when the nation's own native brain posts it and refused by the game's order policy (the same path as any
+        // refused order: the native behavior sees the failure and moves on). Ongoing battle and unit upgrades
+        // pass through.
 
         private static readonly System.Runtime.CompilerServices.ConditionalWeakTable<Order, string> marked = new System.Runtime.CompilerServices.ConditionalWeakTable<Order, string>();
         private static readonly System.Collections.Concurrent.ConcurrentDictionary<Type, System.Reflection.FieldInfo[]> guidFields = new System.Collections.Concurrent.ConcurrentDictionary<Type, System.Reflection.FieldInfo[]>();
         private static int pendingMarks;
 
-        /// <summary>Exército sob ordem citado na ordem (campos SimulationEntityGUID), 0 se nenhum.</summary>
+        /// <summary>Army under orders referenced in the order (SimulationEntityGUID fields), 0 if none.</summary>
         private static ulong LockedIn(Order order, HashSet<ulong> current)
         {
             System.Reflection.FieldInfo[] fields = guidFields.GetOrAdd(order.GetType(), type => type
@@ -917,12 +917,12 @@ namespace CurrencyMod.Diplomacia
                     lastBlocked = $"{name} E{owner}";
                     if (count <= 30)
                     {
-                        Plugin.Log?.LogInfo($"[IA] Exército {army:x} de E{owner} sob ordem: IA nativa tentou {name}; barrada");
+                        Plugin.Log?.LogInfo($"[IA] Army {army:x} of E{owner} under orders: native AI tried {name}; blocked");
                     }
                 }
                 catch (Exception)
                 {
-                    // em dúvida, a ordem segue
+                    // when in doubt, the order goes through
                 }
             }
         }

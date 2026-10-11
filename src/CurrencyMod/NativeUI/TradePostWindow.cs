@@ -17,9 +17,9 @@ using Utils = Amplitude.Mercury.UI.Utils;
 namespace CurrencyMod.NativeUI
 {
     /// <summary>
-    /// Janela "Posto Comercial": aberta ao clicar num território seu na visão de comércio. Lista os
-    /// impérios estrangeiros, as rotas deles que passam ali e deixa escolher Livre / Pedágio / Bloqueado.
-    /// Mesma base nativa do Banco Central (clone de "Cidades e Postos Avançados").
+    /// "Trade Post" window: opened by clicking one of your territories in the trade view. Lists the
+    /// foreign empires, their routes passing there, and lets you choose Free / Toll / Blocked.
+    /// Same native base as the Central Bank (clone of "Cities and Outposts").
     /// </summary>
     internal class TradePostWindow : UIWindow
     {
@@ -40,14 +40,14 @@ namespace CurrencyMod.NativeUI
         private Transform noteCard;
         private readonly List<Transform> rows = new List<Transform>();
         private readonly List<int> rowEmpires = new List<int>();
-        /// <summary>Botões − e + do preço do pedágio de cada linha (só aparecem com o império em Pedágio).</summary>
+        /// <summary>− and + buttons for each row's toll price (only shown when the empire is on Toll).</summary>
         private readonly List<UIButton> priceDownButtons = new List<UIButton>();
         private readonly List<UIButton> priceUpButtons = new List<UIButton>();
         private int territoryIndex = -1;
         private int usersCount;
         private float nextRefresh;
-        /// <summary>Somas da prévia de desvio nas linhas (para o cartão de cima): rotas que desviam do pedágio e rotas barradas.</summary>
-        // Rotas (por par de impérios) que desviam / ficam barradas: a mesma rota aparece nas linhas dos dois lados.
+        /// <summary>Sums of the detour preview across rows (for the top card): routes that detour around the toll and barred routes.</summary>
+        // Routes (per pair of empires) that detour / get barred: the same route shows up in the rows of both sides.
         private readonly HashSet<string> awayRoutes = new HashSet<string>();
         private readonly HashSet<string> barredRoutes = new HashSet<string>();
         private bool previewPending;
@@ -55,13 +55,13 @@ namespace CurrencyMod.NativeUI
 
         internal static bool IsOpen => Instance != null && Instance.Shown;
 
-        // ---------------- Criação ----------------
+        // ---------------- Creation ----------------
 
         internal static TradePostWindow Create()
         {
             AllSettlementsWindow donor = Resources.FindObjectsOfTypeAll<AllSettlementsWindow>().FirstOrDefault(w => w.gameObject.scene.IsValid());
-            // Na visão de comércio o grupo de seleção fica escondido; o painel "Comércio Internacional"
-            // mora no grupo de sobreposições, que não mexe na visibilidade de janelas que não conhece.
+            // In the trade view the selection group is hidden; the "International Trade" panel lives in the
+            // overlays group, which does not touch the visibility of windows it does not know.
             InGameOverlaysGroup group = WindowsManager.Instance?.GetWindowsGroup<InGameOverlaysGroup>();
             if (donor == null || group == null || !group.IsReady)
             {
@@ -96,7 +96,7 @@ namespace CurrencyMod.NativeUI
             group.AddDebugWindowImplementation(window);
             Destroy(stash);
             Instance = window;
-            Plugin.Log.LogInfo("Janela do posto comercial criada.");
+            Plugin.Log.LogInfo("Trade post window created.");
             return window;
         }
 
@@ -112,7 +112,7 @@ namespace CurrencyMod.NativeUI
 
             listTable = root.Find("_SettlementsList/Scrollview/Viewport/SettlementItemsTable").GetComponent<UITransform>();
             cardSample = listTable.transform.Find("_SettlementItemSample");
-            // A janela de cidades esconde a lista quando o império ainda não tem cidades; a cópia herda esse estado.
+            // The cities window hides the list when the empire has no cities yet; the copy inherits that state.
             NativeBankWindow.SetVisible(root.Find("_SettlementsList"), true);
 
             UITransform cultureTransform = culture.GetComponent<UITransform>();
@@ -128,7 +128,7 @@ namespace CurrencyMod.NativeUI
         {
             yield return base.PostLoad();
             closeButton.LeftClick += CloseButton_LeftClick;
-            // "Aplicar a todos" fica num cartão no fim da lista, depois das escolhas que ele copia.
+            // "Apply to all" sits in a card at the end of the list, after the choices it copies.
             noteCard = listTable.InstantiateChild(cardSample, "ApplyAllCard").transform;
             applyAllButton = noteCard.Find("Table/Top/LiberateButton").GetComponent<UIButton>();
             applyAllButton.LeftClick += ApplyAll_LeftClick;
@@ -192,12 +192,12 @@ namespace CurrencyMod.NativeUI
             return false;
         }
 
-        /// <summary>Abre a janela num território (ou fecha, com -1).</summary>
+        /// <summary>Opens the window on a territory (or closes it, with -1).</summary>
         internal static void SetOpen(int territory)
         {
             if (territory < 0 && Instance == null)
             {
-                return; // fechar nunca cria a janela
+                return; // closing never creates the window
             }
             if (Instance == null)
             {
@@ -211,7 +211,7 @@ namespace CurrencyMod.NativeUI
             {
                 Instance.territoryIndex = territory;
                 Instance.nextRefresh = 0;
-                // Recém-criada, a janela só carrega no próximo quadro: abre no Update.
+                // Freshly created, the window only loads on the next frame: open it in Update.
                 Instance.pendingOpen = true;
                 return;
             }
@@ -227,7 +227,7 @@ namespace CurrencyMod.NativeUI
             return Amplitude.Mercury.Presentation.Presentation.PresentationCursorController?.CurrentCursor is Amplitude.Mercury.Presentation.TradeViewCursor;
         }
 
-        // ---------------- Ações ----------------
+        // ---------------- Actions ----------------
 
         private static int LocalEmpire()
         {
@@ -256,12 +256,12 @@ namespace CurrencyMod.NativeUI
             {
                 TradeMode next = Next(TradePolicy.StoredMode(world, me, territoryIndex, target));
                 TradePolicy.SetRule(world, me, territoryIndex, target, next);
-                Plugin.Log.LogInfo($"Posto {territoryIndex}: império {target} → {TradePolicy.ModeName(next)}.");
+                Plugin.Log.LogInfo($"Post {territoryIndex}: empire {target} → {TradePolicy.ModeName(next)}.");
             }
             nextRefresh = 0;
         }
 
-        /// <summary>− e + do pedágio de um império neste posto: o preço passa a ser do posto (por recurso, por turno).</summary>
+        /// <summary>− and + of an empire's toll at this post: the price becomes the post's own (per resource, per turn).</summary>
         private void ChangePrice(int target, int direction)
         {
             int me = LocalEmpire();
@@ -277,7 +277,7 @@ namespace CurrencyMod.NativeUI
                 double next = TradePolicy.StepPrice(current, direction);
                 if (TradePolicy.SetPostPrice(world, me, territoryIndex, target, next))
                 {
-                    Plugin.Log.LogInfo($"Posto {territoryIndex}: pedágio do império {target} → {next} por recurso.");
+                    Plugin.Log.LogInfo($"Post {territoryIndex}: toll for empire {target} → {next} per resource.");
                 }
             }
             nextRefresh = 0;
@@ -309,7 +309,7 @@ namespace CurrencyMod.NativeUI
                         {
                             changed++;
                         }
-                        // O preço do posto vai junto (0 = o preço geral do império).
+                        // The post's price goes along (0 = the empire's general price).
                         if (mode == TradeMode.Toll && TradePolicy.CopyPostPrice(world, me, territory, target, price))
                         {
                             changed++;
@@ -317,7 +317,7 @@ namespace CurrencyMod.NativeUI
                     }
                 }
             }
-            Plugin.Log.LogInfo($"Posto {territoryIndex}: regras copiadas para {mine.Count} território(s) ({changed} mudança(s)).");
+            Plugin.Log.LogInfo($"Post {territoryIndex}: rules copied to {mine.Count} territory(ies) ({changed} change(s)).");
             nextRefresh = 0;
         }
 
@@ -335,11 +335,11 @@ namespace CurrencyMod.NativeUI
             return result;
         }
 
-        // ---------------- Conteúdo ----------------
+        // ---------------- Content ----------------
 
         private void Update()
         {
-            // "Loaded" fica verdadeiro antes do PostLoad terminar; até lá o gerenciador ignora o pedido.
+            // "Loaded" becomes true before PostLoad finishes; until then the manager ignores the request.
             if (LoadingState != Amplitude.UI.Windows.LoadingState.Loaded)
             {
                 return;
@@ -347,16 +347,16 @@ namespace CurrencyMod.NativeUI
             if (pendingOpen)
             {
                 pendingOpen = false;
-                // Uma janela de cada vez (o Banco Central fecha); a visão de comércio continua, é o lugar do posto.
+                // One window at a time (the Central Bank closes); the trade view stays, it is where the post lives.
                 ExclusiveWindows.BeforeOpen(this, keepTradeView: true);
                 openedAt = Time.unscaledTime;
                 WindowsUtils.UpdateWindowVisibility(this, true);
             }
             if (Shown && (!InTradeView() || ExclusiveWindows.Interrupted(this, openedAt, tradeView: true)))
             {
-                WindowsUtils.UpdateWindowVisibility(this, false); // saiu da visão de comércio ou foi mexer em outra coisa
+                WindowsUtils.UpdateWindowVisibility(this, false); // left the trade view or went to do something else
             }
-            // Enquanto o posto está aberto, o painel "Comércio Internacional" (que fica no mesmo lugar) some.
+            // While the post is open, the "International Trade" panel (which sits in the same spot) is hidden.
             SetTradePanelHidden(Shown);
             if (!Shown || Time.unscaledTime < nextRefresh)
             {
@@ -369,7 +369,7 @@ namespace CurrencyMod.NativeUI
             }
             catch (Exception ex)
             {
-                Plugin.Log.LogError($"Posto comercial: {ex}");
+                Plugin.Log.LogError($"Trade post: {ex}");
                 nextRefresh = Time.unscaledTime + 5f;
             }
         }
@@ -401,7 +401,7 @@ namespace CurrencyMod.NativeUI
             int me = game.LocalEmpireInfo.EmpireIndex;
             if (Snapshots.GameSnapshot.PresentationData.TerritoryInfo.Data[territoryIndex].EmpireIndex != me)
             {
-                SetOpen(-1); // o território deixou de ser seu
+                SetOpen(-1); // the territory is no longer yours
                 return;
             }
             CurrencyWorld world = CurrencyManager.Ensure(game.GameID, game.NumberOfMajorEmpires);
@@ -447,8 +447,8 @@ namespace CurrencyMod.NativeUI
                     {
                         continue;
                     }
-                    // Só quem usa este posto; quem já foi taxado ou bloqueado aqui continua na lista
-                    // (a rota bloqueada some, mas é preciso poder liberar).
+                    // Only those who use this post; anyone already tolled or blocked here stays on the list
+                    // (the blocked route disappears, but you must be able to free it).
                     int empire = i;
                     if (routes.Any(r => r.Left == empire || r.Right == empire)
                         || TradePolicy.StoredMode(world, me, territoryIndex, empire) != TradeMode.Free)
@@ -457,7 +457,7 @@ namespace CurrencyMod.NativeUI
                     }
                 }
                 usersCount = empires.Count;
-                // Quem passa por aqui primeiro.
+                // Those who pass through here first.
                 empires = empires.OrderByDescending(e => routes.Count(r => r.Left == e || r.Right == e)).ThenBy(e => e).ToList();
 
                 SetRowCount(empires.Count);
@@ -470,8 +470,8 @@ namespace CurrencyMod.NativeUI
                     rowEmpires[i] = empires[i];
                 }
 
-                // Desvio por causa do pedágio, juntando as linhas sem contar duas vezes a rota entre dois impérios taxados
-                // (prévia calculada pelo caminho do próprio jogo). Bloqueio vence: rota barrada não conta como desvio.
+                // Detours caused by the toll, merging the rows without counting twice a route between two tolled empires
+                // (preview computed by the game's own pathfinding). Blockade wins: a barred route does not count as a detour.
                 awayRoutes.ExceptWith(barredRoutes);
                 int awayTotal = awayRoutes.Count;
                 int barredTotal = barredRoutes.Count;
@@ -514,8 +514,8 @@ namespace CurrencyMod.NativeUI
         }
 
         /// <summary>
-        /// A janela fica por cima do painel "Comércio Internacional" e, com poucas linhas, encolheria e
-        /// deixaria o painel aparecer por baixo: a altura acompanha a do painel nativo.
+        /// The window sits over the "International Trade" panel and, with few rows, would shrink and
+        /// let the panel show underneath: the height follows the native panel's.
         /// </summary>
         private void MatchTradePanelHeight()
         {
@@ -524,7 +524,7 @@ namespace CurrencyMod.NativeUI
             {
                 return;
             }
-            // Borda de baixo visível do painel "Comércio Internacional" (a janela dele ocupa a tela toda).
+            // Visible bottom edge of the "International Trade" panel (its window covers the whole screen).
             const float TradePanelBottom = 866f;
             float target = TradePanelBottom - mine.GlobalRect.y;
             var table = GetComponent<Amplitude.UI.Layouts.UITable1D>();
@@ -567,7 +567,7 @@ namespace CurrencyMod.NativeUI
             bool toll = mode == TradeMode.Toll;
             SetVisible(priceDownButtons[index].transform, toll);
             SetVisible(priceUpButtons[index].transform, toll);
-            // Com pedágio, os botões − e + ocupam a ponta da linha: o terceiro chip sai e o que ele pagou vai para a dica do preço.
+            // With a toll, the − and + buttons take the end of the row: the third chip goes away and what they paid moves to the price tooltip.
             string detail = toll ? null
                 : paid != null ? L.F("Pagou {0} {1}", symbol, Format.Money(paid.ReceivedByOwner))
                 : theirs.Count > 0 ? L.F("Compra {0} · Vende {1}", buys, sells) : null;
@@ -599,8 +599,8 @@ namespace CurrencyMod.NativeUI
         }
 
         /// <summary>
-        /// Chip das rotas da linha. Com pedágio ou bloqueio, mostra a prévia de desvio (TollPreview): das rotas que passariam
-        /// aqui sem a regra, quantas pagam e quantas desviam (ou ficam barradas). Pede o cálculo e soma para o cartão de cima.
+        /// The row's routes chip. With a toll or blockade, shows the detour preview (TollPreview): of the routes that would pass
+        /// here without the rule, how many pay and how many detour (or get barred). Requests the computation and sums for the top card.
         /// </summary>
         private string RoutesChip(TradeMode mode, int empire, int me, double price, int current, out string partners)
         {
@@ -640,14 +640,14 @@ namespace CurrencyMod.NativeUI
             return answer.Away == 0 ? $"{stay} · {away}" : $"{stay} · <c={AwayColor}>{away}</c>";
         }
 
-        /// <summary>"Pagam: rota com Os Polinésios." para a dica da linha (null se não houver).</summary>
+        /// <summary>"Pagam: rota com Os Polinésios." for the row tooltip (null if there are none).</summary>
         private static string PartnerList(string label, List<int> partners)
         {
             return partners.Count == 0 ? null
                 : $"{label}: " + string.Join(", ", partners.Select(p => L.F("rota com {0}", ShortEmpireName(p)))) + ".";
         }
 
-        /// <summary>"Desviam: rota com Os Axumitas (passa pelo seu posto de X)." — desviar para outro posto seu não foge de você.</summary>
+        /// <summary>"Desviam: rota com Os Axumitas (passa pelo seu posto de X)." — detouring to another of your posts does not escape you.</summary>
         private static string AwayList(TollPreview.Answer answer)
         {
             if (answer.AwayPartners.Count == 0)
@@ -665,7 +665,7 @@ namespace CurrencyMod.NativeUI
             return L.T("Desviam") + ": " + string.Join(", ", parts) + ".";
         }
 
-        /// <summary>Botãozinho quadrado na linha dos chips, preso à direita do cartão.</summary>
+        /// <summary>Small square button on the chips line, pinned to the right of the card.</summary>
         private static void PlacePriceButton(UIButton button, string text, float rightBorder)
         {
             UILabel label = button.GetComponent<UILabel>();
@@ -685,7 +685,7 @@ namespace CurrencyMod.NativeUI
             ui.Height = 24f;
         }
 
-        /// <summary>Só impérios que você já conhece (os outros aparecem como "Desconhecido").</summary>
+        /// <summary>Only empires you already know (the others show as "Unknown").</summary>
         internal static bool IsKnown(int empire)
         {
             try
@@ -718,12 +718,12 @@ namespace CurrencyMod.NativeUI
                 rows.Add(row);
                 rowEmpires.Add(-1);
                 UIButton button = row.Find("Table/Top/LiberateButton").GetComponent<UIButton>();
-                // − e + do preço: cópias do botão da linha, na altura dos chips, presas à direita.
+                // Price − and +: copies of the row button, at chip height, pinned to the right.
                 UIButton down = UnityEngine.Object.Instantiate(button.gameObject, button.transform.parent).GetComponent<UIButton>();
                 down.name = "PriceDown";
                 UIButton up = UnityEngine.Object.Instantiate(button.gameObject, button.transform.parent).GetComponent<UIButton>();
                 up.name = "PriceUp";
-                // Hífen comum: a fonte do jogo não tem o sinal de menos (U+2212) e mostraria "?".
+                // Plain hyphen: the game's font lacks the minus sign (U+2212) and would show "?".
                 PlacePriceButton(down, "-", 40f);
                 PlacePriceButton(up, "+", 10f);
                 down.LeftClick += b => ChangePrice(rowEmpires[index], -1);
@@ -745,9 +745,9 @@ namespace CurrencyMod.NativeUI
             SetVisible(cardSample, false);
         }
 
-        // ---------------- Clique no mapa (visão de comércio) ----------------
+        // ---------------- Map click (trade view) ----------------
 
-        /// <summary>Na visão de comércio o clique não fazia nada: num território seu, abre o posto.</summary>
+        /// <summary>In the trade view a click did nothing: on one of your territories, it opens the post.</summary>
         [HarmonyLib.HarmonyPatch(typeof(Amplitude.Mercury.Presentation.TradeViewCursor), nameof(Amplitude.Mercury.Presentation.TradeViewCursor.OnClick))]
         private static class TradeViewClickPatch
         {
@@ -768,12 +768,12 @@ namespace CurrencyMod.NativeUI
                 }
                 catch (Exception ex)
                 {
-                    Plugin.Log.LogError($"Posto comercial (clique): {ex}");
+                    Plugin.Log.LogError($"Trade post (click): {ex}");
                 }
             }
         }
 
-        // ---------------- Remoção ----------------
+        // ---------------- Removal ----------------
 
         internal static void DestroyWindow()
         {
@@ -783,7 +783,7 @@ namespace CurrencyMod.NativeUI
             {
                 return;
             }
-            window.SetTradePanelHidden(false); // devolve o painel nativo (recarga do mod / saída da partida)
+            window.SetTradePanelHidden(false); // restores the native panel (mod reload / leaving the game)
             try
             {
                 if (window.Group is UIWindowsGroup group && group.windows != null)
@@ -793,13 +793,13 @@ namespace CurrencyMod.NativeUI
             }
             catch (Exception ex)
             {
-                Plugin.Log.LogWarning($"Remoção da janela do posto: {ex.Message}");
+                Plugin.Log.LogWarning($"Trade post window removal: {ex.Message}");
             }
             window.gameObject.SetActive(false);
             Destroy(window.gameObject);
         }
 
-        /// <summary>Comandos: "open &lt;território&gt;", "close", "info", "set &lt;território&gt; &lt;império&gt; free|toll|block", "mine".</summary>
+        /// <summary>Commands: "open &lt;territory&gt;", "close", "info", "set &lt;territory&gt; &lt;empire&gt; free|toll|block", "mine".</summary>
         internal static string DevCommand(string args)
         {
             string[] parts = args.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
@@ -815,8 +815,8 @@ namespace CurrencyMod.NativeUI
                     return "ok";
                 case "previa":
                 {
-                    // "trade previa <dono> <território|-1> <alvo> <preço> [bloqueio]": prévia de desvio (pede e mostra a
-                    // resposta já calculada; rode de novo para ler o resultado de um pedido novo).
+                    // "trade previa <owner> <territory|-1> <target> <price> [bloqueio]": detour preview (requests and shows the
+                    // already computed answer; run again to read the result of a new request).
                     if (parts.Length < 5 || !int.TryParse(parts[1], out int owner) || !int.TryParse(parts[2], out int territory)
                         || !int.TryParse(parts[3], out int target) || !double.TryParse(parts[4], out double asked))
                     {
@@ -837,7 +837,7 @@ namespace CurrencyMod.NativeUI
                 }
                 case "price":
                 {
-                    // "trade price <império> up|down": o mesmo que os botões + e − da linha (janela aberta).
+                    // "trade price <empire> up|down": same as the row's + and − buttons (window open).
                     if (Instance == null || !Instance.Shown || parts.Length < 3 || !int.TryParse(parts[1], out int empire))
                     {
                         return "uso: trade price <império> up|down (com a janela do posto aberta)";
@@ -858,7 +858,7 @@ namespace CurrencyMod.NativeUI
                 }
                 case "costs":
                 {
-                    // Manutenção por território de cada rota (leitura direta da simulação, só diagnóstico).
+                    // Per-territory upkeep of each route (read directly from the simulation, diagnostics only).
                     var text = new System.Text.StringBuilder();
                     foreach (var relation in Amplitude.Mercury.Sandbox.Sandbox.TradeController.ExternalTradeRelations)
                     {

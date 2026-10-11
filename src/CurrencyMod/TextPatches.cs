@@ -10,15 +10,15 @@ using HarmonyLib;
 namespace CurrencyMod
 {
     /// <summary>
-    /// Escreve o nome da moeda do jogador ao lado de valores ("Custa 500 Reais [moeda]").
-    /// Rótulos genéricos sem número ("Dinheiro total") ficam como estão.
+    /// Writes the player's currency name next to amounts ("Costs 500 Reais [coin]").
+    /// Generic labels with no number ("Total money") stay as they are.
     /// </summary>
     internal static class TextPatches
     {
         internal static readonly CultureInfo PtBr = CultureInfo.GetCultureInfo("pt-BR");
 
-        // Número (com tags de cor opcionais) seguido do ícone de dinheiro, ou ícone seguido de número.
-        // O separador de milhar pode ser ponto, vírgula ou espaço fino/inseparável (francês), conforme o idioma do jogo.
+        // Number (with optional color tags) followed by the money icon, or icon followed by number.
+        // The thousands separator can be a dot, comma or thin/non-breaking space (French), depending on the game language.
         private static readonly Regex AmountThenIcon = new Regex(
             @"(?<num>[+\-−]?\d(?:[\d.,]|[\u00A0\u202F](?=\d))*(?:\s?[kKmM](?![a-zA-Z]))?)(?<tags>(?:</?[^<>\[\]]*>)*)(?<space>\s*)(?<icon>\[(?:money|moneycolored)\])",
             RegexOptions.Compiled | RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
@@ -27,7 +27,7 @@ namespace CurrencyMod
             @"(?<icon>\[(?:money|moneycolored)\])(?<space>\s*)(?<tags>(?:</?[^<>\[\]]*>)*)(?<num>[+\-−]?\d(?:[\d.,]|[\u00A0\u202F](?=\d))*(?:\s?[kKmM](?![a-zA-Z]))?)(?<close>(?:</[^<>\[\]]*>)*)(?!\s*\p{L})",
             RegexOptions.Compiled | RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
 
-        /// <summary>Plural da moeda do jogador local, atualizado pela janela a cada frame (thread principal).</summary>
+        /// <summary>Plural of the local player's currency, updated by the window every frame (main thread).</summary>
         internal static volatile string LocalCurrencyPlural;
         internal static volatile string LocalTooltipLine;
 
@@ -40,7 +40,7 @@ namespace CurrencyMod
             }
             if (text.IndexOf(plural, StringComparison.Ordinal) >= 0)
             {
-                return text; // já decorado
+                return text; // already decorated
             }
 
             bool matched = false;
@@ -74,7 +74,7 @@ namespace CurrencyMod
                 }
                 catch (Exception)
                 {
-                    // Texto nunca pode quebrar a interface do jogo.
+                    // Text must never break the game UI.
                 }
             }
         }
@@ -102,12 +102,12 @@ namespace CurrencyMod
                 }
                 catch (Exception ex)
                 {
-                    Plugin.Log.LogWarning($"Tooltip de dinheiro: {ex.Message}");
+                    Plugin.Log.LogWarning($"Money tooltip: {ex.Message}");
                 }
             }
         }
 
-        /// <summary>Atualiza os textos cacheados da moeda local. Chamado na thread principal.</summary>
+        /// <summary>Updates the cached texts of the local currency. Called on the main thread.</summary>
         internal static void RefreshLocalCache(EmpireCurrency mine)
         {
             if (mine == null || SavePatches.IsGameOnline())
@@ -117,13 +117,13 @@ namespace CurrencyMod
                 return;
             }
             LocalCurrencyPlural = mine.PluralOrName;
-            // Uma linha curta: o rótulo da renda no tooltip de dinheiro tem altura fixa (uma linha a mais invade os
-            // títulos) e não quebra linha (com moeda e câmbio juntos o texto vazava dos dois lados do balão).
+            // One short line: the income label in the money tooltip has a fixed height (one extra line overlaps the
+            // titles) and does not wrap (with currency and exchange rate together the text spilled out of both sides of the bubble).
             LocalTooltipLine = L.F("Inflação {0}  ·  Juros {1}", Format.Percent(mine.InflationRate), Format.Percent(mine.InterestRate));
         }
     }
 
-    /// <summary>Números da interface, na cultura do idioma do mod (L.Culture).</summary>
+    /// <summary>UI numbers, in the culture of the mod's language (L.Culture).</summary>
     internal static class Format
     {
         public static string Percent(double rate) => (rate * 100).ToString("0.0#", L.Culture) + "%";

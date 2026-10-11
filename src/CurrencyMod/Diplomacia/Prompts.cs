@@ -5,13 +5,13 @@ using System.Text;
 namespace CurrencyMod.Diplomacia
 {
     /// <summary>
-    /// Textos fixos enviados à IA. Ordem pensada para o cache de prompt da API:
-    /// [regras do mundo + formato] (igual para todas as nações) → [persona] (fixa por nação) → [dossiê do turno].
+    /// Fixed texts sent to the AI. Order designed for the API's prompt cache:
+    /// [world rules + format] (same for all nations) → [persona] (fixed per nation) → [turn dossier].
     /// </summary>
     internal static class Prompts
     {
-        /// <param name="congress">A partida tem o Congresso mundial (expansão Together We Rule e opção ligada): entram as
-        /// ferramentas dele. Fixo por partida, então o cache do prompt continua valendo.</param>
+        /// <param name="congress">The game has the World Congress (Together We Rule expansion with the option on): its tools
+        /// are included. Fixed per game, so the prompt cache stays valid.</param>
         internal static string WorldRules(bool congress = false)
         {
             int letters = IaConfig.MaxLettersPerTurn.Value;
@@ -119,8 +119,8 @@ COMO PENSAR
         }
 
         /// <summary>
-        /// Linha de idioma do ESTILO. Em português fica o texto de sempre; nos outros idiomas o dossiê continua em
-        /// português, mas tudo o que alguém lê sai no idioma escolhido ([IA] IdiomaDasCartas), e o json não muda.
+        /// Language line of the STYLE section. In Portuguese it is the usual text; in other languages the dossier stays in
+        /// Portuguese, but everything someone reads comes out in the chosen language ([IA] IdiomaDasCartas), and the json does not change.
         /// </summary>
         internal static string LanguageRule(string voice)
         {
@@ -134,7 +134,7 @@ COMO PENSAR
                 + $"- O dossiê e estas regras estão em português, mas quem lê as suas cartas fala {language}: nunca copie frases em português; traduza as ideias. Nomes do jogo (nações, líderes, cidades, territórios, recursos) ficam exatamente como aparecem no dossiê. As chaves do json e os valores fixos (códigos, \"aceitar\", \"privada\", nomes de ações) continuam exatamente como especificados.";
         }
 
-        /// <summary>Ferramentas do Congresso mundial (research\congress.md §7.1); só nas partidas que o têm.</summary>
+        /// <summary>World Congress tools (research\congress.md §7.1); only in games that have it.</summary>
         private const string CongressTools =
             "- propor_votacao: {\"lei\": \"V7\", \"motivo\": \"...\"} — EXECUTADA: só quando a seção do Congresso disser \"VOCÊ PRESIDE\". Põe essa lei em votação; todas as nações votam por alguns turnos com o peso delas. Quem não estiver na opção vencedora recebe a lei imposta e escolhe entre adotá-la ou pagar influência para recusar.\n"
             + "- votar_congresso: {\"votacao\": \"lei\", \"opcao\": \"A|B|abster\", \"se_perder\": \"adotar|recusar\"} ou {\"votacao\": \"K3\", \"apoiar\": \"E2|abster\"} — EXECUTADA: seu voto pesa o seu peso no Congresso agora, mais os subornos já comprados. Um voto por votação, sem troca; não votar = abster-se. \"se_perder\" (opcional) diz o que seus governadores fazem se a sua opção perder: adotar a lei imposta ou recusá-la pagando influência. Na sua própria crise, o seu peso só conta se você votar em você.\n"
@@ -193,7 +193,7 @@ COMO PENSAR
             "Rurik", "Saba", "Valdemar", "Yara", "Ermengol", "Zenóbia",
         };
 
-        /// <summary>Persona fixa da nação: traços nativos do jogo + um traço sorteado (estável por partida).</summary>
+        /// <summary>The nation's fixed persona: the game's native traits + one randomly drawn trait (stable per game).</summary>
         internal static Persona CreatePersona(PersonaFacts facts, string gameGuid)
         {
             int seed = StableHash(gameGuid + "#" + facts.EmpireIndex);
@@ -278,7 +278,7 @@ COMO PENSAR
         }
     }
 
-    /// <summary>Fatos do jogo usados para montar a persona (lidos na thread principal).</summary>
+    /// <summary>Game facts used to build the persona (read on the main thread).</summary>
     internal sealed class PersonaFacts
     {
         public int EmpireIndex;

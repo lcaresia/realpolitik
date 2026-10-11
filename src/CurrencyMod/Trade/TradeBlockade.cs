@@ -10,10 +10,10 @@ using HarmonyLib;
 namespace CurrencyMod
 {
     /// <summary>
-    /// Bloqueio e pedágio no lado da simulação (thread do sandbox):
-    /// - o cálculo de rotas trata território bloqueado como intransponível e pedágio como desvio caro;
-    /// - quando as regras mudam, as rotas são recalculadas (desviam ou são destruídas);
-    /// - no fim do turno o pedágio é cobrado, a reclamação diplomática é mantida e a IA revê suas regras.
+    /// Blockade and toll on the simulation side (sandbox thread):
+    /// - route pathfinding treats a blocked territory as impassable and a toll as an expensive detour;
+    /// - when the rules change, routes are recomputed (they detour or are destroyed);
+    /// - at end of turn the toll is collected, the diplomatic grievance is kept up and the AI reviews its rules.
     /// </summary>
     internal static class TradeBlockade
     {
@@ -32,8 +32,8 @@ namespace CurrencyMod
         private static bool IsMajor(int empireIndex) => empireIndex >= 0 && empireIndex < Sandbox.NumberOfMajorEmpires;
 
         /// <summary>
-        /// "jogo rotas": rotas comerciais ativas entre impérios maiores que atravessam território de um terceiro, com o que
-        /// esse dono faz com cada lado; regras de pedágio e bloqueio por dono; pedágios pagos no último fim de turno.
+        /// "jogo rotas": active trade routes between major empires that cross a third party's territory, with what
+        /// that owner does to each side; toll and blockade rules per owner; tolls paid at the last end of turn.
         /// </summary>
         internal static string Describe(bool fullPaths = false)
         {
@@ -43,7 +43,7 @@ namespace CurrencyMod
             }
             if (fullPaths)
             {
-                // "jogo rotas detalhe": o caminho inteiro de cada rota ativa, território a território, com o dono.
+                // "jogo rotas detalhe": the full path of each active route, territory by territory, with the owner.
                 var paths = new System.Text.StringBuilder();
                 foreach (ExternalTradeRelation relation in Sandbox.TradeController.ExternalTradeRelations)
                 {
@@ -140,7 +140,7 @@ namespace CurrencyMod
             return summary.ToString() + text.ToString().TrimEnd();
         }
 
-        /// <summary>Modo mais restritivo que o dono do território aplica a algum dos dois lados da rota.</summary>
+        /// <summary>Most restrictive mode the territory owner applies to either side of the route.</summary>
         internal static TradeMode ModeFor(int territoryIndex, int ownerIndex, int left, int right)
         {
             TradeMode mode = TradeMode.Free;
@@ -159,9 +159,9 @@ namespace CurrencyMod
             return mode;
         }
 
-        // ---------------- Cálculo de rotas ----------------
+        // ---------------- Route pathfinding ----------------
 
-        /// <summary>Rota externa sendo calculada agora (o contexto do jogo só guarda os dois impérios).</summary>
+        /// <summary>External route being computed right now (the game's context only holds the two empires).</summary>
         private static ExternalTradeRelation currentRelation;
 
         [HarmonyPatch(typeof(TradePathfindContext), nameof(TradePathfindContext.Clear))]
@@ -177,16 +177,16 @@ namespace CurrencyMod
         }
 
         /// <summary>
-        /// Rota nova: o jogo limpa PathAsPathNode antes do CreatePath, e as trocas ainda não têm TradeNodes, então o pedágio
-        /// do primeiro caminho saía com o piso da manutenção por território (pedágio caríssimo, desvio exagerado) e nada
-        /// pedia recálculo. Marcada aqui, o OnOrderProcessedOrTurnBeginOrTurnEnd do jogo refaz o caminho com os valores reais.
+        /// New route: the game clears PathAsPathNode before CreatePath, and the exchanges have no TradeNodes yet, so the toll
+        /// of the first path came out with the per-territory upkeep floor (very expensive toll, exaggerated detour) and nothing
+        /// requested a recompute. Marked here, the game's OnOrderProcessedOrTurnBeginOrTurnEnd redoes the path with real values.
         /// </summary>
         [HarmonyPatch(typeof(BaseTradeRelation), nameof(BaseTradeRelation.ApplyTradeAction))]
         private static class StartTradePatch
         {
             private static void Postfix(BaseTradeRelation __instance, TradeRoadAction action, bool __result)
             {
-                // Também quando uma rota que já existe ganha mercadoria (StartTrade de novo): o pedágio dela mudou.
+                // Also when an existing route gains goods (StartTrade again): its toll changed.
                 if (action == TradeRoadAction.StartTrade && __result && Enabled && __instance is ExternalTradeRelation
                     && __instance.TradeRoadStatus == TradeRoadStatus.Active)
                 {
@@ -200,18 +200,18 @@ namespace CurrencyMod
                             path.Add("T" + relation.PathAsTerritories[i].Index);
                         }
                     }
-                    Plugin.Log.LogInfo($"Rota E{relation.LeftEmpireIndex}↔E{relation.RightEmpireIndex}: StartTrade pelo caminho {string.Join(",", path)}; marcada para recalcular com o pedágio real.");
+                    Plugin.Log.LogInfo($"Route E{relation.LeftEmpireIndex}↔E{relation.RightEmpireIndex}: StartTrade along path {string.Join(",", path)}; marked for recompute with the real toll.");
                 }
             }
         }
 
         /// <summary>
-        /// Pedágio como custo de caminho: a rota compara pagar o pedágio com desviar. Desviar custa
-        /// manutenção — o jogo cobra manutenção comercial por território atravessado — então o pedágio
-        /// por turno é convertido em "territórios equivalentes" pela manutenção por território desta rota.
-        /// Se pagar sai mais barato que a volta, a rota passa e paga; senão, desvia.
+        /// Toll as a path cost: the route compares paying the toll with detouring. Detouring costs
+        /// upkeep — the game charges trade upkeep per territory crossed — so the per-turn toll
+        /// is converted into "equivalent territories" using this route's upkeep per territory.
+        /// If paying is cheaper than the detour, the route passes and pays; otherwise, it detours.
         /// </summary>
-        /// <summary>Custo de passo de quem escolheu desviar: muito acima de qualquer volta, mas finito.</summary>
+        /// <summary>Step cost for whoever chose to detour: far above any detour, but finite.</summary>
         private const float DetourCost = 1000f;
 
         private static float TollPathCost(int territory, MajorEmpire owner, int left, int right)
@@ -227,7 +227,7 @@ namespace CurrencyMod
             int goods = ResourcesBought(leftExchange) + ResourcesBought(rightExchange);
             if (goods <= 0)
             {
-                return 0f; // rota sem mercadoria não paga pedágio
+                return 0f; // a route without goods pays no toll
             }
             int era = Math.Max(1, owner.DepartmentOfDevelopment.CurrentEraIndex);
             double toll = 0;
@@ -235,8 +235,8 @@ namespace CurrencyMod
             {
                 if (IsMajor(payer) && TradePolicy.GetMode(territory, payer, owner.Index) == TradeMode.Toll)
                 {
-                    // Escolha de quem paga (rota_pedagio da IA de linguagem): pagar = passa sem pesar o preço; desviar =
-                    // foge daqui se houver outro caminho (custo alto, não infinito: sem volta, passa e paga).
+                    // The payer's choice (rota_pedagio from the language AI): pagar = passes without weighing the price;
+                    // desviar = avoids this place if there is another path (high cost, not infinite: with no detour, it passes and pays).
                     switch (TradePolicy.GetTollChoice(payer, owner.Index))
                     {
                         case TollChoiceKind.Pay:
@@ -252,9 +252,10 @@ namespace CurrencyMod
                 return 0f;
             }
             double upkeep = 0;
-            // Nós do caminho atual da rota. Não dá para contar TradeNodes das trocas: no recálculo do jogo (RefreshPath) o
-            // DestroyPath esvazia essas listas antes de procurar o caminho novo, e a conta caía no piso (pedágio caríssimo,
-            // e a prévia de desvio, que roda sem destruir nada, discordava do jogo). PathAsPathNode só muda depois.
+            // Nodes of the route's current path. The exchanges' TradeNodes cannot be counted: in the game's recompute (RefreshPath)
+            // DestroyPath empties those lists before searching for the new path, and the count fell to the floor (very expensive
+            // toll, and the detour preview, which runs without destroying anything, disagreed with the game). PathAsPathNode only
+            // changes afterwards.
             int nodes = relation.PathAsPathNode.Length;
             foreach (ExternalTradeExchange exchange in new[] { leftExchange, rightExchange })
             {
@@ -265,7 +266,7 @@ namespace CurrencyMod
                 }
             }
             double upkeepPerTerritory = Math.Max(0.5, nodes > 0 ? upkeep / nodes : 0);
-            // Entrar num território estrangeiro custa 2 no cálculo do jogo: é a "unidade" de um território a mais.
+            // Entering a foreign territory costs 2 in the game's pathfinding: that is the "unit" of one more territory.
             const double TerritoryStep = 2.0;
             return (float)(toll / upkeepPerTerritory * TerritoryStep * weight);
         }
@@ -288,7 +289,7 @@ namespace CurrencyMod
                 int right = __instance.RightEmpire?.Index ?? -1;
                 if (owner.Index == left || owner.Index == right)
                 {
-                    return; // ninguém bloqueia o próprio comércio
+                    return; // nobody blocks their own trade
                 }
                 switch (ModeFor(toNode.TerritoryIndex, owner.Index, left, right))
                 {
@@ -296,10 +297,10 @@ namespace CurrencyMod
                         __result = float.PositiveInfinity;
                         break;
                     case TradeMode.Toll:
-                        // O dono cobra uma vez por rota, pelo posto mais caro dele no caminho (CollectTolls). Vindo de
-                        // fora, entra o preço deste posto; vindo de outro território do mesmo dono, só o quanto este é
-                        // mais caro que aquele. Antes só a entrada contava: um posto interno (ou mais caro que o da
-                        // entrada) nunca fazia a rota desviar, mas era cobrado.
+                        // The owner charges once per route, at its most expensive post on the path (CollectTolls). Coming
+                        // from outside, this post's price applies; coming from another territory of the same owner, only
+                        // how much more this one costs than that one. Before, only the entry counted: an inner post (or one
+                        // more expensive than the entry) never made the route detour, but was still charged.
                         float cost = TollPathCost(toNode.TerritoryIndex, owner, left, right);
                         if (OwnerOf(fromNode.TerritoryIndex)?.Index == owner.Index
                             && ModeFor(fromNode.TerritoryIndex, owner.Index, left, right) == TradeMode.Toll)
@@ -316,9 +317,9 @@ namespace CurrencyMod
         }
 
         /// <summary>
-        /// Teste ("jogo pedagio teste dono T_livre T_taxado E_esq E_dir [preço]"): custo de passo do mod, com o contexto da
-        /// rota real entre E_esq e E_dir, para entrar no posto taxado vindo de fora, vindo do posto livre do mesmo dono
-        /// (o posto interno) e para ir ao posto livre. O posto taxado usa o cenário "e se" da prévia (só este território).
+        /// Test ("jogo pedagio teste dono T_livre T_taxado E_esq E_dir [preço]"): the mod's step cost, with the context of the
+        /// real route between E_esq and E_dir, for entering the tolled post from outside, from the same owner's free post
+        /// (the inner post) and for going to the free post. The tolled post uses the preview's "what if" scenario (this territory only).
         /// </summary>
         internal static string SelfTestInnerPost(int owner, int free, int tolled, int left, int right, double price)
         {
@@ -369,7 +370,7 @@ namespace CurrencyMod
             }
         }
 
-        /// <summary>Quem, no caminho atual da rota, passou a bloqueá-la (-1 se ninguém).</summary>
+        /// <summary>Who, on the route's current path, has started blocking it (-1 if nobody).</summary>
         private static int FindBlocker(BaseTradeRelation relation, int left, int right)
         {
             for (int i = 0; i < relation.PathAsTerritories.Count; i++)
@@ -392,8 +393,8 @@ namespace CurrencyMod
         [HarmonyPatch(typeof(TradeController), nameof(TradeController.OnOrderProcessedOrTurnBeginOrTurnEnd))]
         private static class RefreshPatch
         {
-            /// <summary>Regras mudaram: rotas que passam por um bloqueio são recalculadas em nome de quem bloqueou
-            /// (a notificação do jogo diz quem destruiu); as demais são só marcadas para o jogo recalcular.</summary>
+            /// <summary>Rules changed: routes that cross a blockade are recomputed on behalf of the blocker
+            /// (the game's notification says who destroyed them); the rest are only marked for the game to recompute.</summary>
             private static void Prefix(TradeController __instance)
             {
                 if (!TradePolicy.PathsDirty)
@@ -447,16 +448,16 @@ namespace CurrencyMod
                     }
                     if (rerouted > 0)
                     {
-                        Plugin.Log.LogInfo($"Bloqueio comercial: {rerouted} rota(s) recalculada(s).");
+                        Plugin.Log.LogInfo($"Trade blockade: {rerouted} route(s) recomputed.");
                     }
                 }
                 catch (Exception ex)
                 {
-                    Plugin.Log.LogError($"Bloqueio comercial (recálculo de rotas): {ex}");
+                    Plugin.Log.LogError($"Trade blockade (route recompute): {ex}");
                 }
             }
 
-            /// <summary>Depois do processamento do jogo: publica as rotas por território para a janela do posto.</summary>
+            /// <summary>After the game's processing: publishes the routes per territory for the trade post window.</summary>
             private static void Postfix(TradeController __instance)
             {
                 PublishTransit(__instance);
@@ -464,8 +465,8 @@ namespace CurrencyMod
         }
 
         /// <summary>
-        /// Mapa território → rotas estrangeiras que passam por ali. Normalmente roda no sandbox depois de cada
-        /// ordem; a janela também chama (só leitura) quando ainda não há mapa, logo após carregar.
+        /// Map territory → foreign routes passing through it. Normally runs on the sandbox after each
+        /// order; the window also calls it (read-only) when there is no map yet, right after loading.
         /// </summary>
         internal static void PublishTransit(TradeController controller)
         {
@@ -507,7 +508,7 @@ namespace CurrencyMod
                 }
                 catch (Exception ex)
                 {
-                    Plugin.Log.LogWarning($"Bloqueio comercial (rotas para a interface): {ex.Message}");
+                    Plugin.Log.LogWarning($"Trade blockade (routes for the UI): {ex.Message}");
                 }
             }
         }
@@ -531,7 +532,7 @@ namespace CurrencyMod
             return exchange == null ? 0 : (int)exchange.NumberOfDifferentResourceTraded.Value;
         }
 
-        // ---------------- Fim de turno: pedágio, reclamações e IA ----------------
+        // ---------------- End of turn: tolls, grievances and AI ----------------
 
         [HarmonyPatch(typeof(DepartmentOfTheTreasury), "TurnEndPass_CollectMoney")]
         private static class TurnEndPatch
@@ -565,15 +566,15 @@ namespace CurrencyMod
                 }
                 catch (Exception ex)
                 {
-                    Plugin.Log.LogError($"Bloqueio comercial (fim de turno): {ex}");
+                    Plugin.Log.LogError($"Trade blockade (end of turn): {ex}");
                 }
             }
         }
 
         /// <summary>
-        /// Cada lado com pedágio paga, por rota, (recursos que a rota leva) × preço do pedágio. Cada dono cobra uma vez por
-        /// rota, mesmo que ela cruze vários postos dele: pelo preço do posto mais caro no caminho. O preço é o do posto,
-        /// senão o geral do império, senão o padrão (configuração × era do cobrador).
+        /// Each tolled side pays, per route, (resources the route carries) × toll price. Each owner charges once per
+        /// route, even if it crosses several of its posts: at the price of the most expensive post on the path. The price is
+        /// the post's, else the empire's general one, else the default (config × the collector's era).
         /// </summary>
         private static void CollectTolls(CurrencyWorld world)
         {
@@ -636,7 +637,7 @@ namespace CurrencyMod
                 {
                     continue;
                 }
-                // O pedágio é cobrado na moeda do dono; quem paga desembolsa o equivalente na sua.
+                // The toll is charged in the owner's currency; the payer spends the equivalent in its own.
                 record.ReceivedByOwner = Math.Round(record.ReceivedByOwner);
                 record.PaidByPayer = Math.Round(record.ReceivedByOwner * world.Rate(record.Owner, record.Payer));
                 TransferConversion.WithoutRecording(() =>
@@ -647,14 +648,14 @@ namespace CurrencyMod
                 world.LastTolls.Add(record);
                 EconomySimulation.RecordMoney(world, record.Payer, record.Owner, record.PaidByPayer, record.ReceivedByOwner, MoneyKind.Toll);
                 TradePolicy.AddIncident(world, record.Owner, record.Payer);
-                Plugin.Log.LogInfo($"Pedágio: império {record.Payer} pagou {record.PaidByPayer} ao império {record.Owner} ({record.Routes} rota(s)).");
+                Plugin.Log.LogInfo($"Toll: empire {record.Payer} paid {record.PaidByPayer} to empire {record.Owner} ({record.Routes} route(s)).");
             }
         }
 
         /// <summary>
-        /// Regra de um território que mudou de dono não vale mais no caminho (GetMode confere o dono), mas continuava viva
-        /// para a reclamação da vítima, a retaliação da IA e o HasAnyRule, e ninguém conseguia limpá-la pela interface
-        /// (o posto não é mais do dono). Chamar com o lock.
+        /// A rule for a territory that changed owner no longer applies on the path (GetMode checks the owner), but it stayed
+        /// alive for the victim's grievance, the AI's retaliation and HasAnyRule, and nobody could clear it through the UI
+        /// (the post no longer belongs to the owner). Call with the lock held.
         /// </summary>
         private static void DropLostTerritoryRules(CurrencyWorld world)
         {
@@ -662,11 +663,11 @@ namespace CurrencyMod
             if (removed > 0)
             {
                 TradePolicy.Invalidate();
-                Plugin.Log.LogInfo($"Bloqueio comercial: {removed} regra(s) de territórios que mudaram de dono removida(s).");
+                Plugin.Log.LogInfo($"Trade blockade: removed {removed} rule(s) for territories that changed owner.");
             }
         }
 
-        /// <summary>Enquanto o bloqueio/pedágio continuar, a vítima mantém a reclamação "Bloqueio comercial".</summary>
+        /// <summary>While the blockade/toll continues, the victim keeps the "Trade blockade" grievance.</summary>
         private static void KeepGrievances(CurrencyWorld world)
         {
             world.TradeIncidents.RemoveAll(i => !TradePolicy.HasAnyRule(world, i.Owner, i.Victim));
@@ -678,7 +679,7 @@ namespace CurrencyMod
                 }
                 catch (Exception ex)
                 {
-                    Plugin.Log.LogWarning($"Reclamação de bloqueio ({incident.Victim} contra {incident.Owner}): {ex.Message}");
+                    Plugin.Log.LogWarning($"Blockade grievance ({incident.Victim} against {incident.Owner}): {ex.Message}");
                 }
             }
         }

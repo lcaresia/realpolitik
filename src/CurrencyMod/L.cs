@@ -12,13 +12,13 @@ using Newtonsoft.Json;
 namespace CurrencyMod
 {
     /// <summary>
-    /// Tradução da interface do mod. O texto em português do código é a própria chave:
-    ///   L.T("Banco Central")            → "Central Bank" em inglês;
-    ///   L.F("Juros de {0}%", taxa)      → string.Format com o texto traduzido e a cultura do idioma;
-    ///   L.N("Ministros")                → só marca o texto para a extração (listas estáticas); traduza com L.T na hora de mostrar.
-    /// As tabelas ficam no próprio núcleo (Lang\en.json, es.json, fr.json, de.json: {"texto em pt": "tradução"}).
-    /// Um arquivo em BepInEx\CurrencyModCore\lang\&lt;código&gt;.json, se existir, passa por cima (traduções da comunidade).
-    /// Texto sem tradução cai no português e entra na lista de faltando (comando "idioma faltando").
+    /// Translation of the mod's UI. The Portuguese text in the code is the key itself:
+    ///   L.T("Banco Central")            → "Central Bank" in English;
+    ///   L.F("Juros de {0}%", taxa)      → string.Format with the translated text and the language's culture;
+    ///   L.N("Ministros")                → only marks the text for extraction (static lists); translate with L.T when showing it.
+    /// The tables live in the core itself (Lang\en.json, es.json, fr.json, de.json: {"text in pt": "translation"}).
+    /// A file at BepInEx\CurrencyModCore\lang\&lt;code&gt;.json, if present, overrides them (community translations).
+    /// Untranslated text falls back to Portuguese and goes into the missing list (command "idioma faltando").
     /// </summary>
     internal static class L
     {
@@ -32,18 +32,18 @@ namespace CurrencyMod
         private static readonly HashSet<string> missing = new HashSet<string>();
         private static float nextCheck;
 
-        /// <summary>Idioma em uso: pt, en, es, fr ou de.</summary>
+        /// <summary>Language in use: pt, en, es, fr or de.</summary>
         internal static string Code => code;
 
-        /// <summary>Dois-pontos do idioma: o francês leva espaço antes (" : ").</summary>
+        /// <summary>The language's colon: French takes a space before it (" : ").</summary>
         internal static string Colon => code == "fr" ? " : " : ": ";
 
-        /// <summary>Cultura dos números e datas no idioma em uso (vírgula decimal em pt, es, fr, de; ponto em en).</summary>
+        /// <summary>Culture for numbers and dates in the language in use (decimal comma in pt, es, fr, de; dot in en).</summary>
         internal static CultureInfo Culture => culture;
 
         internal static bool IsPortuguese => code == "pt";
 
-        /// <summary>Nome do idioma em inglês, para pedir às nações da IA que escrevam nele.</summary>
+        /// <summary>Language name in English, to ask the AI nations to write in it.</summary>
         internal static string EnglishName(string language)
         {
             switch (language)
@@ -71,7 +71,7 @@ namespace CurrencyMod
             Refresh(force: true);
         }
 
-        /// <summary>Confere o idioma do jogo de tempos em tempos (thread principal; chamado pelo DevTools.Update).</summary>
+        /// <summary>Checks the game's language every so often (main thread; called by DevTools.Update).</summary>
         internal static void Tick(float now)
         {
             if (now < nextCheck)
@@ -117,7 +117,7 @@ namespace CurrencyMod
                     return code;
                 }
                 string prefix = game.Substring(0, Math.Min(2, game.Length)).ToLowerInvariant();
-                // Idioma do jogo que o mod ainda não tem: inglês.
+                // Game language the mod does not have yet: English.
                 return Array.IndexOf(Supported, prefix) >= 0 ? prefix : "en";
             }
             catch (Exception)
@@ -161,7 +161,7 @@ namespace CurrencyMod
             }
             catch (Exception ex)
             {
-                Plugin.Log?.LogWarning($"Idioma {language}: tabela não carregada ({ex.Message}). Os textos ficam em português.");
+                Plugin.Log?.LogWarning($"Language {language}: table not loaded ({ex.Message}). Texts stay in Portuguese.");
             }
             return result;
         }
@@ -182,7 +182,7 @@ namespace CurrencyMod
             }
         }
 
-        /// <summary>Traduz um texto da interface (o português é a chave).</summary>
+        /// <summary>Translates a UI text (the Portuguese is the key).</summary>
         internal static string T(string pt)
         {
             Dictionary<string, string> current = table;
@@ -201,7 +201,7 @@ namespace CurrencyMod
             return pt;
         }
 
-        /// <summary>Traduz e formata: L.F("{0} cartas novas", n). Os números saem na cultura do idioma.</summary>
+        /// <summary>Translates and formats: L.F("{0} cartas novas", n). Numbers come out in the language's culture.</summary>
         internal static string F(string pt, params object[] args)
         {
             string format = T(pt);
@@ -211,15 +211,15 @@ namespace CurrencyMod
             }
             catch (FormatException)
             {
-                // Tradução com marcadores errados: usa o português, que sempre bate com os argumentos.
+                // Translation with wrong placeholders: use the Portuguese, which always matches the arguments.
                 return string.Format(culture, pt, args);
             }
         }
 
-        /// <summary>Só marca o texto para a extração (listas estáticas); devolve o próprio português.</summary>
+        /// <summary>Only marks the text for extraction (static lists); returns the Portuguese itself.</summary>
         internal static string N(string pt) => pt;
 
-        /// <summary>Textos pedidos que não têm tradução no idioma atual (para o comando "idioma faltando").</summary>
+        /// <summary>Requested texts that have no translation in the current language (for the command "idioma faltando").</summary>
         internal static List<string> Missing()
         {
             lock (missing)

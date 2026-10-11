@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace CurrencyMod
 {
-    /// <summary>O que o dono de um território faz com as rotas de um império estrangeiro que passam por ali.</summary>
+    /// <summary>What a territory's owner does with the routes of a foreign empire that pass through it.</summary>
     public enum TradeMode
     {
         Free = 0,
@@ -11,19 +11,19 @@ namespace CurrencyMod
         Block = 2,
     }
 
-    /// <summary>Regra de um posto: dono, território, império afetado e modo. Só regras diferentes de Livre são guardadas.</summary>
+    /// <summary>Rule of a post: owner, territory, affected empire and mode. Only rules other than Free are stored.</summary>
     public class TradeRule
     {
         public int Owner;
         public int Territory;
         public int Target;
         public TradeMode Mode;
-        /// <summary>Pedágio deste posto para esse império, por recurso e por turno, na moeda do dono. 0 = o preço geral do
-        /// império (TollPrice) ou, sem ele, o padrão da configuração.</summary>
+        /// <summary>Toll of this post for that empire, per resource and per turn, in the owner's currency. 0 = the empire's
+        /// general price (TollPrice) or, without it, the configured default.</summary>
         public double Price;
     }
 
-    /// <summary>Preço geral de pedágio que o dono cobra de um império em todos os postos (aba Comércio da diplomacia).</summary>
+    /// <summary>General toll price the owner charges an empire at all posts (diplomacy Trade tab).</summary>
     public class TollPrice
     {
         public int Owner;
@@ -31,10 +31,10 @@ namespace CurrencyMod
         public double Price;
     }
 
-    /// <summary>O que as rotas de quem paga fazem nos postos taxados de um dono: escolha da IA de linguagem (rota_pedagio).</summary>
+    /// <summary>What the payer's routes do at an owner's tolled posts: choice of the language-model AI (rota_pedagio).</summary>
     public enum TollChoiceKind { Auto = 0, Pay = 1, Detour = 2 }
 
-    /// <summary>Escolha de <see cref="Payer"/> para os pedágios de <see cref="Owner"/>, em todos os postos dele.</summary>
+    /// <summary>Choice of <see cref="Payer"/> for the tolls of <see cref="Owner"/>, at all of its posts.</summary>
     public class TollChoice
     {
         public int Payer;
@@ -43,14 +43,14 @@ namespace CurrencyMod
         public int Turn;
     }
 
-    /// <summary>Par em que o bloqueio/pedágio já atingiu rotas da vítima: mantém a reclamação viva.</summary>
+    /// <summary>Pair where the blockade/toll has already hit the victim's routes: keeps the grievance alive.</summary>
     public class TradeIncident
     {
         public int Owner;
         public int Victim;
     }
 
-    /// <summary>Pedágio pago no último turno (cada um na sua moeda).</summary>
+    /// <summary>Toll paid in the last turn (each in its own currency).</summary>
     public class TollRecord
     {
         public int Owner;
@@ -60,22 +60,22 @@ namespace CurrencyMod
         public int Routes;
     }
 
-    /// <summary>Uma rota estrangeira que atravessa um território (para a janela do posto).</summary>
+    /// <summary>A foreign route that crosses a territory (for the post window).</summary>
     public struct TransitRoute
     {
         public int Left;
         public int Right;
-        /// <summary>Recursos que Left compra de Right nessa rota.</summary>
+        /// <summary>Resources that Left buys from Right on this route.</summary>
         public int LeftBuys;
-        /// <summary>Recursos que Right compra de Left nessa rota.</summary>
+        /// <summary>Resources that Right buys from Left on this route.</summary>
         public int RightBuys;
         public bool Suspended;
     }
 
     /// <summary>
-    /// Regras de bloqueio/pedágio. As regras vivem no CurrencyWorld (salvo no save); aqui fica
-    /// um índice só de leitura, trocado inteiro a cada mudança, consultado pelo cálculo de rotas
-    /// (milhares de vezes por recálculo, na thread do sandbox) sem pegar o lock.
+    /// Blockade/toll rules. The rules live in CurrencyWorld (stored in the save); here there is
+    /// a read-only index, swapped whole on every change, queried by the route computation
+    /// (thousands of times per recompute, on the sandbox thread) without taking the lock.
     /// </summary>
     public static class TradePolicy
     {
@@ -83,7 +83,7 @@ namespace CurrencyMod
         private static volatile bool stale = true;
         private static volatile Dictionary<int, List<TransitRoute>> transit = new Dictionary<int, List<TransitRoute>>();
 
-        /// <summary>Pede ao sandbox que recalcule as rotas na próxima ordem ou virada de turno.</summary>
+        /// <summary>Asks the sandbox to recompute the routes on the next order or turn change.</summary>
         public static volatile bool PathsDirty;
 
         private static long Key(int territory, int target) => (long)territory * 256 + target;
@@ -94,8 +94,8 @@ namespace CurrencyMod
         }
 
         /// <summary>
-        /// Cenário "e se" da prévia de desvio (TollPreview): troca o modo e o preço de um dono para um império num território
-        /// (ou em todos os dele, com Territory = -1) só durante o cálculo, na thread que o pôs.
+        /// "What if" scenario of the detour preview (TollPreview): swaps an owner's mode and price for an empire in one
+        /// territory (or in all of its territories, with Territory = -1) only during the computation, on the thread that set it.
         /// </summary>
         public sealed class Scenario
         {
@@ -105,7 +105,7 @@ namespace CurrencyMod
             public TradeMode Mode;
             public double Price;
 
-            /// <summary>Target = -1: vale para todos os impérios (sem nenhuma regra do dono ali).</summary>
+            /// <summary>Target = -1: applies to all empires (with no rule of the owner there).</summary>
             internal bool Matches(int territory, int target, int owner) =>
                 (Target < 0 || Target == target) && Owner == owner && (Territory < 0 || Territory == territory);
         }
@@ -113,7 +113,7 @@ namespace CurrencyMod
         [ThreadStatic]
         public static Scenario WhatIf;
 
-        /// <summary>Modo aplicado por <paramref name="owner"/> ao império <paramref name="target"/> no território.</summary>
+        /// <summary>Mode applied by <paramref name="owner"/> to empire <paramref name="target"/> in the territory.</summary>
         public static TradeMode GetMode(int territory, int target, int owner)
         {
             Scenario whatIf = WhatIf;
@@ -121,8 +121,8 @@ namespace CurrencyMod
             {
                 return whatIf.Mode;
             }
-            // Blocos (item 16): entre membros o comércio passa livre; contra quem é de fora vale a tarifa comum do bloco,
-            // se for mais dura que a regra do próprio posto.
+            // Blocs (item 16): between members trade passes freely; against outsiders the bloc's common tariff applies,
+            // if it is harsher than the post's own rule.
             if (Diplomacia.Blocs.BlocIndex.SameBloc(owner, target))
             {
                 return TradeMode.Free;
@@ -137,7 +137,7 @@ namespace CurrencyMod
             {
                 return tariff;
             }
-            // A regra é do dono da época; se o território mudou de mãos, não vale mais.
+            // The rule belongs to the owner at the time; if the territory changed hands, it no longer applies.
             TradeMode rule = packed / 4 == owner ? (TradeMode)(packed % 4) : TradeMode.Free;
             return rule >= tariff ? rule : tariff;
         }
@@ -148,9 +148,9 @@ namespace CurrencyMod
             var prices = new Dictionary<long, double>();
             var general = new Dictionary<long, double>();
             var choices = new Dictionary<long, TollChoiceKind>();
-            // Ler e publicar dentro do lock, e baixar o "stale" antes de ler: uma regra mudada (com o lock) no meio
-            // de um Rebuild fora do lock era apagada pela publicação do índice velho, que ficava valendo até a próxima
-            // mudança.
+            // Read and publish inside the lock, and clear "stale" before reading: a rule changed (under the lock) in the
+            // middle of a Rebuild outside the lock was wiped by publishing the old index, which stayed in effect until the
+            // next change.
             lock (CurrencyManager.Lock)
             {
                 stale = false;
@@ -188,13 +188,13 @@ namespace CurrencyMod
             return built;
         }
 
-        // ---------------- Preço do pedágio ----------------
+        // ---------------- Toll price ----------------
 
         private static volatile Dictionary<long, double> priceCache = new Dictionary<long, double>();
         private static volatile Dictionary<long, double> generalCache = new Dictionary<long, double>();
         private static volatile Dictionary<long, TollChoiceKind> choiceCache = new Dictionary<long, TollChoiceKind>();
 
-        /// <summary>O que as rotas de <paramref name="payer"/> fazem nos postos taxados de <paramref name="owner"/> (lido no cálculo de rotas).</summary>
+        /// <summary>What the routes of <paramref name="payer"/> do at the tolled posts of <paramref name="owner"/> (read during route computation).</summary>
         public static TollChoiceKind GetTollChoice(int payer, int owner)
         {
             if (stale || cache == null)
@@ -204,7 +204,7 @@ namespace CurrencyMod
             return choiceCache.TryGetValue((long)payer * 256 + owner, out TollChoiceKind choice) ? choice : TollChoiceKind.Auto;
         }
 
-        /// <summary>Grava a escolha de quem paga (chamar com o lock). Devolve true se mudou.</summary>
+        /// <summary>Stores the payer's choice (call with the lock). Returns true if it changed.</summary>
         public static bool SetTollChoice(CurrencyWorld world, int payer, int owner, TollChoiceKind choice, int turn)
         {
             world.TollChoices = world.TollChoices ?? new List<TollChoice>();
@@ -223,13 +223,13 @@ namespace CurrencyMod
             return true;
         }
 
-        /// <summary>Pedágio padrão por recurso: o da configuração vezes a era de quem cobra.</summary>
+        /// <summary>Default toll per resource: the configured one times the charging empire's era.</summary>
         public static double DefaultPrice(int ownerEra) => Math.Round(EconomyConfig.TollPerResource.Value * Math.Max(1, ownerEra), 1);
 
         /// <summary>
-        /// Pedágio que <paramref name="owner"/> cobra de <paramref name="target"/> nesse território, por recurso e por turno
-        /// (na moeda do dono): o preço do posto, senão o preço geral do império, senão o padrão. Lido também na thread do
-        /// sandbox (cálculo de rotas e cobrança), pelo índice trocado inteiro.
+        /// Toll that <paramref name="owner"/> charges <paramref name="target"/> in that territory, per resource and per turn
+        /// (in the owner's currency): the post's price, otherwise the empire's general price, otherwise the default. Also
+        /// read on the sandbox thread (route computation and collection), through the index swapped whole.
         /// </summary>
         public static double GetPrice(int territory, int target, int owner, int ownerEra)
         {
@@ -250,7 +250,7 @@ namespace CurrencyMod
             return GeneralPriceOrDefault(owner, target, ownerEra);
         }
 
-        /// <summary>Preço geral do império (sem o do posto), ou o padrão.</summary>
+        /// <summary>The empire's general price (without the post's), or the default.</summary>
         public static double GeneralPriceOrDefault(int owner, int target, int ownerEra)
         {
             if (stale || cache == null)
@@ -260,7 +260,7 @@ namespace CurrencyMod
             return generalCache.TryGetValue((long)owner * 256 + target, out double general) ? general : DefaultPrice(ownerEra);
         }
 
-        /// <summary>Preço próprio de um posto (chamar com o lock). Só vale para regra de pedágio do dono.</summary>
+        /// <summary>A post's own price (call with the lock). Only applies to the owner's toll rule.</summary>
         public static bool SetPostPrice(CurrencyWorld world, int owner, int territory, int target, double price)
         {
             TradeRule rule = world.TradeRules.Find(r => r.Territory == territory && r.Target == target && r.Owner == owner);
@@ -280,8 +280,8 @@ namespace CurrencyMod
         }
 
         /// <summary>
-        /// Preço geral cobrado do império em todos os postos (chamar com o lock). Tira os preços próprios dos postos
-        /// para esse império: "geral" vale em todos. Preço 0 volta ao padrão.
+        /// General price charged to the empire at all posts (call with the lock). Removes the posts' own prices for that
+        /// empire: "general" applies everywhere. Price 0 goes back to the default.
         /// </summary>
         public static void SetGeneralPrice(CurrencyWorld world, int owner, int target, double price)
         {
@@ -301,7 +301,7 @@ namespace CurrencyMod
             PathsDirty = true;
         }
 
-        /// <summary>Copia o preço de um posto para outro, inclusive o 0 (= preço geral). Chamar com o lock.</summary>
+        /// <summary>Copies a post's price to another, including 0 (= general price). Call with the lock.</summary>
         public static bool CopyPostPrice(CurrencyWorld world, int owner, int territory, int target, double price)
         {
             TradeRule rule = world.TradeRules.Find(r => r.Territory == territory && r.Target == target && r.Owner == owner);
@@ -316,13 +316,13 @@ namespace CurrencyMod
             return true;
         }
 
-        /// <summary>Preço geral guardado (0 = nenhum). Chamar com o lock.</summary>
+        /// <summary>Stored general price (0 = none). Call with the lock.</summary>
         public static double StoredGeneralPrice(CurrencyWorld world, int owner, int target)
         {
             return world.TollPrices.Find(p => p.Owner == owner && p.Target == target)?.Price ?? 0;
         }
 
-        /// <summary>Preço próprio guardado de um posto (0 = nenhum). Chamar com o lock.</summary>
+        /// <summary>A post's stored own price (0 = none). Call with the lock.</summary>
         public static double StoredPostPrice(CurrencyWorld world, int owner, int territory, int target)
         {
             return world.TradeRules.Find(r => r.Territory == territory && r.Target == target && r.Owner == owner)?.Price ?? 0;
@@ -333,7 +333,7 @@ namespace CurrencyMod
 
         public static double ClampPrice(double price) => Math.Max(MinPrice, Math.Min(MaxPrice, Math.Round(price)));
 
-        /// <summary>Próximo degrau de preço nos botões − e +: de 1 em 1 até 10, de 2 em 2 até 20, de 5 em 5 até 100, de 25 em 25 acima.</summary>
+        /// <summary>Next price step on the − and + buttons: by 1 up to 10, by 2 up to 20, by 5 up to 100, by 25 above that.</summary>
         public static double StepPrice(double price, int direction)
         {
             double step = price < 10 || (price == 10 && direction < 0) ? 1
@@ -343,12 +343,12 @@ namespace CurrencyMod
             return ClampPrice(next);
         }
 
-        /// <summary>Muda a regra (chamar com o lock do CurrencyManager). Devolve true se algo mudou.</summary>
+        /// <summary>Changes the rule (call with the CurrencyManager lock). Returns true if anything changed.</summary>
         public static bool SetRule(CurrencyWorld world, int owner, int territory, int target, TradeMode mode)
         {
             if (owner == target)
             {
-                mode = TradeMode.Free; // ninguém bloqueia a si mesmo
+                mode = TradeMode.Free; // nobody blocks themselves
             }
             int index = world.TradeRules.FindIndex(r => r.Territory == territory && r.Target == target);
             if (index >= 0)
@@ -381,20 +381,20 @@ namespace CurrencyMod
             return true;
         }
 
-        /// <summary>Modo guardado (sem checar o dono atual). Chamar com o lock.</summary>
+        /// <summary>Stored mode (without checking the current owner). Call with the lock.</summary>
         public static TradeMode StoredMode(CurrencyWorld world, int owner, int territory, int target)
         {
             TradeRule rule = world.TradeRules.Find(r => r.Territory == territory && r.Target == target && r.Owner == owner);
             return rule?.Mode ?? TradeMode.Free;
         }
 
-        /// <summary>O dono tem alguma regra ativa contra o alvo? Chamar com o lock.</summary>
+        /// <summary>Does the owner have any active rule against the target? Call with the lock.</summary>
         public static bool HasAnyRule(CurrencyWorld world, int owner, int target)
         {
             return world.TradeRules.Exists(r => r.Owner == owner && r.Target == target);
         }
 
-        /// <summary>Remove todas as regras do dono contra o alvo (exigência aceita). Chamar com o lock.</summary>
+        /// <summary>Removes all of the owner's rules against the target (demand accepted). Call with the lock.</summary>
         public static int ClearRules(CurrencyWorld world, int owner, int target)
         {
             int removed = world.TradeRules.RemoveAll(r => r.Owner == owner && r.Target == target);
@@ -415,7 +415,7 @@ namespace CurrencyMod
             }
         }
 
-        // ---------------- Rotas que atravessam cada território (lidas pela UI) ----------------
+        // ---------------- Routes crossing each territory (read by the UI) ----------------
 
         public static void PublishTransit(Dictionary<int, List<TransitRoute>> routesPerTerritory)
         {

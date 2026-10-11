@@ -6,14 +6,14 @@ using Newtonsoft.Json;
 namespace CurrencyMod.Diplomacia
 {
     /// <summary>
-    /// Estado da diplomacia com IA de uma partida: personas, diários, sentimentos, memórias, cartas e gasto.
-    /// Vai dentro do save (DiplomaciaIA.json). Só a thread principal mexe nele.
+    /// AI diplomacy state of a game: personas, diaries, feelings, memories, letters and spending.
+    /// Goes inside the save (DiplomaciaIA.json). Only the main thread touches it.
     /// </summary>
     internal sealed class IaWorld
     {
-        /// <summary>2 = turnos contados como o jogo mostra (a versão 1 contava um a mais); 3 = postura e foco guardados
-        /// como estado atual da nação (antes só no histórico de ações); 4 = cartas ligadas à carta que respondem;
-        /// 5 = interceptação de cartas por espiões.</summary>
+        /// <summary>2 = turns counted as the game shows them (version 1 counted one extra); 3 = posture and focus stored
+        /// as the nation's current state (previously only in the action history); 4 = letters linked to the letter they
+        /// answer; 5 = letter interception by spies.</summary>
         public int Version = 5;
         public string GameGuid;
         public double TotalCostUsd;
@@ -30,48 +30,48 @@ namespace CurrencyMod.Diplomacia
         public int NextCityHandle = 1;
         public int NextArmyHandle = 1;
         public int NextActionId = 1;
-        /// <summary>Último nome bom de cada império (líder e nome completo). O jogo às vezes entrega o líder do jogador
-        /// como "0", quando o apelido da Steam ainda não carregou.</summary>
+        /// <summary>Last good name of each empire (leader and full name). The game sometimes delivers the player's leader
+        /// as "0", when the Steam nickname has not loaded yet.</summary>
         public Dictionary<int, string> LeaderNames = new Dictionary<int, string>();
         public Dictionary<int, string> FullNames = new Dictionary<int, string>();
-        /// <summary>Conversas em grupo (melhorias-jogando item 15): qualquer nação cria; mensagens são cartas do tipo "grupo".</summary>
+        /// <summary>Group chats (melhorias-jogando item 15): any nation creates one; messages are letters of type "grupo".</summary>
         public List<ChatGroup> Groups = new List<ChatGroup>();
         public int NextGroupId = 1;
-        /// <summary>Blocos de nações (item 16), com pautas e presidente; regras em Blocs.BlocEngine.</summary>
+        /// <summary>Nation blocs (item 16), with agenda items and a president; rules in Blocs.BlocEngine.</summary>
         public List<Blocs.Bloc> Blocs = new List<Blocs.Bloc>();
         public int NextBlocId = 1;
         public int NextMotionId = 1;
-        /// <summary>Turno em que cada nação saiu (ou foi expulsa) de um bloco: espera Bloc.LeaveCooldown para entrar em outro.</summary>
+        /// <summary>Turn in which each nation left (or was expelled from) a bloc: waits Bloc.LeaveCooldown to join another.</summary>
         public Dictionary<int, int> BlocLeftTurn = new Dictionary<int, int>();
-        /// <summary>Último turno em que o passo dos blocos rodou (BlocEngine.Step roda uma vez por turno).</summary>
+        /// <summary>Last turn in which the bloc step ran (BlocEngine.Step runs once per turn).</summary>
         public int BlocTickTurn = -1;
 
-        /// <summary>Grupo pelo código "GRP#" ou pelo id.</summary>
+        /// <summary>Group by the "GRP#" code or by id.</summary>
         public ChatGroup GroupBy(string handle)
         {
             string digits = (handle ?? string.Empty).Trim().ToUpperInvariant().Replace("GRP", string.Empty);
             return int.TryParse(digits, out int id) ? Groups.FirstOrDefault(g => g.Id == id) : null;
         }
 
-        /// <summary>Todos os nomes de povo que cada império já teve (muda a cada era): as cartas ainda citam os antigos.</summary>
+        /// <summary>All people names each empire has had (changes every era): letters still mention the old ones.</summary>
         public Dictionary<int, List<string>> CultureNames = new Dictionary<int, List<string>>();
-        /// <summary>Onde cada espião (chave = GUID do exército) está e desde que turno: o jogo só guarda isso para
-        /// infiltrações, e espião recém-chegado ainda não conhece o lugar (peso menor na interceptação).</summary>
+        /// <summary>Where each spy (key = army GUID) is and since which turn: the game only stores this for
+        /// infiltrations, and a newly arrived spy does not know the place yet (lower weight in interception).</summary>
         public Dictionary<string, SpyTrack> SpyTracks = new Dictionary<string, SpyTrack>();
         public int SpyTracksTurn = -1;
-        /// <summary>Ordens a exércitos dadas pela IA de linguagem (ordem_exercito): destino, situação e até quando a IA
-        /// nativa deixa o exército em paz.</summary>
+        /// <summary>Army orders given by the language AI (ordem_exercito): destination, status and until when the native
+        /// AI leaves the army alone.</summary>
         public List<ArmyMission> ArmyMissions = new List<ArmyMission>();
-        /// <summary>Reuniões do conselho do jogador (design §10.6), uma por turno, com as respostas dele.</summary>
+        /// <summary>The player's council meetings (design §10.6), one per turn, with the player's answers.</summary>
         public List<Council.CouncilMeeting> PlayerCouncil = new List<Council.CouncilMeeting>();
-        /// <summary>Relações do jogador no turno anterior (guerra, paz, acordos), para ver se ele seguiu o conselho.</summary>
+        /// <summary>The player's relations on the previous turn (war, peace, agreements), to see whether the advice was followed.</summary>
         public Dictionary<int, string> PlayerRelationMemo = new Dictionary<int, string>();
         public int PlayerRelationMemoTurn = -1;
-        /// <summary>Resultados do Congresso mundial (leis votadas e crises julgadas), os mais recentes no fim. O jogo apaga a
-        /// crise do pool logo depois do resultado, então a notícia fica guardada aqui.</summary>
+        /// <summary>World Congress results (voted laws and judged crises), most recent at the end. The game deletes the
+        /// crisis from the pool right after the result, so the news is kept here.</summary>
         public List<CongressNews> CongressNews = new List<CongressNews>();
 
-        /// <summary>A missão em vigor de um exército (a mais recente), ou null.</summary>
+        /// <summary>An army's mission in force (the most recent one), or null.</summary>
         public ArmyMission MissionFor(string armyKey)
         {
             for (int i = ArmyMissions.Count - 1; i >= 0; i--)
@@ -128,7 +128,7 @@ namespace CurrencyMod.Diplomacia
             return handle;
         }
 
-        /// <summary>GUID do jogo por trás de um código C# ou A# (0 se não existir).</summary>
+        /// <summary>Game GUID behind a C# or A# code (0 if it does not exist).</summary>
         public ulong GuidForHandle(string handle)
         {
             Dictionary<string, string> table = handle != null && handle.StartsWith("C") ? CityHandles : ArmyHandles;
@@ -143,7 +143,7 @@ namespace CurrencyMod.Diplomacia
             return 0;
         }
 
-        /// <summary>Troca nomes ruins da foto ("Governante Supremo 0") pelos últimos nomes bons e guarda os bons.</summary>
+        /// <summary>Replaces bad names in the snapshot ("Governante Supremo 0") with the last good names and stores the good ones.</summary>
         public void FixNames(Capture.WorldCapture capture)
         {
             foreach (Capture.CapturedEmpire empire in capture.Empires)
@@ -177,19 +177,19 @@ namespace CurrencyMod.Diplomacia
                 }
                 else if (!string.IsNullOrWhiteSpace(empire.Leader) && empire.FullName != null)
                 {
-                    // Sem nome bom guardado: fica só o título ("Governante Supremo (Os Francos)").
+                    // No good name stored: only the title remains ("Governante Supremo (Os Francos)").
                     empire.FullName = empire.FullName.Replace(" " + empire.Leader.Trim() + " ", " ");
                     empire.Leader = null;
                 }
             }
         }
 
-        /// <summary>Atualiza estados salvos por versões anteriores do mod.</summary>
+        /// <summary>Upgrades states saved by earlier versions of the mod.</summary>
         public void Migrate()
         {
             if (Version < 2)
             {
-                // Versão 1 usava CurrentTurn + 1; o jogo mostra CurrentTurn. Volta tudo um turno.
+                // Version 1 used CurrentTurn + 1; the game shows CurrentTurn. Moves everything back one turn.
                 foreach (IaNation nation in Nations)
                 {
                     if (nation.LastDecisionTurn > 0) nation.LastDecisionTurn--;
@@ -212,7 +212,7 @@ namespace CurrencyMod.Diplomacia
             }
             if (Version < 3)
             {
-                // Postura e foco viravam só registro: recupera o último valor de cada um no histórico de ações.
+                // Posture and focus used to be just a record: recovers the last value of each from the action history.
                 foreach (IaNation nation in Nations)
                 {
                     foreach (ActionRecord action in nation.Actions.OrderBy(a => a.Turn))
@@ -224,8 +224,8 @@ namespace CurrencyMod.Diplomacia
             }
             if (Version < 4)
             {
-                // Respostas: refaz as cadeias em ordem, com a regra de hoje (cada carta responde a mais recente do
-                // destinatário que pedia resposta, já tinha chegado e ainda não tinha resposta).
+                // Replies: rebuilds the chains in order, with today's rule (each letter answers the recipient's most
+                // recent letter that asked for a reply, had already arrived and had no reply yet).
                 var answered = new HashSet<int>();
                 foreach (Letter letter in Letters.OrderBy(l => l.Id))
                 {
@@ -248,15 +248,15 @@ namespace CurrencyMod.Diplomacia
             }
             if (Version < 5)
             {
-                // Interceptação: nenhuma carta antiga é sorteada (nem as que ainda estão a caminho).
+                // Interception: no old letter is rolled (not even those still on the way).
                 foreach (Letter letter in Letters)
                 {
                     letter.InterceptionChecked = true;
                 }
                 Version = 5;
             }
-            // Conselho novo (melhorias-jogando item 3): todo mundo volta a ter só a Mão ao carregar, de uma vez (antes, cada
-            // nação só era zerada quando o dossiê dela era montado, e os 12 veteranos antigos rendiam bônus até lá).
+            // New council (melhorias-jogando item 3): everyone goes back to having only the Hand on load, all at once
+            // (before, each nation was only reset when its dossier was built, and the 12 old veterans gave bonuses until then).
             foreach (IaNation nation in Nations)
             {
                 if (nation.CouncilModel < 1)
@@ -287,40 +287,40 @@ namespace CurrencyMod.Diplomacia
         public List<MemoryNote> Notes = new List<MemoryNote>();
         public List<ActionRecord> Actions = new List<ActionRecord>();
         public List<int> BlockedEmpires = new List<int>();
-        /// <summary>Postura atual com cada nação (definir_postura); vale até mudar e guia a IA nativa (design §11.1).</summary>
+        /// <summary>Current posture toward each nation (definir_postura); holds until changed and guides the native AI (design §11.1).</summary>
         public Dictionary<int, Stance> Postures = new Dictionary<int, Stance>();
-        /// <summary>Foco atual do império (definir_foco); vale até mudar.</summary>
+        /// <summary>The empire's current focus (definir_foco); holds until changed.</summary>
         public Stance Focus;
-        /// <summary>Política comercial com cada nação (politica_comercial: livre, pedagio ou bloqueio) em todos os postos; a IA
-        /// nativa de comércio (TradeAi) não mexe enquanto a IA de linguagem decide pela nação.</summary>
+        /// <summary>Trade policy toward each nation (politica_comercial: livre, pedagio or bloqueio) at all posts; the
+        /// native trade AI (TradeAi) does not touch it while the language AI decides for the nation.</summary>
         public Dictionary<int, Stance> TradeStances = new Dictionary<int, Stance>();
-        /// <summary>Patrocínio escolhido em cada povo independente (patrocinar): índice do povo → (dinheiro &lt;&lt; 8) | influência.
-        /// A IA nativa não mexe nesses povos enquanto a IA de linguagem decide pela nação.</summary>
+        /// <summary>Patronage chosen for each independent people (patrocinar): people index → (money &lt;&lt; 8) | influence.
+        /// The native AI does not touch these peoples while the language AI decides for the nation.</summary>
         public Dictionary<int, int> MinorPatronage = new Dictionary<int, int>();
-        /// <summary>Conselho de ministros (design §10): a Mão e as pastas que a nação já nomeou.</summary>
+        /// <summary>Council of ministers (design §10): the Hand and the portfolios the nation has already appointed.</summary>
         public List<Council.Minister> Council = new List<Council.Minister>();
         public int CouncilTurn = -1;
         /// <summary>
-        /// Modelo do conselho: 0 = o antigo (12 cadeiras sempre cheias); 1 = começa só com a Mão e as pastas são nomeadas
-        /// entre candidatos (melhorias-jogando item 3). Ao carregar um save antigo, o conselho volta a ter só a Mão.
+        /// Council model: 0 = the old one (12 seats always filled); 1 = starts with only the Hand and portfolios are
+        /// appointed from candidates (melhorias-jogando item 3). When loading an old save, the council goes back to only the Hand.
         /// </summary>
         public int CouncilModel;
-        /// <summary>Os 3 candidatos de cada pasta vaga (ids do banco). Mudam na era nova ou quando alguém é nomeado.</summary>
+        /// <summary>The 3 candidates for each vacant portfolio (bank ids). They change in a new era or when someone is appointed.</summary>
         public Dictionary<string, List<string>> CouncilCandidates = new Dictionary<string, List<string>>();
-        /// <summary>Era em que os candidatos foram sorteados.</summary>
+        /// <summary>Era in which the candidates were drawn.</summary>
         public int CouncilCandidatesEra = -1;
-        /// <summary>Personalidades demitidas por esta nação (não voltam para ela).</summary>
+        /// <summary>Personalities fired by this nation (they do not come back to it).</summary>
         public List<string> FiredPersonalities = new List<string>();
-        /// <summary>Congresso: o que os governadores fazem se a lei imposta chegar (cívico → "adotar" ou "recusar"), do
-        /// campo se_perder de votar_congresso.</summary>
+        /// <summary>Congress: what the governors do if the imposed law arrives (civic → "adotar" or "recusar"), from the
+        /// se_perder field of votar_congresso.</summary>
         public Dictionary<string, string> CongressStances = new Dictionary<string, string>();
-        /// <summary>Congresso: a opção que a nação votou em cada lei (cívico → nome da escolha). Votou na vencedora = adota a
-        /// lei imposta (quem não tem a lei também recebe a lei imposta, mesmo tendo votado nela).</summary>
+        /// <summary>Congress: the option the nation voted for on each law (civic → choice name). Voted for the winner =
+        /// adopts the imposed law (whoever lacks the law also receives the imposed law, even having voted for it).</summary>
         public Dictionary<string, string> CongressVotes = new Dictionary<string, string>();
 
         /// <summary>
-        /// Guarda definir_postura / definir_foco como estado atual. Devolve a descrição do que mudou, ou null se a ação
-        /// não é dessas ou veio sem os campos.
+        /// Stores definir_postura / definir_foco as the current state. Returns the description of what changed, or null if
+        /// the action is not one of these or came without the fields.
         /// </summary>
         public string RememberStance(string actionName, string json, int turn)
         {
@@ -337,7 +337,7 @@ namespace CurrencyMod.Diplomacia
             {
                 return null;
             }
-            // Lista ou objeto no "motivo" faria o cast (string) lançar no meio do Apply.
+            // A list or object in "motivo" would make the (string) cast throw in the middle of Apply.
             string reason = (item["motivo"] as Newtonsoft.Json.Linq.JValue)?.Value?.ToString();
             if (actionName == "definir_foco")
             {
@@ -390,7 +390,7 @@ namespace CurrencyMod.Diplomacia
         public int Turn = -1;
     }
 
-    /// <summary>Postura com uma nação ou foco do império: o valor, desde quando vale e o motivo dado.</summary>
+    /// <summary>Posture toward a nation or the empire's focus: the value, since when it holds and the reason given.</summary>
     internal sealed class Stance
     {
         public string Value;
@@ -413,7 +413,7 @@ namespace CurrencyMod.Diplomacia
 
     internal sealed class ActionRecord
     {
-        /// <summary>Id da ordem no executor (0 = ação que não vira ordem do jogo).</summary>
+        /// <summary>Order id in the executor (0 = action that does not become a game order).</summary>
         public int Id;
         public int Turn;
         public string Name;
@@ -427,7 +427,7 @@ namespace CurrencyMod.Diplomacia
 
         public int Id;
         public int From;
-        /// <summary>Índice do destinatário, ou Everyone para declaração pública.</summary>
+        /// <summary>Recipient index, or Everyone for a public declaration.</summary>
         public int To;
         public string Type;
         public string Subject;
@@ -438,36 +438,36 @@ namespace CurrencyMod.Diplomacia
         public int SentTurn;
         public int DeliverTurn;
         /// <summary>
-        /// Carta que esta responde (-1 = nenhuma). Vem do botão Responder do jogador ou, sem ele, da carta mais recente
-        /// do destinatário que pedia resposta e ainda não tinha sido respondida (vale também para as IAs).
+        /// Letter this one answers (-1 = none). Comes from the player's Reply button or, without it, from the recipient's
+        /// most recent letter that asked for a reply and had not been answered yet (also applies to the AIs).
         /// </summary>
         public int InReplyTo = -1;
-        /// <summary>Por quem a carta já foi lida no dossiê (uma pública é lida por vários).</summary>
+        /// <summary>Who has already read the letter in the dossier (a public one is read by many).</summary>
         public List<int> ReadBy = new List<int>();
-        /// <summary>Quem recusou a carta (bloqueou a correspondência privada do remetente).</summary>
+        /// <summary>Who refused the letter (blocked the sender's private correspondence).</summary>
         public List<int> RejectedBy = new List<int>();
 
-        // Interceptação (design §8.3.1). Só cartas privadas passam pelo sorteio, uma vez, no turno em que chegariam.
-        /// <summary>Já passou pelo sorteio (ultimatos e declarações públicas nascem conferidos).</summary>
+        // Interception (design §8.3.1). Only private letters go through the roll, once, on the turn they would arrive.
+        /// <summary>Already went through the roll (ultimatums and public declarations are born checked).</summary>
         public bool InterceptionChecked;
-        /// <summary>Quem interceptou (-1 = ninguém). Carta interceptada nunca chega ao destinatário.</summary>
+        /// <summary>Who intercepted (-1 = nobody). An intercepted letter never reaches the recipient.</summary>
         public int InterceptedBy = -1;
         public int InterceptedTurn = -1;
         public int InterceptedTerritory = -1;
-        /// <summary>Nome e GUID do exército espião que interceptou.</summary>
+        /// <summary>Name and GUID of the spy army that intercepted.</summary>
         public string InterceptedSpy;
         public string InterceptedSpyKey;
-        /// <summary>"origem" (território de quem escreveu) ou "destino" (de quem ia receber).</summary>
+        /// <summary>"origem" (territory of the writer) or "destino" (of the intended recipient).</summary>
         public string InterceptedVia;
-        /// <summary>Quem interceptou já leu (no dossiê, ou o jogador na aba da espionagem).</summary>
+        /// <summary>The interceptor has already read it (in the dossier, or the player in the espionage tab).</summary>
         public bool InterceptorRead;
-        /// <summary>Risco na origem, guardado quando a carta foi escrita (os espiões mudam de lugar depois).</summary>
+        /// <summary>Risk at the origin, stored when the letter was written (spies move afterwards).</summary>
         public List<InterceptRisk> OriginRisks;
 
-        /// <summary>Destino de mensagem de grupo (Members diz quem lê; GroupId diz qual conversa).</summary>
+        /// <summary>Group message destination (Members says who reads; GroupId says which conversation).</summary>
         public const int Group = -2;
 
-        /// <summary>Conversa em grupo (tipo "grupo"): o id do grupo e os membros no momento do envio.</summary>
+        /// <summary>Group chat (type "grupo"): the group id and the members at the time of sending.</summary>
         public int GroupId = -1;
         public List<int> Members;
 
@@ -481,17 +481,17 @@ namespace CurrencyMod.Diplomacia
         public bool Intercepted => InterceptedBy >= 0;
 
         /// <summary>
-        /// A carta chega a este império: é para ele (ou pública e de outro, ou do grupo dele e de outro membro), já passou
-        /// pelo sorteio e não foi interceptada. O turno de entrega se confere à parte.
+        /// The letter reaches this empire: it is for it (or public and from someone else, or from its group and another
+        /// member), has gone through the roll and was not intercepted. The delivery turn is checked separately.
         /// </summary>
         public bool IsFor(int empireIndex) => InterceptionChecked && !Intercepted && From != empireIndex
             && (To == empireIndex || To == Everyone || (To == Group && Members != null && Members.Contains(empireIndex)));
 
-        /// <summary>Já chegou ao destino até este turno (conferida e não interceptada).</summary>
+        /// <summary>Has reached its destination by this turn (checked and not intercepted).</summary>
         public bool Arrived(int turn) => DeliverTurn <= turn && InterceptionChecked && !Intercepted;
     }
 
-    /// <summary>Uma conversa em grupo: nome, quem criou e os membros atuais (quem sai deixa de receber).</summary>
+    /// <summary>A group chat: name, creator and current members (whoever leaves stops receiving).</summary>
     internal sealed class ChatGroup
     {
         public const int MinMembers = 3;
@@ -502,7 +502,7 @@ namespace CurrencyMod.Diplomacia
         public int Creator;
         public int CreatedTurn;
         public List<int> Members = new List<int>();
-        /// <summary>Grupo de um bloco (-1 = grupo comum): os membros seguem o bloco, e só se sai saindo do bloco.</summary>
+        /// <summary>A bloc's group (-1 = ordinary group): members follow the bloc, and one only leaves by leaving the bloc.</summary>
         public int BlocId = -1;
 
         [JsonIgnore]
@@ -510,8 +510,8 @@ namespace CurrencyMod.Diplomacia
     }
 
     /// <summary>
-    /// Um resultado do Congresso: lei votada ("lei") ou crise julgada ("crise"). Key evita repetir a mesma notícia; os
-    /// votos de cada nação ficam em Votes (índice = nação; lei: 0 = A, 1 = B; crise: a nação apoiada; -1 = não votou).
+    /// A Congress result: voted law ("lei") or judged crisis ("crise"). Key avoids repeating the same news; each nation's
+    /// votes go in Votes (index = nation; law: 0 = A, 1 = B; crisis: the supported nation; -1 = did not vote).
     /// </summary>
     internal sealed class CongressNews
     {
@@ -521,7 +521,7 @@ namespace CurrencyMod.Diplomacia
         public string Civic;
         public string ChoiceA;
         public string ChoiceB;
-        /// <summary>Lei: 0 = A, 1 = B, -1 = empate. Crise: a nação vencedora (-1 = cancelada).</summary>
+        /// <summary>Law: 0 = A, 1 = B, -1 = tie. Crisis: the winning nation (-1 = cancelled).</summary>
         public int Winner = -1;
         public int Declarator = -1;
         public int Target = -1;
@@ -530,7 +530,7 @@ namespace CurrencyMod.Diplomacia
         public List<double> Sway = new List<double>();
     }
 
-    /// <summary>Chance de um império interceptar uma carta numa ponta, e o espião dele que mais pesa ali.</summary>
+    /// <summary>Chance of an empire intercepting a letter at one end, and its spy that weighs most there.</summary>
     internal sealed class InterceptRisk
     {
         public int Empire;
@@ -541,8 +541,8 @@ namespace CurrencyMod.Diplomacia
     }
 
     /// <summary>
-    /// Ordem da IA de linguagem a um exército: o objetivo, o destino (território e, se houver, a cidade), quando foi dada,
-    /// a situação ("a caminho", "chegou", "falhou: …", "cancelada") e até que turno a IA nativa fica sem mexer nele.
+    /// Language AI order to an army: the goal, the destination (territory and, if any, the city), when it was given, the
+    /// status ("a caminho", "chegou", "falhou: …", "cancelada") and until which turn the native AI leaves it alone.
     /// </summary>
     internal sealed class ArmyMission
     {
@@ -550,7 +550,7 @@ namespace CurrencyMod.Diplomacia
         public int Empire;
         public string ArmyKey;
         public string Handle;
-        /// <summary>mover, atacar, defender ou parar.</summary>
+        /// <summary>mover, atacar, defender or parar.</summary>
         public string Goal;
         public int TargetTerritory = -1;
         public string TargetCityKey;
@@ -559,13 +559,13 @@ namespace CurrencyMod.Diplomacia
         public int Turn;
         public string Status;
         public int StatusTurn;
-        /// <summary>Último turno em que a IA nativa fica sem mexer no exército.</summary>
+        /// <summary>Last turn in which the native AI leaves the army alone.</summary>
         public int HoldUntil = -1;
-        /// <summary>Ainda em vigor (a caminho, ou chegou e segurando a posição).</summary>
+        /// <summary>Still in force (on the way, or arrived and holding the position).</summary>
         public bool Active;
     }
 
-    /// <summary>Onde um espião está e desde quando (turno em que chegou ao território).</summary>
+    /// <summary>Where a spy is and since when (turn it arrived in the territory).</summary>
     internal sealed class SpyTrack
     {
         public int Territory = -1;

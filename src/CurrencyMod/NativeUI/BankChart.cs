@@ -7,9 +7,9 @@ using UnityEngine;
 namespace CurrencyMod.NativeUI
 {
     /// <summary>
-    /// Gráfico de linhas desenhado na CPU numa textura (o jogo não tem controle de gráfico): linhas suavizadas, grade,
-    /// área sob a primeira série e linhas de referência tracejadas. O Banco Central mostra aqui o histórico de câmbio,
-    /// juros e inflação (as últimas 60 rodadas guardadas em EmpireCurrency.History).
+    /// Line chart drawn on the CPU into a texture (the game has no chart control): smoothed lines, grid, area under the
+    /// first series and dashed reference lines. The Central Bank shows here the history of exchange rate, interest and
+    /// inflation (the last 60 rounds stored in EmpireCurrency.History).
     /// </summary>
     internal static class BankChart
     {
@@ -31,7 +31,7 @@ namespace CurrencyMod.NativeUI
             public Color Color;
         }
 
-        /// <summary>Faixa de valores do eixo vertical (com folga), olhando as séries e as referências.</summary>
+        /// <summary>Value range of the vertical axis (with margin), based on the series and the references.</summary>
         internal static void Range(IList<Series> series, IList<Reference> references, out double min, out double max)
         {
             min = double.MaxValue;
@@ -62,7 +62,7 @@ namespace CurrencyMod.NativeUI
             max += span * 0.12;
         }
 
-        /// <summary>Desenha o gráfico em <paramref name="pixels"/> (Width × Height, origem embaixo à esquerda).</summary>
+        /// <summary>Draws the chart into <paramref name="pixels"/> (Width × Height, origin at the bottom left).</summary>
         internal static void Render(Color32[] pixels, IList<Series> series, IList<Reference> references, double min, double max, int count)
         {
             Array.Clear(pixels, 0, pixels.Length);
@@ -70,7 +70,7 @@ namespace CurrencyMod.NativeUI
             float Y(double v) => (float)((v - min) / span * (Height - 1));
             float X(int i) => count <= 1 ? Width / 2f : i * (Width - 1f) / (count - 1);
 
-            // Grade: cinco linhas horizontais suaves.
+            // Grid: five soft horizontal lines.
             for (int g = 0; g <= 4; g++)
             {
                 int y = Mathf.Clamp(Mathf.RoundToInt(g * (Height - 1) / 4f), 1, Height - 2);
@@ -79,7 +79,7 @@ namespace CurrencyMod.NativeUI
                     Blend(pixels, x, y, new Color(1f, 1f, 1f, 0.10f));
                 }
             }
-            // Referências tracejadas.
+            // Dashed references.
             foreach (Reference r in references)
             {
                 int y = Mathf.Clamp(Mathf.RoundToInt(Y(r.Value)), 1, Height - 2);
@@ -122,7 +122,7 @@ namespace CurrencyMod.NativeUI
             {
                 return;
             }
-            // Coluna por coluna: cada pixel pega o valor interpolado entre os dois pontos vizinhos (sem repintar as juntas).
+            // Column by column: each pixel takes the value interpolated between the two neighboring points (joints are not repainted).
             for (int px = 0; px < Width; px++)
             {
                 float position = px / (float)(Width - 1) * (n - 1);
@@ -188,7 +188,7 @@ namespace CurrencyMod.NativeUI
             }
         }
 
-        /// <summary>"Over" com alfa direto: o que já está no pixel fica por baixo.</summary>
+        /// <summary>"Over" with straight alpha: what is already in the pixel stays underneath.</summary>
         private static void Blend(Color32[] pixels, int x, int y, Color source)
         {
             if (x < 0 || y < 0 || x >= Width || y >= Height)

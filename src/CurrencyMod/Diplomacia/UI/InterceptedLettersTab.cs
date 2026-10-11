@@ -16,13 +16,13 @@ using B = CurrencyMod.NativeUI.NativeBankWindow;
 namespace CurrencyMod.Diplomacia.UI
 {
     /// <summary>
-    /// Aba "Cartas" na janela nativa de espionagem (Inteligência), ao lado de Furtividade e Detecção (design §8.1 e
-    /// §8.3.1): a rede de espiões do jogador, a chance de interceptar as cartas de cada nação e as cartas interceptadas.
-    /// As abas de modo do jogo vêm de um enum; esta é um clone da aba de modo com o mesmo componente (os cantos de
-    /// primeira e última aba vêm do estilo), sem ligação com a janela. Ativa, ela esconde as abas de listagem, a
-    /// ordenação e as listas e mostra um painel nosso; um postfix no Refresh da janela mantém isso enquanto ela estiver
-    /// ativa, e um prefix no SetStatMode a desativa quando o jogador clica numa aba do jogo.
-    /// Selo no botão de espionagem da barra: cartas interceptadas que o jogador ainda não leu.
+    /// "Letters" tab in the native espionage (Intelligence) window, next to Stealth and Detection (design §8.1 and
+    /// §8.3.1): the player's spy network, the chance of intercepting each nation's letters and the intercepted letters.
+    /// The game's mode tabs come from an enum; this one is a clone of the mode tab with the same component (first and
+    /// last tab corners come from the style), with no link to the window. When active, it hides the listing tabs, the
+    /// sorting and the lists and shows a panel of ours; a postfix on the window's Refresh keeps that while it is
+    /// active, and a prefix on SetStatMode deactivates it when the player clicks one of the game's tabs.
+    /// Badge on the bar's espionage button: intercepted letters the player has not read yet.
     /// </summary>
     internal class InterceptedLettersTab : MonoBehaviour
     {
@@ -38,7 +38,7 @@ namespace CurrencyMod.Diplomacia.UI
         private const int MaxShown = 30;
 
         internal static InterceptedLettersTab Instance;
-        /// <summary>A aba nossa está ativa (a janela continua num dos modos do jogo por baixo).</summary>
+        /// <summary>Our tab is active (the window stays in one of the game's modes underneath).</summary>
         internal static bool Active;
 
         private AllMilitaryForcesStealthLayerWindow window;
@@ -52,7 +52,7 @@ namespace CurrencyMod.Diplomacia.UI
         private Transform emptyCard;
         private Transform emptyBody;
         private readonly List<Row> rows = new List<Row>();
-        /// <summary>Cartas que estavam por ler quando a aba abriu: continuam "Nova" até o jogador sair dela.</summary>
+        /// <summary>Letters that were unread when the tab opened: they stay "Nova" until the player leaves it.</summary>
         private readonly HashSet<int> freshShown = new HashSet<int>();
         private bool built;
         private float nextCheck;
@@ -104,7 +104,7 @@ namespace CurrencyMod.Diplomacia.UI
                 }
                 if (!window.Shown)
                 {
-                    // Fechou: na próxima visita, só o que chegar depois aparece como "Nova".
+                    // Closed: on the next visit, only what arrives afterwards shows as "Nova".
                     freshShown.Clear();
                     return;
                 }
@@ -121,12 +121,12 @@ namespace CurrencyMod.Diplomacia.UI
             }
             catch (Exception ex)
             {
-                Plugin.Log.LogError($"Aba de cartas da espionagem: {ex}");
+                Plugin.Log.LogError($"Espionage letters tab: {ex}");
                 nextCheck = Time.unscaledTime + 5f;
             }
         }
 
-        // ---------------- Montagem ----------------
+        // ---------------- Building ----------------
 
         private void Build(AllMilitaryForcesStealthLayerWindow target)
         {
@@ -152,12 +152,12 @@ namespace CurrencyMod.Diplomacia.UI
                 NativeUIKit.Dispose(oldPanel);
             }
 
-            // Aba: clone da aba de modo, com o componente dela (cantos pelo estilo) mas sem ligação com a janela.
+            // Tab: clone of the mode tab, with its component (corners from the style) but no link to the window.
             UITransform clone = tabs.GetComponent<UITransform>().InstantiateChild(sample, TabName);
             clone.transform.SetAsLastSibling();
             clone.VisibleSelf = true;
             tab = clone.GetComponent<AllMilitaryForcesStealthLayerWindow_StatModeTabItem>();
-            // O evento Switch da aba fica ambíguo com o Publicizer (evento e campo com o mesmo nome): ouvimos o toggle.
+            // The tab's Switch event is ambiguous with the Publicizer (event and field with the same name): we listen to the toggle.
             tab.toggle.Switch += Toggle_Switch;
             tab.SetState(false);
             tab.title.Text = L.T("Cartas");
@@ -166,8 +166,8 @@ namespace CurrencyMod.Diplomacia.UI
             tab.tooltip.Bind(TooltipUtils.TitleAndDescription, tabTooltip);
             ShapeTabs(ours: true);
 
-            // Painel: lista da janela de cidades montada sob um pai inativo e só depois posta na janela, logo depois
-            // dos filtros (a janela é uma tabela vertical e cresce com ele).
+            // Panel: list from the cities window built under an inactive parent and only then put into the window, right
+            // after the filters (the window is a vertical table and grows with it).
             var stash = new GameObject("CurrencyMod_Stash");
             stash.SetActive(false);
             try
@@ -194,12 +194,12 @@ namespace CurrencyMod.Diplomacia.UI
             NativeUIKit.SetVisible(panel, false);
             built = true;
             Active = false;
-            Plugin.Log.LogInfo("Aba de cartas da espionagem montada.");
+            Plugin.Log.LogInfo("Espionage letters tab built.");
         }
 
         /// <summary>
-        /// Cantos da fileira: o jogo marca a primeira e a última aba no estilo (First/Last). Com a nossa no fim, a de
-        /// Detecção vira aba do meio; sem ela, volta a ser a última.
+        /// Row corners: the game marks the first and last tab in the style (First/Last). With ours at the end, the
+        /// Detection tab becomes a middle tab; without it, it is the last one again.
         /// </summary>
         private void ShapeTabs(bool ours)
         {
@@ -218,7 +218,7 @@ namespace CurrencyMod.Diplomacia.UI
             }
         }
 
-        // ---------------- Ativar e desativar ----------------
+        // ---------------- Activate and deactivate ----------------
 
         private void Toggle_Switch(IUIToggle source, bool state)
         {
@@ -246,7 +246,7 @@ namespace CurrencyMod.Diplomacia.UI
             RefreshContent();
         }
 
-        /// <summary>Volta às abas do jogo: a do modo atual acende e a janela se redesenha.</summary>
+        /// <summary>Goes back to the game's tabs: the current mode's tab lights up and the window redraws.</summary>
         internal void Deactivate(bool restoreNative)
         {
             if (!Active)
@@ -275,12 +275,12 @@ namespace CurrencyMod.Diplomacia.UI
                     items[mode]?.SetState(true);
                 }
             }
-            // Força a janela a escolher a listagem de novo e mostrar a lista do modo.
+            // Forces the window to pick the listing again and show the mode's list.
             window.currentListingMode = AllMilitaryForcesStealthLayerListingMode.Count;
             window.Dirtyfy();
         }
 
-        /// <summary>Esconde abas de listagem, ordenação, listas e o aviso de "nenhuma força" (o Refresh do jogo os reexibe).</summary>
+        /// <summary>Hides listing tabs, sorting, lists and the "no forces" notice (the game's Refresh shows them again).</summary>
         internal void HideNative()
         {
             if (window == null)
@@ -310,7 +310,7 @@ namespace CurrencyMod.Diplomacia.UI
             }
         }
 
-        // ---------------- Conteúdo ----------------
+        // ---------------- Content ----------------
 
         private void RefreshTabTitle()
         {
@@ -358,8 +358,8 @@ namespace CurrencyMod.Diplomacia.UI
         }
 
         /// <summary>
-        /// O painel acompanha o conteúdo até PanelHeight (depois rola): a janela do jogo é uma tabela vertical e cresce
-        /// junto, sem sobrar fundo vazio embaixo dos cartões. A medida é a do último arranjo da tabela (0,5 s de atraso).
+        /// The panel follows the content up to PanelHeight (then it scrolls): the game window is a vertical table and grows
+        /// along, without leftover empty background below the cards. The size is from the table's last layout (0.5 s delay).
         /// </summary>
         private void FitHeight()
         {
@@ -368,7 +368,7 @@ namespace CurrencyMod.Diplomacia.UI
                 return;
             }
             float height = Mathf.Clamp(listTable.Height + 12f, 120f, PanelHeight);
-            // Barra de rolagem só quando o conteúdo passa do painel (cabendo, ela aparecia como um risco na borda).
+            // Scrollbar only when the content exceeds the panel (when it fit, it showed up as a stroke on the edge).
             Transform scrollbar = panel.Find("Scrollview/Scrollbar");
             if (scrollbar != null)
             {
@@ -445,7 +445,7 @@ namespace CurrencyMod.Diplomacia.UI
             summaryCard.SetAsFirstSibling();
         }
 
-        /// <summary>Missão do espião na interface (Espionage.SpyWeight.Mission fica em português: vai também para o dossiê).</summary>
+        /// <summary>Spy mission in the UI (Espionage.SpyWeight.Mission stays in Portuguese: it also goes to the dossier).</summary>
         private static string MissionUi(string mission)
         {
             switch (mission)
@@ -458,7 +458,7 @@ namespace CurrencyMod.Diplomacia.UI
             }
         }
 
-        /// <summary>Espionage.Level na interface (o original fica em português: vai também para o dossiê).</summary>
+        /// <summary>Espionage.Level in the UI (the original stays in Portuguese: it also goes to the dossier).</summary>
         private static string LevelUi(double chance)
         {
             switch (Espionage.Level(chance))
@@ -519,7 +519,7 @@ namespace CurrencyMod.Diplomacia.UI
             B.SetVisible(cardSample, false);
         }
 
-        // ---------------- Selo no botão de espionagem ----------------
+        // ---------------- Badge on the espionage button ----------------
 
         private void RefreshBadge()
         {
@@ -548,7 +548,7 @@ namespace CurrencyMod.Diplomacia.UI
             NativeUIKit.SetBadge(badge, unread <= 0 ? null : unread > 9 ? "9+" : unread.ToString());
         }
 
-        // ---------------- Limpeza ----------------
+        // ---------------- Cleanup ----------------
 
         private void Cleanup()
         {
@@ -570,7 +570,7 @@ namespace CurrencyMod.Diplomacia.UI
             }
             catch (Exception ex)
             {
-                Plugin.Log.LogWarning($"Aba de cartas da espionagem: limpeza: {ex.Message}");
+                Plugin.Log.LogWarning($"Espionage letters tab: cleanup: {ex.Message}");
             }
             built = false;
             tab = null;
@@ -603,7 +603,7 @@ namespace CurrencyMod.Diplomacia.UI
 
         // ---------------- Patches ----------------
 
-        /// <summary>O Refresh da janela reexibe listas e abas de listagem: com a nossa aba ativa, some de novo.</summary>
+        /// <summary>The window's Refresh shows lists and listing tabs again: with our tab active, they are hidden again.</summary>
         [HarmonyPatch(typeof(AllMilitaryForcesStealthLayerWindow), "Refresh")]
         private static class RefreshPatch
         {
@@ -616,13 +616,13 @@ namespace CurrencyMod.Diplomacia.UI
             }
         }
 
-        /// <summary>Clique numa aba de modo do jogo (Furtividade, Detecção): a nossa sai.</summary>
+        /// <summary>Click on one of the game's mode tabs (Stealth, Detection): ours is deactivated.</summary>
         [HarmonyPatch(typeof(AllMilitaryForcesStealthLayerWindow), "SetStatMode")]
         private static class SetStatModePatch
         {
             private static void Prefix()
             {
-                // A aba do modo atual acende de novo: se o clique foi nela mesma, o SetStatMode não mexe nos estados.
+                // The current mode's tab lights up again: if the click was on it, SetStatMode does not touch the states.
                 if (Active)
                 {
                     Instance?.Deactivate(restoreNative: true);
@@ -630,7 +630,7 @@ namespace CurrencyMod.Diplomacia.UI
             }
         }
 
-        /// <summary>Saída da partida: a janela e a barra são refeitas; aba, painel e selo saem antes.</summary>
+        /// <summary>Leaving the game: the window and the bar are rebuilt; tab, panel and badge are removed first.</summary>
         [HarmonyPatch(typeof(AllMilitaryForcesStealthLayerWindow), nameof(AllMilitaryForcesStealthLayerWindow.OnPresentationShuttingDown))]
         private static class ShutdownPatch
         {
@@ -650,8 +650,8 @@ namespace CurrencyMod.Diplomacia.UI
         }
 
         /// <summary>
-        /// "ia espionagem aba": abre a visão de espionagem já na aba Cartas. "ia espionagem aba furtividade|deteccao":
-        /// o mesmo que clicar na aba do jogo (StatModeTab_Switch). "ia espionagem aba estado": qual aba está ativa.
+        /// "ia espionagem aba": opens the espionage view already on the Letters tab. "ia espionagem aba furtividade|deteccao":
+        /// the same as clicking the game's tab (StatModeTab_Switch). "ia espionagem aba estado": which tab is active.
         /// </summary>
         internal static string DevOpen(string which)
         {

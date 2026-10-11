@@ -5,9 +5,9 @@ using Newtonsoft.Json.Linq;
 namespace CurrencyMod.Diplomacia.Blocs
 {
     /// <summary>
-    /// Ações de bloco das IAs de linguagem (aplicadas pelo mod, sem ordem ao jogo): fundar_bloco, responder_bloco,
-    /// pauta_bloco (o presidente já põe em votação; os outros sugerem), abrir_pauta (presidente), votar_pauta,
-    /// votar_presidente e sair_bloco. A validação de forma fica no DecisionParser; as regras, no BlocEngine.
+    /// Bloc actions of the language-model AIs (applied by the mod, no game order): fundar_bloco, responder_bloco,
+    /// pauta_bloco (the president puts it straight to a vote; the others suggest), abrir_pauta (president), votar_pauta,
+    /// votar_presidente and sair_bloco. Shape validation lives in DecisionParser; the rules, in BlocEngine.
     /// </summary>
     internal static class BlocActions
     {

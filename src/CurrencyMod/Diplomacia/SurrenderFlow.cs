@@ -10,27 +10,28 @@ using UnityEngine;
 namespace CurrencyMod.Diplomacia
 {
     /// <summary>
-    /// Rendição de guerra pelas ordens do jogo (research\surrender.md §5.3). Thread do sandbox, só no turno principal
-    /// (as ordens de termo são recusadas no fim do turno):
-    /// - oferecer: StartToFillSurrenderProposition → territórios (em ordem de vizinhança) e vassalagem → ProposeToSurrender;
-    /// - impor: AllowToForceOtherToSurrender (ou o rascunho forçado já aberto) → termos → DeclareSurrender;
-    /// - responder: AcceptSurrender / RefuseSurrender, conferindo o papel (forçada: responde o perdedor; oferta: o vencedor).
-    /// O que sobra do placar o jogo põe em ouro sozinho. Se o envio falhar, o rascunho é cancelado (rascunho aberto bloqueia
-    /// paz e rendição na guerra e nunca expira), e uma faxina cancela rascunhos órfãos das nações da IA de linguagem.
+    /// War surrender through the game's orders (research\surrender.md §5.3). Sandbox thread, main turn only (term orders
+    /// are refused at end of turn):
+    /// - offer: StartToFillSurrenderProposition → territories (in adjacency order) and vassalage → ProposeToSurrender;
+    /// - impose: AllowToForceOtherToSurrender (or the forced draft already open) → terms → DeclareSurrender;
+    /// - respond: AcceptSurrender / RefuseSurrender, checking the role (forced: the loser responds; offer: the winner).
+    /// Whatever is left of the score the game converts to gold by itself. If sending fails, the draft is cancelled (an open
+    /// draft blocks peace and surrender in the war and never expires), and a cleanup cancels orphan drafts of the
+    /// language-model AI nations.
     /// </summary>
     internal static class SurrenderFlow
     {
-        /// <summary>Rascunhos sendo montados agora (império &lt;&lt; 16 | outro): a faxina não mexe neles.</summary>
+        /// <summary>Drafts being assembled right now (empire &lt;&lt; 16 | other): the cleanup leaves them alone.</summary>
         private static readonly HashSet<int> assembling = new HashSet<int>();
-        /// <summary>Rascunhos forçados abertos pelo mod (os da variante "ao aliado" o jogo dá de presente e ficam).</summary>
+        /// <summary>Forced drafts opened by the mod (the ones from the "to the ally" variant are granted by the game and stay).</summary>
         private static readonly HashSet<int> forcedByUs = new HashSet<int>();
-        /// <summary>Quando cada rascunho órfão foi visto pela primeira vez (faxina só depois de alguns segundos).</summary>
+        /// <summary>When each orphan draft was first seen (cleanup only after a few seconds).</summary>
         private static readonly Dictionary<int, float> orphanSince = new Dictionary<int, float>();
         private static float nextCleanUp;
 
         private static int Pair(int empire, int other) => (empire << 16) | other;
 
-        // ---------------- Oferecer e impor ----------------
+        // ---------------- Offer and impose ----------------
 
         internal static void Offer(ActionIntent intent, MajorEmpire empire)
         {
@@ -41,7 +42,7 @@ namespace CurrencyMod.Diplomacia
             DiplomaticAmbassy mine = relation.GetEmpireEmbassy(intent.Empire);
             if (mine.CurrentSurrenderToOtherProposition >= 0)
             {
-                // Rascunho velho de uma tentativa que não terminou: cancela e começa de novo, com termos limpos.
+                // Stale draft from an attempt that did not finish: cancel and start over with clean terms.
                 assembling.Add(Pair(intent.Empire, intent.Other));
                 ActionExecutor.Post(new OrderDiplomaticAction { OtherEmpireIndex = intent.Other, DiplomaticAction = DiplomaticAction.CancelSurrenderProposition }, intent, null,
                     next => Offer(next, empire), failed => assembling.Remove(Pair(failed.Empire, failed.Other)));
@@ -67,7 +68,7 @@ namespace CurrencyMod.Diplomacia
             assembling.Add(Pair(intent.Empire, intent.Other));
             if (relation.GetEmpireEmbassy(intent.Empire).ForcedOtherToSurrenderProposition >= 0)
             {
-                Fill(intent, forced: true); // já aberto (um aliado deu o direito, ou tentativa anterior)
+                Fill(intent, forced: true); // already open (an ally granted the right, or a previous attempt)
                 return;
             }
             DiplomaticActionFailureFlags flags = empire.DepartmentOfForeignAffairs.GetDiplomaticActionFailureFlags(intent.Other, DiplomaticAction.AllowToForceOtherToSurrender);
@@ -83,9 +84,9 @@ namespace CurrencyMod.Diplomacia
         }
 
         /// <summary>
-        /// Termos no rascunho aberto: territórios pedidos em ordem de vizinhança (cada um tem de encostar na fronteira do
-        /// vencedor, ser cidade ocupada por ele ou vizinho de um já incluído), vassalagem, dentro do placar; depois envia.
-        /// As ordens são processadas na ordem em que são postadas.
+        /// Terms in the open draft: requested territories in adjacency order (each one must touch the winner's border,
+        /// be a city occupied by the winner, or neighbor one already included), vassalage, within the score; then sends.
+        /// Orders are processed in the order they are posted.
         /// </summary>
         private static void Fill(ActionIntent intent, bool forced)
         {
@@ -198,14 +199,14 @@ namespace CurrencyMod.Diplomacia
                 catch (Exception)
                 {
                 }
-                // Rascunho que não foi enviado bloquearia paz e rendição nesta guerra: cancela.
+                // A draft that was not sent would block peace and surrender in this war: cancel it.
                 SandboxManager.PostAndTrackOrder(new OrderDiplomaticAction { OtherEmpireIndex = intent.Other, DiplomaticAction = DiplomaticAction.CancelSurrenderProposition }, intent.Empire);
                 forcedByUs.Remove(Pair(intent.Empire, intent.Other));
                 ActionExecutor.Report(intent, false, "o jogo recusou a rendição: " + reason);
             });
         }
 
-        // ---------------- Responder ----------------
+        // ---------------- Respond ----------------
 
         internal static void Answer(ActionIntent intent, MajorEmpire empire)
         {
@@ -233,12 +234,12 @@ namespace CurrencyMod.Diplomacia
                 accept ? "rendição aceita: a guerra acabou e os termos foram cumpridos" : "rendição recusada: a guerra continua");
         }
 
-        // ---------------- Faxina ----------------
+        // ---------------- Cleanup ----------------
 
         /// <summary>
-        /// Rascunho de rendição aberto por nação da IA de linguagem sem montagem em curso (núcleo recarregado ou save
-        /// carregado no meio, ou falha sem cancelamento) é cancelado depois de alguns segundos: ele bloquearia paz e rendição.
-        /// O rascunho forçado que o jogo dá de presente (variante "ao aliado") fica, para impor_rendicao usar.
+        /// A surrender draft opened by a language-model AI nation with no assembly in progress (core reloaded or save
+        /// loaded midway, or a failure without cancellation) is cancelled after a few seconds: it would block peace and
+        /// surrender. The forced draft the game grants (the "to the ally" variant) stays, for impor_rendicao to use.
         /// </summary>
         internal static void CleanUp()
         {
@@ -289,7 +290,7 @@ namespace CurrencyMod.Diplomacia
                     orphanSince.Remove(pair);
                     forcedByUs.Remove(pair);
                     SandboxManager.PostAndTrackOrder(new OrderDiplomaticAction { OtherEmpireIndex = other, DiplomaticAction = DiplomaticAction.CancelSurrenderProposition }, empire);
-                    Plugin.Log?.LogInfo($"[IA] Rascunho de rendição órfão de E{empire} contra E{other} cancelado.");
+                    Plugin.Log?.LogInfo($"[IA] Orphan surrender draft of E{empire} against E{other} cancelled.");
                 }
             }
             foreach (int pair in orphanSince.Keys.Where(k => !stillOrphan.Contains(k)).ToList())
@@ -298,7 +299,7 @@ namespace CurrencyMod.Diplomacia
             }
         }
 
-        // ---------------- Utilidades ----------------
+        // ---------------- Utilities ----------------
 
         private static bool War(ActionIntent intent, out DiplomaticRelation relation)
         {

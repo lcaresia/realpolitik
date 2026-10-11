@@ -5,7 +5,7 @@ using CurrencyMod.Diplomacia.Capture;
 
 namespace CurrencyMod.Diplomacia.Blocs
 {
-    /// <summary>Seção BLOCOS do dossiê: o bloco da nação (pautas, eleição, tarifa), convites e os outros blocos.</summary>
+    /// <summary>BLOCOS section of the dossier: the nation's bloc (motions, election, tariff), invites and the other blocs.</summary>
     internal static class BlocDossier
     {
         internal static void Append(StringBuilder text, IaWorld world, int self, int turn, ValidationContext context, Func<int, string> name)

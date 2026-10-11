@@ -5,8 +5,8 @@ using System.Linq;
 namespace CurrencyMod.Diplomacia.Blocs
 {
     /// <summary>
-    /// Retrato dos blocos para a thread da simulação (pedágio e rotas leem milhares de vezes por turno): quem está em
-    /// que bloco formado e a tarifa comum de cada bloco. Publicado pela thread principal; nunca lê IaModule.World.
+    /// Snapshot of the blocs for the simulation thread (tolls and routes read it thousands of times per turn): who is in
+    /// which formed bloc and each bloc's common tariff. Published by the main thread; never reads IaModule.World.
     /// </summary>
     internal static class BlocIndex
     {
@@ -14,7 +14,7 @@ namespace CurrencyMod.Diplomacia.Blocs
         {
             public Dictionary<int, int> BlocOf = new Dictionary<int, int>();
             public Dictionary<int, int[]> Members = new Dictionary<int, int[]>();
-            /// <summary>(bloco &lt;&lt; 16 | alvo) → modo da tarifa comum.</summary>
+            /// <summary>(bloc &lt;&lt; 16 | target) → common tariff mode.</summary>
             public Dictionary<int, TradeMode> Tariffs = new Dictionary<int, TradeMode>();
             public string Signature = string.Empty;
         }
@@ -46,14 +46,14 @@ namespace CurrencyMod.Diplomacia.Blocs
                 return;
             }
             current = next;
-            // Rotas recalculam: membro passa livre, tarifa comum entra ou sai.
+            // Routes recompute: members pass free, the common tariff comes in or goes away.
             TradePolicy.Invalidate();
             TradePolicy.PathsDirty = true;
         }
 
         internal static void Clear() => current = new Snapshot();
 
-        /// <summary>Membros do bloco formado da nação (inclusive ela).</summary>
+        /// <summary>Members of the nation's formed bloc (including the nation itself).</summary>
         internal static bool TryMembers(int empire, out int[] members)
         {
             Snapshot snap = current;
@@ -67,7 +67,7 @@ namespace CurrencyMod.Diplomacia.Blocs
             return a != b && snap.BlocOf.TryGetValue(a, out int x) && snap.BlocOf.TryGetValue(b, out int y) && x == y;
         }
 
-        /// <summary>Tarifa comum que o bloco do dono do posto aplica a quem passa (Free = nenhuma).</summary>
+        /// <summary>Common tariff that the post owner's bloc applies to whoever passes through (Free = none).</summary>
         internal static TradeMode Tariff(int owner, int trader)
         {
             Snapshot snap = current;

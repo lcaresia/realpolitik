@@ -5,42 +5,42 @@ using Newtonsoft.Json;
 namespace CurrencyMod.Diplomacia.Blocs
 {
     /// <summary>
-    /// Bloco de nações (melhorias-jogando item 16, "tipo OTAN, BRICS"). Nasce com 3 membros depois dos convites,
-    /// tem presidente com mandato, pautas votadas e quatro benefícios: comércio interno livre, defesa mútua, voz
-    /// conjunta no Congresso e tarifa comum. A tela chama "Alianças"; a entidade é "bloco" para não confundir com o
-    /// acordo de Aliança do jogo.
+    /// Bloc of nations (melhorias-jogando item 16, "like NATO, BRICS"). It is born with 3 members after the invitations,
+    /// has a president with a term, voted agenda items and four benefits: free internal trade, mutual defense, a joint
+    /// voice in the Congress and a common tariff. The screen calls it "Alliances"; the entity is a "bloc" so it is not
+    /// confused with the game's Alliance agreement.
     /// </summary>
     internal sealed class Bloc
     {
         public const int MinMembers = 3;
         public const int MaxMembers = 10;
-        /// <summary>Turnos que um convite fica aberto.</summary>
+        /// <summary>Turns an invitation stays open.</summary>
         public const int InviteTurns = 5;
-        /// <summary>Turnos que uma pauta ou eleição fica em votação.</summary>
+        /// <summary>Turns an agenda item or election stays open for voting.</summary>
         public const int VoteTurns = 3;
         public const int TermTurns = 20;
-        /// <summary>Turnos de espera depois de sair (ou ser expulso) para entrar em outro bloco.</summary>
+        /// <summary>Waiting turns after leaving (or being expelled) before joining another bloc.</summary>
         public const int LeaveCooldown = 10;
 
         public int Id;
         public string Name;
         public int Founder;
         public int CreatedTurn;
-        /// <summary>Turno em que o bloco atingiu 3 membros; -1 = ainda em formação (só convites).</summary>
+        /// <summary>Turn the bloc reached 3 members; -1 = still forming (invitations only).</summary>
         public int FormedTurn = -1;
         public List<int> Members = new List<int>();
         public int President = -1;
         public int TermStart;
-        /// <summary>Grupo de conversa dos membros (ChatGroup), criado junto com o bloco.</summary>
+        /// <summary>Members' chat group (ChatGroup), created together with the bloc.</summary>
         public int GroupId = -1;
         public List<BlocInvite> Invites = new List<BlocInvite>();
         public List<BlocMotion> Motions = new List<BlocMotion>();
         public List<BlocEvent> History = new List<BlocEvent>();
-        /// <summary>Tarifa comum: pedágio ou bloqueio contra uma nação de fora em todos os postos dos membros.</summary>
+        /// <summary>Common tariff: toll or blockade against an outside nation at every member trade post.</summary>
         public List<BlocTariff> Tariffs = new List<BlocTariff>();
-        /// <summary>Posição do bloco no Congresso, votada em pauta: todos os membros votam juntos.</summary>
+        /// <summary>Bloc position in the Congress, voted as an agenda item: all members vote together.</summary>
         public BlocCongressLine CongressLine;
-        /// <summary>Eleição aberta: turno de abertura (-1 = nenhuma) e votos (eleitor → candidato).</summary>
+        /// <summary>Open election: opening turn (-1 = none) and votes (voter → candidate).</summary>
         public int ElectionOpened = -1;
         public Dictionary<int, int> ElectionVotes = new Dictionary<int, int>();
 
@@ -80,9 +80,9 @@ namespace CurrencyMod.Diplomacia.Blocs
     }
 
     /// <summary>
-    /// Pauta do bloco. Membro comum sugere (Suggested); só o presidente põe em votação (Voting). Fecha quando todos
-    /// votam ou o prazo acaba: maioria simples dos votos (empate: vale o voto do presidente); expulsão exige 2/3 dos
-    /// membros que podem votar.
+    /// Bloc agenda item. A regular member suggests it (Suggested); only the president puts it to a vote (Voting). It closes
+    /// when everyone has voted or the deadline ends: simple majority of the votes (tie: the president's vote decides);
+    /// expulsion requires 2/3 of the members who can vote.
     /// </summary>
     internal sealed class BlocMotion
     {
@@ -92,14 +92,14 @@ namespace CurrencyMod.Diplomacia.Blocs
         public const string Failed = "rejeitada";
         public const string Dropped = "descartada";
 
-        /// <summary>Tipos de pauta.</summary>
+        /// <summary>Agenda item types.</summary>
         public static readonly string[] Kinds = { "tarifa", "fim_tarifa", "admitir", "expulsar", "congresso", "renomear", "dissolver" };
 
         public int Id;
         public string Kind;
-        /// <summary>Nação alvo (tarifa, fim_tarifa, admitir, expulsar); -1 nas outras.</summary>
+        /// <summary>Target nation (tarifa, fim_tarifa, admitir, expulsar); -1 for the others.</summary>
         public int Target = -1;
-        /// <summary>Tarifa: "pedagio" ou "bloqueio". Congresso: a posição ("a", "b" ou a nação apoiada "E#"). Renomear: o nome.</summary>
+        /// <summary>Tariff: "pedagio" or "bloqueio". Congress: the position ("a", "b" or the supported nation "E#"). Rename: the name.</summary>
         public string Arg;
         public string Reason;
         public int Author;
@@ -120,7 +120,7 @@ namespace CurrencyMod.Diplomacia.Blocs
     internal sealed class BlocEvent
     {
         public int Turn;
-        /// <summary>fundou, convidou, entrou, recusou, saiu, expulso, presidente, pauta, aprovada, rejeitada,
+        /// <summary>Event kinds: fundou, convidou, entrou, recusou, saiu, expulso, presidente, pauta, aprovada, rejeitada,
         /// tarifa, fim_tarifa, renomeado, desfeito, formado, falhou.</summary>
         public string Kind;
         public int Actor = -1;
@@ -131,14 +131,14 @@ namespace CurrencyMod.Diplomacia.Blocs
     internal sealed class BlocTariff
     {
         public int Target;
-        /// <summary>"pedagio" ou "bloqueio".</summary>
+        /// <summary>"pedagio" or "bloqueio".</summary>
         public string Mode;
         public int Since;
     }
 
     internal sealed class BlocCongressLine
     {
-        /// <summary>Posição votada: "a"/"b" numa lei, "E#" numa crise; vale para a sessão aberta quando foi votada.</summary>
+        /// <summary>Voted position: "a"/"b" on a law, "E#" on a crisis; applies to the session open when it was voted.</summary>
         public string Choice;
         public string SessionKey;
         public int Turn;

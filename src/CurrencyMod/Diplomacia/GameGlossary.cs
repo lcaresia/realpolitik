@@ -8,8 +8,8 @@ using Amplitude.Mercury.Simulation;
 namespace CurrencyMod.Diplomacia
 {
     /// <summary>
-    /// Nomes oficiais do jogo, na língua do jogo, para ancorar as falas das IAs (design §9.1): recursos e povos.
-    /// Lido na thread principal, sob demanda, e guardado: não muda durante a partida.
+    /// Official game names, in the game's language, to anchor what the AIs say (design §9.1): resources and peoples.
+    /// Read on the main thread, on demand, and cached: it does not change during the match.
     /// </summary>
     internal static class GameGlossary
     {
@@ -19,14 +19,14 @@ namespace CurrencyMod.Diplomacia
             public string Name;
             public bool Luxury;
             public bool Strategic;
-            /// <summary>Era em que o recurso aparece (-1 = desde o começo).</summary>
+            /// <summary>Era in which the resource appears (-1 = from the start).</summary>
             public int Era;
         }
 
         private static ResourceEntry[] resources;
         private static List<string> cultures;
 
-        /// <summary>Recursos por ResourceType (posição vazia = tipo sem recurso).</summary>
+        /// <summary>Resources by ResourceType (empty slot = type with no resource).</summary>
         internal static ResourceEntry[] Resources()
         {
             if (resources != null)
@@ -58,7 +58,7 @@ namespace CurrencyMod.Diplomacia
                     Era = definition.EraOfApparition,
                 };
             }
-            // Sem a tradução carregada ficaria o nome interno: só guarda quando todos os nomes vieram traduzidos.
+            // Without the translation loaded we would get the internal name: only cache when every name came translated.
             if (complete)
             {
                 resources = table;
@@ -72,7 +72,7 @@ namespace CurrencyMod.Diplomacia
             return type >= 0 && type < table.Length ? table[type] : null;
         }
 
-        /// <summary>Nomes de todos os povos do jogo: reconhecem nas cartas as culturas antigas de cada nação.</summary>
+        /// <summary>Names of every people in the game: used to recognize each nation's former cultures in the letters.</summary>
         internal static List<string> Cultures()
         {
             if (cultures != null)
@@ -93,7 +93,7 @@ namespace CurrencyMod.Diplomacia
             }
             catch (Exception ex)
             {
-                Plugin.Log?.LogWarning($"[IA] Nomes dos povos não lidos: {ex.Message}");
+                Plugin.Log?.LogWarning($"[IA] People names not read: {ex.Message}");
             }
             if (names.Count > 0)
             {
@@ -102,7 +102,7 @@ namespace CurrencyMod.Diplomacia
             return names;
         }
 
-        /// <summary>Nome traduzido de uma definição do jogo (cívico, escolha de cívico...); null se não houver.</summary>
+        /// <summary>Translated name of a game definition (civic, civic choice...); null if there is none.</summary>
         internal static string Title(string definitionName)
         {
             return string.IsNullOrEmpty(definitionName) ? null : LocalizedTitle(new StaticString(definitionName));

@@ -12,14 +12,14 @@ using DiplomaticGrievanceAction = Amplitude.Mercury.Data.Simulation.DiplomaticGr
 namespace CurrencyMod.Diplomacia
 {
     /// <summary>
-    /// Grandes decisões são da IA de linguagem (design §11.0). Enquanto ela responde por uma nação, a IA nativa
-    /// dessa nação não declara guerra, não propõe nem rompe tratados e acordos, não responde às propostas dos
-    /// outros (elas esperam a IA de linguagem, pelo ProposalHold), não transforma reclamações em exigências nem as
-    /// perdoa, e não responde, retira ou leva ao Congresso as exigências. Continua cuidando do resto (construir,
-    /// pesquisar, mover tropas, lutar) e das exigências forçadas pelo consulado, que o jogo obriga a responder no
-    /// mesmo turno.
-    /// A trava só vale para nações que decidiram há pouco: se a API cair, ela cai sozinha (F1).
-    /// Os patches rodam na thread da IA nativa: a tabela é um array trocado inteiro, nunca editado no lugar.
+    /// Big decisions belong to the language AI (design §11.0). While it answers for a nation, that nation's native AI
+    /// does not declare war, does not propose or break treaties and agreements, does not answer other nations'
+    /// proposals (they wait for the language AI, via ProposalHold), does not turn grievances into demands nor forgive
+    /// them, and does not answer, withdraw or take demands to the Congress. It still handles everything else (build,
+    /// research, move troops, fight) and the demands enforced by the consulate, which the game forces to be answered in
+    /// the same turn.
+    /// The lock only applies to nations that decided recently: if the API goes down, the lock drops by itself (F1).
+    /// The patches run on the native AI thread: the table is an array swapped whole, never edited in place.
     /// </summary>
     internal static class NativeAiLocks
     {
@@ -31,7 +31,7 @@ namespace CurrencyMod.Diplomacia
         private static int lockedWarChecks;
         private static volatile string lastBlocked;
 
-        /// <summary>Resumo para o "ia status": nações travadas e o que a trava já segurou.</summary>
+        /// <summary>Summary for "ia status": locked nations and what the lock has held back so far.</summary>
         internal static string Describe()
         {
             bool[] current = llmActive;
@@ -49,7 +49,7 @@ namespace CurrencyMod.Diplomacia
                 + $" · rendições seguradas: {blockedSurrenders} · {DescribeMinors()} · {DescribeCongress()}";
         }
 
-        /// <summary>Chamado pela thread principal (IaModule) a cada segundo.</summary>
+        /// <summary>Called by the main thread (IaModule) every second.</summary>
         internal static void SetActive(bool[] active)
         {
             llmActive = active ?? new bool[0];
@@ -58,9 +58,9 @@ namespace CurrencyMod.Diplomacia
         private const string CarryKey = "CurrencyMod.NativeAiLocks.Active";
 
         /// <summary>
-        /// Recarga a quente: a geração nova começa com a tabela vazia até o primeiro segundo do IaModule, e nesse intervalo a
-        /// IA nativa soltava de uma vez tudo o que a trava vinha segurando (no T75 de um teste, 7 crises no Congresso que
-        /// nenhuma nação da IA de linguagem pediu). O ModEntry.Stop guarda a tabela e o Start a devolve antes dos patches.
+        /// Hot reload: the new generation starts with an empty table until IaModule's first second, and in that gap the
+        /// native AI released at once everything the lock had been holding (at T75 of a test, 7 Congress crises that no
+        /// language-AI nation asked for). ModEntry.Stop stores the table and Start restores it before the patches.
         /// </summary>
         internal static void Carry()
         {
@@ -78,7 +78,7 @@ namespace CurrencyMod.Diplomacia
                 {
                     count += locked ? 1 : 0;
                 }
-                Plugin.Log?.LogInfo($"[IA] Travas da IA nativa vindas da geração anterior: {count} nação(ões), já antes dos patches.");
+                Plugin.Log?.LogInfo($"[IA] Native AI locks carried over from the previous generation: {count} nation(s), already before the patches.");
             }
         }
 
@@ -137,7 +137,7 @@ namespace CurrencyMod.Diplomacia
                         {
                             System.Threading.Interlocked.Increment(ref blockedTreaties);
                             lastBlocked = $"E{brain.EmpireIndex} {chosen} → E{embassy.OtherEmpireIndex}";
-                            // DiplomaticAction.Count = "nenhuma ação" para o gerador ManageTreaties.
+                            // DiplomaticAction.Count = "no action" for the ManageTreaties generator.
                             data.ChosenDiplomaticActionTreaty = new HeuristicValue<DiplomaticAction>(DiplomaticAction.Count);
                         }
                     }
@@ -149,7 +149,7 @@ namespace CurrencyMod.Diplomacia
             }
         }
 
-        /// <summary>Reclamações: a IA nativa não as transforma em exigência nem as perdoa (ferramentas exigir e perdoar_queixas).</summary>
+        /// <summary>Grievances: the native AI neither turns them into demands nor forgives them (tools exigir and perdoar_queixas).</summary>
         [HarmonyPatch(typeof(ComputeGrievanceActions), nameof(ComputeGrievanceActions.Process))]
         private static class GrievancePatch
         {
@@ -174,7 +174,7 @@ namespace CurrencyMod.Diplomacia
                             }
                             System.Threading.Interlocked.Increment(ref blockedGrievances);
                             lastBlocked = $"E{brain.EmpireIndex} {chosen[i].Action.Value} → E{embassy.OtherEmpireIndex}";
-                            // Count = "nada a fazer" para o gerador ManageGrievances.
+                            // Count = "nothing to do" for the ManageGrievances generator.
                             chosen[i].Action = new HeuristicValue<DiplomaticGrievanceAction>(DiplomaticGrievanceAction.Count);
                         }
                     }
@@ -187,8 +187,9 @@ namespace CurrencyMod.Diplomacia
         }
 
         /// <summary>
-        /// Exigências: aceitar, recusar, enrolar, retirar, levar ao Congresso (e, na escalada, romper aliança) são da IA de
-        /// linguagem. A exigência forçada pelo consulado fica com a IA nativa: o jogo trava o fim do turno até a resposta.
+        /// Demands: accepting, refusing, stalling, withdrawing, taking to the Congress (and, on escalation, breaking an
+        /// alliance) belong to the language AI. The demand enforced by the consulate stays with the native AI: the game
+        /// blocks the end of turn until it is answered.
         /// </summary>
         [HarmonyPatch(typeof(ComputeDemandsAction), nameof(ComputeDemandsAction.Process))]
         private static class DemandsPatch
@@ -227,8 +228,8 @@ namespace CurrencyMod.Diplomacia
         }
 
         /// <summary>
-        /// Propor, romper e também responder a tratados e acordos: tudo isso é da IA de linguagem. As propostas que ela
-        /// precisa responder ficam pendentes pelo ProposalHold (opção B do F3) até a resposta dela.
+        /// Proposing, breaking and also answering treaties and agreements: all of it belongs to the language AI. The
+        /// proposals it must answer stay pending via ProposalHold (option B of F3) until it answers.
         /// </summary>
         private static bool IsInitiative(DiplomaticAction action)
         {
@@ -258,12 +259,12 @@ namespace CurrencyMod.Diplomacia
             }
         }
 
-        // ---------------- Rendição (research\surrender.md §3.2) ----------------
+        // ---------------- Surrender (research\surrender.md §3.2) ----------------
 
         private static int blockedSurrenders;
         /// <summary>
-        /// Relações (respondente &lt;&lt; 16 | outro) em que a IA nativa volta a responder a uma rendição: a IA de linguagem
-        /// não respondeu dentro do prazo do hold. Publicada pela thread principal (ProposalHold.TrackSurrenders).
+        /// Relations (responder &lt;&lt; 16 | other) in which the native AI answers a surrender again: the language AI did
+        /// not answer within the hold deadline. Published by the main thread (ProposalHold.TrackSurrenders).
         /// </summary>
         private static volatile System.Collections.Generic.HashSet<int> surrenderFallback = new System.Collections.Generic.HashSet<int>();
 
@@ -272,21 +273,21 @@ namespace CurrencyMod.Diplomacia
             surrenderFallback = pairs ?? new System.Collections.Generic.HashSet<int>();
         }
 
-        /// <summary>A IA nativa não abre oferta de rendição para a nação (oferecer_rendicao é da IA de linguagem).</summary>
+        /// <summary>The native AI does not open a surrender offer for the nation (oferecer_rendicao belongs to the language AI).</summary>
         [HarmonyPatch(typeof(Amplitude.Mercury.AI.Brain.Generators.Diplomacy.Surrender), "GetParents")]
         private static class SurrenderOfferPatch
         {
             private static bool Prefix(Amplitude.Mercury.AI.Brain.Generators.Diplomacy.Surrender __instance) => !Blocks(__instance.Brain);
         }
 
-        /// <summary>Nem abre rendição forçada (impor_rendicao).</summary>
+        /// <summary>Nor opens a forced surrender (impor_rendicao).</summary>
         [HarmonyPatch(typeof(Amplitude.Mercury.AI.Brain.Generators.Diplomacy.ForceSurrender), "GetParents")]
         private static class SurrenderForcePatch
         {
             private static bool Prefix(Amplitude.Mercury.AI.Brain.Generators.Diplomacy.ForceSurrender __instance) => !Blocks(__instance.Brain);
         }
 
-        /// <summary>Nem mexe nos termos do rascunho que o executor do mod está montando.</summary>
+        /// <summary>Nor touches the terms of the draft the mod's executor is building.</summary>
         [HarmonyPatch(typeof(Amplitude.Mercury.AI.Brain.Generators.Diplomacy.FillSurrenderTerms), "GetContexts")]
         private static class SurrenderTermsPatch
         {
@@ -294,8 +295,8 @@ namespace CurrencyMod.Diplomacia
         }
 
         /// <summary>
-        /// Nem envia, aceita ou recusa: responder_rendicao é da IA de linguagem. Por relação: quando o hold vence sem
-        /// resposta (ou a API cai e a trava inteira some), a IA nativa responde naquela relação.
+        /// Nor sends, accepts or refuses: responder_rendicao belongs to the language AI. Per relation: when the hold expires
+        /// with no answer (or the API goes down and the whole lock disappears), the native AI answers in that relation.
         /// </summary>
         [HarmonyPatch(typeof(Amplitude.Mercury.AI.Brain.Generators.Diplomacy.EndSurrender), "TryComputeAction")]
         private static class SurrenderEndPatch
@@ -342,14 +343,14 @@ namespace CurrencyMod.Diplomacia
             return false;
         }
 
-        // ---------------- Povos independentes ----------------
+        // ---------------- Independent peoples ----------------
 
         private static int blockedMinorTreaties;
         private static int keptPatronage;
 
         /// <summary>
-        /// Patrocínio escolhido pela IA de linguagem (patrocinar), por (império, povo): a IA nativa replaneja o
-        /// investimento de tempos em tempos e desfaria a escolha. Só em memória (recarga ou load: a nativa volta a decidir).
+        /// Patronage chosen by the language AI (patrocinar), per (empire, people): the native AI re-plans the investment
+        /// every so often and would undo the choice. In memory only (reload or load: the native AI decides again).
         /// </summary>
         private static volatile System.Collections.Generic.Dictionary<int, int> patronage = new System.Collections.Generic.Dictionary<int, int>();
 
@@ -361,7 +362,7 @@ namespace CurrencyMod.Diplomacia
             patronage = copy;
         }
 
-        /// <summary>Tabela inteira, publicada pelo IaModule a cada segundo a partir do estado salvo das nações.</summary>
+        /// <summary>Whole table, published by IaModule every second from the nations' saved state.</summary>
         internal static void SetPatronageTable(System.Collections.Generic.Dictionary<int, int> table)
         {
             patronage = table ?? new System.Collections.Generic.Dictionary<int, int>();
@@ -369,7 +370,7 @@ namespace CurrencyMod.Diplomacia
 
         internal static string DescribeMinors() => $"povos: vassalagens/anexações seguradas {blockedMinorTreaties} · patrocínios mantidos {keptPatronage}";
 
-        /// <summary>Vassalo e anexação de povo independente são grandes decisões: só pela IA de linguagem (tratado_povo).</summary>
+        /// <summary>Vassalizing and annexing an independent people are big decisions: only through the language AI (tratado_povo).</summary>
         [HarmonyPatch(typeof(Amplitude.Mercury.AI.Brain.Generators.MinorRelation.EnactMinorPuppetTreaty), "IsTreatyValid")]
         private static class PuppetPatch
         {
@@ -405,9 +406,9 @@ namespace CurrencyMod.Diplomacia
         }
 
         /// <summary>
-        /// Povo com patrocínio escolhido pela IA de linguagem: os geradores de patrocínio da IA nativa (começar e parar de
-        /// patrocinar) nem consideram o povo. Trocar só os níveis da ordem dela (abaixo) deixava a IA nativa insatisfeita, e
-        /// ela repetia a ordem sem parar (821 ordens em 10 minutos no turno 113).
+        /// People with patronage chosen by the language AI: the native AI's patronage generators (start and stop
+        /// patronizing) do not even consider the people. Only swapping the levels of its order (below) left the native AI
+        /// unsatisfied, and it repeated the order endlessly (821 orders in 10 minutes on turn 113).
         /// </summary>
         [HarmonyPatch(typeof(Amplitude.Mercury.AI.Brain.Generators.MinorRelation.StartPatronizingMinor), "IsRelevant")]
         private static class StartPatronagePatch
@@ -442,7 +443,7 @@ namespace CurrencyMod.Diplomacia
             }
         }
 
-        /// <summary>Rede de segurança: se ainda sair uma ordem de investimento da IA nativa para esse povo, vai com os níveis da IA de linguagem.</summary>
+        /// <summary>Safety net: if an investment order from the native AI for that people still goes out, it carries the language AI's levels.</summary>
         [HarmonyPatch(typeof(Amplitude.Mercury.AI.Brain.Actuators.PatronizeMinor), "CreateOrder")]
         private static class PatronagePatch
         {
@@ -470,22 +471,22 @@ namespace CurrencyMod.Diplomacia
             }
         }
 
-        // ---------------- Congresso (research\congress.md §4.2) ----------------
+        // ---------------- Congress (research\congress.md §4.2) ----------------
 
         private static int blockedVerdicts;
         private static int keptStances;
         private static readonly System.Collections.Generic.HashSet<long> ImposedSeen = new System.Collections.Generic.HashSet<long>();
         /// <summary>
-        /// Publicados pela thread principal (CongressFlow.TrackFallbacks): vereditos (perdedor &lt;&lt; 16 | vencedor) e
-        /// presidentes da 1ª sessão em que a IA nativa volta a agir por prazo vencido, e a resposta da IA de linguagem para
-        /// cada lei imposta ((império &lt;&lt; 32) | evento de osmose → true = recusar).
+        /// Published by the main thread (CongressFlow.TrackFallbacks): verdicts (loser &lt;&lt; 16 | winner) and
+        /// 1st-session presidents for which the native AI acts again because the deadline expired, and the language AI's
+        /// answer for each imposed law ((empire &lt;&lt; 32) | osmosis event → true = refuse).
         /// </summary>
         private static volatile System.Collections.Generic.HashSet<int> verdictFallback = new System.Collections.Generic.HashSet<int>();
         private static volatile System.Collections.Generic.HashSet<int> leaderFallback = new System.Collections.Generic.HashSet<int>();
         private static volatile System.Collections.Generic.Dictionary<string, LawStance> lawStances = new System.Collections.Generic.Dictionary<string, LawStance>();
 
-        /// <summary>O que uma nação da IA de linguagem quer de uma lei do Congresso: a opção que ela votou e o que fazer com a
-        /// lei imposta se perder (se_perder). Chave: "império|cívico".</summary>
+        /// <summary>What a language-AI nation wants from a Congress law: the option it voted for and what to do with the
+        /// imposed law if it loses (se_perder). Key: "empire|civic".</summary>
         internal sealed class LawStance
         {
             public string Voted;
@@ -494,8 +495,8 @@ namespace CurrencyMod.Diplomacia
 
         internal static string LawStanceKey(int empire, string civic) => empire + "|" + civic;
 
-        /// <summary>Resultado da última votação de lei (cívico, opção vencedora, presidente): reconhece a lei imposta pelo
-        /// Congresso quando o jogo já trocou os efeitos dela (depois de carregar o save). Publicado pela thread principal.</summary>
+        /// <summary>Result of the last law vote (civic, winning option, president): recognizes the law imposed by the
+        /// Congress when the game has already swapped its effects (after loading the save). Published by the main thread.</summary>
         private static volatile string[] lastLawResult = new string[0];
 
         internal static void SetLastLawResult(string civic, string choice, int leader)
@@ -541,8 +542,8 @@ namespace CurrencyMod.Diplomacia
         internal static int BlockedConsulateActions;
 
         /// <summary>
-        /// Consulado, "demandas e crises" do design §11.0: a IA nativa não usa a alavancagem (exigência forçada, sanções,
-        /// reduzir placar de guerra, tropas indesejadas, revelar agentes) por uma nação da IA de linguagem.
+        /// Consulate, "demands and crises" of design §11.0: the native AI does not use leverage (enforced demand, sanctions,
+        /// reduce war score, unwanted troops, reveal agents) on behalf of a language-AI nation.
         /// </summary>
         [HarmonyPatch(typeof(Amplitude.Mercury.AI.Brain.Generators.Diplomacy.DoDiplomaticLeverageAction), "GetContexts")]
         private static class ConsulateLeveragePatch
@@ -559,8 +560,8 @@ namespace CurrencyMod.Diplomacia
         }
 
         /// <summary>
-        /// Nem propõe nem cancela acordos de consulado. Responder (aceitar, contrapropor, recusar) a um acordo que outro
-        /// propôs fica com ela, como a exigência forçada: a IA de linguagem não tem essa ação e a proposta ficaria parada.
+        /// Nor proposes or cancels consulate agreements. Answering (accept, counter, refuse) an agreement someone else
+        /// proposed stays with it, like the enforced demand: the language AI has no such action and the proposal would stall.
         /// </summary>
         [HarmonyPatch(typeof(Amplitude.Mercury.AI.Brain.Generators.Diplomacy.ManageConsulateAgreements), "TryContinue")]
         private static class ConsulateAgreementPatch
@@ -577,7 +578,7 @@ namespace CurrencyMod.Diplomacia
             }
         }
 
-        /// <summary>A IA nativa não propõe lei quando preside (propor_votacao); só na 1ª sessão parada por prazo vencido.</summary>
+        /// <summary>The native AI does not propose a law when presiding (propor_votacao); only in a 1st session stalled past its deadline.</summary>
         [HarmonyPatch(typeof(Amplitude.Mercury.AI.Brain.Generators.International.StartInternationalCivicVote), "GetContexts")]
         private static class CongressProposePatch
         {
@@ -588,21 +589,21 @@ namespace CurrencyMod.Diplomacia
             }
         }
 
-        /// <summary>Nem vota nem suborna nas leis (votar_congresso, subornar). Abster-se é escolha da IA de linguagem.</summary>
+        /// <summary>Nor votes or bribes on laws (votar_congresso, subornar). Abstaining is the language AI's choice.</summary>
         [HarmonyPatch(typeof(Amplitude.Mercury.AI.Brain.Generators.International.ManageInternationalCivicVote), "GetContexts")]
         private static class CongressLawVotePatch
         {
             private static bool Prefix(Amplitude.Mercury.AI.Brain.Generators.International.ManageInternationalCivicVote __instance) => !BlocksCongress(__instance.Brain);
         }
 
-        /// <summary>Nem vota nem suborna nas crises.</summary>
+        /// <summary>Nor votes or bribes on crises.</summary>
         [HarmonyPatch(typeof(Amplitude.Mercury.AI.Brain.Generators.International.ManageInternationalCrisisVote), "GetContexts")]
         private static class CongressCrisisVotePatch
         {
             private static bool Prefix(Amplitude.Mercury.AI.Brain.Generators.International.ManageInternationalCrisisVote __instance) => !BlocksCongress(__instance.Brain);
         }
 
-        /// <summary>Nem contribui ao consenso ideológico (contribuir_consenso).</summary>
+        /// <summary>Nor contributes to the ideological consensus (contribuir_consenso).</summary>
         [HarmonyPatch(typeof(Amplitude.Mercury.AI.Brain.Generators.International.ContributeToInternationalIdeologicalConsensus), "GetContexts")]
         private static class CongressConsensusPatch
         {
@@ -610,8 +611,8 @@ namespace CurrencyMod.Diplomacia
         }
 
         /// <summary>
-        /// Nem responde ao veredito de uma crise perdida (responder_congresso): sem esta trava, a IA nativa de uma nação da
-        /// IA de linguagem declararia guerra surpresa sozinha. Por relação: com o prazo vencido, a IA nativa responde.
+        /// Nor answers the verdict of a lost crisis (responder_congresso): without this lock, the native AI of a language-AI
+        /// nation would declare a surprise war on its own. Per relation: once the deadline expires, the native AI answers.
         /// </summary>
         [HarmonyPatch(typeof(Amplitude.Mercury.AI.Brain.Generators.International.ResolveInternationalCrisisVote), "GenerateDesires")]
         private static class CongressVerdictPatch
@@ -637,9 +638,10 @@ namespace CurrencyMod.Diplomacia
         }
 
         /// <summary>
-        /// Lei imposta pelo Congresso: a IA nativa responde no mesmo turno (senão o fim do turno recusa e cobra influência),
-        /// mas com a resposta que a IA de linguagem escolheu: votou na opção imposta = adota; senão, se_perder. A tabela é
-        /// publicada antes de a votação fechar, e a decisão sai na hora da ordem (a IA nativa responde no primeiro segundo).
+        /// Law imposed by the Congress: the native AI answers in the same turn (otherwise the end of turn refuses and charges
+        /// influence), but with the answer the language AI chose: voted for the imposed option = adopt; otherwise, se_perder.
+        /// The table is published before the vote closes, and the decision is made when the order is created (the native AI
+        /// answers in the first second).
         /// </summary>
         [HarmonyPatch(typeof(Amplitude.Mercury.AI.Brain.Actuators.DoOsmosisAction), "CreateOrder")]
         private static class ImposedLawPatch
@@ -673,7 +675,7 @@ namespace CurrencyMod.Diplomacia
                     }
                     else if (stance.IfLost == "recusar")
                     {
-                        // Sem influência para recusar, o fim do turno recusaria e cobraria assim mesmo: adota.
+                        // Without influence to refuse, the end of turn would refuse and charge anyway: adopt.
                         discard = info.DiscardFailureFlags == Amplitude.Mercury.Simulation.FailureFlags.None;
                     }
                     else if (stance.IfLost == "adotar")
@@ -685,8 +687,8 @@ namespace CurrencyMod.Diplomacia
                         return;
                     }
                     bool nativeDiscard = __result is Amplitude.Mercury.Interop.OrderDiscardCulturalOsmosisEvent;
-                    // Conta e registra uma vez por evento (o atuador pode pedir a ordem de novo); o turno entra na chave porque
-                    // o índice do evento é reaproveitado depois.
+                    // Count and log once per event (the actuator may request the order again); the turn is part of the key
+                    // because the event index is reused later.
                     bool first;
                     lock (ImposedSeen)
                     {
@@ -696,8 +698,8 @@ namespace CurrencyMod.Diplomacia
                     if (first)
                     {
                         System.Threading.Interlocked.Increment(ref keptStances);
-                        Plugin.Log?.LogInfo($"[IA] Lei imposta a E{empire} ({info.ItemName} → {info.CivicChoiceName}): {(discard ? "recusada" : "adotada")}, como a IA de linguagem quis"
-                            + (discard != nativeDiscard ? $" (a IA nativa ia {(nativeDiscard ? "recusar" : "adotar")})." : " (a IA nativa faria o mesmo)."));
+                        Plugin.Log?.LogInfo($"[IA] Law imposed on E{empire} ({info.ItemName} → {info.CivicChoiceName}): {(discard ? "refused" : "adopted")}, as the language AI wanted"
+                            + (discard != nativeDiscard ? $" (the native AI would have {(nativeDiscard ? "refused" : "adopted")})." : " (the native AI would do the same)."));
                     }
                     if (discard == nativeDiscard)
                     {
@@ -719,7 +721,7 @@ namespace CurrencyMod.Diplomacia
             if (!errorLogged)
             {
                 errorLogged = true;
-                Plugin.Log?.LogError($"[IA] Trava da IA nativa: {ex}");
+                Plugin.Log?.LogError($"[IA] Native AI lock: {ex}");
             }
         }
     }

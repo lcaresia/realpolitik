@@ -7,15 +7,15 @@ using UnityEngine;
 namespace CurrencyMod.Diplomacia.Council
 {
     /// <summary>
-    /// Retratos dos ministros (gerados com o Codex, tools\retratos): um por cargo × época × gênero, embutidos na DLL como
-    /// "retrato.&lt;cargo&gt;_&lt;época&gt;_&lt;m|f&gt;.jpg". Época 1 = Neolítica a Clássica, 2 = Medieval e Moderna, 3 = Industrial
-    /// e Contemporânea. Sem a imagem da época, usa a mais próxima; sem nenhuma, null (a tela fica sem retrato).
+    /// Minister portraits (generated with Codex, tools\retratos): one per portfolio × epoch × gender, embedded in the DLL as
+    /// "retrato.&lt;portfolio&gt;_&lt;epoch&gt;_&lt;m|f&gt;.jpg". Epoch 1 = Neolithic to Classical, 2 = Medieval and Early Modern,
+    /// 3 = Industrial and Contemporary. Without the epoch's image, uses the closest one; with none, null (no portrait shown).
     /// </summary>
     internal static class Portraits
     {
         private static readonly Dictionary<string, Texture2D> cache = new Dictionary<string, Texture2D>();
 
-        /// <summary>Época do retrato pela era do império (0 Neolítica … 6 Contemporânea).</summary>
+        /// <summary>Portrait epoch from the empire's era (0 Neolithic … 6 Contemporary).</summary>
         internal static int Epoch(int era) => era <= 2 ? 1 : era <= 4 ? 2 : 3;
 
         internal static Texture2D Get(string portfolio, int era, string gender)
@@ -64,7 +64,7 @@ namespace CurrencyMod.Diplomacia.Council
             }
             catch (Exception ex)
             {
-                Plugin.Log.LogWarning($"Retrato {name}: {ex.Message}");
+                Plugin.Log.LogWarning($"Portrait {name}: {ex.Message}");
             }
             cache[name] = texture;
             return texture;

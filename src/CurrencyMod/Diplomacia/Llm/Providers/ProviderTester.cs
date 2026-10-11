@@ -10,20 +10,20 @@ using Newtonsoft.Json.Linq;
 
 namespace CurrencyMod.Diplomacia.Llm.Providers
 {
-    /// <summary>Resultado do "Testar conexão" para a tela.</summary>
+    /// <summary>Result of "Test connection" for the screen.</summary>
     internal sealed class TestOutcome
     {
         public volatile bool Finished;
         public bool Ok;
         public string Message;
         public double Seconds;
-        /// <summary>Crédito que sobra (OpenRouter), ou null.</summary>
+        /// <summary>Remaining credit (OpenRouter), or null.</summary>
         public double? CreditLeftUsd;
     }
 
     /// <summary>
-    /// "Testar conexão": uma chamada mínima (resposta em json de poucos tokens, custo de frações de centavo) e,
-    /// quando o provedor tem lista de modelos, a lista. Roda numa thread de trabalho.
+    /// "Test connection": a minimal call (json response of a few tokens, costing fractions of a cent) and, when the
+    /// provider has a model list, the list. Runs on a worker thread.
     /// </summary>
     internal static class ProviderTester
     {
@@ -107,7 +107,7 @@ namespace CurrencyMod.Diplomacia.Llm.Providers
             FetchModels(provider);
         }
 
-        /// <summary>Mensagem clara para cada tipo de erro.</summary>
+        /// <summary>Clear message for each kind of error.</summary>
         internal static string Explain(ProviderDef provider, ChatResult chat)
         {
             switch (chat.Kind)
@@ -134,7 +134,7 @@ namespace CurrencyMod.Diplomacia.Llm.Providers
             }
         }
 
-        /// <summary>Modelos que a conta enxerga (para a lista da tela). Vazio se o provedor não lista.</summary>
+        /// <summary>Models the account can see (for the screen's list). Empty if the provider does not list them.</summary>
         internal static List<string> Models(ProviderDef provider)
         {
             lock (FetchedModels)
@@ -143,7 +143,7 @@ namespace CurrencyMod.Diplomacia.Llm.Providers
             }
         }
 
-        /// <summary>Busca a lista de modelos (GET, sem custo). No OpenRouter, também guarda o preço de cada um.</summary>
+        /// <summary>Fetches the model list (GET, free). On OpenRouter, also stores each model's price.</summary>
         internal static bool FetchModels(ProviderDef provider, bool quick = false)
         {
             if (provider.Local)
@@ -175,7 +175,7 @@ namespace CurrencyMod.Diplomacia.Llm.Providers
                     }
                     if (provider.Id == "openrouter")
                     {
-                        // Só modelos que aceitam json e cabem no nosso uso (sem imagem, sem lote).
+                        // Only models that accept json and fit our use (no image, no batch).
                         var parameters = item["supported_parameters"] as JArray;
                         if (parameters == null || !parameters.Any(p => (string)p == "response_format") || id.EndsWith(":batch"))
                         {
@@ -199,7 +199,7 @@ namespace CurrencyMod.Diplomacia.Llm.Providers
             }
             catch (Exception ex)
             {
-                Plugin.Log.LogInfo($"[IA] Lista de modelos de {provider.Name} indisponível: {ex.GetType().Name}");
+                Plugin.Log.LogInfo($"[IA] Model list of {provider.Name} unavailable: {ex.GetType().Name}");
                 return false;
             }
         }

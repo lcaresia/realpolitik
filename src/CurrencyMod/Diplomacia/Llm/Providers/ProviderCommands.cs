@@ -6,14 +6,14 @@ using System.Threading;
 namespace CurrencyMod.Diplomacia.Llm.Providers
 {
     /// <summary>
-    /// Comandos de teste ("ia provedor ..."). Nunca recebem chave: o canal de comandos grava tudo no result.txt.
-    ///   ia provedor                      lista provedores, fila, estado e modelo
-    ///   ia provedor ordem a,b            muda a fila (vazio = padrão)
-    ///   ia provedor modelo id nome       muda o modelo de um provedor
-    ///   ia provedor testar id            "Testar conexão" (espera até 60 s)
-    ///   ia provedor falso id             testa com uma chave falsa na memória (mensagem de chave errada)
-    ///   ia provedor login id|cancelar    começa/cancela um login; "ia provedor login" mostra o andamento
-    ///   ia provedor tela ...             controla a tela (ver ProvidersScreen.DevCommand)
+    /// Test commands ("ia provedor ..."). They never receive a key: the command channel writes everything to result.txt.
+    ///   ia provedor                      lists providers, queue, state and model
+    ///   ia provedor ordem a,b            changes the queue (empty = default)
+    ///   ia provedor modelo id nome       changes a provider's model
+    ///   ia provedor testar id            "Test connection" (waits up to 60 s)
+    ///   ia provedor falso id             tests with a fake in-memory key (wrong key message)
+    ///   ia provedor login id|cancelar    starts/cancels a login; "ia provedor login" shows the progress
+    ///   ia provedor tela ...             drives the screen (see ProvidersScreen.DevCommand)
     /// </summary>
     internal static class ProviderCommands
     {
@@ -49,7 +49,7 @@ namespace CurrencyMod.Diplomacia.Llm.Providers
                     return $"{(result.Ok ? "ok?!" : "erro esperado")}: {result.Kind} · {ProviderTester.Explain(provider, result)} · ({result.Error})";
                 }
                 case "chave-falsa" when provider != null:
-                    // Só testes da fila: grava uma chave que o provedor recusa (nunca uma chave de verdade por aqui).
+                    // Queue tests only: saves a key the provider rejects (never a real key through here).
                     Credentials.Save(provider.Id, new Credential { Key = "teste-chave-falsa-000000000000" });
                     return $"ok: {provider.Id} com chave falsa (apague com 'ia provedor apagar {provider.Id}')";
                 case "apagar" when provider != null:
@@ -57,7 +57,7 @@ namespace CurrencyMod.Diplomacia.Llm.Providers
                     return $"ok: credencial de {provider.Id} apagada";
                 case "rota":
                 {
-                    // Uma chamada mínima pela fila inteira, como as nações fazem.
+                    // A minimal call through the whole queue, the way the nations do it.
                     var request = new ChatRequest
                     {
                         Messages = { new ChatMessage("user", "Reply exactly with this json: {\"ok\": true}") },
@@ -71,7 +71,8 @@ namespace CurrencyMod.Diplomacia.Llm.Providers
                 }
                 case "semrede" when provider != null:
                 {
-                    // Endereço que não existe (.invalid nunca resolve): o mesmo caminho de "sem internet", sem tirar a rede.
+                    // An address that does not exist (.invalid never resolves): the same path as "no internet", without
+                    // taking the network down.
                     var offline = new ProviderDef
                     {
                         Id = provider.Id, Name = provider.Name, Format = provider.Format, Login = provider.Login, AcceptsKey = provider.AcceptsKey,
@@ -83,7 +84,7 @@ namespace CurrencyMod.Diplomacia.Llm.Providers
                 }
                 case "login-teste" when provider != null:
                 {
-                    // Login sem abrir o navegador: o teste faz o papel dele com "ia provedor retorno ...".
+                    // Login without opening the browser: the test plays its part with "ia provedor retorno ...".
                     OAuthLogin.SuppressBrowser = true;
                     LoginSession session = OAuthLogin.Start(provider);
                     Thread.Sleep(1000);

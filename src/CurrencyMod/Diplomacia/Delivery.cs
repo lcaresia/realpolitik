@@ -4,8 +4,8 @@ using CurrencyMod.Diplomacia.Capture;
 namespace CurrencyMod.Diplomacia
 {
     /// <summary>
-    /// Tempo de entrega das cartas pela era de quem envia ([IA] AtrasoCartasPorEra).
-    /// Fase 1: só a era conta; a distância entra junto com a tela do correio (fase 2).
+    /// Letter delivery time by the sender's era ([IA] AtrasoCartasPorEra).
+    /// Phase 1: only the era counts; distance comes in together with the mail screen (phase 2).
     /// </summary>
     internal static class Delivery
     {
@@ -23,10 +23,10 @@ namespace CurrencyMod.Diplomacia
             return int.TryParse(value, out int turns) ? Math.Max(0, Math.Min(10, turns)) : 1;
         }
 
-        /// <summary>Como a carta viaja, pela era de quem envia (só texto de ambientação).</summary>
+        /// <summary>How the letter travels, by the sender's era (flavor text only).</summary>
         internal static string CourierName(int era)
         {
-            // Só aparece na interface (correio e aba Cartas); o dossiê usa Describe, que fica em português.
+            // Only shown in the UI (mail and Letters tab); the dossier uses Describe, which stays in Portuguese.
             if (era <= 2) return L.T("mensageiro");
             if (era <= 4) return L.T("mensageiro a cavalo");
             if (era == 5) return L.T("telégrafo");

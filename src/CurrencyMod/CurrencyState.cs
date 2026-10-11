@@ -5,18 +5,18 @@ using Newtonsoft.Json;
 
 namespace CurrencyMod
 {
-    /// <summary>Um ponto do histórico de um império, gravado a cada fim de turno.</summary>
+    /// <summary>A point in an empire's history, recorded at every end of turn.</summary>
     public class HistoryPoint
     {
         public int Turn;
         public double ExchangeValue;
         public double InflationRate;
         public double InterestRate;
-        /// <summary>Acessos a recursos estratégicos e de luxo (tipo → quantidade), só do jogador humano; null em saves antigos.</summary>
+        /// <summary>Strategic and luxury resource accesses (type → amount), human player only; null in old saves.</summary>
         public Dictionary<int, int> Resources;
     }
 
-    /// <summary>Uma compra de recursos por rota comercial num turno: o comprador paga a manutenção ao vendedor (na moeda do comprador).</summary>
+    /// <summary>A resource purchase over a trade route in one turn: the buyer pays the upkeep to the seller (in the buyer's currency).</summary>
     public class TradeFlow
     {
         public int Buyer;
@@ -26,8 +26,8 @@ namespace CurrencyMod
     }
 
     /// <summary>
-    /// Dinheiro que passou de um império para outro num turno. Paid sai do caixa de From (na moeda dele); Gain entra no de To
-    /// (na moeda dele, já convertido). Kind: ver MoneyKind.
+    /// Money that went from one empire to another in one turn. Paid leaves From's treasury (in its currency); Gain enters
+    /// To's (in its currency, already converted). Kind: see MoneyKind.
     /// </summary>
     public class MoneyFlow
     {
@@ -40,26 +40,26 @@ namespace CurrencyMod
 
     public static class MoneyKind
     {
-        /// <summary>Compra de recursos: o comprador paga na hora e o vendedor ganha uma parte, uma vez só.</summary>
+        /// <summary>Resource purchase: the buyer pays up front and the seller gets a share, only once.</summary>
         public const int Resources = 0;
-        /// <summary>Manutenção das rotas comerciais, por turno, paga pelo comprador (não vai para o vendedor).</summary>
+        /// <summary>Trade route upkeep, per turn, paid by the buyer (does not go to the seller).</summary>
         public const int Upkeep = 1;
-        /// <summary>Pedágio dos postos: por turno, do dono da rota para o dono do posto.</summary>
+        /// <summary>Post tolls: per turn, from the route owner to the post owner.</summary>
         public const int Toll = 2;
-        /// <summary>Presentes, exigências, rendição e outras transferências entre impérios.</summary>
+        /// <summary>Gifts, demands, surrender and other transfers between empires.</summary>
         public const int Other = 3;
     }
 
-    /// <summary>Fluxos comerciais ativos de um turno (só quem tem recurso comprado; o histórico é esparso).</summary>
+    /// <summary>Active trade flows of one turn (only those with purchased resources; the history is sparse).</summary>
     public class TradePoint
     {
         public int Turn;
         public List<TradeFlow> Flows = new List<TradeFlow>();
-        /// <summary>O dinheiro que mudou de mãos entre impérios neste turno (esparso).</summary>
+        /// <summary>The money that changed hands between empires this turn (sparse).</summary>
         public List<MoneyFlow> Money = new List<MoneyFlow>();
     }
 
-    /// <summary>Estado monetário de um império. Taxas são por turno (0.01 = 1%).</summary>
+    /// <summary>Monetary state of an empire. Rates are per turn (0.01 = 1%).</summary>
     public class EmpireCurrency
     {
         public const int MaxHistory = 60;
@@ -70,15 +70,15 @@ namespace CurrencyMod
         public string Symbol;
         public bool NamedByPlayer;
 
-        /// <summary>Valor externo da moeda (1.0 = média mundial).</summary>
+        /// <summary>External value of the currency (1.0 = world average).</summary>
         public double ExchangeValue = 1.0;
         public double InflationRate;
         public double InterestRate = 0.01;
         public bool AutoInterest = true;
-        /// <summary>Índice de preços acumulado (começa em 1.0).</summary>
+        /// <summary>Cumulative price index (starts at 1.0).</summary>
         public double PriceIndex = 1.0;
 
-        // Indicadores do último turno processado (só para exibição).
+        // Indicators of the last processed turn (display only).
         public double Gdp;
         public double Stability;
         public double Strength;
@@ -86,37 +86,37 @@ namespace CurrencyMod
         public double LastIncomeEffect;
         public double LastConversionGain;
 
-        // Ciclo produção → inflação → juros (proposta-ciclo-economico.md). Só exibição e o patch de produção.
-        /// <summary>Multiplicador da produção das cidades pelos juros (crédito caro ou barato).</summary>
+        // Production → inflation → interest cycle (proposta-ciclo-economico.md). Display and the production patch only.
+        /// <summary>Multiplier on city production from the interest rate (expensive or cheap credit).</summary>
         public double CreditFactor = 1.0;
-        /// <summary>Produção efetiva por moeda nova, relativa à mediana do mundo (1 = na média).</summary>
+        /// <summary>Effective production per new currency unit, relative to the world median (1 = average).</summary>
         public double Coverage = 1.0;
-        /// <summary>Parcela da inflação-alvo vinda da cobertura (negativa = produção segurando os preços).</summary>
+        /// <summary>Share of the target inflation coming from coverage (negative = production holding prices down).</summary>
         public double CoverageInflation;
-        /// <summary>Estabilidade tirada de cada cidade no último turno pela inflação alta.</summary>
+        /// <summary>Stability taken from each city last turn by high inflation.</summary>
         public double LastStabilityPenalty;
-        /// <summary>Juros fixados por comando de teste mesmo numa nação da IA (balanceamento).</summary>
+        /// <summary>Interest rate fixed by a test command even on an AI nation (balancing).</summary>
         public bool ForcedInterest;
-        /// <summary>Produção efetiva e renda suavizadas (média móvel exponencial): a cobertura não pula com um turno ruim.</summary>
+        /// <summary>Smoothed effective production and income (exponential moving average): coverage does not jump on one bad turn.</summary>
         public double SmoothedProduction;
         public double SmoothedIncome;
-        /// <summary>Referência adaptativa de dinheiro por produção (acompanha a razão atual em ~15 turnos).</summary>
+        /// <summary>Adaptive reference of money per production (follows the current ratio over ~15 turns).</summary>
         public double DemandBaseline;
-        /// <summary>Pressão de demanda: dinheiro por produção contra a referência − 1 (positivo = dinheiro demais, falta oferta).</summary>
+        /// <summary>Demand pressure: money per production against the reference − 1 (positive = too much money, short supply).</summary>
         public double Pressure;
-        /// <summary>Estabilidade tirada de cada cidade no último turno pelo desemprego (produção cortada por crédito caro).</summary>
+        /// <summary>Stability taken from each city last turn by unemployment (production cut by expensive credit).</summary>
         public double LastUnemploymentPenalty;
-        /// <summary>Rumo da inflação no último turno (a inflação anda até ele aos poucos) e as parcelas dele, para a aba Ciclo.
-        /// A parcela da oferta × demanda é CoverageInflation; a base vem da configuração.</summary>
+        /// <summary>Inflation heading last turn (inflation moves toward it gradually) and its components, for the Cycle tab.
+        /// The supply × demand component is CoverageInflation; the base comes from the configuration.</summary>
         public double InflationTarget;
         public double InflationFromDebt;
-        /// <summary>Quanto da inflação atual veio da dívida: anda até InflationFromDebt no mesmo ritmo da inflação. É a parte
-        /// que a regra automática dos juros pesa com teto suave (EconomySimulation.DebtInRule).</summary>
+        /// <summary>How much of the current inflation came from debt: moves toward InflationFromDebt at the same pace as
+        /// inflation. It is the part the automatic interest rule weighs with a soft cap (EconomySimulation.DebtInRule).</summary>
         public double InflationRateFromDebt;
         public double InflationFromHoarding;
         public double InflationFromStability;
         public double InflationFromInterest;
-        /// <summary>Falso em saves anteriores à decomposição, até o primeiro fim de turno.</summary>
+        /// <summary>False in saves older than the breakdown, until the first end of turn.</summary>
         public bool HasInflationBreakdown;
 
         public List<HistoryPoint> History = new List<HistoryPoint>();
@@ -137,35 +137,35 @@ namespace CurrencyMod
             }
         }
 
-        /// <summary>Valor do câmbio no turno anterior, para mostrar tendência.</summary>
+        /// <summary>Exchange value on the previous turn, to show the trend.</summary>
         public double PreviousExchangeValue => History.Count >= 2 ? History[History.Count - 2].ExchangeValue : ExchangeValue;
     }
 
-    /// <summary>Estado de uma partida inteira, persistido dentro do save.</summary>
+    /// <summary>State of a whole game, persisted inside the save.</summary>
     public class CurrencyWorld
     {
         public const int CurrentVersion = 2;
 
         public int Version = CurrentVersion;
         public string GameGuid;
-        /// <summary>Último turno em que a economia global foi recalculada (evita processar duas vezes).</summary>
+        /// <summary>Last turn in which the global economy was recalculated (avoids processing twice).</summary>
         public int LastProcessedTurn = -1;
         public List<EmpireCurrency> Empires = new List<EmpireCurrency>();
 
-        // Bloqueio comercial (ver Trade/TradePolicy.cs).
+        // Trade blockade (see Trade/TradePolicy.cs).
         public List<TradeRule> TradeRules = new List<TradeRule>();
         public List<TradeIncident> TradeIncidents = new List<TradeIncident>();
         public List<TollRecord> LastTolls = new List<TollRecord>();
-        /// <summary>Preço geral de pedágio de cada dono para cada império (o preço de cada posto fica na TradeRule).</summary>
+        /// <summary>General toll price of each owner for each empire (each post's price lives in the TradeRule).</summary>
         public List<TollPrice> TollPrices = new List<TollPrice>();
-        /// <summary>Pagar ou desviar dos pedágios de cada dono, escolhido por quem paga (IA de linguagem).</summary>
+        /// <summary>Pay or detour around each owner's tolls, chosen by the payer (language AI).</summary>
         public List<TollChoice> TollChoices = new List<TollChoice>();
         public int LastTradeTurn = -1;
-        /// <summary>Histórico do comércio entre impérios (últimos MaxTradeHistory turnos), gravado no fim de cada turno.</summary>
+        /// <summary>History of trade between empires (last MaxTradeHistory turns), recorded at the end of each turn.</summary>
         public List<TradePoint> TradeHistory = new List<TradePoint>();
         public const int MaxTradeHistory = 60;
 
-        /// <summary>O ponto do turno (cria se não houver). Quem chama já tem o CurrencyManager.Lock.</summary>
+        /// <summary>The turn's point (created if missing). The caller already holds CurrencyManager.Lock.</summary>
         public TradePoint PointFor(int turn)
         {
             TradeHistory = TradeHistory ?? new List<TradePoint>();
@@ -192,7 +192,7 @@ namespace CurrencyMod
             {
                 return;
             }
-            // Duas casas bastam (o livro entra no JSON do save).
+            // Two decimals are enough (the ledger goes into the save's JSON).
             TradePoint point = PointFor(turn);
             point.Money.Add(new MoneyFlow { From = from, To = to, Paid = Math.Round(paid, 2), Gain = Math.Round(gain, 2), Kind = kind });
         }
@@ -202,7 +202,7 @@ namespace CurrencyMod
             return empireIndex >= 0 && empireIndex < Empires.Count ? Empires[empireIndex] : null;
         }
 
-        /// <summary>Quantas unidades da moeda 'to' valem 1 unidade da moeda 'from'.</summary>
+        /// <summary>How many units of currency 'to' are worth 1 unit of currency 'from'.</summary>
         public double Rate(int fromEmpire, int toEmpire)
         {
             EmpireCurrency from = Get(fromEmpire);
@@ -223,23 +223,23 @@ namespace CurrencyMod
             {
                 foreach (EmpireCurrency empire in world.Empires)
                 {
-                    // Saves da versão 1 não tinham plural nem histórico.
+                    // Version 1 saves had neither plural nor history.
                     empire.History = empire.History ?? new List<HistoryPoint>();
-                    // Símbolos que a fonte do jogo não tem viram letras.
+                    // Symbols the game's font lacks become letters.
                     empire.Symbol = (empire.Symbol ?? string.Empty).Replace("₹", "Rs").Replace("₽", "Rb").Replace("ℳ", "Mk").Replace("ƒ", "Fl");
                     if (string.IsNullOrEmpty(empire.Plural))
                     {
                         empire.Plural = CurrencyManager.GuessPlural(empire.Name);
                     }
                 }
-                // Saves anteriores ao bloqueio comercial.
+                // Saves older than the trade blockade.
                 world.TradeRules = world.TradeRules ?? new List<TradeRule>();
                 world.TradeIncidents = world.TradeIncidents ?? new List<TradeIncident>();
                 world.LastTolls = world.LastTolls ?? new List<TollRecord>();
                 world.TollPrices = world.TollPrices ?? new List<TollPrice>();
                 world.TollChoices = world.TollChoices ?? new List<TollChoice>();
                 world.TradeHistory = world.TradeHistory ?? new List<TradePoint>();
-                // Saves gravados antes do livro de dinheiro tinham só os Flows: a manutenção deles vira movimento de dinheiro.
+                // Saves written before the money ledger only had Flows: their upkeep becomes money movement.
                 foreach (TradePoint point in world.TradeHistory)
                 {
                     point.Flows = point.Flows ?? new List<TradeFlow>();
@@ -262,8 +262,8 @@ namespace CurrencyMod
     }
 
     /// <summary>
-    /// Ponto único de acesso ao estado. É lido pela UI (thread principal) e escrito
-    /// pela simulação (thread do sandbox), por isso todo acesso passa pelo lock.
+    /// Single access point to the state. It is read by the UI (main thread) and written
+    /// by the simulation (sandbox thread), so every access goes through the lock.
     /// </summary>
     public static class CurrencyManager
     {
@@ -271,7 +271,7 @@ namespace CurrencyMod
 
         private static CurrencyWorld world;
 
-        // Nome, plural e símbolo de moedas históricas, usadas pela IA e como padrão do jogador.
+        // Name, plural and symbol of historical currencies, used by the AI and as the player's default.
         private static readonly string[][] DefaultCurrencies =
         {
             new[] { "Denário", "Denários", "Dn" }, new[] { "Dracma", "Dracmas", "Dr" }, new[] { "Siclo", "Siclos", "Sc" },
@@ -282,7 +282,7 @@ namespace CurrencyMod
             new[] { "Marco", "Marcos", "Mk" }, new[] { "Sestércio", "Sestércios", "HS" }, new[] { "Áureo", "Áureos", "Au" },
         };
 
-        /// <summary>Garante que existe estado para a partida atual; recria se for outra partida.</summary>
+        /// <summary>Ensures there is state for the current game; recreates it if it is another game.</summary>
         public static CurrencyWorld Ensure(string gameGuid, int numberOfMajorEmpires)
         {
             lock (Lock)
@@ -292,7 +292,7 @@ namespace CurrencyMod
                     world = CreateDefault(gameGuid, numberOfMajorEmpires);
                     TradePolicy.Invalidate();
                     EconomySimulation.ResetEffectsLater();
-                    Plugin.Log.LogInfo($"Novo estado monetário criado para a partida {gameGuid} ({numberOfMajorEmpires} impérios).");
+                    Plugin.Log.LogInfo($"New monetary state created for game {gameGuid} ({numberOfMajorEmpires} empires).");
                 }
                 else
                 {
@@ -326,7 +326,7 @@ namespace CurrencyMod
             string lower = name.ToLowerInvariant();
             if (lower.EndsWith("al") || lower.EndsWith("el") || lower.EndsWith("ol") || lower.EndsWith("ul"))
             {
-                // Real -> Reais, Papel -> Papéis (sem acento), Sol -> Sóis (sem acento)
+                // Real -> Reais, Papel -> Papéis (without accent), Sol -> Sóis (without accent)
                 return name.Substring(0, name.Length - 1) + "is";
             }
             if (lower.EndsWith("m"))
@@ -356,7 +356,7 @@ namespace CurrencyMod
 
         private static EmpireCurrency CreateDefaultEmpire(string gameGuid, int empireIndex)
         {
-            // Determinístico por partida: o mesmo save sempre gera os mesmos nomes.
+            // Deterministic per game: the same save always generates the same names.
             int seed = StableHash(gameGuid);
             int slot = (int)(((uint)seed + (uint)(empireIndex * 7)) % (uint)DefaultCurrencies.Length);
             return new EmpireCurrency

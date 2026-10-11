@@ -11,7 +11,7 @@ using Math = System.Math;
 
 namespace CurrencyMod
 {
-    /// <summary>Janela do Banco Central, botão de moeda flutuante e bloqueio de entrada do jogo.</summary>
+    /// <summary>Central Bank window, floating coin button and blocking of game input.</summary>
     internal class CentralBankWindow : MonoBehaviour
     {
         private enum Tab { Overview, Exchange, Policy, Currency }
@@ -62,7 +62,7 @@ namespace CurrencyMod
             }
         }
 
-        /// <summary>Comandos de desenvolvimento: "open", "close", "tab 0..3".</summary>
+        /// <summary>Development commands: "open", "close", "tab 0..3".</summary>
         internal static string DevCommand(string args)
         {
             if (instance == null)
@@ -87,7 +87,7 @@ namespace CurrencyMod
             }
         }
 
-        // ---------------- Ciclo de vida ----------------
+        // ---------------- Lifecycle ----------------
 
         private void Awake()
         {
@@ -162,7 +162,7 @@ namespace CurrencyMod
             }
         }
 
-        // ---------------- Bloqueio de entrada ----------------
+        // ---------------- Input blocking ----------------
 
         private void TrySubscribeInteraction()
         {
@@ -171,7 +171,7 @@ namespace CurrencyMod
             {
                 return;
             }
-            // Mesmo grupo das janelas de debug do próprio jogo: recebe as mensagens antes da interface e do mapa.
+            // Same group as the game's own debug windows: receives messages before the UI and the map.
             interactionId = service.Subscribe("CurrencyMod.CentralBank", OnInteractionMessage, 20, 90);
             interactionSubscribed = true;
         }
@@ -180,7 +180,7 @@ namespace CurrencyMod
         {
             switch (message.ID)
             {
-                case 40: // movimento do mouse: marca como "coberto" para o jogo não reagir embaixo da janela
+                case 40: // mouse movement: mark as "covered" so the game does not react under the window
                     if (mouseOverUi)
                     {
                         message.Parameter.UInt16_3 |= 16;
@@ -188,7 +188,7 @@ namespace CurrencyMod
                     break;
                 case 16:
                 case 17:
-                case 18: // teclado
+                case 18: // keyboard
                     if (keyboardCaptured)
                     {
                         return InteractionResponse.Break;
@@ -198,7 +198,7 @@ namespace CurrencyMod
                 case 33:
                 case 34:
                 case 36:
-                case 37: // cliques e rolagem
+                case 37: // clicks and scrolling
                     if (mouseOverUi)
                     {
                         return InteractionResponse.Break;
@@ -208,7 +208,7 @@ namespace CurrencyMod
             return InteractionResponse.Continue;
         }
 
-        // ---------------- Desenho ----------------
+        // ---------------- Drawing ----------------
 
         private void OnGUI()
         {
@@ -387,7 +387,7 @@ namespace CurrencyMod
             GUILayout.Space(10);
         }
 
-        // ---------------- Aba: visão geral ----------------
+        // ---------------- Tab: overview ----------------
 
         private void DrawOverview(GameSnapshot.Data game, CurrencyWorld world, EmpireCurrency mine, int localIndex)
         {
@@ -465,7 +465,7 @@ namespace CurrencyMod
             GUILayout.EndVertical();
         }
 
-        /// <summary>Gráfico de colunas a partir de uma linha de base, com rótulos de mínimo e máximo.</summary>
+        /// <summary>Column chart from a baseline, with minimum and maximum labels.</summary>
         private static void DrawChart(List<double> values, double baseline, Color color, Func<double, string> format, float width, float height)
         {
             Rect frame = GUILayoutUtility.GetRect(width, height, Theme.ChartFrame, GUILayout.Width(width), GUILayout.Height(height));
@@ -507,7 +507,7 @@ namespace CurrencyMod
             GUI.Label(new Rect(area.xMax + 6, toY(values[values.Count - 1]) - 9, 60, 18), format(values[values.Count - 1]), Theme.Colored(Theme.LabelSmall, color));
         }
 
-        // ---------------- Aba: câmbio ----------------
+        // ---------------- Tab: exchange ----------------
 
         private void DrawExchange(GameSnapshot.Data game, CurrencyWorld world, EmpireCurrency mine, int localIndex)
         {
@@ -527,7 +527,7 @@ namespace CurrencyMod
                 .Where(e => e.EmpireIndex < game.NumberOfMajorEmpires && e.EmpireIndex < game.EmpireInfo.Length && game.EmpireInfo[e.EmpireIndex].IsAlive)
                 .OrderByDescending(e => e.ExchangeValue);
 
-            // Barra vertical visível: com 16 impérios a tabela passa dos 400 px.
+            // Visible vertical bar: with 16 empires the table goes past 400 px.
             tableScroll = GUILayout.BeginScrollView(tableScroll, false, true, GUIStyle.none, GUI.skin.verticalScrollbar, GUILayout.Height(400));
             int row = 0;
             foreach (EmpireCurrency other in rows)
@@ -551,7 +551,7 @@ namespace CurrencyMod
             GUILayout.EndScrollView();
         }
 
-        // ---------------- Aba: política monetária ----------------
+        // ---------------- Tab: monetary policy ----------------
 
         private void DrawPolicy(GameSnapshot.Data game, EmpireCurrency mine, int localIndex)
         {
@@ -572,7 +572,7 @@ namespace CurrencyMod
             GUI.enabled = true;
             if (!auto && Math.Abs(value - mine.InterestRate) > 1e-5)
             {
-                mine.InterestRate = Math.Round(value * 1000) / 1000; // passos de 0,1%
+                mine.InterestRate = Math.Round(value * 1000) / 1000; // steps of 0.1%
             }
             GUILayout.BeginHorizontal();
             GUILayout.Label(Format.Percent(min), Theme.LabelSmall);
@@ -584,7 +584,7 @@ namespace CurrencyMod
             GUILayout.EndVertical();
             GUILayout.EndHorizontal();
 
-            // Prévia do efeito, com os mesmos números da simulação.
+            // Preview of the effect, with the same numbers as the simulation.
             double stock = (float)game.EmpireInfo[localIndex].MoneyStock;
             double net = (float)game.EmpireInfo[localIndex].MoneyNet;
             double realRate = stock >= 0
@@ -610,7 +610,7 @@ namespace CurrencyMod
                 Theme.LabelDim);
         }
 
-        // ---------------- Aba: sua moeda ----------------
+        // ---------------- Tab: your currency ----------------
 
         private void SyncEditBuffers(string gameGuid, EmpireCurrency mine)
         {
@@ -700,7 +700,7 @@ namespace CurrencyMod
             GUIUtility.keyboardControl = 0;
             TextPatches.RefreshLocalCache(mine);
             SetFeedback(L.T("Moeda salva. Ela vai junto no próximo save do jogo."), false);
-            Plugin.Log.LogInfo($"Jogador nomeou a moeda: {name} / {plural} ({symbol}).");
+            Plugin.Log.LogInfo($"Player named the currency: {name} / {plural} ({symbol}).");
         }
 
         private void SetFeedback(string message, bool isError)
@@ -709,7 +709,7 @@ namespace CurrencyMod
             feedbackIsError = isError;
         }
 
-        // ---------------- Utilidades ----------------
+        // ---------------- Utilities ----------------
 
         private static bool TryGetGame(out GameSnapshot.Data game)
         {

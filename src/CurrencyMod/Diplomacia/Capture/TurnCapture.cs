@@ -14,9 +14,9 @@ using FailureFlags = Amplitude.Mercury.Simulation.FailureFlags;
 namespace CurrencyMod.Diplomacia.Capture
 {
     /// <summary>
-    /// Fotografa o mundo no começo de cada turno, na thread do jogo: postfix em SandboxState_TurnMain.Begin, que roda
-    /// logo depois do processamento de início de turno e antes de a IA nativa agir. Enquanto o postfix roda nenhuma
-    /// ordem é processada, então a leitura é consistente. Pesquisa: research\llm-dossier-api.md §1.
+    /// Snapshots the world at the start of each turn, on the game thread: postfix on SandboxState_TurnMain.Begin, which
+    /// runs right after start-of-turn processing and before the native AI acts. While the postfix runs no order is
+    /// processed, so the read is consistent. Research: research\llm-dossier-api.md §1.
     /// </summary>
     internal static class TurnCapture
     {
@@ -33,7 +33,7 @@ namespace CurrencyMod.Diplomacia.Capture
         {
             private static void Postfix()
             {
-                // Uma exceção aqui interromperia a máquina de estados do jogo: nunca deixar escapar.
+                // An exception here would break the game's state machine: never let one escape.
                 try
                 {
                     Sandbox sandbox = SandboxManager.Sandbox;
@@ -45,14 +45,14 @@ namespace CurrencyMod.Diplomacia.Capture
                 }
                 catch (Exception ex)
                 {
-                    Plugin.Log?.LogError($"[IA] Falha ao fotografar o começo do turno: {ex}");
+                    Plugin.Log?.LogError($"[IA] Failed to snapshot the start of the turn: {ex}");
                 }
             }
         }
 
         /// <summary>
-        /// Plano B, na thread principal: usado quando ainda não há foto do turno atual (o núcleo foi recarregado no
-        /// meio do turno) e pelos comandos de desenvolvimento. Funciona quase sempre; o chamador trata exceções.
+        /// Plan B, on the main thread: used when there is no snapshot of the current turn yet (the core was reloaded
+        /// mid-turn) and by the dev commands. Works almost always; the caller handles exceptions.
         /// </summary>
         internal static WorldCapture CaptureFromMainThread()
         {
@@ -60,7 +60,7 @@ namespace CurrencyMod.Diplomacia.Capture
             return sandbox == null ? null : Capture(sandbox, fromMainThread: true);
         }
 
-        /// <summary>A prévia de rendição usa RPN e uma fila estática do jogo: só na thread do jogo (foto do começo do turno).</summary>
+        /// <summary>The surrender preview uses RPN and a static game queue: only on the game thread (start-of-turn snapshot).</summary>
         [ThreadStatic]
         private static bool previewAllowed;
 
@@ -95,7 +95,7 @@ namespace CurrencyMod.Diplomacia.Capture
             }
             catch (Exception ex)
             {
-                Plugin.Log?.LogWarning($"[IA] Congresso não lido neste turno: {ex.Message}");
+                Plugin.Log?.LogWarning($"[IA] Congress not read this turn: {ex.Message}");
             }
 
             capture.Empires = new CapturedEmpire[majors];
@@ -108,7 +108,7 @@ namespace CurrencyMod.Diplomacia.Capture
                 }
             }
 
-            // O território do centro de uma cidade leva o nome dela (mesma regra da interface do jogo).
+            // A city's center territory takes the city's name (same rule as the game UI).
             foreach (CapturedEmpire empire in capture.Empires)
             {
                 if (empire == null)
@@ -132,7 +132,7 @@ namespace CurrencyMod.Diplomacia.Capture
             }
             catch (Exception ex)
             {
-                Plugin.Log?.LogWarning($"[IA] Espiões não lidos neste turno: {ex.Message}");
+                Plugin.Log?.LogWarning($"[IA] Spies not read this turn: {ex.Message}");
             }
             try
             {
@@ -140,7 +140,7 @@ namespace CurrencyMod.Diplomacia.Capture
             }
             catch (Exception ex)
             {
-                Plugin.Log?.LogWarning($"[IA] Povos independentes não lidos neste turno: {ex.Message}");
+                Plugin.Log?.LogWarning($"[IA] Independent peoples not read this turn: {ex.Message}");
             }
 
             for (int i = 0; i < majors; i++)
@@ -153,7 +153,7 @@ namespace CurrencyMod.Diplomacia.Capture
             return capture;
         }
 
-        // ---------------- Territórios ----------------
+        // ---------------- Territories ----------------
 
         private static void CaptureTerritories(World world, int majors, WorldCapture capture)
         {
@@ -173,7 +173,7 @@ namespace CurrencyMod.Diplomacia.Capture
                 {
                     capture.TerritoryNames[t] = info[t].LocalizedName;
                     int owner = info[t].EmpireIndex;
-                    capture.TerritoryOwner[t] = owner < majors ? owner : -1; // 255 = sem dono; acima dos maiores = povos independentes
+                    capture.TerritoryOwner[t] = owner < majors ? owner : -1; // 255 = no owner; above the majors = independent peoples
                 }
                 else
                 {
@@ -193,7 +193,7 @@ namespace CurrencyMod.Diplomacia.Capture
             return tile >= 0 && tile < tiles.Length ? tiles[tile].TerritoryIndex : -1;
         }
 
-        // ---------------- Império ----------------
+        // ---------------- Empire ----------------
 
         private static CapturedEmpire CaptureEmpire(MajorEmpire empire, int majors, World world)
         {
@@ -263,7 +263,7 @@ namespace CurrencyMod.Diplomacia.Capture
             }
             catch (Exception ex)
             {
-                Plugin.Log?.LogWarning($"[IA] Recursos do império {index} não lidos: {ex.Message}");
+                Plugin.Log?.LogWarning($"[IA] Resources of empire {index} not read: {ex.Message}");
             }
 
             captured.Relations = new CapturedRelation[majors];
@@ -293,7 +293,7 @@ namespace CurrencyMod.Diplomacia.Capture
                     captured.FullName = First(info.EmpireNameWithoutSymbolPerEmpireColorIndex);
                     captured.Leader = First(info.AvatarNameWithoutSymbolPerEmpireColorIndex);
                     string culture = First(info.CultureNamePerEmpireColorIndex);
-                    // A cultura com artigo vem entre parênteses no nome completo: "... (Os Chou)".
+                    // The culture with its article comes in parentheses in the full name: "... (Os Chou)".
                     int open = captured.FullName?.LastIndexOf('(') ?? -1;
                     int close = captured.FullName?.LastIndexOf(')') ?? -1;
                     captured.Culture = open >= 0 && close > open ? captured.FullName.Substring(open + 1, close - open - 1).Trim() : culture;
@@ -314,7 +314,7 @@ namespace CurrencyMod.Diplomacia.Capture
 
         private static string First(LocalizedStringParameter[] values)
         {
-            // Índice 0 = sem marcações de cor.
+            // Index 0 = no color markup.
             return values != null && values.Length > 0 ? GameAccess.Clean(values[0].StringValue) : null;
         }
 
@@ -377,9 +377,9 @@ namespace CurrencyMod.Diplomacia.Capture
         }
 
         /// <summary>
-        /// Quantas unidades de espionagem o exército tem. Espião é agente furtivo (agentes secretos e mestres espiões, da
-        /// era moderna) ou unidade terrestre furtiva (os espiões da Idade Média não têm a marca de agente). Ficam de fora os
-        /// enviados (agentes sem furtividade, visíveis) e os navios furtivos.
+        /// How many espionage units the army has. A spy is a stealthy agent (secret agents and spymasters, from the
+        /// modern era) or a stealthy land unit (Middle Ages spies lack the agent tag). Envoys (non-stealthy, visible
+        /// agents) and stealthy ships are excluded.
         /// </summary>
         internal static int SpyUnits(Army army)
         {
@@ -406,12 +406,12 @@ namespace CurrencyMod.Diplomacia.Capture
 
         private static string SafeName(string name) => string.IsNullOrWhiteSpace(name) ? null : GameAccess.Clean(name);
 
-        // ---------------- Povos independentes ----------------
+        // ---------------- Independent peoples ----------------
 
         /// <summary>
-        /// Povos independentes vivos com cidade: nome, situação, territórios e, para cada império maior que já viu um
-        /// assentamento deles, o patrocínio, o investimento e o que dá para assinar agora (pelas mesmas funções de recusa
-        /// que validam a ordem). Tratados do mesmo grupo se excluem: um escolhido trava os outros do grupo.
+        /// Living independent peoples with a city: name, status, territories and, for each major empire that has seen one
+        /// of their settlements, the patronage, the investment and what can be signed now (via the same refusal functions
+        /// that validate the order). Treaties in the same group are mutually exclusive: choosing one locks the others.
         /// </summary>
         private static void CaptureMinors(WorldCapture capture, World world, int majors)
         {
@@ -513,7 +513,7 @@ namespace CurrencyMod.Diplomacia.Capture
             }
         }
 
-        /// <summary>Motivo do jogo em português (patrocínio e tratados com povos independentes).</summary>
+        /// <summary>The game's reason in Portuguese (patronage and treaties with independent peoples).</summary>
         internal static string MinorBlock(FailureFlags flags)
         {
             string text = flags.ToString();
@@ -531,12 +531,12 @@ namespace CurrencyMod.Diplomacia.Capture
             return reasons.Count > 0 ? string.Join(", ", reasons) : text;
         }
 
-        // ---------------- Espiões ----------------
+        // ---------------- Spies ----------------
 
         /// <summary>
-        /// Cada exército com unidade agente: onde está, se está oculto do dono do território e pode agir contra ele,
-        /// a detecção ali, há quantos turnos de ser revelado e a infiltração. Também os territórios que o jogo marcou
-        /// com atividade de espiões estrangeiros (o dono recebe o aviso nativo). Base da interceptação de cartas.
+        /// Each army with an agent unit: where it is, whether it is hidden from the territory owner and can act against
+        /// them, the detection there, how many turns from being revealed, and the infiltration. Also the territories the
+        /// game flagged with foreign spy activity (the owner gets the native warning). Basis for letter interception.
         /// </summary>
         private static void CaptureSpies(WorldCapture capture, World world, int majors)
         {
@@ -630,9 +630,9 @@ namespace CurrencyMod.Diplomacia.Capture
             }
         }
 
-        // ---------------- Recursos e comércio ----------------
+        // ---------------- Resources and trade ----------------
 
-        /// <summary>Tamanho das tabelas de recursos do jogo (DepartmentOfResources.InitializeStatics).</summary>
+        /// <summary>Size of the game's resource tables (DepartmentOfResources.InitializeStatics).</summary>
         private const int ResourceSlots = 64;
 
         private static int[] ResourceAccess(MajorEmpire empire)
@@ -655,8 +655,8 @@ namespace CurrencyMod.Diplomacia.Capture
         }
 
         /// <summary>
-        /// Jazidas do mapa, compras das rotas comerciais e o que o bloqueio comercial do mod registrou: pedágios do
-        /// último fim de turno, postos com pedágio ou bloqueio e o nome da moeda de cada império.
+        /// Map deposits, trade route purchases and what the mod's trade blockade recorded: tolls from the last end of
+        /// turn, outposts with a toll or blockade and each empire's currency name.
         /// </summary>
         private static void CaptureEconomy(WorldCapture capture, World world, int majors)
         {
@@ -682,7 +682,7 @@ namespace CurrencyMod.Diplomacia.Capture
             }
             catch (Exception ex)
             {
-                Plugin.Log?.LogWarning($"[IA] Rotas comerciais não lidas: {ex.Message}");
+                Plugin.Log?.LogWarning($"[IA] Trade routes not read: {ex.Message}");
             }
 
             CurrencyWorld currency = CurrencyManager.Current;
@@ -716,7 +716,7 @@ namespace CurrencyMod.Diplomacia.Capture
                 foreach (TradeRule rule in currency.TradeRules)
                 {
                     int territory = rule.Territory;
-                    // Regra de um dono antigo do território não vale mais (mesma regra do TradePolicy.GetMode).
+                    // A rule from a former owner of the territory no longer applies (same rule as TradePolicy.GetMode).
                     if (rule.Mode == TradeMode.Free || rule.Target < 0 || rule.Target >= majors
                         || territory < 0 || territory >= capture.TerritoryOwner.Length || capture.TerritoryOwner[territory] != rule.Owner)
                     {
@@ -732,7 +732,7 @@ namespace CurrencyMod.Diplomacia.Capture
                     summary.Posts++;
                     if (!block)
                     {
-                        // Preço do pedágio (do posto, senão o geral do império, senão o padrão): menor e maior entre os postos.
+                        // Toll price (the outpost's, else the empire's general one, else the default): lowest and highest among the outposts.
                         int era = rule.Owner < capture.Empires.Length && capture.Empires[rule.Owner] != null ? capture.Empires[rule.Owner].EraIndex : 1;
                         double price = rule.Price > 0 ? rule.Price : TradePolicy.GeneralPriceOrDefault(rule.Owner, rule.Target, era);
                         summary.MinPrice = summary.MinPrice <= 0 ? price : System.Math.Min(summary.MinPrice, price);
@@ -766,7 +766,7 @@ namespace CurrencyMod.Diplomacia.Capture
             }
         }
 
-        // ---------------- Relações ----------------
+        // ---------------- Relations ----------------
 
         private static CapturedRelation CaptureRelation(DiplomaticRelation relation, int self, int other)
         {
@@ -840,12 +840,12 @@ namespace CurrencyMod.Diplomacia.Capture
             }
             catch (Exception)
             {
-                // Relação em estado estranho (império eliminado etc.): fica com o que deu para ler.
+                // Relation in an odd state (eliminated empire etc.): keep whatever could be read.
             }
             return captured;
         }
 
-        // ---------------- Rendição (research\surrender.md) ----------------
+        // ---------------- Surrender (research\surrender.md) ----------------
 
         private static CapturedSurrender CaptureSurrender(DiplomaticRelation relation, int self, int other)
         {
@@ -906,14 +906,14 @@ namespace CurrencyMod.Diplomacia.Capture
             }
             catch (Exception ex)
             {
-                Plugin.Log?.LogWarning($"[IA] Rendição E{self}-E{other} não capturada: {ex.Message}");
+                Plugin.Log?.LogWarning($"[IA] Surrender E{self}-E{other} not captured: {ex.Message}");
             }
             return result;
         }
 
         /// <summary>
-        /// Prévia exata do rascunho que o jogo criaria (DiplomaticAncillary.InitializeSurrenderProposition numa struct
-        /// local, sem tocar no pool): exigências, territórios que dá para pedir, vassalagem e o valor do ouro.
+        /// Exact preview of the draft the game would create (DiplomaticAncillary.InitializeSurrenderProposition on a local
+        /// struct, without touching the pool): demands, territories that can be requested, vassalage and the gold value.
         /// </summary>
         private static CapturedSurrenderPreview Preview(DiplomaticRelation relation, int winner, int loser)
         {
@@ -963,7 +963,7 @@ namespace CurrencyMod.Diplomacia.Capture
             {
                 preview.Territories.Add(new CapturedSurrenderTerritory { Territory = t, Ready = true, Detail = TerritoryDetail(t, p.SurrenderTerritories[t].Connectivity == SurrenderTerritoryConnectivity.OccupiedCity) });
             }
-            // Segundo anel: só entram junto com um vizinho já incluído (o jogo checa a conexão a cada inclusão).
+            // Second ring: only added alongside an already included neighbor (the game checks connectivity on each inclusion).
             foreach (int t in ready.Take(10))
             {
                 foreach (int next in Sandbox.World.Territories[t].AdjacentTerritories)
@@ -1036,7 +1036,7 @@ namespace CurrencyMod.Diplomacia.Capture
             }
         }
 
-        /// <summary>Reclamações que ainda podem virar exigência ou ser perdoadas, com o motivo do jogo quando não dá agora.</summary>
+        /// <summary>Grievances that can still become demands or be forgiven, with the game's reason when not possible right now.</summary>
         private static IEnumerable<CapturedGrievance> Grievances(BaseDiplomaticState state, DiplomaticAmbassy ambassy, int self)
         {
             var list = new List<CapturedGrievance>();
@@ -1058,7 +1058,7 @@ namespace CurrencyMod.Diplomacia.Capture
                 ref DiplomaticGrievanceInfo info = ref allocator.GetReferenceAt(pool);
                 if (info.DemandIndex >= 0 || info.Renounced || info.OverridedByDemand)
                 {
-                    continue; // já virou exigência, foi perdoada ou repete uma exigência de território
+                    continue; // already a demand, forgiven, or duplicates a territory demand
                 }
                 DiplomaticGrievanceActionFailureFlags flags = state.CheckPrerequisitesFor(DiplomaticGrievanceAction.CreateDemand, self, pool);
                 list.Add(new CapturedGrievance
@@ -1101,7 +1101,7 @@ namespace CurrencyMod.Diplomacia.Capture
             return list;
         }
 
-        /// <summary>O que a exigência entrega a quem exige (owner) e se o jogo ainda consegue entregar.</summary>
+        /// <summary>What the demand gives the demander (owner) and whether the game can still deliver it.</summary>
         private static CapturedGain Gain(DemandGainType type, ref DemandGain gain, int count, int owner, int other)
         {
             var captured = new CapturedGain { Kind = type.ToString() };
@@ -1145,12 +1145,12 @@ namespace CurrencyMod.Diplomacia.Capture
             }
             catch (Exception)
             {
-                // Ganho em estado estranho (território sumiu etc.): fica o tipo.
+                // Gain in an odd state (territory gone etc.): keep the type.
             }
             return captured;
         }
 
-        /// <summary>Motivo, em português, de uma reclamação não poder virar exigência agora.</summary>
+        /// <summary>Reason, in Portuguese, why a grievance cannot become a demand right now.</summary>
         internal static string GrievanceBlock(DiplomaticGrievanceActionFailureFlags flags)
         {
             var reasons = new List<string>();
@@ -1189,7 +1189,7 @@ namespace CurrencyMod.Diplomacia.Capture
             return types;
         }
 
-        /// <summary>Mesma regra do jogo (EmpireNameSnapshot): paz ou mais conhece; no contato parcial, só quem descobriu.</summary>
+        /// <summary>Same rule as the game (EmpireNameSnapshot): peace or better knows the name; with partial contact, only the discoverer.</summary>
         private static bool Knows(DiplomaticRelation relation, int observer)
         {
             if (relation.CurrentState >= DiplomaticStateType.Peace)
@@ -1201,7 +1201,7 @@ namespace CurrencyMod.Diplomacia.Capture
                 && partial.LeftKnowRight == (relation.LeftEmpireIndex == observer);
         }
 
-        // ---------------- O que cada nação vê ----------------
+        // ---------------- What each nation sees ----------------
 
         private static void CaptureObserverView(WorldCapture capture, int observer, int majors, World world)
         {
@@ -1209,7 +1209,7 @@ namespace CurrencyMod.Diplomacia.Capture
             MajorEmpire observerEmpire = Sandbox.MajorEmpires[observer];
             VisibilityController visibility = Sandbox.VisibilityController;
 
-            // Vizinhos: donos de territórios encostados nos meus.
+            // Neighbors: owners of territories bordering mine.
             var neighbors = new HashSet<int>();
             for (int t = 0; t < capture.TerritoryOwner.Length; t++)
             {
@@ -1241,7 +1241,7 @@ namespace CurrencyMod.Diplomacia.Capture
                     continue;
                 }
 
-                // Exércitos que estou vendo agora (furtivos só se detectados).
+                // Armies I can see right now (stealthy ones only if detected).
                 for (int a = 0; a < otherEmpire.Armies.Count; a++)
                 {
                     Army army = otherEmpire.Armies[a];
@@ -1272,7 +1272,7 @@ namespace CurrencyMod.Diplomacia.Capture
                     });
                 }
 
-                // Assentamentos em tiles que já explorei (população e cerco só se estiverem à vista).
+                // Settlements on tiles I have explored (population and siege only if in sight).
                 for (int s = 0; s < otherEmpire.Settlements.Count; s++)
                 {
                     Settlement settlement = otherEmpire.Settlements[s];

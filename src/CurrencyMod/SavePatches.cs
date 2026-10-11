@@ -11,8 +11,8 @@ using HarmonyLib;
 namespace CurrencyMod
 {
     /// <summary>
-    /// Guarda o estado monetário como um arquivo extra dentro do próprio container do save.
-    /// O jogo ignora arquivos que não conhece, então o save continua abrindo sem o mod.
+    /// Stores the monetary state as an extra file inside the save's own container.
+    /// The game ignores files it does not know, so the save still opens without the mod.
     /// </summary>
     internal static class SavePatches
     {
@@ -54,12 +54,12 @@ namespace CurrencyMod
                     {
                         stream.Write(bytes, 0, bytes.Length);
                     }
-                    Plugin.Log.LogInfo($"Estado monetário salvo em '{title}'.");
+                    Plugin.Log.LogInfo($"Monetary state saved to '{title}'.");
                 }
                 catch (Exception ex)
                 {
-                    // Nunca deixar o mod quebrar o save do jogo.
-                    Plugin.Log.LogError($"Falha ao salvar estado monetário: {ex}");
+                    // Never let the mod break the game's save.
+                    Plugin.Log.LogError($"Failed to save monetary state: {ex}");
                 }
             }
         }
@@ -89,23 +89,23 @@ namespace CurrencyMod
                     CurrencyWorld loaded = CurrencyWorld.FromJson(json);
                     if (loaded == null || loaded.GameGuid != guid)
                     {
-                        Plugin.Log.LogWarning("Estado monetário do save não corresponde à partida; usando padrão.");
+                        Plugin.Log.LogWarning("Saved monetary state does not match this game; using defaults.");
                         CurrencyManager.Replace(null);
                     }
                     else
                     {
                         CurrencyManager.Replace(loaded);
-                        Plugin.Log.LogInfo($"Estado monetário carregado ({loaded.Empires.Count} impérios).");
+                        Plugin.Log.LogInfo($"Monetary state loaded ({loaded.Empires.Count} empires).");
                     }
                 }
                 catch (FileNotFoundException)
                 {
-                    Plugin.Log.LogInfo("Save sem dados do CurrencyMod (save antigo ou de antes do mod); usando padrão.");
+                    Plugin.Log.LogInfo("Save has no CurrencyMod data (old save or from before the mod); using defaults.");
                     CurrencyManager.Replace(null);
                 }
                 catch (Exception ex)
                 {
-                    Plugin.Log.LogError($"Falha ao carregar estado monetário, usando padrão: {ex}");
+                    Plugin.Log.LogError($"Failed to load monetary state, using defaults: {ex}");
                     CurrencyManager.Replace(null);
                 }
                 CurrencyManager.Ensure(guid, Sandbox.NumberOfMajorEmpires);

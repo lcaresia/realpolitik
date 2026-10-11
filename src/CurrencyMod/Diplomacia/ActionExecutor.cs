@@ -10,7 +10,7 @@ using HarmonyLib;
 
 namespace CurrencyMod.Diplomacia
 {
-    /// <summary>Uma ação decidida pela IA de linguagem, pronta para virar ordem do jogo.</summary>
+    /// <summary>An action decided by the language-model AI, ready to become a game order.</summary>
     internal sealed class ActionIntent
     {
         public int Id;
@@ -22,15 +22,15 @@ namespace CurrencyMod.Diplomacia
         public DiplomaticAction Diplomatic;
         public int Gold;
         public int Influence;
-        /// <summary>presentear: cidades, postos e exércitos dados junto (GUIDs).</summary>
+        /// <summary>presentear: cities, outposts and armies given along with it (GUIDs).</summary>
         public List<ulong> GiftEntities = new List<ulong>();
-        /// <summary>Itens que o jogo não deixou dar (com o motivo), para o relatório.</summary>
+        /// <summary>Items the game did not allow to give (with the reason), for the report.</summary>
         public List<string> GiftProblems;
-        /// <summary>ceder_territorio: o território (destacado da cidade antes, se for anexo).</summary>
+        /// <summary>ceder_territorio: the territory (detached from the city first, if it is an attached one).</summary>
         public int Territory = -1;
-        /// <summary>ordem_exercito: objetivo (mover, atacar, defender, parar), alvo (território, cidade ou exército inimigo),
-        /// rótulo para os relatórios, prazo em turnos e a chave (GUID hex) do exército. Resume = missão salva reenviada
-        /// depois de carregar o save ou recarregar o núcleo (vale até ResumeUntil).</summary>
+        /// <summary>ordem_exercito: goal (mover, atacar, defender, parar), target (territory, city or enemy army),
+        /// label for the reports, deadline in turns and the army's key (hex GUID). Resume = saved mission re-sent
+        /// after loading the save or reloading the core (valid until ResumeUntil).</summary>
         public string ArmyGoal;
         public int TargetTerritory = -1;
         public ulong TargetCity;
@@ -40,7 +40,7 @@ namespace CurrencyMod.Diplomacia
         public string ArmyKey;
         public bool Resume;
         public int ResumeUntil;
-        /// <summary>patrocinar / tratado_povo: o povo independente, o tratado (MinorTreaty) e os investimentos (null = manter).</summary>
+        /// <summary>patrocinar / tratado_povo: the independent people, the treaty (MinorTreaty) and the investments (null = keep).</summary>
         public int Minor = -1;
         public int MinorTreatyIndex = -1;
         public string MoneyInvestment;
@@ -48,16 +48,16 @@ namespace CurrencyMod.Diplomacia
         public ulong Entity;
         public string NewName;
         public string Summary;
-        /// <summary>exigir / perdoar_queixas: o que fazer com as reclamações listadas (ou com todas).</summary>
+        /// <summary>exigir / perdoar_queixas: what to do with the listed grievances (or with all of them).</summary>
         public DiplomaticGrievanceAction GrievanceAction;
         public List<GrievanceRef> Grievances = new List<GrievanceRef>();
         public bool AllGrievances;
-        /// <summary>oferecer_rendicao / impor_rendicao: territórios pedidos (ou cedidos) e vassalagem; o resto vira ouro.</summary>
+        /// <summary>oferecer_rendicao / impor_rendicao: territories demanded (or ceded) and vassalage; the rest becomes gold.</summary>
         public List<int> SurrenderTerritories = new List<int>();
         public bool SurrenderSubmission;
-        /// <summary>Congresso (CongressFlow): lei proposta (nome da definição do cívico); votação de lei (LawVote) ou de crise
-        /// (CrisisVote = índice do pool); escolha (lei: 0 = A, 1 = B; crise: a nação apoiada; -1 = abster); suborno (alvo e
-        /// vezes); eixo do consenso.</summary>
+        /// <summary>Congress (CongressFlow): proposed law (civic definition name); law vote (LawVote) or crisis vote
+        /// (CrisisVote = pool index); choice (law: 0 = A, 1 = B; crisis: the supported nation; -1 = abstain); bribe (target and
+        /// times); consensus axis.</summary>
         public string CivicName;
         public bool LawVote = true;
         public int CrisisVote = -1;
@@ -67,7 +67,7 @@ namespace CurrencyMod.Diplomacia
         public int ConsensusAxis = -1;
     }
 
-    /// <summary>O que o jogo fez com a ação (volta para a memória da nação).</summary>
+    /// <summary>What the game did with the action (goes back into the nation's memory).</summary>
     internal sealed class ActionOutcome
     {
         public int Id;
@@ -77,10 +77,10 @@ namespace CurrencyMod.Diplomacia
     }
 
     /// <summary>
-    /// Executa as ações da IA de linguagem como ordens do próprio jogo (design §7 e §11.0;
-    /// research\order-catalog.md §4). A thread principal enfileira; a bomba roda na thread do sandbox, num prefix do
-    /// PostOrderController.Update (o laço que posta as ordens): só no turno principal, confere antes com as funções
-    /// de recusa do jogo, posta com PostAndTrackOrder e devolve o resultado pela fila de saída.
+    /// Executes the language-model AI's actions as the game's own orders (design §7 and §11.0;
+    /// research\order-catalog.md §4). The main thread enqueues; the pump runs on the sandbox thread, in a prefix of
+    /// PostOrderController.Update (the loop that posts orders): only during the main turn, it checks first with the
+    /// game's refusal functions, posts with PostAndTrackOrder and returns the result through the outgoing queue.
     /// </summary>
     internal static class ActionExecutor
     {
@@ -92,28 +92,28 @@ namespace CurrencyMod.Diplomacia
         {
             private static void Prefix()
             {
-                // Uma exceção aqui pararia o laço de ordens do jogo: nunca deixar escapar.
+                // An exception here would stop the game's order loop: never let one escape.
                 try
                 {
                     Pump();
                 }
                 catch (Exception ex)
                 {
-                    Plugin.Log?.LogError($"[IA] Executor de ações: {ex}");
+                    Plugin.Log?.LogError($"[IA] Action executor: {ex}");
                 }
             }
         }
 
         private static void Pump()
         {
-            // Missões de exército andam a cada volta (chegada, repostagem no turno novo), com ou sem ação nova na fila.
+            // Army missions advance on every pass (arrival, re-posting on a new turn), with or without a new queued action.
             try
             {
                 ArmyOrders.Tick();
             }
             catch (Exception ex)
             {
-                Plugin.Log?.LogError($"[IA] Ordens a exércitos: {ex}");
+                Plugin.Log?.LogError($"[IA] Army orders: {ex}");
             }
             try
             {
@@ -121,16 +121,16 @@ namespace CurrencyMod.Diplomacia
             }
             catch (Exception ex)
             {
-                Plugin.Log?.LogError($"[IA] Rascunhos de rendição: {ex}");
+                Plugin.Log?.LogError($"[IA] Surrender drafts: {ex}");
             }
             try
             {
-                // Prévia de desvio do pedágio (janela do posto e aba Comércio): cálculo de caminho do jogo, nesta thread.
+                // Toll detour preview (outpost window and Trade tab): the game's pathfinding, on this thread.
                 TollPreview.Pump();
             }
             catch (Exception ex)
             {
-                Plugin.Log?.LogError($"Prévia de desvio: {ex}");
+                Plugin.Log?.LogError($"Detour preview: {ex}");
             }
             if (Pending.IsEmpty)
             {
@@ -139,14 +139,14 @@ namespace CurrencyMod.Diplomacia
             Sandbox sandbox = SandboxManager.Sandbox;
             if (sandbox == null || sandbox.IsSessionOnline || sandbox.CurrentStateName != "SandboxState_TurnMain")
             {
-                return; // fora do turno principal as ordens esperam na fila
+                return; // outside the main turn, orders wait in the queue
             }
             string guid = sandbox.GUID.ToString();
             for (int budget = Pending.Count; budget > 0 && Pending.TryDequeue(out ActionIntent intent); budget--)
             {
                 if (intent.Guid != guid)
                 {
-                    continue; // de outra partida
+                    continue; // from another game
                 }
                 try
                 {
@@ -230,7 +230,7 @@ namespace CurrencyMod.Diplomacia
             }
         }
 
-        // ---------------- Presente (três ordens em cadeia) ----------------
+        // ---------------- Gift (three chained orders) ----------------
 
         private static void StartGift(ActionIntent intent, MajorEmpire empire)
         {
@@ -240,10 +240,10 @@ namespace CurrencyMod.Diplomacia
                 Report(intent, false, "o jogo não permite presente agora: " + Explain(flags));
                 return;
             }
-            // Nunca mais do que a nação tem.
+            // Never more than the nation has.
             intent.Gold = Math.Max(0, Math.Min(intent.Gold, (int)(float)empire.MoneyStock.Value));
             intent.Influence = Math.Max(0, Math.Min(intent.Influence, (int)(float)empire.InfluenceStock.Value));
-            // Cidades, postos e exércitos: o jogo diz o que não pode (capital, cercada, tomada de outro, mercenário).
+            // Cities, outposts and armies: the game says what is not allowed (capital, besieged, taken from another, mercenary).
             var problems = new List<string>();
             var entities = new List<ulong>();
             foreach (ulong guid in intent.GiftEntities)
@@ -277,7 +277,7 @@ namespace CurrencyMod.Diplomacia
                 Report(intent, false, "o jogo não abriu a proposta de presente");
                 return;
             }
-            // As ordens são processadas na ordem em que são postadas: valores e itens primeiro, proposta por último.
+            // Orders are processed in the order they are posted: amounts and items first, the proposal last.
             if (intent.Gold > 0)
             {
                 SandboxManager.PostAndTrackOrder(new OrderUpdateGiftFimsInfo { GiftPropositionIndex = proposition, Currency = GiftFimsInfo.CurrencyTypes.Money, Amount = (FixedPoint)(float)intent.Gold }, intent.Empire);
@@ -303,12 +303,12 @@ namespace CurrencyMod.Diplomacia
                 failed => SandboxManager.PostAndTrackOrder(new OrderDiplomaticAction { OtherEmpireIndex = failed.Other, DiplomaticAction = DiplomaticAction.CancelGiftProposition }, failed.Empire));
         }
 
-        // ---------------- Ceder território ----------------
+        // ---------------- Cede territory ----------------
 
         /// <summary>
-        /// Cessão de um território: se é o central de um posto ou de uma cidade, vai o assentamento inteiro de presente;
-        /// se é anexo de uma cidade, primeiro ele é destacado (vira posto, OrderDetachTerritoryFromCity) e então o posto
-        /// novo vai de presente. A outra nação aceita ou recusa como qualquer presente.
+        /// Ceding a territory: if it is the core territory of an outpost or city, the whole settlement is gifted;
+        /// if it is attached to a city, it is first detached (becomes an outpost, OrderDetachTerritoryFromCity) and then
+        /// the new outpost is gifted. The other nation accepts or refuses like any gift.
         /// </summary>
         private static void CedeTerritory(ActionIntent intent, MajorEmpire empire)
         {
@@ -332,7 +332,7 @@ namespace CurrencyMod.Diplomacia
             int center = Sandbox.World.TileInfo.Data[owner.WorldPosition.ToTileIndex()].TerritoryIndex;
             if (center == t || owner.SettlementStatus != SettlementStatuses.City)
             {
-                // Território central: o assentamento inteiro.
+                // Core territory: the whole settlement.
                 intent.GiftEntities = new List<ulong> { (ulong)owner.GUID };
                 StartGift(intent, empire);
                 return;
@@ -346,7 +346,7 @@ namespace CurrencyMod.Diplomacia
             }
             Post(new OrderDetachTerritoryFromCity { CityGUID = owner.GUID, TerritoryToDetach = t }, intent, null, detached =>
             {
-                // O território virou posto: acha o assentamento novo e oferece.
+                // The territory became an outpost: find the new settlement and offer it.
                 Settlement camp = null;
                 for (int s = 0; s < empire.Settlements.Count; s++)
                 {
@@ -368,11 +368,11 @@ namespace CurrencyMod.Diplomacia
             });
         }
 
-        // ---------------- Povos independentes ----------------
+        // ---------------- Independent peoples ----------------
 
         /// <summary>
-        /// Investimento por turno num povo independente (dinheiro e influência). Sem contato aberto, assina o contato
-        /// antes, como a IA nativa faz. A escolha fica guardada para a IA nativa não desfazer (NativeAiLocks).
+        /// Per-turn investment in an independent people (money and influence). Without an open contact, signs the contact
+        /// first, as the native AI does. The choice is stored so the native AI does not undo it (NativeAiLocks).
         /// </summary>
         private static void Patronize(ActionIntent intent, MajorEmpire empire)
         {
@@ -521,12 +521,12 @@ namespace CurrencyMod.Diplomacia
             return reasons.Count > 0 ? string.Join(", ", reasons) : flags;
         }
 
-        // ---------------- Reclamações: exigir ou perdoar ----------------
+        // ---------------- Grievances: demand or forgive ----------------
 
         /// <summary>
-        /// Uma OrderExecuteGrievanceAction por reclamação (o índice é o do GrievanceAllocator, o mesmo do código G), ou a
-        /// versão em lote para "todas". O jogo reaproveita índices, então cada reclamação é conferida de novo (dona,
-        /// alvo e tipo) antes de postar.
+        /// One OrderExecuteGrievanceAction per grievance (the index is the GrievanceAllocator's, the same as the G code), or
+        /// the batch version for "all". The game reuses indices, so each grievance is checked again (owner, target and
+        /// type) before posting.
         /// </summary>
         private static void ExecuteGrievances(ActionIntent intent, MajorEmpire empire)
         {
@@ -586,7 +586,7 @@ namespace CurrencyMod.Diplomacia
             PostAll(orders, intent, verb, problems);
         }
 
-        /// <summary>Várias ordens de uma ação só: um resultado quando todas voltarem (os tickets fecham na thread do sandbox).</summary>
+        /// <summary>Several orders from a single action: one result when all of them come back (tickets close on the sandbox thread).</summary>
         private static void PostAll(List<Order> orders, ActionIntent intent, string verb, List<string> problems)
         {
             int remaining = orders.Count;
@@ -613,7 +613,7 @@ namespace CurrencyMod.Diplomacia
             }
         }
 
-        // ---------------- Postagem e resultado ----------------
+        // ---------------- Posting and result ----------------
 
         internal static void Post(Order order, ActionIntent intent, string success, Action<ActionIntent> next = null, Action<ActionIntent> onFailure = null)
         {
@@ -643,13 +643,13 @@ namespace CurrencyMod.Diplomacia
             Outcomes.Enqueue(new ActionOutcome { Id = intent.Id, Empire = intent.Empire, Ok = ok, Detail = detail });
         }
 
-        /// <summary>Resultado vindo de fora do executor (missões de exército, que relatam várias vezes).</summary>
+        /// <summary>Result coming from outside the executor (army missions, which report several times).</summary>
         internal static void ReportOutcome(int id, int empire, bool ok, string detail)
         {
             Outcomes.Enqueue(new ActionOutcome { Id = id, Empire = empire, Ok = ok, Detail = detail });
         }
 
-        /// <summary>Motivos da recusa em português, para a IA entender no próximo dossiê.</summary>
+        /// <summary>Refusal reasons in Portuguese, for the AI to understand in the next dossier.</summary>
         internal static string Explain(DiplomaticActionFailureFlags flags)
         {
             var reasons = new List<string>();

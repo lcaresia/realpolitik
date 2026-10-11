@@ -9,7 +9,7 @@ using System.Threading;
 
 namespace CurrencyMod.Diplomacia.Viewer
 {
-    /// <summary>Pedido vindo do navegador (formulário de debug), tratado na thread principal.</summary>
+    /// <summary>Request coming from the browser (debug form), handled on the main thread.</summary>
     internal sealed class ViewerRequest
     {
         public string Kind;
@@ -17,9 +17,9 @@ namespace CurrencyMod.Diplomacia.Viewer
     }
 
     /// <summary>
-    /// Servidor HTTP mínimo só para esta máquina (127.0.0.1), para o visualizador de debug (F10).
-    /// TcpListener em vez de HttpListener: não depende de nada do sistema e funciona igual no Mono da Unity.
-    /// A thread do servidor só lê textos prontos (trocados de forma atômica pela thread principal).
+    /// Minimal HTTP server for this machine only (127.0.0.1), for the debug viewer (F10).
+    /// TcpListener instead of HttpListener: it depends on nothing from the system and works the same on Unity's Mono.
+    /// The server thread only reads ready-made texts (swapped atomically by the main thread).
     /// </summary>
     internal sealed class ViewerServer
     {
@@ -133,7 +133,7 @@ namespace CurrencyMod.Diplomacia.Viewer
                     {
                         return;
                     }
-                    // Só atende quem chamou por localhost (bloqueia DNS rebinding) e, em POST, a própria página.
+                    // Only serves callers that used localhost (blocks DNS rebinding) and, for POST, the page itself.
                     if (!IsLocalHost(host))
                     {
                         Write(stream, 403, "text/plain", "forbidden");
@@ -148,7 +148,7 @@ namespace CurrencyMod.Diplomacia.Viewer
                 }
                 catch (Exception)
                 {
-                    // Navegador fechou a conexão no meio: ignora.
+                    // Browser closed the connection midway: ignore.
                 }
             }
         }
@@ -208,7 +208,7 @@ namespace CurrencyMod.Diplomacia.Viewer
             method = path = host = origin = requestToken = body = null;
             var headerBytes = new MemoryStream();
             int matched = 0;
-            // Lê até o fim dos cabeçalhos (\r\n\r\n), com limite de tamanho.
+            // Reads up to the end of the headers (\r\n\r\n), with a size limit.
             while (headerBytes.Length < 32 * 1024)
             {
                 int b = stream.ReadByte();

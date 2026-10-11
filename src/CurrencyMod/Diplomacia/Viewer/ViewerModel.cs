@@ -6,7 +6,7 @@ using Newtonsoft.Json.Linq;
 
 namespace CurrencyMod.Diplomacia.Viewer
 {
-    /// <summary>Monta os jsons que o visualizador lê (na thread principal, a partir do estado da IA).</summary>
+    /// <summary>Builds the JSON files the viewer reads (on the main thread, from the AI state).</summary>
     internal static class ViewerModel
     {
         private static int version;

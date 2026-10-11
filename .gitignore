@@ -72,3 +72,6 @@ media/retratos/pessoais-teste/
 
 # Ferramentas locais
 .serena/
+
+# Code maps (graphify): regenerable; the game map derives from decompiled SEGA/Amplitude code
+mapa/

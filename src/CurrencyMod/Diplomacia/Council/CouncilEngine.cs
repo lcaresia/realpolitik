@@ -8,7 +8,7 @@ using Newtonsoft.Json.Linq;
 
 namespace CurrencyMod.Diplomacia.Council
 {
-    /// <summary>Um ministro de uma nação: quem é (do banco), a pasta, os números e a última opinião.</summary>
+    /// <summary>A nation's minister: who they are (from the bank), the portfolio, the numbers and the latest opinion.</summary>
     internal sealed class Minister
     {
         public string Portfolio;
@@ -17,56 +17,57 @@ namespace CurrencyMod.Diplomacia.Council
         public string Gender;
         public List<string> Traits = new List<string>();
         public string Voice;
-        /// <summary>0 a 100: sobe e desce com os números da pasta.</summary>
+        /// <summary>0 to 100: goes up and down with the portfolio's numbers.</summary>
         public int Credibility = 50;
-        /// <summary>-100 a 100: o quanto o líder gosta dele (segue ou ignora os conselhos).</summary>
+        /// <summary>-100 to 100: how much the leader likes them (follows or ignores the advice).</summary>
         public int Affection;
         public int Loyalty = 60;
         public int Ambition = 40;
         public int Since;
-        /// <summary>Simpatia (+) ou antipatia (-) por outras nações, de -50 a 50.</summary>
+        /// <summary>Sympathy (+) or antipathy (-) toward other nations, from -50 to 50.</summary>
         public Dictionary<int, int> Sympathies = new Dictionary<int, int>();
         public string Opinion;
-        /// <summary>A mesma opinião no idioma da interface (só para a tela; o dossiê usa Opinion, sempre em português).</summary>
+        /// <summary>The same opinion in the UI language (screen only; the dossier uses Opinion, always in Portuguese).</summary>
         public string OpinionUi;
-        /// <summary>O conselho em forma de etiqueta, para saber se o líder seguiu: "paz:E3", "foco:ciencia", "economizar"…</summary>
+        /// <summary>The advice as a tag, to know whether the leader followed it: "paz:E3", "foco:ciencia", "economizar"…</summary>
         public string Advice;
         public double Urgency;
         public int OpinionTurn = -1;
-        /// <summary>Valor da métrica da pasta na última atualização (para a credibilidade).</summary>
+        /// <summary>Portfolio metric value at the last update (for credibility).</summary>
         public double LastMetric = double.NaN;
 
         internal bool Has(string trait) => Traits.Any(t => CouncilBank.TraitKey(t) == trait);
     }
 
     /// <summary>
-    /// Conselhos de ministros das nações da IA (design §10). Tudo por regras, sem chamada à IA: a cada turno cada
-    /// ministro lê os números da própria pasta (só o que a nação sabe), ganha ou perde credibilidade e dá um conselho
-    /// curto, puxado pelos traços dele e pelas simpatias por outras nações. A Mão resume a pauta. O dossiê do líder
-    /// traz as opiniões em ordem de peso (credibilidade × afeição do líder × urgência), e o líder pode demitir.
+    /// Councils of ministers of the AI nations (design §10). All rule-based, no AI call: every turn each minister reads
+    /// their own portfolio's numbers (only what the nation knows), gains or loses credibility and gives short advice,
+    /// shaped by their traits and their sympathies toward other nations. The Hand summarizes the agenda. The leader's
+    /// dossier lists the opinions by weight (credibility × leader's affection × urgency), and the leader can fire.
     /// </summary>
     internal static class CouncilEngine
     {
         private static readonly CultureInfo PtBr = CultureInfo.GetCultureInfo("pt-BR");
 
-        // ---------------- Formação ----------------
+        // ---------------- Formation ----------------
 
-        // Modelo de 2026-10-10 (melhorias-jogando item 3): o conselho começa só com a Mão; cada pasta vaga tem 3 candidatos
-        // (os mesmos até a era mudar ou alguém ser nomeado) e nomear custa influência, uma vez. Demitir abre a vaga.
+        // Model from 2026-10-10 (melhorias-jogando item 3): the council starts with only the Hand; each vacant portfolio
+        // has 3 candidates (the same until the era changes or someone is appointed) and appointing costs influence, once.
+        // Firing opens the seat.
 
-        /// <summary>Candidatos por pasta vaga.</summary>
+        /// <summary>Candidates per vacant portfolio.</summary>
         internal const int CandidatesPerSeat = 3;
 
-        /// <summary>Influência para nomear um ministro na era (0 = Neolítica): 25, 50 na Antiga… 175 na Contemporânea.</summary>
+        /// <summary>Influence to appoint a minister in the era (0 = Neolithic): 25, 50 in the Ancient… 175 in the Contemporary.</summary>
         internal static int AppointCost(int era) => 25 * (Math.Max(0, era) + 1);
 
-        /// <summary>Bônus de veterano, em %, na área da pasta: +1% a cada 5 turnos no cargo, até +10%. A Mão não tem.</summary>
+        /// <summary>Veteran bonus, in %, in the portfolio's area: +1% every 5 turns in office, up to +10%. The Hand has none.</summary>
         internal static int VeteranBonus(Minister minister, int turn) =>
             minister == null || minister.Portfolio == "mao" ? 0 : Math.Max(0, Math.Min(10, (turn - minister.Since) / 5));
 
         /// <summary>
-        /// A Mão sempre presente e os candidatos de cada pasta vaga em dia. Save antigo (12 cadeiras): o conselho volta a ter
-        /// só a Mão, uma vez.
+        /// The Hand always present and the candidates of each vacant portfolio up to date. Old save (12 seats): the council
+        /// goes back to only the Hand, once.
         /// </summary>
         internal static void Ensure(IaWorld world, IaNation nation, WorldCapture capture, int turn)
         {
@@ -116,15 +117,15 @@ namespace CurrencyMod.Diplomacia.Council
                     picks.Add(person.Id);
                 }
                 nation.CouncilCandidates[portfolio] = picks;
-                // Sorteio novo vai para o save já (senão um save/load ou a recarga do núcleo sorteia outros).
+                // A new draw goes into the save right away (otherwise a save/load or a core reload draws others).
                 IaModule.Instance?.MarkDirty();
             }
             nation.Council.Sort((a, b) => Array.IndexOf(CouncilBank.Portfolios, a.Portfolio).CompareTo(Array.IndexOf(CouncilBank.Portfolios, b.Portfolio)));
         }
 
         /// <summary>
-        /// Nomeia um dos candidatos da pasta (o custo em influência é cobrado por quem chama). Devolve null e o motivo em
-        /// <paramref name="problem"/> quando não dá.
+        /// Appoints one of the portfolio's candidates (the influence cost is charged by the caller). Returns null and the
+        /// reason in <paramref name="problem"/> when it cannot.
         /// </summary>
         internal static Minister Appoint(IaWorld world, IaNation nation, WorldCapture capture, string portfolio, string personalityId, int turn, out string problem)
         {
@@ -151,7 +152,7 @@ namespace CurrencyMod.Diplomacia.Council
                 problem = "candidato não existe mais no banco";
                 return null;
             }
-            // O banco é pequeno: a mesma pessoa pode ser candidata em duas nações. Quem já serve a outra sai da lista.
+            // The bank is small: the same person may be a candidate in two nations. Whoever already serves another leaves the list.
             if (world.Nations.Any(n => n != nation && n.Council.Any(m => m.PersonalityId == personalityId)))
             {
                 candidates.Remove(personalityId);
@@ -165,7 +166,7 @@ namespace CurrencyMod.Diplomacia.Council
             return minister;
         }
 
-        /// <summary>Alguém do banco que não serve a nenhuma nação, não foi demitido por esta e não está em <paramref name="taken"/>.</summary>
+        /// <summary>Someone from the bank who serves no nation, was not fired by this one and is not in <paramref name="taken"/>.</summary>
         private static Personality Pick(IaWorld world, IaNation nation, string portfolio, int salt, int attempt, HashSet<string> taken)
         {
             var used = new HashSet<string>(world.Nations.SelectMany(n => n.Council).Select(m => m.PersonalityId));
@@ -202,7 +203,7 @@ namespace CurrencyMod.Diplomacia.Council
             };
             if (minister.Has("leal")) minister.Loyalty = Math.Min(100, minister.Loyalty + 15);
             if (minister.Has("ambicioso")) minister.Ambition = Math.Min(100, minister.Ambition + 25);
-            // Uma ou duas nações conhecidas por quem tem simpatia ou antipatia.
+            // One or two known nations toward which they feel sympathy or antipathy.
             List<int> known = capture?.AliveEmpires().Where(e => e != nation.EmpireIndex && (capture.Empire(nation.EmpireIndex)?.RelationWith(e)?.Knows ?? false)).ToList() ?? new List<int>();
             for (int i = 0; i < Math.Min(2, known.Count); i++)
             {
@@ -215,8 +216,8 @@ namespace CurrencyMod.Diplomacia.Council
         }
 
         /// <summary>
-        /// Demite: a pasta fica vaga, com candidatos novos (a Mão não sai: é trocada na hora por outra pessoa do banco).
-        /// Devolve a descrição, ou null se a pasta não tem ministro.
+        /// Fires: the portfolio becomes vacant, with new candidates (the Hand does not leave: it is replaced right away by
+        /// another person from the bank). Returns the description, or null if the portfolio has no minister.
         /// </summary>
         internal static string Fire(IaWorld world, IaNation nation, WorldCapture capture, string portfolio, int turn)
         {
@@ -230,7 +231,7 @@ namespace CurrencyMod.Diplomacia.Council
             nation.CouncilCandidates?.Remove(portfolio);
             Ensure(world, nation, capture, turn);
             Minister newHand = portfolio == "mao" ? nation.Council.FirstOrDefault(m => m.Portfolio == "mao") : null;
-            // O resto do conselho sente o golpe: quem é leal teme, quem é ambicioso vê espaço.
+            // The rest of the council feels the blow: the loyal ones fear, the ambitious ones see room.
             foreach (Minister other in nation.Council.Where(m => m != newHand))
             {
                 if (other.Has("ambicioso")) other.Ambition = Math.Min(100, other.Ambition + 5);
@@ -242,9 +243,9 @@ namespace CurrencyMod.Diplomacia.Council
                 : $"{Title(old, era)} {old.Name} demitido; a pasta fica vaga até você nomear alguém";
         }
 
-        // ---------------- Turno ----------------
+        // ---------------- Turn ----------------
 
-        /// <summary>Uma vez por turno: credibilidade pelos números da pasta e o conselho de cada um.</summary>
+        /// <summary>Once per turn: credibility from the portfolio's numbers and each one's advice.</summary>
         internal static void Update(IaWorld world, IaNation nation, WorldCapture capture, ValidationContext context, int turn)
         {
             CapturedEmpire me = capture?.Empire(nation.EmpireIndex);
@@ -275,7 +276,7 @@ namespace CurrencyMod.Diplomacia.Council
                 List<Minister> others = nation.Council.Where(m => m != hand).ToList();
                 if (newTurn && others.Count > 0)
                 {
-                    // A Mão vale o que vale o conselho que ela coordena.
+                    // The Hand is worth what the council it coordinates is worth.
                     int average = (int)Math.Round(others.Average(m => m.Credibility));
                     hand.Credibility = Clamp(hand.Credibility + Math.Sign(average - hand.Credibility), 5, 95);
                 }
@@ -293,14 +294,14 @@ namespace CurrencyMod.Diplomacia.Council
             {
                 case "financas":
                 case "agricultura":
-                    // Nível: positivo sobe, negativo cai.
+                    // Level: positive goes up, negative goes down.
                     delta = metric > 0 ? 1 : metric < 0 ? -2 : 0;
                     break;
                 case "interior":
                     delta = metric >= 60 ? 1 : metric < 40 ? -2 : 0;
                     break;
                 case "cultura":
-                    // Posição no ranking de fama: menor é melhor.
+                    // Position in the fame ranking: lower is better.
                     if (!double.IsNaN(before)) delta = metric < before ? 2 : metric > before ? -2 : 0;
                     break;
                 default:
@@ -315,7 +316,7 @@ namespace CurrencyMod.Diplomacia.Council
                     }
                     break;
             }
-            // Sem novidade, a credibilidade volta devagar para o meio.
+            // With nothing new, credibility slowly drifts back to the middle.
             if (delta == 0 && Math.Abs(minister.Credibility - 50) > 20)
             {
                 delta = minister.Credibility > 50 ? -1 : 1;
@@ -323,7 +324,7 @@ namespace CurrencyMod.Diplomacia.Council
             minister.Credibility = Clamp(minister.Credibility + delta, 5, 95);
         }
 
-        /// <summary>A métrica de cada pasta, só com o que a nação sabe de si mesma.</summary>
+        /// <summary>Each portfolio's metric, using only what the nation knows about itself.</summary>
         private static double Metric(string portfolio, IaWorld world, WorldCapture capture, CapturedEmpire me, int turn)
         {
             switch (portfolio)
@@ -344,14 +345,14 @@ namespace CurrencyMod.Diplomacia.Council
             }
         }
 
-        // ---------------- Opiniões ----------------
+        // ---------------- Opinions ----------------
 
         private static void Opine(Minister m, IaWorld world, WorldCapture capture, CapturedEmpire me, ValidationContext context, int turn)
         {
             string money = me.CurrencyName ?? "de dinheiro";
             string moneyUi = me.CurrencyName ?? L.T("de dinheiro");
             m.Advice = null;
-            // Opinion vai para o dossiê (sempre português); OpinionUi é a mesma coisa no idioma da tela.
+            // Opinion goes to the dossier (always Portuguese); OpinionUi is the same thing in the screen language.
             m.OpinionUi = null;
             switch (m.Portfolio)
             {
@@ -558,7 +559,7 @@ namespace CurrencyMod.Diplomacia.Council
                 m.Opinion = "Como sempre previ: " + Lower(m.Opinion);
                 if (m.OpinionUi != null)
                 {
-                    // Em alemão os substantivos começam com maiúscula: não baixa a primeira letra.
+                    // In German nouns start with a capital letter: do not lowercase the first letter.
                     m.OpinionUi = L.F("Como sempre previ: {0}", L.Code == "de" ? m.OpinionUi : Lower(m.OpinionUi));
                 }
             }
@@ -610,7 +611,7 @@ namespace CurrencyMod.Diplomacia.Council
                     + (bold ? L.T("Isso é provocação: temos pretexto.") : L.T("Reforce as guarnições e exija explicação por carta."));
                 return;
             }
-            // Inimigo jurado por antipatia do próprio ministro, ou postura do líder.
+            // Sworn enemy from the minister's own antipathy, or the leader's posture.
             KeyValuePair<int, int> hated = m.Sympathies.Where(p => p.Value <= -20 && context.KnownEmpires.ContainsValue(p.Key)).OrderBy(p => p.Value).FirstOrDefault();
             if (bold && hated.Value < 0)
             {
@@ -655,7 +656,7 @@ namespace CurrencyMod.Diplomacia.Council
                 m.OpinionUi = L.F("Há proposta formal de {0} esperando você.", Who(capture, proposer)) + " " + (accept ? L.T("Aceite: vale mais um amigo na fronteira.") : L.T("Desconfio da pressa deles: deixe esperar."));
                 return;
             }
-            // Sem urgência: puxar para quem o ministro simpatiza, se ainda não houver acordo.
+            // No urgency: lean toward whoever the minister likes, if there is no agreement yet.
             KeyValuePair<int, int> friend = m.Sympathies.Where(p => p.Value >= 20 && context.KnownEmpires.ContainsValue(p.Key) && !context.AtWar.Contains(p.Key)).OrderByDescending(p => p.Value).FirstOrDefault();
             if (friend.Value > 0)
             {
@@ -682,10 +683,10 @@ namespace CurrencyMod.Diplomacia.Council
             for (int i = 0; i < agenda.Count; i++)
             {
                 parts.Add($"{i + 1}) {CouncilBank.PortfolioNames[agenda[i].Portfolio]}: {Shorten(agenda[i].Opinion, 18)}");
-                // Nomes das pastas marcados com L.N no CouncilBank.
+                // Portfolio names marked with L.N in CouncilBank.
                 partsUi.Add($"{i + 1}) {L.T(CouncilBank.PortfolioNames[agenda[i].Portfolio])}: {Shorten(agenda[i].OpinionUi ?? agenda[i].Opinion, 18)}");
             }
-            // Prazos de ultimato que vencem agora.
+            // Ultimatum deadlines that expire now.
             Letter due = world.Letters.Where(l => l.Type == "ultimato" && (l.From == me.Index || (l.To == me.Index && l.Arrived(turn)))
                 && l.SentTurn + l.DeadlineTurns <= turn && l.SentTurn + l.DeadlineTurns >= turn - 1).OrderByDescending(l => l.Id).FirstOrDefault();
             string deadline = due == null ? string.Empty
@@ -697,10 +698,11 @@ namespace CurrencyMod.Diplomacia.Council
             hand.OpinionUi = (partsUi.Count > 0 ? L.F("Pauta de hoje: {0}", string.Join(" ", partsUi)) : L.T("Nada urgente na pauta.")) + deadlineUi;
         }
 
-        // ---------------- Reação às decisões do líder ----------------
+        // ---------------- Reaction to the leader's decisions ----------------
 
         /// <summary>
-        /// Depois da decisão do turno: quem viu o conselho seguido ganha afeição do líder; quem viu o contrário perde.
+        /// After the turn's decision: whoever saw their advice followed gains the leader's affection; whoever saw the
+        /// opposite loses it.
         /// </summary>
         internal static void React(IaNation nation, IEnumerable<ActionDraft> actions, int turn)
         {
@@ -738,9 +740,9 @@ namespace CurrencyMod.Diplomacia.Council
         }
 
         /// <summary>
-        /// Afeição e lealdade depois do que o líder fez (etiquetas como "paz:E3", "acordo", "foco:ciencia"), contra os
-        /// conselhos dados no turno <paramref name="turn"/>. No conselho do jogador, a afeição é o apreço do ministro pelo
-        /// líder; o efeito é o mesmo.
+        /// Affection and loyalty after what the leader did (tags like "paz:E3", "acordo", "foco:ciencia"), against the
+        /// advice given on turn <paramref name="turn"/>. In the player's council, affection is the minister's regard for
+        /// the leader; the effect is the same.
         /// </summary>
         internal static void ApplyReaction(IaNation nation, List<string> done, int turn)
         {
@@ -785,14 +787,14 @@ namespace CurrencyMod.Diplomacia.Council
             }
         }
 
-        // ---------------- Dossiê ----------------
+        // ---------------- Dossier ----------------
 
-        /// <summary>Peso da opinião: credibilidade × afeição do líder × urgência.</summary>
+        /// <summary>Opinion weight: credibility × leader's affection × urgency.</summary>
         internal static double Weight(Minister m) => m.Credibility * (1 + m.Affection / 200.0) * (0.3 + m.Urgency);
 
         internal static string Title(Minister m, int era) => CouncilBank.Title(m.Portfolio, era, m.Gender);
 
-        /// <summary>Seção "SEU CONSELHO" do dossiê: a Mão e as opiniões que mais pesam.</summary>
+        /// <summary>The dossier's "SEU CONSELHO" section: the Hand and the weightiest opinions.</summary>
         internal static string DossierText(IaNation nation, CapturedEmpire me)
         {
             if (nation.Council.Count == 0)
@@ -813,14 +815,14 @@ namespace CurrencyMod.Diplomacia.Council
                 text.AppendLine($"- {Title(m, era)} {m.Name} ({string.Join(", ", m.Traits)} · credibilidade {m.Credibility}{affection}): {m.Opinion}");
             }
             text.AppendLine("Ministros com credibilidade baixa e sem a sua afeição pesam menos. Seguir um conselho aumenta a sua afeição por quem o deu. Demitir (demitir_ministro com a pasta) deixa a pasta vaga e zera o bônus de veterano dela.");
-            // Veteranos: o tempo no cargo rende na área da pasta (até +10%).
+            // Veterans: time in office pays off in the portfolio's area (up to +10%).
             List<string> veterans = nation.Council.Where(m => VeteranBonus(m, nation.CouncilTurn) > 0)
                 .Select(m => $"{Title(m, era)} {m.Name} +{VeteranBonus(m, nation.CouncilTurn)}%").ToList();
             if (veterans.Count > 0)
             {
                 text.AppendLine("Bônus de veterano (rende na área da pasta enquanto ele fica no cargo, +1% a cada 5 turnos até +10%): " + string.Join(", ", veterans) + ".");
             }
-            // Pastas vagas e os candidatos: nomear_ministro com a pasta e o código do candidato (custa influência).
+            // Vacant portfolios and the candidates: nomear_ministro with the portfolio and the candidate code (costs influence).
             if (nation.CouncilCandidates != null && nation.CouncilCandidates.Count > 0)
             {
                 text.AppendLine($"PASTAS VAGAS (nomear_ministro custa {AppointCost(era)} de influência; vaga não opina nem rende bônus):");
@@ -837,7 +839,7 @@ namespace CurrencyMod.Diplomacia.Council
             return text.ToString();
         }
 
-        // ---------------- Utilidades ----------------
+        // ---------------- Utilities ----------------
 
         private static string Who(WorldCapture capture, int empire)
         {
@@ -849,7 +851,7 @@ namespace CurrencyMod.Diplomacia.Council
 
         private static string Signed(double value) => (value >= 0 ? "+" : string.Empty) + N(value);
 
-        /// <summary>N e Signed na cultura da interface (só para OpinionUi).</summary>
+        /// <summary>N and Signed in the UI culture (OpinionUi only).</summary>
         private static string NUi(double value) => Math.Round(value).ToString("#,0", L.Culture);
 
         private static string SignedUi(double value) => (value >= 0 ? "+" : string.Empty) + NUi(value);

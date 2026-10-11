@@ -9,9 +9,10 @@ using Amplitude.Mercury.Simulation;
 namespace CurrencyMod.Diplomacia.Capture
 {
     /// <summary>
-    /// Congresso mundial da expansão Together We Rule (research\congress.md §2 e §7.5), lido no começo do turno. Quase
-    /// tudo é leitura simples; o que usa RPN ou arrays estáticos do jogo (desbloqueio, próxima sessão, custo do consenso)
-    /// só roda na thread do jogo. Na foto da thread principal (recarga no meio do turno) a próxima sessão vem da foto da IA.
+    /// World Congress of the Together We Rule expansion (research\congress.md §2 and §7.5), read at the start of the
+    /// turn. Almost everything is a simple read; whatever uses RPN or the game's static arrays (unlock, next session,
+    /// consensus cost) only runs on the game thread. In the main-thread snapshot (reload mid-turn) the next session comes
+    /// from the AI snapshot.
     /// </summary>
     internal static class CongressCapture
     {
@@ -19,10 +20,10 @@ namespace CurrencyMod.Diplomacia.Capture
         private static readonly StaticString MinimumMet = new StaticString("International_MinimumPercentageEmpiresMetToUnlock");
         private const string InternationalOsmosisEffects = "OsmosisEffectsInternationalCivicVoteResult";
 
-        /// <summary>Lista de leis propuníveis preenchida pelo jogo (só na thread do jogo, como a do próprio jogo).</summary>
+        /// <summary>List of proposable laws filled by the game (game thread only, like the game's own).</summary>
         private static bool[] proposable = new bool[0];
 
-        /// <summary>A partida tem a expansão (DiplomacyExpansionPack) ativa.</summary>
+        /// <summary>The game has the expansion (DiplomacyExpansionPack) active.</summary>
         internal static bool ExpansionActive =>
             DownloadableContentHelper.IsValid(Amplitude.Mercury.Data.Simulation.Prerequisites.DownloadableContentPrerequisite.DownloadableContents.DiplomacyExpansionPack);
 
@@ -108,7 +109,7 @@ namespace CurrencyMod.Diplomacia.Capture
             return congress;
         }
 
-        // ---------------- Sessões e leis ----------------
+        // ---------------- Sessions and laws ----------------
 
         private static void CaptureSession(InternationalAncillary international, CapturedCongress congress, int majors, bool gameThread)
         {
@@ -135,7 +136,7 @@ namespace CurrencyMod.Diplomacia.Capture
                 }
                 return;
             }
-            // Plano B na thread principal: a foto que a IA nativa usa (calculada pelo próprio jogo).
+            // Plan B on the main thread: the snapshot the native AI uses (computed by the game itself).
             try
             {
                 congress.NextLeader = Amplitude.Mercury.Interop.AI.Snapshots.International.NextCivicVoteSessionLeaderEmpireIndex;
@@ -164,7 +165,7 @@ namespace CurrencyMod.Diplomacia.Capture
             }
         }
 
-        /// <summary>A lei com as duas opções e a opção em vigor em cada nação.</summary>
+        /// <summary>The law with both options and the option in force in each nation.</summary>
         private static CongressLaw Law(CivicDefinition definition, int code, int majors)
         {
             if (definition == null || definition.Choices == null || definition.Choices.Length < 2)
@@ -256,7 +257,7 @@ namespace CurrencyMod.Diplomacia.Capture
             }
         }
 
-        /// <summary>Cédula de uma nação; com a votação aberta, os subornos que ela ainda pode comprar contra cada alvo.</summary>
+        /// <summary>A nation's ballot; while the vote is open, the bribes it can still buy against each target.</summary>
         private static CongressBallot Ballot(int choice, FixedPoint sway, InternationalBribeInfo[] bribes, int empire, int majors, bool active, CapturedCongress congress)
         {
             var result = new CongressBallot { Choice = choice, Sway = choice >= 0 ? (float)sway : 0 };
@@ -338,7 +339,7 @@ namespace CurrencyMod.Diplomacia.Capture
             }
         }
 
-        // ---------------- Consenso ideológico ----------------
+        // ---------------- Ideological consensus ----------------
 
         private static void CaptureConsensus(InternationalAncillary international, CapturedCongress congress, int majors, bool gameThread)
         {
@@ -382,7 +383,7 @@ namespace CurrencyMod.Diplomacia.Capture
             }
         }
 
-        // ---------------- Leis impostas ----------------
+        // ---------------- Imposed laws ----------------
 
         private static void CaptureImposedLaws(CapturedCongress congress, int majors)
         {
@@ -403,8 +404,9 @@ namespace CurrencyMod.Diplomacia.Capture
                     continue;
                 }
                 string civic = info.ItemName.ToString();
-                // Lei imposta pelo Congresso: efeitos próprios, ou (depois de carregar o save, quando o jogo troca os efeitos)
-                // a lei, a opção vencedora e o presidente da última votação. A osmose cultural comum da mesma lei não conta.
+                // Law imposed by the Congress: its own effects, or (after loading the save, when the game swaps the
+                // effects) the law, the winning option and the chair of the last vote. Ordinary cultural osmosis of the
+                // same law does not count.
                 bool congressEffects = info.OsmosisEffectsDefinitionName.ToString() == InternationalOsmosisEffects;
                 bool lastResult = civic == lastCivic && info.CivicChoiceName.ToString() == lastChoice && info.ProposingEmpireIndex == last.Leader;
                 if (!congressEffects && !lastResult)
@@ -424,11 +426,11 @@ namespace CurrencyMod.Diplomacia.Capture
             }
         }
 
-        // ---------------- Veredito numa relação ----------------
+        // ---------------- Verdict in a relation ----------------
 
         /// <summary>
-        /// Crise julgada pelo Congresso (status InternationalCrisisVoteEnded): quem venceu e, para o perdedor, se ele pode
-        /// cumprir as exigências ou ir à guerra surpresa agora (as mesmas funções de recusa que validam a ordem).
+        /// Crisis judged by the Congress (status InternationalCrisisVoteEnded): who won and, for the loser, whether it can
+        /// meet the demands or go to surprise war now (the same refusal functions that validate the order).
         /// </summary>
         internal static void FillVerdict(CapturedRelation captured, BaseDiplomaticState state, int self, int other)
         {

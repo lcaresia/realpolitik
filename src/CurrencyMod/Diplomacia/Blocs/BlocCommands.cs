@@ -5,8 +5,8 @@ using System.Linq;
 namespace CurrencyMod.Diplomacia.Blocs
 {
     /// <summary>
-    /// "ia bloco ..." no canal de desenvolvimento. Por padrão age como o jogador; "como E#" no fim age como outra nação
-    /// (para testar convites, votos e eleição sem esperar as IAs).
+    /// "ia bloco ..." on the dev channel. By default acts as the player; "como E#" at the end acts as another nation
+    /// (to test invites, votes and elections without waiting for the AIs).
     /// </summary>
     internal static class BlocCommands
     {
@@ -61,7 +61,7 @@ namespace CurrencyMod.Diplomacia.Blocs
                 case "presidente" when bits.Count >= 2:
                     return Done(module, BlocEngine.VotePresident(world, actor, Empire(bits[1]), turn), "ok: voto de E" + actor);
                 case "turno":
-                    // Roda o passo de turno agora, como se o turno tivesse passado N turnos (para prazos): "turno [+N]".
+                    // Runs the turn step now, as if N turns had passed (for deadlines): "turno [+N]".
                     int ahead = bits.Count >= 2 && int.TryParse(bits[1].TrimStart('+'), out int n) ? n : 0;
                     BlocEngine.Tick(world, turn + ahead);
                     module.MarkDirty();

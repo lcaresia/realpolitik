@@ -6,10 +6,10 @@ using UnityEngine;
 namespace CurrencyMod
 {
     /// <summary>
-    /// Valor no meio de cada rota que passa pelas terras do jogador, só na visão de comércio: "£ 12/t" em dourado quando a
-    /// rota já paga o pedágio dele, "£ 12/t?" em branco quando passa livre (quanto pagaria no preço atual). A posição usa a
-    /// mesma conta dos marcadores do jogo (posição do tile no mundo → câmera). Desenhado com IMGUI: as linhas do jogo são
-    /// pintadas na GPU, sem marcador próprio para pendurar texto.
+    /// Value in the middle of each route that crosses the player's land, only in the trade view: "£ 12/t" in gold when the
+    /// route already pays the player's toll, "£ 12/t?" in white when it passes free (what it would pay at the current price).
+    /// The position uses the same math as the game's markers (tile world position → camera). Drawn with IMGUI: the game's
+    /// lines are painted on the GPU, with no marker of their own to hang text on.
     /// </summary>
     internal sealed class RouteLabels : MonoBehaviour
     {
@@ -78,7 +78,7 @@ namespace CurrencyMod
             }
             catch (Exception ex)
             {
-                Plugin.Log.LogWarning($"Rótulos das rotas: {ex.Message}");
+                Plugin.Log.LogWarning($"Route labels: {ex.Message}");
                 enabled = false;
             }
         }

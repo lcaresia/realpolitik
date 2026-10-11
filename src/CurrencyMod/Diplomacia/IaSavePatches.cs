@@ -11,8 +11,8 @@ using HarmonyLib;
 namespace CurrencyMod.Diplomacia
 {
     /// <summary>
-    /// Guarda a memória da IA (personas, diários, sentimentos, cartas, gasto) como DiplomaciaIA.json dentro do
-    /// container do save, ao lado do CurrencyMod.json. O jogo ignora arquivos que não conhece.
+    /// Stores the AI memory (personas, diaries, sentiments, letters, spending) as DiplomaciaIA.json inside the
+    /// save container, next to CurrencyMod.json. The game ignores files it does not know.
     /// </summary>
     internal static class IaSavePatches
     {
@@ -37,7 +37,7 @@ namespace CurrencyMod.Diplomacia
                 }
                 try
                 {
-                    // A thread principal mantém uma cópia serializada sempre atualizada; aqui só gravamos.
+                    // The main thread keeps an always up-to-date serialized copy; here we only write it.
                     string json = IaModule.LatestWorldJson;
                     if (string.IsNullOrEmpty(json) || IaModule.LatestWorldGuid != __instance.GUID.ToString())
                     {
@@ -51,8 +51,8 @@ namespace CurrencyMod.Diplomacia
                 }
                 catch (Exception ex)
                 {
-                    // Nunca deixar o mod quebrar o save do jogo.
-                    Plugin.Log.LogError($"[IA] Falha ao salvar a memória da IA: {ex}");
+                    // Never let the mod break the game save.
+                    Plugin.Log.LogError($"[IA] Failed to save the AI memory: {ex}");
                 }
             }
         }
@@ -82,11 +82,11 @@ namespace CurrencyMod.Diplomacia
                 }
                 catch (FileNotFoundException)
                 {
-                    // Save de antes da IA: começa do zero.
+                    // Save from before the AI: start from scratch.
                 }
                 catch (Exception ex)
                 {
-                    Plugin.Log.LogError($"[IA] Falha ao ler a memória da IA do save: {ex.Message}");
+                    Plugin.Log.LogError($"[IA] Failed to read the AI memory from the save: {ex.Message}");
                 }
                 IaModule.OnSaveLoaded(guid, json);
             }
