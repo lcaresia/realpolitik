@@ -75,3 +75,6 @@ media/retratos/pessoais-teste/
 
 # Code maps (graphify): regenerable; the game map derives from decompiled SEGA/Amplitude code
 /codemap/
+
+# Local assistant rules, not part of the project
+/CLAUDE.md
