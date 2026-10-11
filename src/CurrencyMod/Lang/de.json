@@ -1813,5 +1813,7 @@
   "pago {0} {1} · recebido {0} {2}": "bezahlt {0} {1} · erhalten {0} {2}",
   "Soma dos acessos a todos os recursos estratégicos e de luxo, turno a turno. O valor é o dinheiro do último turno fechado: compras e vendas de recursos e manutenção das rotas com outros impérios (passe o mouse no gráfico para ver cada turno).": "Summe der Zugänge zu allen strategischen und Luxusressourcen, Runde für Runde. Der Wert ist das Geld der letzten abgeschlossenen Runde: Käufe und Verkäufe von Ressourcen und Routenunterhalt mit anderen Reichen (Maus über das Diagramm für jede Runde).",
   "Agora, no automático, o banco leva os juros para {0} (hoje {1}).": "Im Automatikmodus führt die Bank den Zins auf {0} (heute {1}).",
-  "No automático, o banco levaria os juros para {0} (hoje {1}).": "Im Automatikmodus würde die Bank den Zins auf {0} führen (heute {1})."
+  "No automático, o banco levaria os juros para {0} (hoje {1}).": "Im Automatikmodus würde die Bank den Zins auf {0} führen (heute {1}).",
+  "Pedágios recebidos nos seus postos": "Zölle an deinen Posten erhalten",
+  "Pedágios pagos a outros impérios": "An andere Reiche gezahlte Zölle"
 }

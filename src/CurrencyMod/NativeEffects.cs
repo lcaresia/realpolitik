@@ -87,6 +87,25 @@ namespace CurrencyMod
             return Enabled && empire is MajorEmpire major && RouteTransit.LastReceived.TryGetValue(major.Index, out double amount) ? amount : 0;
         }
 
+        /// <summary>
+        /// Tolls the empire received at its posts (positive) or paid at other empires' posts (negative) last turn, each in
+        /// its own currency (TradeBlockade charges them at the end of turn, outside the game's MoneyNet).
+        /// </summary>
+        internal static double ProjectedTolls(Empire empire, bool received)
+        {
+            CurrencyWorld world = CurrencyManager.Current;
+            if (!Enabled || !(empire is MajorEmpire major) || world?.LastTolls == null)
+            {
+                return 0;
+            }
+            lock (CurrencyManager.Lock)
+            {
+                return received
+                    ? world.LastTolls.Where(t => t.Owner == major.Index).Sum(t => t.ReceivedByOwner)
+                    : -world.LastTolls.Where(t => t.Payer == major.Index).Sum(t => t.PaidByPayer);
+            }
+        }
+
         /// <summary>Bloc refund of route upkeep expected at the next end of turn: last turn's amount (BlocTrade).</summary>
         internal static double ProjectedBlocRefund(Empire empire)
         {
@@ -102,7 +121,8 @@ namespace CurrencyMod
             FixedPoint net = empire.MoneyNet.Value;
             try
             {
-                double extra = ProjectedInterest(empire) + ProjectedTransit(empire) + ProjectedBlocRefund(empire);
+                double extra = ProjectedInterest(empire) + ProjectedTransit(empire) + ProjectedBlocRefund(empire)
+                    + ProjectedTolls(empire, received: true) + ProjectedTolls(empire, received: false);
                 if (Math.Abs(extra) >= 0.05)
                 {
                     return net + (FixedPoint)(float)extra;
@@ -132,6 +152,8 @@ namespace CurrencyMod
         private static readonly StaticString InterestId = new StaticString("CurrencyMod_Interest");
         private static readonly StaticString TransitId = new StaticString("CurrencyMod_RouteTransit");
         private static readonly StaticString BlocRefundId = new StaticString("CurrencyMod_BlocRefund");
+        private static readonly StaticString TollsReceivedId = new StaticString("CurrencyMod_TollsReceived");
+        private static readonly StaticString TollsPaidId = new StaticString("CurrencyMod_TollsPaid");
         private static bool loggedError;
 
         private static void Postfix(ref PropertyBreakdownWorker __instance, SimulationEntity simulationEntity, string propertyName, BreakdownOptions options)
@@ -159,6 +181,8 @@ namespace CurrencyMod
                     added = AddInterest(ref __instance, empire);
                     added |= AddPart(ref __instance, NativeEffects.ProjectedTransit(empire), L.T("Passagem das rotas pelos seus territórios"), TransitId);
                     added |= AddPart(ref __instance, NativeEffects.ProjectedBlocRefund(empire), L.T("Desconto do bloco na manutenção das rotas"), BlocRefundId);
+                    added |= AddPart(ref __instance, NativeEffects.ProjectedTolls(empire, received: true), L.T("Pedágios recebidos nos seus postos"), TollsReceivedId);
+                    added |= AddPart(ref __instance, NativeEffects.ProjectedTolls(empire, received: false), L.T("Pedágios pagos a outros impérios"), TollsPaidId);
                 }
                 if (added)
                 {

@@ -72,7 +72,9 @@ namespace CurrencyMod.Diplomacy.Llm.Providers
                     return false;
                 }
                 RefreshLoginAsync(force: false);
-                return loggedIn == true;
+                // Still checking (just loaded) counts as ready: the call itself fails with an auth error if the login
+                // is really gone. Treating "unknown" as logged out sent the first nations of a turn to the fallback.
+                return loggedIn != false;
             }
         }
 
@@ -94,7 +96,11 @@ namespace CurrencyMod.Diplomacy.Llm.Providers
             {
                 try
                 {
-                    loggedIn = CheckLogin();
+                    bool? state = CheckLogin();
+                    if (state.HasValue)
+                    {
+                        loggedIn = state.Value;
+                    }
                 }
                 catch (Exception)
                 {
@@ -107,7 +113,8 @@ namespace CurrencyMod.Diplomacy.Llm.Providers
             });
         }
 
-        private static bool CheckLogin()
+        /// <summary>Logged in, logged out, or null when the check itself failed (timed out under load): keep the last state.</summary>
+        private static bool? CheckLogin()
         {
             string exe = Exe;
             if (exe == null)
@@ -115,6 +122,10 @@ namespace CurrencyMod.Diplomacy.Llm.Providers
                 return false;
             }
             RunResult run = Run(exe, new List<string> { "login", "status" }, null, 30);
+            if (run.TimedOut)
+            {
+                return null;
+            }
             string text = (run.Stdout + "\n" + run.Stderr).ToLowerInvariant();
             return run.ExitCode == 0 && text.Contains("logged in") && !text.Contains("not logged in");
         }

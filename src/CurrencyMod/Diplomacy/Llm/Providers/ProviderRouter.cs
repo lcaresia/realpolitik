@@ -193,7 +193,9 @@ namespace CurrencyMod.Diplomacy.Llm.Providers
                         health.LastErrorUtc = DateTime.UtcNow;
                         health.LastError = result.Error;
                         health.LastKind = result.Kind;
-                        health.OutUntilUtc = DateTime.UtcNow.AddMinutes(Math.Max(1, AiConfig.FailoverMinutes.Value));
+                        // A rejected key (401/403) will not fix itself in a few minutes: sit out for an hour, so a dead
+                        // fallback key does not take the turns that the working provider would answer.
+                        health.OutUntilUtc = DateTime.UtcNow.AddMinutes(result.Kind == ErrorKind.Auth ? 60 : Math.Max(1, AiConfig.FailoverMinutes.Value));
                     }
                 }
                 if (result.Ok)

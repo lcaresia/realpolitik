@@ -1813,5 +1813,7 @@
   "pago {0} {1} · recebido {0} {2}": "paid {0} {1} · received {0} {2}",
   "Soma dos acessos a todos os recursos estratégicos e de luxo, turno a turno. O valor é o dinheiro do último turno fechado: compras e vendas de recursos e manutenção das rotas com outros impérios (passe o mouse no gráfico para ver cada turno).": "Sum of the accesses to all strategic and luxury resources, turn by turn. The value is the money of the last closed turn: resource purchases and sales and route upkeep with other empires (hover the chart to see each turn).",
   "Agora, no automático, o banco leva os juros para {0} (hoje {1}).": "Now, in automatic, the bank is taking the rate to {0} (today {1}).",
-  "No automático, o banco levaria os juros para {0} (hoje {1}).": "In automatic, the bank would take the rate to {0} (today {1})."
+  "No automático, o banco levaria os juros para {0} (hoje {1}).": "In automatic, the bank would take the rate to {0} (today {1}).",
+  "Pedágios recebidos nos seus postos": "Tolls received at your posts",
+  "Pedágios pagos a outros impérios": "Tolls paid to other empires"
 }

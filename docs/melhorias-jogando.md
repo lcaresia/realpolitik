@@ -731,3 +731,28 @@ tela cheia, e fica assim.
   - Na próxima vez, ANTES de reiniciar, rodar `cameras` e `inspect` e comparar com o estado normal salvo em `dev/out` (sessão das 17:56).
 - Novo bug visto: o rótulo flutuante de pedágio das rotas ("TI 10/t?", IMGUI de `Trade/RouteLabels.cs`) aparece por cima
   do painel do topo e do mercado. Pular os rótulos que caem sobre a interface.
+
+### 29. Aviso no ícone do conselho quando ele quer que eu leia algo
+
+- **O que já existe:** o botão do conselho tem um "!" (CouncilButton/`PlayerCouncil.HasNews`) quando a reunião do turno
+  está pronta e não foi vista. No T91 o status dizia "no meeting this turn", então o aviso não tinha o que mostrar.
+- **A conferir:** se as reuniões estão deixando de acontecer por causa do bug do item 30 (a chamada da reunião ia para o
+  OpenRouter quebrado) ou porque a regra só convoca reunião com assunto urgente.
+- **Proposta:**
+  - "!" também quando um ministro responder à sua fala e quando surgir conselho urgente (guerra, exigência, caixa no vermelho), mesmo sem reunião completa;
+  - número no badge com quantas falas novas há;
+  - toast curto do jogo ("O conselho quer falar com você") uma vez por turno.
+- **Integrações:** o mesmo padrão do badge do Correio e da tela Alianças (`Badge()`).
+- **Tamanho:** pequeno.
+
+### 30. BUG (corrigido): Codex conectado, mas cartas com X vermelho e nações sem decidir
+
+- **Causa:** `CodexCli.Ready` só valia com o login confirmado por `codex login status`, que roda a cada 2 min com limite de 30 s.
+  - Logo após carregar o jogo (checagem ainda em andamento) ou com 15 nações usando o Codex ao mesmo tempo (a checagem estoura o tempo), o Codex era tratado como deslogado.
+  - O turno ia para o reserva (OpenRouter), cuja chave está inválida ("HTTP 401: User not found").
+  - No T90, E3, E5, E6 e E7 falharam assim; o estado "API com erro" deixa o X vermelho em Cartas.
+- **Correção:**
+  - "checando" conta como pronto;
+  - uma checagem que estoura o tempo mantém o último estado;
+  - provedor com chave recusada (401/403) fica 1 h fora da fila, não só os minutos de failover.
+- **Ação do Lucas:** a chave do OpenRouter está inválida. Trocar a chave ou tirar o OpenRouter da fila na tela Realpolitik.

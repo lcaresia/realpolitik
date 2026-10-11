@@ -1813,5 +1813,7 @@
   "pago {0} {1} · recebido {0} {2}": "pagado {0} {1} · recibido {0} {2}",
   "Soma dos acessos a todos os recursos estratégicos e de luxo, turno a turno. O valor é o dinheiro do último turno fechado: compras e vendas de recursos e manutenção das rotas com outros impérios (passe o mouse no gráfico para ver cada turno).": "Suma de los accesos a todos los recursos estratégicos y de lujo, turno a turno. El valor es el dinero del último turno cerrado: compras y ventas de recursos y mantenimiento de las rutas con otros imperios (pasa el ratón por el gráfico para ver cada turno).",
   "Agora, no automático, o banco leva os juros para {0} (hoje {1}).": "Ahora, en automático, el banco lleva los intereses a {0} (hoy {1}).",
-  "No automático, o banco levaria os juros para {0} (hoje {1}).": "En automático, el banco llevaría los intereses a {0} (hoy {1})."
+  "No automático, o banco levaria os juros para {0} (hoje {1}).": "En automático, el banco llevaría los intereses a {0} (hoy {1}).",
+  "Pedágios recebidos nos seus postos": "Peajes recibidos en tus puestos",
+  "Pedágios pagos a outros impérios": "Peajes pagados a otros imperios"
 }

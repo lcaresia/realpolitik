@@ -61,6 +61,7 @@ namespace CurrencyMod
             try
             {
                 EnsureStyles();
+                RefreshPanels();
                 foreach (RouteVisuals.Label label in labels)
                 {
                     Vector3 world = Presentation.PresentationWorldController.GetWorldPositionInUnityWorld(label.Tile, needElevation: true);
@@ -72,6 +73,11 @@ namespace CurrencyMod
                     var content = new GUIContent(label.Text);
                     Vector2 size = style.CalcSize(content);
                     var rect = new Rect(viewport.x * Screen.width - size.x / 2f, (1f - viewport.y) * Screen.height - size.y / 2f, size.x, size.y);
+                    // IMGUI draws over every game panel: a label that would land on one is skipped.
+                    if (OverPanel(rect))
+                    {
+                        continue;
+                    }
                     style.normal.textColor = label.Paid ? new Color(0.95f, 0.78f, 0.36f) : new Color(0.93f, 0.93f, 0.93f);
                     GUI.Label(rect, content, style);
                 }
@@ -81,6 +87,58 @@ namespace CurrencyMod
                 Plugin.Log.LogWarning($"Route labels: {ex.Message}");
                 enabled = false;
             }
+        }
+
+        // Game panels the labels must not cover (top banners, bottom bar, trade view side panel, notifications).
+        private static readonly string[] PanelTypes =
+        {
+            "Amplitude.Mercury.UI.ManagementBanner", "Amplitude.Mercury.UI.EmpireBanner", "Amplitude.Mercury.UI.MenuBanner",
+            "Amplitude.Mercury.UI.ControlBanner", "Amplitude.Mercury.UI.NotificationBanner", "Amplitude.Mercury.UI.TradeViewMarketTab",
+            "Amplitude.Mercury.UI.EndTurnWindow", "Amplitude.Mercury.UI.EraStarCompletionBanner",
+        };
+
+        private readonly List<Amplitude.UI.UITransform> panels = new List<Amplitude.UI.UITransform>();
+        private float panelsFoundAt = -100f;
+
+        private void RefreshPanels()
+        {
+            if (Time.unscaledTime - panelsFoundAt < 2f)
+            {
+                return;
+            }
+            panelsFoundAt = Time.unscaledTime;
+            panels.Clear();
+            foreach (string name in PanelTypes)
+            {
+                Type type = HarmonyLib.AccessTools.TypeByName(name);
+                if (type == null)
+                {
+                    continue;
+                }
+                foreach (UnityEngine.Object found in FindObjectsOfType(type))
+                {
+                    if (found is Component component && component.GetComponent<Amplitude.UI.UITransform>() is Amplitude.UI.UITransform ui)
+                    {
+                        panels.Add(ui);
+                    }
+                }
+            }
+        }
+
+        /// <summary>True when the screen rect overlaps a visible game panel (panel rects are in the 1920x1080 UI space).</summary>
+        private bool OverPanel(Rect rect)
+        {
+            float scaleX = 1920f / Screen.width;
+            float scaleY = 1080f / Screen.height;
+            var ui = new Rect(rect.x * scaleX, rect.y * scaleY, rect.width * scaleX, rect.height * scaleY);
+            foreach (Amplitude.UI.UITransform panel in panels)
+            {
+                if (panel != null && panel.VisibleGlobally && panel.GlobalRect.Overlaps(ui))
+                {
+                    return true;
+                }
+            }
+            return false;
         }
 
         private void OnDestroy()
