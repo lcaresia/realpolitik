@@ -515,3 +515,72 @@ Caminhos relativos a `src\CurrencyMod\Diplomacia\`.
   - **Escolha do Lucas:** genérico por cargo × 3 épocas × gênero (72 imagens), para poupar a cota. O retrato por pessoa (216) gastaria ~72% da semana.
   - **Medido:** 3 imagens ≈ 10% da janela de 5 h e ≈ 1% da semana. O script espera a janela renovar quando passa de 85%.
   - Testes por pessoa (Aurélio Varro, Nefertari, Kang Wei, em 3 épocas) ficaram em `media\retratos\pessoais-teste\`.
+
+## Play-test de 2026-10-11 (jogo real, voltado ao T72)
+
+Regra: só é corrigido na hora o que o Lucas chamar de impeditivo. O resto fica anotado aqui, com análise.
+
+### 20. Nome do império nos brasões da tela de decisões (cívicas)
+
+Na tela de uma decisão cívica (ex.: "Povos Independentes"), os brasões no alto mostram os impérios que já decidiram.
+A dica nativa só diz "Este Império tomou uma decisão…", sem dizer qual império. Só pelo brasão não dá para saber quem é.
+
+- **Proposta:** acrescentar à dica nativa o nome do povo e do líder, no formato `GameText.NationAndLeader` (o mesmo das cartas).
+  Opcionalmente, também a relação com você (Paz / Guerra / Aliança) e se é membro do seu bloco.
+- **Integrações:**
+  - A ligação mais forte é com as cartas e os blocos: saber quem decidiu o quê ajuda a cobrar um aliado ("você escolheu diferente de mim").
+  - A IA de diplomacia já recebe as escolhas cívicas no dossiê? Conferir. Se não recebe, vale incluir as decisões que divergem das suas.
+- **Cuidado:** não revelar QUAL opção o império escolheu, se o jogo nativo esconde isso. Mostrar só quem é.
+- **Tamanho:** pequeno. Um patch na dica do ícone do império da tela de cívicas, com a mesma técnica das dicas nativas que já alteramos.
+
+### 21. Dica do Dinheiro: mostrar os juros e todo ganho que hoje fica de fora; negativos em vermelho
+
+Na dica nativa do Dinheiro (barra do topo), a seção "Esgotamento" lista Cidade, Passagem das rotas, Manutenção de rota e Exército.
+Os juros do saldo não aparecem.
+
+**Por que os juros somem hoje:** a linha existe (`NativeEffects.AddInterest`), mas `AddPart` descarta qualquer valor menor que 0,5.
+Isso imita o próprio jogo. Com 831 de caixa e juros de 0,02%, o rendimento é cerca de 0,2 por turno, então a linha some.
+Ou seja, o código está certo, mas o pedido revela duas coisas:
+- **O descarte esconde informação:** o jogador quer ver a linha mesmo pequena. Proposta: sempre mostrar "Juros do saldo"
+  quando houver saldo, com 1 casa decimal se for menor que 1. O descarte de 0,5 vale para as linhas do jogo, não para as nossas.
+- **0,02% é baixo demais para alguém notar:** reavaliar com a calibração da economia.
+  Os juros do saldo usam `SavingsCapacity(renda, PIB)`, que limita quanto do caixa rende. Talvez mostrar na própria dica
+  "rende até X do seu caixa", para o jogador entender o teto.
+
+**Auditar todo dinheiro que o mod move e que a barra não mostra.** Cada `MoneyKind` precisa de linha própria e precisa entrar no
+`DisplayedMoneyNet`, senão o "-13 por turno" mente:
+- pedágios recebidos e pagos (`MoneyKind.Toll`);
+- licenças de recurso compradas e vendidas, e a conversão de moeda (`Resources`);
+- repasse de manutenção (`Upkeep`);
+- juros e amortização de empréstimos (banco central e dívida);
+- aporte e resgate de aplicações;
+- dinheiro dado ou recebido em cartas (presentes, tributos de ultimato) e as contribuições do bloco (congresso, defesa).
+Para cada fluxo, decidir entre linha previsível (repete todo turno, entra no líquido) e evento pontual (aparece como
+"no último turno", sem entrar na previsão). Fluxos pontuais podem ir numa linha "Outros (último turno)".
+
+**Negativos em vermelho:** as linhas negativas da seção (Manutenção de Rota, Exército, juros da dívida etc.) devem sair em
+vermelho, e as positivas ficam como estão. As linhas são montadas pelo jogo, então é preciso um patch na formatação do valor
+(ou cor no `LocalizedSourceName`, se o jogo não sobrescrever). Vale para as linhas nativas também, não só para as nossas.
+Conferir se o "-13 Reais por turno" no cabeçalho da Renda também pode ficar vermelho quando negativo.
+
+- **Integrações:** dica nativa (`PropertyBreakdownPatch`), `MoneyNetDisplayPatch`, livro de fluxos (`MoneyFlow` em `CurrencyState`),
+  telas do banco (que já mostram os fluxos e podem servir de referência para os nomes).
+- **Risco:** se a soma das linhas do mod não bater com o caixa no turno seguinte, o jogador perde a confiança.
+  Testar comparando a previsão com a variação real do caixa por alguns turnos.
+- **Tamanho:** médio. O vermelho e a linha de juros são pequenos; a auditoria de fluxos é a parte maior.
+
+### 22. Painel de recursos de outra nação: importação/exportação, câmbio e relação
+
+No painel nativo "É possível comercializar Recursos" (cabeçalho com o líder, lista de estratégicos e luxos com preço):
+mostrar quanto você importa e exporta com essa nação, o câmbio entre as duas moedas e a relação (aliado, paz, guerra).
+
+- **Proposta:** uma linha no cabeçalho, logo abaixo do nome:
+  "Aliança · câmbio 1 R$ = 0,55 da moeda deles · você compra 3 (−46/t) · você vende 1 (+22/t)".
+  Por recurso, a dica do preço pode mostrar o preço na moeda deles e o que você já compra dele.
+- **Integrações:**
+  - o câmbio vem do `CurrencyState` (o mesmo da conversão do log `TradeController`);
+  - os fluxos vêm do livro `MoneyFlow` (`Resources`);
+  - a relação vem do `CapturedRelation`, com bloco (BlocIndex) e tarifa do bloco, se houver;
+  - o rótulo "R$ 4/t?" que aparece no meio do painel parece ser a nossa dica antiga de preço por turno com "?": conferir o que é e unificar.
+- **Cuidado:** espaço curto no cabeçalho, então chips em vez de frase longa, como nos cartões do Correio.
+- **Tamanho:** pequeno a médio. Depende de achar o painel nativo (provavelmente o mesmo do comércio por império).

@@ -18,19 +18,29 @@ namespace CurrencyMod.Diplomacy.Council
         /// <summary>Portrait epoch from the empire's era (0 Neolithic … 6 Contemporary).</summary>
         internal static int Epoch(int era) => era <= 2 ? 1 : era <= 4 ? 2 : 3;
 
-        internal static Texture2D Get(string portfolio, int era, string gender)
+        /// <summary>
+        /// Portrait number <paramref name="variant"/> of the portfolio and gender: first the epoch's own images (the base one,
+        /// then "_2", "_3"… when they exist), then the closest epochs. Different variants never return the same image while
+        /// there are enough of them, so the candidates of a seat each get their own face.
+        /// </summary>
+        internal static Texture2D Get(string portfolio, int era, string gender, int variant = 0)
         {
             string g = gender == "f" ? "f" : "m";
             int epoch = Epoch(era);
+            var options = new List<Texture2D>();
             foreach (int e in new[] { epoch, epoch == 1 ? 2 : epoch - 1, epoch == 3 ? 1 : 3 })
             {
                 Texture2D texture = Load($"{portfolio}_{e}_{g}");
                 if (texture != null)
                 {
-                    return texture;
+                    options.Add(texture);
+                }
+                for (int extra = 2; (texture = Load($"{portfolio}_{e}_{g}_{extra}")) != null; extra++)
+                {
+                    options.Add(texture);
                 }
             }
-            return null;
+            return options.Count == 0 ? null : options[Math.Max(0, variant) % options.Count];
         }
 
         private static Texture2D Load(string name)

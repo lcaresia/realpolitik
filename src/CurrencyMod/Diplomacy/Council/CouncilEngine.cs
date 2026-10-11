@@ -24,6 +24,8 @@ namespace CurrencyMod.Diplomacy.Council
         public int Loyalty = 60;
         public int Ambition = 40;
         public int Since;
+        /// <summary>Which of the portfolio's portraits (Portraits.Get): set at appointment so candidates never share a face.</summary>
+        public int PortraitVariant;
         /// <summary>Sympathy (+) or antipathy (-) toward other nations, from -50 to 50.</summary>
         public Dictionary<int, int> Sympathies = new Dictionary<int, int>();
         public string Opinion;
@@ -113,6 +115,11 @@ namespace CurrencyMod.Diplomacy.Council
                     {
                         break;
                     }
+                    // At most 2 of each gender per seat, so each candidate has a different portrait.
+                    if (picks.Count(id => CouncilBank.ById(id)?.Gender == person.Gender) >= 2)
+                    {
+                        continue;
+                    }
                     taken.Add(person.Id);
                     picks.Add(person.Id);
                 }
@@ -160,10 +167,58 @@ namespace CurrencyMod.Diplomacy.Council
                 return null;
             }
             Minister minister = Make(world, nation, capture, person, portfolio, turn);
+            minister.PortraitVariant = PortraitVariant(candidates, personalityId);
             nation.Council.Add(minister);
             nation.CouncilCandidates.Remove(portfolio);
             nation.Council.Sort((a, b) => Array.IndexOf(CouncilBank.Portfolios, a.Portfolio).CompareTo(Array.IndexOf(CouncilBank.Portfolios, b.Portfolio)));
             return minister;
+        }
+
+        /// <summary>A candidate's portrait: their position among the seat's candidates of the same gender (kept after appointment).</summary>
+        internal static int PortraitVariant(List<string> candidates, string personalityId)
+        {
+            string gender = CouncilBank.ById(personalityId)?.Gender;
+            return Math.Max(0, candidates.Where(id => CouncilBank.ById(id)?.Gender == gender).ToList().IndexOf(personalityId));
+        }
+
+        /// <summary>
+        /// The minister this candidate would become if appointed now (numbers and sympathies are fixed per person and
+        /// nation, so the preview matches the appointment).
+        /// </summary>
+        internal static Minister Preview(AiWorld world, AiNation nation, WorldCapture capture, Personality person, string portfolio, int turn)
+        {
+            return Make(world, nation, capture, person, portfolio, turn);
+        }
+
+        /// <summary>How the traits change the advice and the loyalty, in the UI language (the rules in Opine* and Follow).</summary>
+        internal static List<string> TendenciesUi(Minister m)
+        {
+            var lines = new List<string>();
+            if (m.Has("belicista") || m.Has("ousado") || m.Has("rancoroso"))
+                lines.Add(L.T("Na guerra, empurra para o ataque e para reforçar o exército."));
+            else if (m.Has("cauteloso") || m.Has("prudente") || m.Has("frio") || m.Has("pragmático"))
+                lines.Add(L.T("Na guerra, prefere segurar posição e negociar."));
+            if (m.Has("orgulhoso") || m.Has("belicista") || m.Has("rancoroso") || m.Has("desconfiado"))
+                lines.Add(L.T("Diante de exigências estrangeiras, tende a recusar."));
+            else if (m.Has("cauteloso") || m.Has("prudente") || m.Has("idealista") || m.Has("pragmático") || m.Has("generoso"))
+                lines.Add(L.T("Diante de exigências estrangeiras, tende a ceder para evitar conflito."));
+            if (m.Has("ganancioso") || m.Has("astuto"))
+                lines.Add(L.T("Com o caixa no vermelho, manda cobrar dívidas e pedágios em vez de cortar gastos."));
+            if (m.Has("generoso") || m.Has("ousado") || m.Has("otimista"))
+                lines.Add(L.T("Com sobra de dinheiro, sugere presentes e patrocínio de povos independentes."));
+            if (m.Has("devoto"))
+                lines.Add(L.T("Puxa o reino para a fé."));
+            if (m.Has("ambicioso") || m.Has("vaidoso"))
+                lines.Add(L.T("Gosta de maravilhas e de cultura que levem o nome do reino."));
+            if (m.Has("vaidoso"))
+                lines.Add(L.T("Gosta de lembrar que já tinha previsto."));
+            if (m.Has("orgulhoso") || m.Has("rancoroso"))
+                lines.Add(L.T("Perde lealdade quando você contraria os conselhos."));
+            if (m.Has("leal"))
+                lines.Add(L.T("Começa com lealdade mais alta."));
+            if (m.Has("ambicioso"))
+                lines.Add(L.T("Começa com ambição mais alta, que cresce quando um colega é demitido."));
+            return lines;
         }
 
         /// <summary>Someone from the bank who serves no nation, was not fired by this one and is not in <paramref name="taken"/>.</summary>
@@ -187,7 +242,8 @@ namespace CurrencyMod.Diplomacy.Council
 
         private static Minister Make(AiWorld world, AiNation nation, WorldCapture capture, Personality person, string portfolio, int turn)
         {
-            uint seed = Hash($"{world.GameGuid}|{nation.EmpireIndex}|{portfolio}|{person.Id}|{turn}");
+            // No turn in the seed: the candidate card shows these numbers before the appointment (Preview).
+            uint seed = Hash($"{world.GameGuid}|{nation.EmpireIndex}|{portfolio}|{person.Id}");
             var minister = new Minister
             {
                 Portfolio = portfolio,

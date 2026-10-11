@@ -725,7 +725,7 @@ namespace CurrencyMod.Diplomacy.UI
             }
             B.SetVisible(row.Button.transform, false);
             MailScreen.FitTitle(top, 12f);
-            Texture2D speakerPortrait = minister != null ? Portraits.Get(minister.Portfolio, era, minister.Gender) : null;
+            Texture2D speakerPortrait = minister != null ? Portraits.Get(minister.Portfolio, era, minister.Gender, minister.PortraitVariant) : null;
             SetPortrait(row, speakerPortrait);
             if (speakerPortrait != null) B.HideOutputs(top, PortraitCardHeight); else B.HideOutputs(top);
             B.Tip(top, "StatsTable/PopCount", PortfolioName(speech.Portfolio), minister != null ? MailScreen.Escape(TraitsUi(minister)) + (string.IsNullOrWhiteSpace(minister.Voice) ? string.Empty : "\n" + MailScreen.Escape(L.T(minister.Voice))) : string.Empty); // voice: from the default bank, marked with L.N
@@ -825,7 +825,9 @@ namespace CurrencyMod.Diplomacy.UI
                 {
                     foreach (string id in candidates)
                     {
-                        FillCandidate(rows[index++], seat, CouncilBank.ById(id), era, cost, influence);
+                        Personality person = CouncilBank.ById(id);
+                        Minister preview = person != null && module != null ? CouncilEngine.Preview(AiModule.World, nation, capture, person, seat, turn) : null;
+                        FillCandidate(rows[index++], seat, person, preview, CouncilEngine.PortraitVariant(candidates, id), capture, era, cost, influence);
                     }
                 }
             }
@@ -856,7 +858,7 @@ namespace CurrencyMod.Diplomacy.UI
                 B.SetVisible(row.Button.transform, true);
                 B.SetButtonText(row.Button, confirming ? L.T("Confirmar") : L.T("Demitir"));
                 MailScreen.FitTitle(top, row.Button.GetComponent<UITransform>().Width + 20f);
-                Texture2D ministerPortrait = Portraits.Get(minister.Portfolio, era, minister.Gender);
+                Texture2D ministerPortrait = Portraits.Get(minister.Portfolio, era, minister.Gender, minister.PortraitVariant);
                 SetPortrait(row, ministerPortrait);
                 if (ministerPortrait != null) B.HideOutputs(top, PortraitCardHeight); else B.HideOutputs(top);
                 B.Tip(top, "StatsTable/PopCount", PortfolioName(minister.Portfolio), MailScreen.Escape(TraitsUi(minister)));
@@ -874,16 +876,10 @@ namespace CurrencyMod.Diplomacy.UI
                     lines.Add(L.F("Voz: {0}", MailScreen.Escape(L.T(minister.Voice)))); // voice: from the default bank, marked with L.N
                 }
                 lines.Add(L.F("Lealdade {0} · ambição {1} · no cargo desde o turno {2}", minister.Loyalty, minister.Ambition, minister.Since));
-                var likes = minister.Sympathies.Where(p => p.Value > 0).Select(p => capture.Empire(p.Key)?.Culture ?? "E" + p.Key).ToList();
-                var dislikes = minister.Sympathies.Where(p => p.Value < 0).Select(p => capture.Empire(p.Key)?.Culture ?? "E" + p.Key).ToList();
-                if (likes.Count > 0 || dislikes.Count > 0)
+                string sympathies = SympathyLine(minister, capture);
+                if (sympathies != null)
                 {
-                    string joiner = " " + L.T("e") + " ";
-                    string liked = MailScreen.Escape(string.Join(joiner, likes));
-                    string disliked = MailScreen.Escape(string.Join(joiner, dislikes));
-                    lines.Add(likes.Count > 0 && dislikes.Count > 0 ? L.F("Simpatiza com {0}; desconfia de {1}.", liked, disliked)
-                        : likes.Count > 0 ? L.F("Simpatiza com {0}.", liked)
-                        : L.F("desconfia de {0}.", disliked));
+                    lines.Add(sympathies);
                 }
                 if (!string.IsNullOrWhiteSpace(minister.Opinion))
                 {
@@ -1091,7 +1087,28 @@ namespace CurrencyMod.Diplomacy.UI
             MailScreen.SetBody(row.Body, L.F("Bônus de quem ficar no cargo: {0}, +1% a cada 5 turnos, até +10%.", VeteranArea(seat)));
         }
 
-        private void FillCandidate(Row row, string seat, Personality person, int era, int cost, double influence)
+        /// <summary>"Likes X; distrusts Y." from the minister's sympathies, or null when there are none.</summary>
+        private static string SympathyLine(Minister minister, WorldCapture capture)
+        {
+            var likes = minister.Sympathies.Where(p => p.Value > 0).Select(p => capture.Empire(p.Key)?.Culture ?? "E" + p.Key).ToList();
+            var dislikes = minister.Sympathies.Where(p => p.Value < 0).Select(p => capture.Empire(p.Key)?.Culture ?? "E" + p.Key).ToList();
+            if (likes.Count == 0 && dislikes.Count == 0)
+            {
+                return null;
+            }
+            string joiner = " " + L.T("e") + " ";
+            string liked = MailScreen.Escape(string.Join(joiner, likes));
+            string disliked = MailScreen.Escape(string.Join(joiner, dislikes));
+            return likes.Count > 0 && dislikes.Count > 0 ? L.F("Simpatiza com {0}; desconfia de {1}.", liked, disliked)
+                : likes.Count > 0 ? L.F("Simpatiza com {0}.", liked)
+                : L.F("desconfia de {0}.", disliked);
+        }
+
+        /// <summary>
+        /// A candidate: traits, the numbers they would start with (credibility, loyalty, ambition), the sympathies, the voice
+        /// and how the traits shape the advice, so the choice is informed. The portrait is the seat's variant for them.
+        /// </summary>
+        private void FillCandidate(Row row, string seat, Personality person, Minister preview, int variant, WorldCapture capture, int era, int cost, double influence)
         {
             row.Portfolio = seat;
             row.Vacant = null;
@@ -1099,24 +1116,50 @@ namespace CurrencyMod.Diplomacy.UI
             Transform top = row.Card.Find("Table/Top");
             string title = person != null ? CouncilBank.TitleUi(seat, era, person.Gender) + " " + person.Name : "?";
             B.SetLabel(top, "TitleGroup/Title", $"<c={Gold}>›</c> " + MailScreen.Escape(title));
-            B.SetChip(top, "StatsTable/PopCount", L.T("Candidato(a)"));
             string traits = person != null ? string.Join(", ", person.Traits.Select(t => L.T(t))) : string.Empty;
-            B.SetVisible(top.Find("StatsTable/Fortification"), traits.Length > 0);
-            B.SetChip(top, "StatsTable/Fortification", MailScreen.Escape(traits));
-            B.HideChild(top, "StatsTable/ExtensionsCount");
-            B.HideChild(top, "StatsTable/Chip3");
+            B.SetChip(top, "StatsTable/PopCount", traits.Length > 0 ? MailScreen.Escape(traits) : L.T("Candidato(a)"));
+            B.SetVisible(top.Find("StatsTable/Fortification"), preview != null);
+            B.SetVisible(top.Find("StatsTable/ExtensionsCount"), preview != null);
+            string ambitionChip = B.ExtraChip(top, 3);
+            B.SetVisible(top.Find(ambitionChip), preview != null);
+            if (preview != null)
+            {
+                B.SetChip(top, "StatsTable/Fortification", L.F("Credibilidade {0}", preview.Credibility));
+                B.SetChip(top, "StatsTable/ExtensionsCount", L.F("Lealdade {0}", preview.Loyalty));
+                B.SetChip(top, ambitionChip, L.F("Ambição {0}", preview.Ambition));
+                B.Tip(top, "StatsTable/Fortification", L.T("Credibilidade"), L.T("De 0 a 100, com que começa no cargo. Pesa quanto a opinião conta no conselho; depois sobe e desce com os números da pasta."));
+                B.Tip(top, "StatsTable/ExtensionsCount", L.T("Lealdade"), L.T("De 0 a 100. Sobe quando você segue os conselhos; ministros orgulhosos ou rancorosos perdem lealdade quando são contrariados."));
+                B.Tip(top, ambitionChip, L.T("Ambição"), L.T("De 0 a 100. Quanto quer subir: pesa no tom das falas e cresce quando um colega é demitido."));
+            }
             bool affordable = influence >= cost;
             B.SetVisible(row.Button.transform, person != null);
             B.SetButtonText(row.Button, L.F("Nomear · {0}", cost));
             MailScreen.FitTitle(top, row.Button.GetComponent<UITransform>().Width + 20f);
-            Texture2D candidatePortrait = person != null ? Portraits.Get(seat, era, person.Gender) : null;
+            Texture2D candidatePortrait = person != null ? Portraits.Get(seat, era, person.Gender, variant) : null;
             SetPortrait(row, candidatePortrait);
             if (candidatePortrait != null) B.HideOutputs(top, PortraitCardHeight); else B.HideOutputs(top);
-            B.Tip(top, "StatsTable/Fortification", L.T("Traços"), L.T("Os traços puxam o jeito de aconselhar: um prudente segura gastos, um ousado empurra para a frente."));
+            B.Tip(top, "StatsTable/PopCount", L.T("Traços"), L.T("Os traços puxam o jeito de aconselhar: um prudente segura gastos, um ousado empurra para a frente."));
             B.Tip(row.Button.transform, string.Empty, L.T("Nomear"), affordable
                 ? L.F("Nomeia para a pasta por {0} de influência. Os outros candidatos saem.", cost)
                 : L.F("Influência insuficiente: custa {0}, você tem {1}.", cost, Math.Floor(influence)));
-            MailScreen.SetBody(row.Body, person != null && !string.IsNullOrWhiteSpace(person.Voice) ? L.F("Voz: {0}", MailScreen.Escape(L.T(person.Voice))) : string.Empty);
+            var lines = new List<string>();
+            if (person != null && !string.IsNullOrWhiteSpace(person.Voice))
+            {
+                lines.Add(L.F("Voz: {0}", MailScreen.Escape(L.T(person.Voice)))); // voice: from the default bank, marked with L.N
+            }
+            if (preview != null)
+            {
+                string sympathies = SympathyLine(preview, capture);
+                if (sympathies != null)
+                {
+                    lines.Add(sympathies);
+                }
+                foreach (string tendency in CouncilEngine.TendenciesUi(preview))
+                {
+                    lines.Add("· " + tendency);
+                }
+            }
+            MailScreen.SetBody(row.Body, string.Join("\n", lines));
         }
 
         private void RowClicked(Row row)
