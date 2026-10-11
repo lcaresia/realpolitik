@@ -1802,5 +1802,16 @@
   "eleição em {0} turno(s)": "election in {0} turn(s)",
   "até o turno {0}": "until turn {0}",
   "O presidente põe pautas em votação; os outros sugerem. Mandato de {0} turnos, até o turno {1}; no fim há eleição, com 1 voto por membro (empate mantém o atual).": "The president puts motions to a vote; the others suggest. A {0}-turn term, until turn {1}; then an election, 1 vote per member (a tie keeps the incumbent).",
-  "Este império já tomou esta decisão. Se você escolher diferente, ele não vai gostar e vai abrir uma queixa contra você.": "This empire already took this choice. If you choose differently, it won't like it and will open a grievance against you."
+  "Este império já tomou esta decisão. Se você escolher diferente, ele não vai gostar e vai abrir uma queixa contra você.": "This empire already took this choice. If you choose differently, it won't like it and will open a grievance against you.",
+  "1 {0} = {1} {2}": "1 {0} = {1} {2}",
+  "Relação: {0}": "Relation: {0}",
+  "Câmbio: 1 {0} vale {1} {2} ({3}).": "Exchange: 1 {0} is worth {1} {2} ({3}).",
+  "saldo {0}/t": "balance {0}/t",
+  "Você compra {0} recurso(s) dele: {1} {2}/turno.": "You buy {0} resource(s) from them: {1} {2}/turn.",
+  "Você vende {0} recurso(s) a ele: {1} {2}/turno.": "You sell {0} resource(s) to them: {1} {2}/turn.",
+  "Média dos últimos {0} turno(s), com a manutenção das rotas. Detalhes no Banco Central, aba Comércio.": "Average of the last {0} turn(s), route upkeep included. Details in the Central Bank, Trade tab.",
+  "pago {0} {1} · recebido {0} {2}": "paid {0} {1} · received {0} {2}",
+  "Soma dos acessos a todos os recursos estratégicos e de luxo, turno a turno. O valor é o dinheiro do último turno fechado: compras e vendas de recursos e manutenção das rotas com outros impérios (passe o mouse no gráfico para ver cada turno).": "Sum of the accesses to all strategic and luxury resources, turn by turn. The value is the money of the last closed turn: resource purchases and sales and route upkeep with other empires (hover the chart to see each turn).",
+  "Agora, no automático, o banco leva os juros para {0} (hoje {1}).": "Now, in automatic, the bank is taking the rate to {0} (today {1}).",
+  "No automático, o banco levaria os juros para {0} (hoje {1}).": "In automatic, the bank would take the rate to {0} (today {1})."
 }

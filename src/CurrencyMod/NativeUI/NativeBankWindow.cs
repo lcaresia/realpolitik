@@ -1026,8 +1026,13 @@ namespace CurrencyMod.NativeUI
                 L.T("Crédito: juro real (juros − inflação) acima do neutro encarece o investimento e corta a produção das cidades; abaixo, aquece. A produção chega ao novo patamar aos poucos. Detalhes na aba Ciclo."));
             Tip(top, "StatsTable/ExtensionsCount", L.T("Efeito na inflação"),
                 L.T("Juros altos seguram a inflação; juros baixos a empurram para cima."));
+            // Where the automatic bank is taking the rate (the same Taylor rule as the simulation), item 24.
+            double wanted = EconomySimulation.TaylorRate(mine.InflationRate, mine.Pressure, mine.InflationRateFromDebt);
             Tip(autoButton.transform, string.Empty, L.T("Modo dos juros"),
-                L.T("Automático: o banco ajusta os juros sozinho para levar a inflação à meta.\nManual: você decide pelo controle abaixo.\nClique para trocar."));
+                L.T("Automático: o banco ajusta os juros sozinho para levar a inflação à meta.\nManual: você decide pelo controle abaixo.\nClique para trocar.")
+                + "\n\n" + (mine.AutoInterest
+                    ? L.F("Agora, no automático, o banco leva os juros para {0} (hoje {1}).", Pct(wanted), Pct(mine.InterestRate))
+                    : L.F("No automático, o banco levaria os juros para {0} (hoje {1}).", Pct(wanted), Pct(mine.InterestRate))));
 
             if (interestSlider != null && !interestSlider.IsDragging)
             {
@@ -1066,6 +1071,7 @@ namespace CurrencyMod.NativeUI
             HideChild(top, "StatsTable/Fortification");
             HideChild(top, "StatsTable/ExtensionsCount");
             HideOutputs(top);
+            SetVisible(saveButton.transform, true); // the sample's button can come hidden
             SetButtonText(saveButton, L.T("Salvar"));
             Tip(top, "StatsTable/PopCount", L.T("Prévia"), L.T("Assim o nome e o símbolo aparecem nos textos do jogo."));
             Tip(saveButton.transform, string.Empty, L.T("Salvar moeda"), L.T("Aplica o nome, o plural e o símbolo. Enter num campo também salva."));

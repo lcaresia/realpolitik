@@ -207,18 +207,32 @@ namespace CurrencyMod.NativeUI
             chartXLabels[1].Text = L.F("Turno {0}", last);
             SetLabel(top, "TitleGroup/Title", L.F("Acessos a recursos nos últimos {0} turnos", history.Count));
 
+            // Money of resources per turn (melhorias-jogando item 23): purchases, sales and route upkeep with other empires,
+            // from the bank's trade ledger. Recorded per partner, not per resource, so the value is per turn.
+            var moneyByTurn = new Dictionary<int, (double Paid, double Gain)>();
+            CurrencyWorld ledgerWorld = CurrencyManager.Current;
+            foreach (TradePoint point in ledgerWorld?.TradeHistory ?? new List<TradePoint>())
+            {
+                double paid = point.Money.Where(m => m.From == localIndex && (m.Kind == MoneyKind.Resources || m.Kind == MoneyKind.Upkeep)).Sum(m => m.Paid);
+                double gain = point.Money.Where(m => m.To == localIndex && (m.Kind == MoneyKind.Resources || m.Kind == MoneyKind.Upkeep)).Sum(m => m.Gain);
+                moneyByTurn[point.Turn] = (paid, gain);
+            }
+            string MoneyText(int turn) => moneyByTurn.TryGetValue(turn, out var money) && (money.Paid > 0.05 || money.Gain > 0.05)
+                ? L.F("pago {0} {1} · recebido {0} {2}", mine.Symbol, Format.Money(money.Paid), Format.Money(money.Gain))
+                : null;
+
             int strategic = latest.Where(p => GameGlossary.Resource(p.Key)?.Strategic ?? false).Sum(p => p.Value);
             int luxury = latest.Where(p => GameGlossary.Resource(p.Key)?.Luxury ?? false).Sum(p => p.Value);
             string legend = string.Join("  ", lines.Select((type, i) => "<c=" + ResourceHex[i % ResourceHex.Length] + ">●</c> " + names[i]));
             string[] chips =
             {
-                Dot("E3C88A") + L.F("Total {0}", latest.Values.Sum()),
+                Dot("E3C88A") + L.F("Total {0}", latest.Values.Sum()) + (MoneyText(last) is string lastMoney ? " · " + lastMoney : string.Empty),
                 L.F("Estratégicos {0} · luxo {1}", strategic, luxury),
                 legend.Length > 0 ? legend : L.T("Sem recursos"),
             };
             string[][] tips =
             {
-                new[] { L.T("Total"), L.T("Soma dos acessos a todos os recursos estratégicos e de luxo, turno a turno.") },
+                new[] { L.T("Total"), L.T("Soma dos acessos a todos os recursos estratégicos e de luxo, turno a turno. O valor é o dinheiro do último turno fechado: compras e vendas de recursos e manutenção das rotas com outros impérios (passe o mouse no gráfico para ver cada turno).") },
                 new[] { L.T("Por tipo"), L.T("Estratégicos liberam unidades e construções; luxos dão bônus às cidades.") },
                 new[] { L.T("Linhas"), L.F("Os {0} recursos com mais acessos agora, cada um na sua cor.", ResourceChartLines) },
             };
@@ -241,6 +255,11 @@ namespace CurrencyMod.NativeUI
                     {
                         hover.Add(names[s] + L.Colon + value.ToString("0"));
                     }
+                }
+                string money = MoneyText(first + index);
+                if (money != null)
+                {
+                    hover.Insert(0, money);
                 }
                 return new[] { L.F("Turno {0}", first + index), string.Join("\n", hover) };
             });

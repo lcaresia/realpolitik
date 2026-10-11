@@ -1802,5 +1802,16 @@
   "eleição em {0} turno(s)": "élection dans {0} tour(s)",
   "até o turno {0}": "jusqu'au tour {0}",
   "O presidente põe pautas em votação; os outros sugerem. Mandato de {0} turnos, até o turno {1}; no fim há eleição, com 1 voto por membro (empate mantém o atual).": "Le président met les motions au vote ; les autres suggèrent. Mandat de {0} tours, jusqu'au tour {1} ; ensuite une élection, 1 voix par membre (l'égalité garde le sortant).",
-  "Este império já tomou esta decisão. Se você escolher diferente, ele não vai gostar e vai abrir uma queixa contra você.": "Cet empire a déjà fait ce choix. Si vous choisissez autrement, il n'appréciera pas et ouvrira un grief contre vous."
+  "Este império já tomou esta decisão. Se você escolher diferente, ele não vai gostar e vai abrir uma queixa contra você.": "Cet empire a déjà fait ce choix. Si vous choisissez autrement, il n'appréciera pas et ouvrira un grief contre vous.",
+  "1 {0} = {1} {2}": "1 {0} = {1} {2}",
+  "Relação: {0}": "Relation : {0}",
+  "Câmbio: 1 {0} vale {1} {2} ({3}).": "Change : 1 {0} vaut {1} {2} ({3}).",
+  "saldo {0}/t": "solde {0}/t",
+  "Você compra {0} recurso(s) dele: {1} {2}/turno.": "Vous lui achetez {0} ressource(s) : {1} {2}/tour.",
+  "Você vende {0} recurso(s) a ele: {1} {2}/turno.": "Vous lui vendez {0} ressource(s) : {1} {2}/tour.",
+  "Média dos últimos {0} turno(s), com a manutenção das rotas. Detalhes no Banco Central, aba Comércio.": "Moyenne des {0} dernier(s) tour(s), entretien des routes compris. Détails dans la Banque centrale, onglet Commerce.",
+  "pago {0} {1} · recebido {0} {2}": "payé {0} {1} · reçu {0} {2}",
+  "Soma dos acessos a todos os recursos estratégicos e de luxo, turno a turno. O valor é o dinheiro do último turno fechado: compras e vendas de recursos e manutenção das rotas com outros impérios (passe o mouse no gráfico para ver cada turno).": "Somme des accès à toutes les ressources stratégiques et de luxe, tour par tour. La valeur est l'argent du dernier tour clos : achats et ventes de ressources et entretien des routes avec les autres empires (survolez le graphique pour chaque tour).",
+  "Agora, no automático, o banco leva os juros para {0} (hoje {1}).": "En automatique, la banque amène le taux à {0} (aujourd'hui {1}).",
+  "No automático, o banco levaria os juros para {0} (hoje {1}).": "En automatique, la banque amènerait le taux à {0} (aujourd'hui {1})."
 }

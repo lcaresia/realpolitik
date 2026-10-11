@@ -32,7 +32,7 @@ the command words around them are English.
 | `responders <x> <y>` | same | responders under a screen point, in click order |
 | `windows` | same | game windows and whether they are open |
 | — | `cameras` | cameras and UI views (depth, clear, target, components): diagnose rendering bugs |
-| — | `resolution [WxH [window|full|exclusive]]` | shows or sets the screen resolution (recreates the screen buffers) |
+| — | `resolution [WxH [window\|full\|exclusive]]` | shows or sets the screen resolution (recreates the screen buffers) |
 | `styles [filter]` | same | UI style names |
 | `show <Window>` / `hide <Window>` | same | opens/closes a game window by type |
 | `hover <path>\|off` | same | opens/closes an element's native tooltip |

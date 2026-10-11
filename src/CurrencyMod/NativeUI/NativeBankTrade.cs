@@ -129,6 +129,68 @@ namespace CurrencyMod.NativeUI
             return world.LastProcessedTurn < 0 ? all : all.Where(p => p.Turn <= world.LastProcessedTurn).ToList();
         }
 
+        /// <summary>
+        /// Another empire's trade header (trade view market, melhorias-jogando item 22): a short line (relation,
+        /// exchange rate, trade balance per turn) and the details for its tooltip (what you buy and sell, averaged like
+        /// the bank's Trade tab). False when there is no game or currency data.
+        /// </summary>
+        internal static bool TradeHeader(int partner, out string line, out string details)
+        {
+            line = details = null;
+            CurrencyWorld world = CurrencyManager.Current;
+            var sandbox = Amplitude.Mercury.Sandbox.SandboxManager.Sandbox;
+            if (world == null || sandbox == null)
+            {
+                return false;
+            }
+            int me = sandbox.LocalEmpireIndex;
+            if (me < 0 || partner < 0 || me >= world.Empires.Count || partner >= world.Empires.Count || me == partner)
+            {
+                return false;
+            }
+            var shortParts = new List<string>();
+            var lines = new List<string>();
+            Diplomacy.Capture.WorldCapture capture = Diplomacy.Capture.TurnCapture.Latest;
+            Diplomacy.Capture.CapturedRelation relation = capture?.Empire(me)?.RelationWith(partner);
+            if (relation != null)
+            {
+                string chip = Diplomacy.UI.MailScreen.RelationChip(relation);
+                shortParts.Add(chip);
+                lines.Add(L.F("Relação: {0}", chip));
+            }
+            EmpireCurrency mine = world.Get(me);
+            EmpireCurrency other = world.Get(partner);
+            if (mine != null && other != null && other.ExchangeValue > 1e-6)
+            {
+                string rate = Format.Rate(mine.ExchangeValue / other.ExchangeValue);
+                shortParts.Add(L.F("1 {0} = {1} {2}", mine.Symbol, rate, other.Symbol));
+                lines.Add(L.F("Câmbio: 1 {0} vale {1} {2} ({3}).", mine.PluralOrName, rate, other.PluralOrName, other.Symbol));
+            }
+            List<TradePoint> history = CompleteHistory(world);
+            if (history.Count > 0)
+            {
+                int last = history[history.Count - 1].Turn;
+                int window = WindowTurns(history, last, TradeAverageTurns);
+                if (TotalsByPartner(history, me, last - window + 1, last).TryGetValue(partner, out PartnerTotals totals)
+                    && (totals.PaidTotal > 0.05 || totals.GainTotal > 0.05 || totals.BoughtGoods > 0 || totals.SoldGoods > 0))
+                {
+                    double balance = (totals.GainTotal - totals.PaidTotal) / window;
+                    string color = balance > 0.05 ? GainColor : balance < -0.05 ? PaidColor : null;
+                    shortParts.Add(Colored(L.F("saldo {0}/t", Signed(balance)), color));
+                    lines.Add(L.F("Você compra {0} recurso(s) dele: {1} {2}/turno.", totals.BoughtGoods, mine?.Symbol, Format.Money(totals.PaidTotal / window)));
+                    lines.Add(L.F("Você vende {0} recurso(s) a ele: {1} {2}/turno.", totals.SoldGoods, mine?.Symbol, Format.Money(totals.GainTotal / window)));
+                    lines.Add(L.F("Média dos últimos {0} turno(s), com a manutenção das rotas. Detalhes no Banco Central, aba Comércio.", window));
+                }
+            }
+            if (shortParts.Count == 0)
+            {
+                return false;
+            }
+            line = string.Join("  ·  ", shortParts);
+            details = string.Join("\n", lines);
+            return true;
+        }
+
         /// <summary>How many turns the average window actually covers (the history may be shorter).</summary>
         private static int WindowTurns(List<TradePoint> history, int last, int wanted)
         {

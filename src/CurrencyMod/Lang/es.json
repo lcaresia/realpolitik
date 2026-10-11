@@ -1802,5 +1802,16 @@
   "eleição em {0} turno(s)": "elección en {0} turno(s)",
   "até o turno {0}": "hasta el turno {0}",
   "O presidente põe pautas em votação; os outros sugerem. Mandato de {0} turnos, até o turno {1}; no fim há eleição, com 1 voto por membro (empate mantém o atual).": "El presidente somete las propuestas a votación; los demás sugieren. Mandato de {0} turnos, hasta el turno {1}; al final hay elección, con 1 voto por miembro (el empate mantiene al actual).",
-  "Este império já tomou esta decisão. Se você escolher diferente, ele não vai gostar e vai abrir uma queixa contra você.": "Este imperio ya tomó esta decisión. Si eliges distinto, no le gustará y abrirá una queja contra ti."
+  "Este império já tomou esta decisão. Se você escolher diferente, ele não vai gostar e vai abrir uma queixa contra você.": "Este imperio ya tomó esta decisión. Si eliges distinto, no le gustará y abrirá una queja contra ti.",
+  "1 {0} = {1} {2}": "1 {0} = {1} {2}",
+  "Relação: {0}": "Relación: {0}",
+  "Câmbio: 1 {0} vale {1} {2} ({3}).": "Cambio: 1 {0} vale {1} {2} ({3}).",
+  "saldo {0}/t": "saldo {0}/t",
+  "Você compra {0} recurso(s) dele: {1} {2}/turno.": "Le compras {0} recurso(s): {1} {2}/turno.",
+  "Você vende {0} recurso(s) a ele: {1} {2}/turno.": "Le vendes {0} recurso(s): {1} {2}/turno.",
+  "Média dos últimos {0} turno(s), com a manutenção das rotas. Detalhes no Banco Central, aba Comércio.": "Media de los últimos {0} turno(s), con el mantenimiento de las rutas. Detalles en el Banco Central, pestaña Comercio.",
+  "pago {0} {1} · recebido {0} {2}": "pagado {0} {1} · recibido {0} {2}",
+  "Soma dos acessos a todos os recursos estratégicos e de luxo, turno a turno. O valor é o dinheiro do último turno fechado: compras e vendas de recursos e manutenção das rotas com outros impérios (passe o mouse no gráfico para ver cada turno).": "Suma de los accesos a todos los recursos estratégicos y de lujo, turno a turno. El valor es el dinero del último turno cerrado: compras y ventas de recursos y mantenimiento de las rutas con otros imperios (pasa el ratón por el gráfico para ver cada turno).",
+  "Agora, no automático, o banco leva os juros para {0} (hoje {1}).": "Ahora, en automático, el banco lleva los intereses a {0} (hoy {1}).",
+  "No automático, o banco levaria os juros para {0} (hoje {1}).": "En automático, el banco llevaría los intereses a {0} (hoy {1})."
 }

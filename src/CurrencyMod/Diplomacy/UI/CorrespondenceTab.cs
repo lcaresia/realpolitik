@@ -802,6 +802,7 @@ namespace CurrencyMod.Diplomacy.UI
                 B.SetChip(replyTop, "StatsTable/PopCount", L.F("Carta do turno {0}", answerable.SentTurn));
                 B.HideChild(replyTop, "StatsTable/Fortification");
                 B.HideChild(replyTop, "StatsTable/ExtensionsCount");
+                B.SetVisible(replyButton.transform, true); // the sample's button can come hidden
                 B.SetButtonText(replyButton, L.T("Soltar"));
                 MailScreen.FitTitle(replyTop, replyButton.GetComponent<UITransform>().Width + 20f);
                 B.HideOutputs(replyTop);
