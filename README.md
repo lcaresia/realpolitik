@@ -336,7 +336,7 @@ To develop against a real install, clone into the game folder as `_Modding`
 while the game is running. To build the installer you also need Inno Setup 6:
 
 ```
-powershell -ExecutionPolicy Bypass -File _Modding\tools\make-release.ps1 -Version 1.3.0
+powershell -ExecutionPolicy Bypass -File _Modding\tools\make-release.ps1 -Version 1.3.1
 ```
 
 ## How releases are built (transparency)
@@ -351,7 +351,7 @@ Every Setup.exe on the Releases page is built by GitHub Actions from the public 
   this exact commit:
 
   ```
-  gh attestation verify Realpolitik_Setup_1.3.0.exe --repo lcaresia/realpolitik
+  gh attestation verify Realpolitik_Setup_1.3.1.exe --repo lcaresia/realpolitik
   ```
 - **No obfuscation:** the DLLs are a plain build, so you can decompile them and compare them with the code.
 
