@@ -45,6 +45,6 @@ again next pass. Empires without LLM floors get a default floor computed from th
 - Test: 13 of 14 LLM nations set their floors on their own on the first turn; the floors held back purchases in every
   category. The prompt example first used numbers and nations copied them; it now uses placeholders (N).
 - `Trade/RouteTransit.cs`: the buyer's route upkeep is paid to the non-buyer owners of the crossed territories, in
-  proportion to their territories on the path (config `[BloqueioComercial] RepasseDaManutencao`, default 1.0). Test:
+  proportion to their territories on the path (config `[BloqueioComercial] RepasseDaManutencao`; Lucas set 0.1 = 10% paid out, 90% vanishes as route maintenance). Test:
   about 2,330 per turn credited world-wide against about 1,800 of summed income (Carthaginians +446 for +116 income),
   so this injects a lot of money; the share is tunable.

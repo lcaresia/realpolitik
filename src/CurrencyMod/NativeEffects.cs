@@ -78,16 +78,34 @@ namespace CurrencyMod
             return EconomySimulation.InterestFlow((float)major.MoneyStock.Value, effects.InterestRate, effects.InflationRate, effects.SmoothedIncome, effects.Gdp);
         }
 
-        /// <summary>Per-turn income the game shows: its own plus the projected interest (MoneyNetDisplayPatch).</summary>
+        /// <summary>
+        /// Route transit the empire will receive at the next end of turn: last turn's amount (RouteTransit), which stays the
+        /// same while the routes do not change. Zero until the first end of turn after loading.
+        /// </summary>
+        internal static double ProjectedTransit(Empire empire)
+        {
+            return Enabled && empire is MajorEmpire major && RouteTransit.LastReceived.TryGetValue(major.Index, out double amount) ? amount : 0;
+        }
+
+        /// <summary>Bloc refund of route upkeep expected at the next end of turn: last turn's amount (BlocTrade).</summary>
+        internal static double ProjectedBlocRefund(Empire empire)
+        {
+            return Enabled && empire is MajorEmpire major && Diplomacy.Blocs.BlocTrade.LastRefund.TryGetValue(major.Index, out double amount) ? amount : 0;
+        }
+
+        /// <summary>
+        /// Per-turn income the game shows: its own plus what the mod adds or removes at the end of turn (balance interest,
+        /// route transit, bloc upkeep refund), so the top bar matches the money that will actually arrive (MoneyNetDisplayPatch).
+        /// </summary>
         public static FixedPoint DisplayedMoneyNet(Empire empire)
         {
             FixedPoint net = empire.MoneyNet.Value;
             try
             {
-                double interest = ProjectedInterest(empire);
-                if (Math.Abs(interest) >= 0.05)
+                double extra = ProjectedInterest(empire) + ProjectedTransit(empire) + ProjectedBlocRefund(empire);
+                if (Math.Abs(extra) >= 0.05)
                 {
-                    return net + (FixedPoint)(float)interest;
+                    return net + (FixedPoint)(float)extra;
                 }
             }
             catch (Exception)
@@ -112,6 +130,8 @@ namespace CurrencyMod
         private static readonly StaticString InflationId = new StaticString("CurrencyMod_Inflation");
         private static readonly StaticString UnemploymentId = new StaticString("CurrencyMod_Unemployment");
         private static readonly StaticString InterestId = new StaticString("CurrencyMod_Interest");
+        private static readonly StaticString TransitId = new StaticString("CurrencyMod_RouteTransit");
+        private static readonly StaticString BlocRefundId = new StaticString("CurrencyMod_BlocRefund");
         private static bool loggedError;
 
         private static void Postfix(ref PropertyBreakdownWorker __instance, SimulationEntity simulationEntity, string propertyName, BreakdownOptions options)
@@ -137,6 +157,8 @@ namespace CurrencyMod
                 else if (simulationEntity is MajorEmpire empire && propertyName == NativeEffects.MoneyProperty)
                 {
                     added = AddInterest(ref __instance, empire);
+                    added |= AddPart(ref __instance, NativeEffects.ProjectedTransit(empire), L.T("Passagem das rotas pelos seus territórios"), TransitId);
+                    added |= AddPart(ref __instance, NativeEffects.ProjectedBlocRefund(empire), L.T("Desconto do bloco na manutenção das rotas"), BlocRefundId);
                 }
                 if (added)
                 {

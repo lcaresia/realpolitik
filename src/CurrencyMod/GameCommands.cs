@@ -251,6 +251,12 @@ namespace CurrencyMod
                         TradePolicy.PathsDirty = true;
                         return $"ok: PesoPedagioNasRotas = {weight} (routes are recomputed)";
                     }
+                    if (words.Length == 2 && words[0] == "transit" && double.TryParse(words[1].Replace(',', '.'), System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out double transit))
+                    {
+                        // "game toll transit f": RepasseDaManutencao, the share of route upkeep paid to the crossed territories' owners.
+                        EconomyConfig.RouteTransitShare.Value = Math.Max(0, Math.Min(1, transit));
+                        return $"ok: RepasseDaManutencao = {EconomyConfig.RouteTransitShare.Value}";
+                    }
                     if (words.Length >= 6 && words[0] == "test" && TryEmpire(words[1], out int testOwner) && TryEmpire(words[4], out int testLeft) && TryEmpire(words[5], out int testRight)
                         && int.TryParse(words[2].TrimStart('T', 't'), out int freePost) && int.TryParse(words[3].TrimStart('T', 't'), out int tolledPost))
                     {
@@ -352,7 +358,7 @@ namespace CurrencyMod
                 guid = Snapshots.GameSnapshot.PresentationData.EmpireInfo[player].SimulationEntityGuid;
                 property = NativeEffects.MoneyProperty;
                 EmpireInfo info = Snapshots.GameSnapshot.PresentationData.EmpireInfo[player];
-                header.AppendLine($"money of empire E{player}: shown income {(float)info.MoneyNet:0.#} (game {(float)Sandbox.MajorEmpires[player].MoneyNet.Value:0.#}, projected interest {NativeEffects.ProjectedInterest(Sandbox.MajorEmpires[player]):+0.#;-0.#})");
+                header.AppendLine($"money of empire E{player}: shown income {(float)info.MoneyNet:0.#} (game {(float)Sandbox.MajorEmpires[player].MoneyNet.Value:0.#}, projected interest {NativeEffects.ProjectedInterest(Sandbox.MajorEmpires[player]):+0.#;-0.#}, route transit {NativeEffects.ProjectedTransit(Sandbox.MajorEmpires[player]):+0.#;-0.#}, bloc refund {NativeEffects.ProjectedBlocRefund(Sandbox.MajorEmpires[player]):+0.#;-0.#})");
             }
             else
             {
