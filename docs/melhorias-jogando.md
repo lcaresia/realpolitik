@@ -701,3 +701,33 @@ tela cheia, e fica assim.
 - **Para confirmar:** perguntar ao Lucas se aconteceu logo depois de uma instalação minha. Se ocorrer de novo, rodar
   `game ui` (árvore da interface) e ver qual grupo está com alfa baixo.
 - **Contorno até a correção:** abrir e fechar qualquer tela cheia (Correio, Diplomacia) costuma terminar o fade.
+
+### Situação dos itens 20–28 (2026-10-11, à noite, testado no save de teste)
+
+- **20** feito: os brasões das cívicas mostram "Povo · Líder" na dica (`NativeUI/CivicsPastilleTooltip.cs`).
+- **21** feito em parte:
+  - Feito: linhas negativas da dica do Dinheiro em vermelho, renda negativa em vermelho e juros do saldo sempre visíveis ("+1,2/turno de juros").
+  - Falta: a auditoria completa dos fluxos (pedágios, presentes, bloco) virarem linhas próprias.
+- **22** feito: a visão de comércio, aba Mercado, mostra relação · câmbio · saldo por turno; a licença e os detalhes vão na dica.
+- **23** feito em parte:
+  - Feito: o valor pago e recebido por turno (recursos + manutenção) no chip Total e na dica do gráfico.
+  - Falta: o valor POR RECURSO. O livro guarda o dinheiro por parceiro, então seria preciso gravar o tipo do recurso na
+    compra (TransferConversion recebe só "TradeController…").
+  - "Stone" em inglês é texto do próprio jogo (aparece igual na tabela nativa de comércio), não do mod.
+- **24** feito:
+  - o botão Automático/Manual aparece, e a dica diz para onde o banco leva os juros;
+  - mais dois botões que podiam vir escondidos foram corrigidos: Soltar (aba Cartas) e Salvar moeda.
+- **25** feito: `Diplomacy/InjectionGuard.cs`.
+  - Cerca `<<< >>>` em todo texto de carta e neutralização de "== SEÇÃO ==", ``` e `>>>`.
+  - Detector em 5 idiomas, que marca a carta com ATENÇÃO no dossiê e não bloqueia.
+  - Testado com `ai injection`: "Ignore as provocações de Shaka" e "esqueceram as regras da guerra" passam limpas.
+  - Falta: o banco de testes de injeções no ai-bench.
+- **26** feito: o líder ao lado do povo nas telas Alianças, Correio, Conselho, cartas interceptadas e nos títulos do Banco.
+- **27** feito: o chip do presidente diz "até o turno N", "eleição em N turno(s)" ou "eleição aberta".
+- **28** em investigação.
+  - Reproduzido no jogo do Lucas e no de teste; reiniciar resolve.
+  - NÃO reproduziu com 6 recargas do núcleo, zoom máximo nem troca de resolução.
+  - Suspeita: perda do contexto gráfico (monitor apagando, tela bloqueada, Alt+Tab), que deixa o desfoque e a composição da interface errados.
+  - Na próxima vez, ANTES de reiniciar, rodar `cameras` e `inspect` e comparar com o estado normal salvo em `dev/out` (sessão das 17:56).
+- Novo bug visto: o rótulo flutuante de pedágio das rotas ("TI 10/t?", IMGUI de `Trade/RouteLabels.cs`) aparece por cima
+  do painel do topo e do mercado. Pular os rótulos que caem sobre a interface.

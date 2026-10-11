@@ -141,6 +141,7 @@ the command words around them are English.
 | `ia bloco ...` | `ai bloc ...` | see below |
 | `ia aliancas ...` | `ai alliances ...` | see below |
 | `ia mencoes [texto]` | `ai mentions [text]` | public statements that mention the player / tests a text |
+| — | `ai injection <text>` | prompt-injection detector on a text (flagged/clean + neutralized) |
 | `ia espionagem` | `ai espionage` | spies and interception chances (also `dev\out\espionage.txt`) |
 | `ia espionagem unidades` | `ai espionage units` | agent unit types and stealthy armies |
 | `ia espionagem aba [furtividade\|deteccao\|estado]` | `ai espionage tab [stealth\|detection\|state]` | intercepted letters tab |

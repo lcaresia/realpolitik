@@ -206,6 +206,9 @@ namespace CurrencyMod.Diplomacy
                 }
                 case "alliances":
                     return UI.AlliancesScreen.DevCommand(rest);
+                case "injection":
+                    // Prompt-injection detector (InjectionGuard): tests a text as if it were a received letter.
+                    return (InjectionGuard.LooksLikeInjection(rest) ? "flagged" : "clean") + " · " + InjectionGuard.Inline(rest);
                 case "mentions":
                 {
                     // Mention detector (Mentions): without text, the public statements that mention the player; with text,
