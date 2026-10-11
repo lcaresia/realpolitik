@@ -162,6 +162,8 @@ namespace CurrencyMod
                     return ForceInterest(rest);
                 case "rpn":
                     return DumpRpn(rest);
+                case "erastars":
+                    return EraStars();
                 case "breakdown":
                     return Breakdown(rest);
                 case "interaction":
@@ -800,6 +802,73 @@ namespace CurrencyMod
         }
 
         /// <summary>"game rpn &lt;name&gt;": the game's data formula (operation stack, constants and properties), to understand a calculation.</summary>
+        /// <summary>
+        /// The player's era stars: score, thresholds and how the deed behind each one is scored (trigger and evaluator,
+        /// dumped by reflection). Read-only, main thread: diagnostics only.
+        /// </summary>
+        private static string EraStars()
+        {
+            Sandbox sandbox = SandboxManager.Sandbox;
+            if (sandbox == null)
+            {
+                return "error: no game loaded";
+            }
+            Amplitude.Mercury.Simulation.MajorEmpire mine = Sandbox.MajorEmpires[sandbox.LocalEmpireIndex];
+            var deeds = Databases.GetDatabase<Amplitude.Mercury.Data.Simulation.DeedDefinition>();
+            var pool = mine.DepartmentOfDevelopment.EraStarInfoPool;
+            var text = new StringBuilder();
+            for (int i = 0; i < pool.Capacity; i++)
+            {
+                EraStarInfo star = pool[i];
+                if (star.PoolAllocationIndex < 0)
+                {
+                    continue;
+                }
+                text.AppendLine($"{star.EraStarDefinitionName} deed {star.DeedDefinitionName} level {star.Level} score {(float)star.Score:0.##} thresholds "
+                    + string.Join("/", (star.Thresholds ?? new Amplitude.FixedPoint[0]).Select(t => ((float)t).ToString("0"))));
+                Amplitude.Mercury.Data.Simulation.DeedDefinition deed = null;
+                if (deeds != null && deeds.TryGetValue(star.DeedDefinitionName, out deed) && deed != null)
+                {
+                    text.AppendLine("  trigger: " + DumpFields(deed.Trigger));
+                    text.AppendLine("  evaluator " + deed.Evaluator?.GetType().Name + ": " + DumpFields(deed.Evaluator));
+                }
+            }
+            text.AppendLine($"money stock {(float)mine.MoneyStock.Value:0} net {(float)mine.MoneyNet.Value:0}");
+            return text.ToString();
+        }
+
+        private static string DumpFields(object value)
+        {
+            if (value == null)
+            {
+                return "null";
+            }
+            var parts = new System.Collections.Generic.List<string>();
+            foreach (System.Reflection.FieldInfo field in value.GetType().GetFields(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance))
+            {
+                object v = field.GetValue(value);
+                string shown = v is System.Array array ? "[" + string.Join(", ", array.Cast<object>().Select(e => e == null ? "null" : DumpShort(e))) + "]" : DumpShort(v);
+                parts.Add(field.Name + "=" + shown);
+            }
+            return string.Join("; ", parts);
+        }
+
+        private static string DumpShort(object value)
+        {
+            if (value == null)
+            {
+                return "null";
+            }
+            System.Type type = value.GetType();
+            if (type.IsPrimitive || value is string || type.IsEnum || value is Amplitude.FixedPoint || value is Amplitude.StaticString)
+            {
+                return value.ToString();
+            }
+            var inner = type.GetFields(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance)
+                .Select(f => f.Name + ":" + (f.GetValue(value)?.ToString() ?? "null"));
+            return "{" + string.Join(", ", inner) + "}";
+        }
+
         private static string DumpRpn(string name)
         {
             var database = Databases.GetDatabase<Amplitude.Framework.Simulation.Rpn.RpnDefinition>();

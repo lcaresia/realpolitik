@@ -81,6 +81,7 @@ the command words around them are English.
 | `jogo economia` | `game economy` | economy audit |
 | `jogo juros <E#> <pct>\|auto` | `game interest <E#> <pct>\|auto` | forces an interest rate |
 | `jogo rpn <name>` | `game rpn <name>` | dumps a game formula |
+| — | `game erastars` | the player era stars: score, thresholds and how each deed is scored |
 | `jogo detalhe industria\|estabilidade\|dinheiro [n]` | `game breakdown industry\|stability\|money [n]` | native tooltip breakdown |
 | `jogo interacao ...` | `game interaction ...` | `esc\|tropa\|cidade\|fe\|comercio\|aba X\|diplomacia E#\|sociedade\|espionagem\|normal\|estado` → `esc\|unit\|city\|faith\|trade\|tab relations\|trade\|treaties\|crisis\|diplomacy E#\|society\|espionage\|normal\|state` |
 | `jogo foco <path>\|off` | `game focus <path>\|off` | keyboard focus on a field |

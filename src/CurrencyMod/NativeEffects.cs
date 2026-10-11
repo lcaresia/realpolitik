@@ -396,4 +396,44 @@ namespace CurrencyMod
             return list;
         }
     }
+
+    /// <summary>
+    /// The Merchant era star ("Earn N money") adds the empire's MoneyNet at every turn start when it is positive. The
+    /// money the mod pays at the end of turn (balance interest, route transit, bloc upkeep refund) never goes through
+    /// MoneyNet, so it did not count. This scores the same income the top bar shows (DisplayedMoneyNet) instead.
+    /// </summary>
+    [HarmonyPatch]
+    internal static class MerchantStarIncomePatch
+    {
+        private static bool loggedError;
+
+        private static MethodBase TargetMethod()
+        {
+            Type evaluator = AccessTools.TypeByName("Amplitude.Mercury.Simulation.DeedEvaluator_PropertyEvaluator");
+            return evaluator == null ? null : AccessTools.Method(evaluator, "Evaluate");
+        }
+
+        private static void Postfix(MajorEmpire majorEmpire, Amplitude.Mercury.Data.Simulation.DeedEvaluator_PropertyEvaluator deedEvaluator,
+            FixedPoint currentScore, ref FixedPoint __result)
+        {
+            try
+            {
+                if (!NativeEffects.Enabled || majorEmpire == null || deedEvaluator == null || deedEvaluator.TargetProperty != "MoneyNet"
+                    || deedEvaluator.DeedScoringMethod != Amplitude.Mercury.Data.Simulation.DeedScoringMethod.Operation.AccumulateIfPositive)
+                {
+                    return;
+                }
+                __result = Amplitude.Mercury.Data.Simulation.DeedScoringMethod.Apply(deedEvaluator.DeedScoringMethod, currentScore,
+                    NativeEffects.DisplayedMoneyNet(majorEmpire));
+            }
+            catch (Exception ex)
+            {
+                if (!loggedError)
+                {
+                    loggedError = true;
+                    Plugin.Log.LogError($"Merchant star income: {ex}");
+                }
+            }
+        }
+    }
 }
