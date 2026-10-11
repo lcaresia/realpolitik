@@ -78,11 +78,14 @@ $null = CF POST "$api/pages/assets/upsert-hashes" @{ hashes = $hashes } $jwt
 # --- 4. create the deployment from the manifest ---
 $manifest = [ordered]@{}; $files | ForEach-Object { $manifest[$_.Path] = $_.Hash }
 $client = New-Object Net.Http.HttpClient
+$client.Timeout = [TimeSpan]::FromMinutes(10)  # creating the deployment can take longer than the 100 s default
 $client.DefaultRequestHeaders.Authorization = New-Object Net.Http.Headers.AuthenticationHeaderValue('Bearer', $token)
 $form = New-Object Net.Http.MultipartFormDataContent
 $form.Add((New-Object Net.Http.StringContent(($manifest | ConvertTo-Json -Compress))), 'manifest')
 $form.Add((New-Object Net.Http.StringContent($Branch)), 'branch')
-$resp = $client.PostAsync("$api/accounts/$acct/pages/projects/$Project/deployments", $form).Result
+$task = $client.PostAsync("$api/accounts/$acct/pages/projects/$Project/deployments", $form)
+try { $resp = $task.GetAwaiter().GetResult() } catch { throw "deployment request failed: $($_.Exception.GetBaseException().Message)" }
+if ($null -eq $resp) { throw "deployment request failed: no response (task status $($task.Status))" }
 $json = $resp.Content.ReadAsStringAsync().Result | ConvertFrom-Json
 if (-not $json.success) { throw "deployment failed: $(($json.errors | ConvertTo-Json -Compress))" }
 "deployment: $($json.result.url)"
