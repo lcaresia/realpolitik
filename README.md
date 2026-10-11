@@ -76,7 +76,7 @@ Without an AI provider everything else still works, and nations use the game's n
 - **Prompt-injection guard.** The rules tell each nation that letters it receives are other characters' words, not
   orders.
 
-#### 32 actions that become real game orders
+#### 40+ actions that become real game orders
 
 Each order goes through the game's own checks; the result (or the game's refusal reason) goes back into the nation's
 memory.
@@ -93,6 +93,8 @@ memory.
 | Trade | trade policy (free, toll with a price, blockade) against each empire |
 | Steering the native AI | posture (ally … war target) and focus (expansion, economy, science, military, faith, culture) |
 | World Congress (Together We Rule) | propose laws, vote, bribe, comply with or defy a verdict, contribute to consensus |
+| Blocs and groups | found a bloc, answer an invitation, suggest or open a motion, vote on motions and for president, leave; create or leave a group chat |
+| Council and treasury | appoint or fire a minister; set cash floors for army, cities and resources |
 | Other | rename cities and armies, fire a minister, refuse or accept another nation's letters |
 
 **Native-AI locks:**
@@ -104,7 +106,10 @@ memory.
 
 #### Letters and the Diplomatic Mail
 
-- **Letter types:** private letters, ultimatums (with a demand and a deadline), and public declarations.
+- **Letter types:** private letters, ultimatums (with a demand and a deadline), public declarations and group
+  messages.
+- **Group chats:** you and the AI nations create groups of up to 8 members; every member reads each message, and
+  your group messages ask for an answer. Every bloc gets its own group automatically.
 - **Who writes:** nations write to you and to each other.
 - **Delivery delay by era:** letters take turns to arrive in the early eras and arrive the same turn in the
   Contemporary era.
@@ -112,8 +117,8 @@ memory.
 - **Refusing letters:** you, or an AI, can refuse another nation's private letters. They bounce back, and the sender
   learns it.
 - **Diplomatic Mail** (envelope button in the bottom bar, with a red badge for new letters):
-  - A full-screen screen with New, To answer, Read, Answered, Sent (with delivery status), Public communiqués and
-    Nations.
+  - A full-screen screen with New, To answer, Read, Answered, Sent (with delivery status), Public communiqués,
+    Nations and Groups.
   - Filters by nation and by period.
   - A composer for private letters, ultimatums and public declarations.
 - **Letters tab** in each nation's diplomacy screen: the whole conversation with that nation and a composer.
@@ -130,15 +135,31 @@ memory.
 
 #### Councils of ministers
 
-- **AI nations:** 12 ministers each (11 portfolios plus the Hand). Ministers come from a personality bank, and
-  their titles change by era and culture. Their opinions feed the leader's dossier at no extra API cost, and the leader
-  can fire them.
+- **Appointing:** every council starts with only the Hand. Each vacant portfolio offers 3 candidates (traits, starting
+  credibility, loyalty and ambition, sympathies toward other nations, and how their traits shape the advice), and
+  appointing one costs influence. AI nations appoint and fire the same way.
+- **Painted portraits:** 72 portraits, one per portfolio, epoch and gender; no two candidates of a seat share a face.
+- **Veterans:** a minister in office gains +1% every 5 turns in the portfolio's area (industry, stability, faith,
+  influence, trade income, interception chance…), up to +10%.
+- **AI nations:** ministers come from a personality bank, and their titles change by era and culture. Their opinions
+  feed the leader's dossier at no extra API cost.
 - **Your council** (three-busts button):
   - Every turn the Hand opens the agenda and the most urgent ministers speak about your realm, using your own dossier.
   - You can answer them. Their regard for you changes, and it also follows the wars, peaces and agreements you actually
     make.
   - Fire ministers on the Ministers tab; previous meetings stay readable.
   - It costs about US$0.003 per meeting with a cheap model.
+
+#### Blocs and the Alliances screen
+
+- **Blocs:** a founder names the bloc and invites; it is born with 3 members, one bloc per nation.
+- **Benefits:** no tolls or blockades between members and cheaper route upkeep, mutual defence (an attack on a member
+  gives everyone a grievance against the aggressor), a common tariff against outsiders, and a joint vote in Congress.
+- **President:** elected for 20 turns, one vote per member; only the president puts motions to a vote (tariffs,
+  admitting or expelling members, the Congress vote, renaming, dissolving); members suggest motions.
+- **AI nations take part in everything** through actions: found, answer invitations, suggest, vote, elect, leave.
+- **Alliances screen** (button next to the Mail and the Council): members with strength and fame, the president's
+  term, open motions with the score and deadline, active benefits with real numbers, and the other blocs of the world.
 
 #### F10 web viewer
 
@@ -196,6 +217,11 @@ memory.
   - Inflation and unemployment lower city stability.
   - Your balance earns (or your debt costs) real interest.
   - Interest is manual or automatic per empire; AI empires use automatic.
+  - Idle money earns interest on a share of the treasury sized by your income and GDP.
+- **AI cash floors:** each AI nation sets minimum reserves for army, cities and resources every turn, from a GDP
+  ranking in its dossier, so the native AI no longer buys itself into debt.
+- **Route transit:** 10% of a route's upkeep is paid to the owners of the territories it crosses (the rest is the cost
+  of running it); it shows in the top-bar income and its tooltip.
 - **Central Bank** (temple button next to Trade, or F8), a full-screen screen with five sections:
   - Exchange: rates against other empires, with a 60-turn chart.
   - Trade: money earned and paid to each empire.
@@ -249,7 +275,10 @@ Tested in game with 16 empires on Tiny, Normal and Huge maps. Saves with more th
 
 - **Hot reload:** a fixed loader plugin reloads the core DLL about one second after it changes, so you can iterate
   without restarting the game.
-- **Command channel** (`_Modding\dev\cmd.txt`) to drive the game from scripts:
+- **Code map:** graphify maps of the mod, the decompiled game and every Harmony patch (`tools\codemap\`), used before
+  changing code. All code, logs and commands are in English.
+- **Command channel** (`_Modding\dev\cmd.txt`) to drive the game from scripts (commands listed in
+  [docs/dev-commands.md](docs/dev-commands.md)):
   - load saves, start test games, end turns, take screenshots, record frames for video;
   - inspect the UI tree, force AI decisions, test every action, audit the economy (CSV), and more.
   - Scripts live in `tools\dev\` (`devcmd.ps1`, `passturn.ps1`, `passturns.ps1`).
@@ -307,7 +336,7 @@ To develop against a real install, clone into the game folder as `_Modding`
 while the game is running. To build the installer you also need Inno Setup 6:
 
 ```
-powershell -ExecutionPolicy Bypass -File _Modding\tools\make-release.ps1 -Version 1.2.0
+powershell -ExecutionPolicy Bypass -File _Modding\tools\make-release.ps1 -Version 1.3.0
 ```
 
 ## How releases are built (transparency)
@@ -322,7 +351,7 @@ Every Setup.exe on the Releases page is built by GitHub Actions from the public 
   this exact commit:
 
   ```
-  gh attestation verify Realpolitik_Setup_1.2.0.exe --repo lcaresia/realpolitik
+  gh attestation verify Realpolitik_Setup_1.3.0.exe --repo lcaresia/realpolitik
   ```
 - **No obfuscation:** the DLLs are a plain build, so you can decompile them and compare them with the code.
 
