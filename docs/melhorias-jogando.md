@@ -584,3 +584,34 @@ mostrar quanto você importa e exporta com essa nação, o câmbio entre as duas
   - o rótulo "R$ 4/t?" que aparece no meio do painel parece ser a nossa dica antiga de preço por turno com "?": conferir o que é e unificar.
 - **Cuidado:** espaço curto no cabeçalho, então chips em vez de frase longa, como nos cartões do Correio.
 - **Tamanho:** pequeno a médio. Depende de achar o painel nativo (provavelmente o mesmo do comércio por império).
+
+### 23. Gráfico "Acessos a recursos nos últimos 5 turnos": mostrar o valor além da quantidade
+
+Hoje o gráfico (tela do banco) e a dica por turno mostram só quantos acessos existem, no total e por recurso
+("Cobre: 16"). O Lucas quer ver também quanto isso vale em dinheiro.
+
+- **Proposta:**
+  - **Dica por turno:** "Cobre: 16 · 640 R$" (a quantidade e o valor).
+  - **Chips do topo:** "Total 70 · 2.380 R$".
+  - **Valor pelo preço de quê:** o valor pago e recebido de fato no turno, que é o mais honesto e vem do livro `MoneyFlow`
+    (`Resources`) somado por recurso. O preço de mercado do recurso fica como alternativa.
+  - Separar compra e venda quando houver as duas: "+ vendido / − comprado".
+  - **Opção:** um seletor "Quantidade | Valor" que troca o eixo do gráfico. Vale só se a dica ficar carregada demais.
+- **Integrações:** é o mesmo dado do item 21 (auditoria de fluxos) e do item 22 (painel de recursos da outra nação).
+  Os três precisam de uma consulta comum "dinheiro de recursos por recurso, parceiro e turno" em `CurrencyState`/`EconomySimulation`.
+  Fazer essa consulta uma vez só.
+- **Bug pequeno visto na foto:** "Stone" aparece em inglês na legenda e na dica, enquanto os outros estão traduzidos.
+  É um nome de recurso que o jogo não traduziu (ou que pegamos da chave errada). Conferir a origem do nome.
+- **Tamanho:** pequeno, se o histórico de fluxos por recurso já estiver guardado por turno. Se só houver totais, médio.
+
+### 24. Banco Central: botão Automático/Manual dos juros (bug, corrigido em código)
+
+O botão já existia (`NativeBankWindow.autoButton`, "Modo: automático/manual", com dica explicando a regra de Taylor),
+mas não aparecia: era o mesmo bug do Correio, em que o botão do cartão-modelo nativo vem escondido. Corrigido mostrando o
+botão explicitamente. Ele entra no jogo na próxima instalação (não instalei com o jogo aberto).
+
+- **Pendência:** varrer todas as telas atrás de botões `LiberateButton` reaproveitados que nunca recebem
+  `SetVisible(..., true)`. Já foram quatro casos (Trocar, Enviar e Soltar no Correio; o modo dos juros no Banco).
+  Vale um teste automático (dev command) que abre cada tela e lista os botões com texto mas invisíveis.
+- **Ideia ligada:** com o modo automático, mostrar no cartão para onde o banco está levando os juros ("vai subir até X%").
+  O texto já existe na aba de diagnóstico (linha ~660), então dá para trazer para a dica do botão.

@@ -1016,6 +1016,7 @@ namespace CurrencyMod.NativeUI
             SetChip(top, "StatsTable/Fortification", L.F("Produção ×{0}", Format.Rate(mine.CreditFactor)));
             SetChip(top, "StatsTable/ExtensionsCount", L.F("Inflação {0}", Format.SignedPercent(inflationPush)));
             HideOutputs(top);
+            SetVisible(autoButton.transform, true); // the sample's button can come hidden
             SetButtonText(autoButton, mine.AutoInterest ? L.T("Modo: automático") : L.T("Modo: manual"));
             Tip(top, "StatsTable/PopCount", stock >= 0 ? L.T("Rendimento do saldo") : L.T("Custo da dívida"),
                 stock >= 0
