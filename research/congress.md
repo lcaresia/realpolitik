@@ -92,7 +92,7 @@ Complementa `order-catalog.md` (§2.2, §2.3, §2.19), `crisis-negotiation.md` e
 **Era mínima:** o valor está só nos dados.
 - Indício, não prova: a IA nativa reduz a vontade de ganhar peso antes da era de índice 4 (GENI\ImproveDiplomaticPower.cs:64-70).
 - O save de teste está na Medieval e o Congresso segue travado. Isso bate com era mínima ≥ 4 ou com falta de consulado.
-- Para ler: `jogo rpn International_MinimumEraToUnlock` (src\CurrencyMod\GameCommands.cs:129-130, 451-478).
+- Para ler: `game rpn International_MinimumEraToUnlock` (src\CurrencyMod\GameCommands.cs:129-130, 451-478).
 
 ### 1.2 O que acontece ao destravar (`UnlockCivicVote`, INT:414-441)
 
@@ -863,32 +863,32 @@ Consenso ideológico (o mundo destrava eixos com influência; o efeito vem da m�
 
 ### 7.9 Comandos de desenvolvimento
 
-- `ia congresso` (ampliar MOD\IaCommands.cs:182-209) mostra:
+- `ai congress` (ampliar MOD\IaCommands.cs:182-209) mostra:
   - DLC e opção da partida; flags de desbloqueio por nação e os valores de RPN;
   - quem destravou, a ordem de presidência, a próxima sessão e as leis propuníveis;
   - a votação ativa, com cédulas e subornos;
   - as crises, com estado, cédulas e se esperam resposta;
   - peso, consulado e alavancagem das nações da IA de linguagem;
   - os contadores das travas.
-- `jogo congresso liberar E#`: posta ForceUnlockCivicVote (de E#), ForceUnlockCrisisVote e ForceUnlockIdeologicalConsensus. Só no TurnMain.
-- `jogo congresso encerrar lei|K#`: posta ForceEndCivicVote ou ForceEndCrisisVote. Só para teste: o resultado sai na hora.
-- `jogo rpn <nome>` (já existe): as fórmulas de §1.4.
+- `game congress unlock E#`: posta ForceUnlockCivicVote (de E#), ForceUnlockCrisisVote e ForceUnlockIdeologicalConsensus. Só no TurnMain.
+- `game congress close law|K#`: posta ForceEndCivicVote ou ForceEndCrisisVote. Só para teste: o resultado sai na hora.
+- `game rpn <name>` (já existe): as fórmulas de §1.4.
 - **Apoio ao teste** com ordens de editor, aceitas em partida normal (`order-catalog.md` §2.19):
   - `EditorOrderCreateExtensionDistrictAt{DistrictDefinitionName = <EmpireWideConsulatDefinition>, TileIndex = casa livre num território de cidade}`: cria o consulado e grava `Consulat` (SIM\EditorOrderProcessors.cs:702-749; SIM\DepartmentOfTheInterior.cs:3570-3574). Postar com alvo −1. Escolher uma casa sem distrito; numa casa com distrito, a ordem faz upgrade e substitui o distrito.
   - `EditorOrderAddOrRemoveLeveragePointStock{OtherEmpireIndex, PointDelta}`: postar **para o império** que ganha (o processador fica no DOFA, DOFA:1078-1096).
   - `EditorOrderUnlockCivic{EmpireIndex, CivicName}`: deixa uma lei internacional disponível para o presidente (SIM\EditorOrderProcessors.cs:2085-2109).
-  - `ia acao E# {json}` (já existe): as ferramentas novas.
+  - `ai action E# {json}` (já existe): as ferramentas novas.
 
 ### 7.10 Testes no save Francos (de teste; Medieval, 10 impérios, Congresso travado)
 
 **0. Preparação**
 - Salvar ("Antes congresso T#").
-- `ia congresso`: conferir DLC = sim, opção = ligada, flags por nação, consulados e alavancagem.
+- `ai congress`: conferir DLC = sim, opção = ligada, flags por nação, consulados e alavancagem.
   - **Se o DLC ou a opção faltar, parar**: forçar criaria votações eternas (§1.1).
-- `jogo rpn` das 10 fórmulas de §1.4. Anotar a era mínima e as durações.
+- `game rpn` das 10 fórmulas de §1.4. Anotar a era mínima e as durações.
 
 **1. Liberar**
-- `jogo congresso liberar E0` no TurnMain.
+- `game congress unlock E0` no TurnMain.
 - Esperado:
   - as três flags ligadas e E0 na posição de quem destravou;
   - a ordem de presidência montada;
@@ -898,7 +898,7 @@ Consenso ideológico (o mundo destrava eixos com influência; o efeito vem da m�
 
 **2. Proposta pela IA de linguagem**
 - O dossiê de E0 mostra "VOCÊ PRESIDE".
-- Esperar a decisão da nação, ou usar `ia acao E0 {"acao":"propor_votacao","lei":"V#"}`.
+- Esperar a decisão da nação, ou usar `ai action E0 {"acao":"propor_votacao","lei":"V#"}`.
 - Esperado:
   - votação ativa com `TurnEnd` certo;
   - notificação para o humano;
@@ -907,7 +907,7 @@ Consenso ideológico (o mundo destrava eixos com influência; o efeito vem da m�
 
 **3. Votos**
 - Deixar as nações votarem; o humano vota pela tela.
-- Conferir no `ia congresso`:
+- Conferir no `ai congress`:
   - cédulas e pesos;
   - nenhuma nação da IA de linguagem votou pela IA nativa (contadores);
   - as nações nativas votam no ritmo delas;
@@ -919,7 +919,7 @@ Consenso ideológico (o mundo destrava eixos com influência; o efeito vem da m�
 
 **5. Suborno**
 - Nação da IA de linguagem com consulado e alavancagem; criar os dois com as ordens de editor de §7.9, se faltar.
-- `ia acao E# {"acao":"subornar","votacao":"lei","nacao":"E4","vezes":1}`.
+- `ai action E# {"acao":"subornar","votacao":"lei","nacao":"E4","vezes":1}`.
 - Esperado:
   - `PurchasedBribeActionCount` = 1, o que prova que o campo chega no solo (§3.5);
   - alavancagem reduzida;
@@ -927,7 +927,7 @@ Consenso ideológico (o mundo destrava eixos com influência; o efeito vem da m�
 - Votar no turno seguinte e conferir `SwayContribution`.
 
 **6. Resultado**
-- Usar `jogo congresso encerrar lei` ou passar até `TurnEnd`.
+- Usar `game congress close law` ou passar até `TurnEnd`.
 - Conferir:
   - quem recebeu lei imposta;
   - o humano com o obrigatório (testar aceitar e recusar);
@@ -940,7 +940,7 @@ Consenso ideológico (o mundo destrava eixos com influência; o efeito vem da m�
 
 **8. Crise**
 - Escolher um par em paz em que uma nação da IA de linguagem tenha exigências e consulado (criar com `exigir`; se for preciso, recusa do outro).
-- `crise_internacional` → K#; votos; `jogo congresso encerrar K#`.
+- `crise_internacional` → K#; votos; `game congress close K#`.
 - **Perdedor da IA de linguagem:**
   - o dossiê mostra "O CONGRESSO DECIDIU CONTRA VOCÊ";
   - a IA nativa dele **não** responde nem declara guerra (contador);

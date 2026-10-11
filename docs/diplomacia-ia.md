@@ -65,7 +65,7 @@ Thread principal (IaModule.Tick, a cada 1 s)
 | `IaConfig.cs` | Seção `[IA]` do `.cfg` (ver §5). |
 | `Llm\ApiKey.cs` | Lê o `BepInEx\config\deepseek.key` antigo (só para importar para as credenciais, §15). |
 | `Llm\LlmClient.cs` | Transporte HTTP: `chat/completions` com as variações de cada provedor (o Codex vai por `Providers\CodexCli.cs`). Modo json, raciocínio, novas tentativas em erro de rede/429/5xx, tipo do erro (`ErrorKind`), extração do json, custo (`Pricing`) e limpeza de pedaços de chave nas mensagens de erro (`Redact`). |
-| `Llm\Providers\*.cs` | Provedores (§15): catálogo, credenciais com DPAPI, fila com troca automática, logins OAuth, "Testar conexão" e comandos `ia provedor`. |
+| `Llm\Providers\*.cs` | Provedores (§15): catálogo, credenciais com DPAPI, fila com troca automática, logins OAuth, "Testar conexão" e comandos `ai provider`. |
 | `UI\ProvidersScreen.cs` / `UI\ProvidersButtons.cs` | Tela Diplomacia IA (menu principal e menu de pausa) e os botões de entrada (§15). |
 | `IaModule.cs` | Orquestrador (MonoBehaviour): partida, turno, despacho, aplicação das respostas, cartas do jogador, publicação. |
 | `IaJobs.cs` | `DecisionJob` (tudo que a thread de trabalho precisa) e `DecisionRunner` (chamada + validação + novas tentativas). |
@@ -86,7 +86,7 @@ Thread principal (IaModule.Tick, a cada 1 s)
 | `Delivery.cs` | Prazo de entrega das cartas pela era de quem envia. |
 | `IaSavePatches.cs` | Grava/lê `DiplomaciaIA.json` dentro do container do save. |
 | `IaLog.cs` | Log por decisão em `BepInEx\DiplomaciaIA\logs\<partida>\T###_E#.json`. |
-| `IaCommands.cs` | Comandos de desenvolvimento (`ia ...`, ver §7). |
+| `AiCommands.cs` | Comandos de desenvolvimento (`ai ...`, ver §7). |
 | `Viewer\ViewerServer.cs` | Servidor HTTP mínimo em `127.0.0.1` (TcpListener). |
 | `Viewer\ViewerModel.cs` | Monta os jsons do visualizador. |
 | `Viewer\viewer.html` | A página do visualizador (embutida na DLL). |
@@ -95,7 +95,7 @@ Pontos de contato com o resto do CurrencyMod:
 - `Plugin.BindConfig` chama `IaConfig.Bind`.
 - `ModEntry.Start` adiciona o `IaModule`.
 - `ModEntry.Stop` chama `IaModule.Shutdown()`, que solta a porta e guarda a memória para a recarga a quente.
-- `DevTools.Execute` repassa `ia ...`.
+- `DevTools.Execute` repassa `ai ...`.
 
 ## 3. O dossiê
 
@@ -237,7 +237,7 @@ eras.
 | `ConselhoDoJogador` | true | O seu conselho se reúne a cada turno (1 chamada) e responde às suas falas (1 chamada cada) (§14). |
 | `ConselhoAbreSozinho` | true | A tela do conselho abre sozinha quando a reunião fica pronta, se o mapa estiver livre. |
 | `ConselhoFalasPorTurno` | 6 | Quantos ministros falam na reunião, além da Mão. |
-| `ExpansaoEmSaveAntigo` | false | Liga o DLC Together We Rule (Congresso) ao carregar um save criado sem ele, se o DLC estiver comprado e ativo (`ExpansionSavePatch`: postfix em `Sandbox.Load` que acende o bit do `DiplomacyExpansionPack` em `Sandbox.DownloadableContents`). Vale no próximo carregamento. `jogo expansao` mostra se a sessão atual foi forçada. |
+| `ExpansaoEmSaveAntigo` | false | Liga o DLC Together We Rule (Congresso) ao carregar um save criado sem ele, se o DLC estiver comprado e ativo (`ExpansionSavePatch`: postfix em `Sandbox.Load` que acende o bit do `DiplomacyExpansionPack` em `Sandbox.DownloadableContents`). Vale no próximo carregamento. `game expansion` mostra se a sessão atual foi forçada. |
 | `AtalhoVisualizador` | F10 | Abre o visualizador no navegador. |
 | `PortaVisualizador` | 8765 | Porta local do visualizador. |
 | `SalvarLogs` | true | Grava os logs por decisão. |
@@ -285,70 +285,70 @@ Escreva uma linha em `_Modding\dev\cmd.txt` com o jogo aberto. O resultado sai e
 
 | Comando | O que faz |
 |---|---|
-| `ia status` | Situação, estado do jogo, foto do turno, gasto, nações e última decisão de cada uma. |
-| `ia foto` | Tira a foto do turno agora, pela thread principal (testes). |
-| `ia dossie <n\|todas>` | Monta o dossiê agora, sem chamar a API, e grava em `dev\out\ia_dossie_E<n>.txt`. |
-| `ia prompt <n>` | Grava o prompt completo (sistema + dossiê). |
-| `ia agora [n]` | Faz a nação `n` (ou todas) pensar agora, mesmo já tendo pensado no turno. |
-| `ia carta <n> <texto>` | Carta privada sua para a nação `n` (chega pela regra de entrega). |
-| `ia carta! <n> <texto>` | O mesmo, entregue no turno atual. Junto com `ia agora <n>`, testa o ciclo carta → resposta. |
-| `ia on` / `ia off` | Liga ou desliga a IA (grava no `.cfg`). |
-| `ia viewer` | Abre o visualizador. |
-| `ia reset` | Apaga a memória da IA desta partida (testes). |
-| `ia acoes [turnos]` | Ações das nações nos últimos turnos (padrão 3) e o que o jogo fez com cada uma. |
-| `ia mencoes [texto]` | Comunicados públicos que citam você (detector `Mentions`: nome do líder, povos de todas as eras, cidades, 1 erro de digitação) e os povos já conhecidos do jogador; com texto, testa o detector nele. |
-| `ia correio colar [arquivo]` | Cola o arquivo (em `_Modding\dev`, padrão `colar.txt`) no campo da carta pelo caminho do Ctrl+V (foco + `TryInsertString`), sem enviar. Mostra caracteres, edição e posição do rótulo. |
-| `ia correio …` | Controla a tela cheia do correio (§11.5). |
-| `ia cartas E#` | Abre a diplomacia com a nação já na aba Cartas. |
-| `ia espionagem …` / `ia interceptar …` | Espiões e interceptação de cartas (§13). |
-| `ia congresso [agora]` | O Congresso visto pela foto do turno (ou tirada agora): DLC, liberação, peso de cada nação, consulados, alavancagem, presidência, leis, votações com votos e subornos, crises, consenso, leis impostas e notícias. Grava `dev\out\congresso.txt`. |
-| `ia acao E# {json}` | Uma ação qualquer de uma nação da IA (o mesmo json das decisões), pelo mesmo caminho do executor, sem a validação do dossiê. Fica na memória da nação. |
-| `ia conselho [ver\|abrir\|fechar\|secao 0..2\|falar <texto>\|demitir <pasta>\|reunir\|convocar]` | O seu conselho (§14): mostra a última reunião em texto, abre a tela, fala com os ministros, demite e convoca uma audiência (ou de novo depois de uma falha). Sozinho, ele se reúne a cada `ConselhoIntervaloTurnos` (7) turnos. |
-| `ia teste carta-de E# [texto] \| parser E# \| congresso \| conselho-json` | Cenários da revisão de bugs: carta de uma nação para você (vale com nação eliminada); decisão com cartas erradas na 1ª e na última tentativa; a espera da 1ª sessão do Congresso numa sequência de presidentes; resposta do conselho fora do formato pelo `ApplyMeeting` de verdade. |
-| `ia exercitos E#` | Exércitos da nação com o código A (da foto do turno), em marcha ou não, e a missão de cada um (§12). |
-| `ia exercito E# A# mover\|atacar\|defender\|parar <T#\|C#\|A#\|-> [turnos]` | A mesma ordem que a IA de linguagem daria, registrada na memória da nação (o resultado aparece no `ia acoes`). |
+| `ai status` | Situação, estado do jogo, foto do turno, gasto, nações e última decisão de cada uma. |
+| `ai snapshot` | Tira a foto do turno agora, pela thread principal (testes). |
+| `ai dossier <n\|all>` | Monta o dossiê agora, sem chamar a API, e grava em `dev\out\ai_dossier_E<n>.txt`. |
+| `ai prompt <n>` | Grava o prompt completo (sistema + dossiê). |
+| `ai now [n]` | Faz a nação `n` (ou todas) pensar agora, mesmo já tendo pensado no turno. |
+| `ai letter <n> <text>` | Carta privada sua para a nação `n` (chega pela regra de entrega). |
+| `ai letter! <n> <text>` | O mesmo, entregue no turno atual. Junto com `ai now <n>`, testa o ciclo carta → resposta. |
+| `ai on` / `ai off` | Liga ou desliga a IA (grava no `.cfg`). |
+| `ai viewer` | Abre o visualizador. |
+| `ai reset` | Apaga a memória da IA desta partida (testes). |
+| `ai actions [turns]` | Ações das nações nos últimos turnos (padrão 3) e o que o jogo fez com cada uma. |
+| `ai mentions [text]` | Comunicados públicos que citam você (detector `Mentions`: nome do líder, povos de todas as eras, cidades, 1 erro de digitação) e os povos já conhecidos do jogador; com texto, testa o detector nele. |
+| `ai mail paste [arquivo]` | Cola o arquivo (em `_Modding\dev`, padrão `paste.txt`) no campo da carta pelo caminho do Ctrl+V (foco + `TryInsertString`), sem enviar. Mostra caracteres, edição e posição do rótulo. |
+| `ai mail …` | Controla a tela cheia do correio (§11.5). |
+| `ai letters E#` | Abre a diplomacia com a nação já na aba Cartas. |
+| `ai espionage …` / `ai intercept …` | Espiões e interceptação de cartas (§13). |
+| `ai congress [now]` | O Congresso visto pela foto do turno (ou tirada agora): DLC, liberação, peso de cada nação, consulados, alavancagem, presidência, leis, votações com votos e subornos, crises, consenso, leis impostas e notícias. Grava `dev\out\congresso.txt`. |
+| `ai action E# {json}` | Uma ação qualquer de uma nação da IA (o mesmo json das decisões), pelo mesmo caminho do executor, sem a validação do dossiê. Fica na memória da nação. |
+| `ai council [show\|open\|close\|section 0..2\|speak <text>\|fire <portfolio>\|convene]\|convene]` | O seu conselho (§14): mostra a última reunião em texto, abre a tela, fala com os ministros, demite e convoca uma audiência (ou de novo depois de uma falha). Sozinho, ele se reúne a cada `ConselhoIntervaloTurnos` (7) turnos. |
+| `ai test letter-from E# [text] \| parser E# \| congress \| council-json` | Cenários da revisão de bugs: carta de uma nação para você (vale com nação eliminada); decisão com cartas erradas na 1ª e na última tentativa; a espera da 1ª sessão do Congresso numa sequência de presidentes; resposta do conselho fora do formato pelo `ApplyMeeting` de verdade. |
+| `ai armies E#` | Exércitos da nação com o código A (da foto do turno), em marcha ou não, e a missão de cada um (§12). |
+| `ai army E# A# move\|attack\|defend\|stop <T#\|C#\|A#\|-> [turns]` | A mesma ordem que a IA de linguagem daria, registrada na memória da nação (o resultado aparece no `ai actions`). |
 
 Comandos do jogo (`GameCommands.cs`), para testar sem clicar:
 
 | Comando | O que faz |
 |---|---|
-| `jogo estado` | Estado do jogo, turno e se dá para passar o turno. |
-| `jogo saves [reler]` | Lista os saves. `reler`: relê a pasta (Cloud ou local, a escolha do jogador) para o jogo enxergar um save copiado com ele aberto. Sem isso, `jogo carregar` diz "não encontrado". |
-| `jogo carregar [título]` | Carrega o save pelo título (sem título: o mais recente). Funciona no menu principal. |
-| `jogo rotas cores E#\|todas` | Teste das cores das rotas: pinta como se o jogador fosse o E# (rotas em névoa não aparecem); `todas` põe rótulo em toda rota colorida para conferir a posição; sem nada volta ao normal. Sair e entrar na visão de comércio para recalcular. |
-| `jogo salvar <título>` | Salva a partida. |
-| `jogo turno` | Passa o turno (mesma ordem do botão). Avisa se uma proposta espera o jogador: o jogo segura o fim do turno até ele responder. |
-| `jogo propostas` | Tratados e acordos pendentes entre o jogador e cada nação. |
-| `jogo responder <E#> aceitar\|ignorar` | Responde pelo jogador. |
-| `jogo propor <E#> <tipo>` | Proposta formal do jogador (economico, informacao, cultural, militar, alianca, paz). |
-| `jogo crises [E#]` | Reclamações (com o índice G), exigências e crise de todas as relações, ou só das de uma nação. |
-| `jogo exigir <E#> todas\|G#…` | O jogador transforma reclamações em exigências (para testar as respostas das IAs). |
-| `jogo exigencias <E#> aceitar\|recusar\|enrolar\|retirar` | O jogador responde às exigências de uma nação, ou retira as suas. |
-| `jogo travado [n]` | Por que o fim do turno não termina: pendências diplomáticas, batalhas, ações, decisão obrigatória do jogador e as últimas n ordens (o TurnFinish só sai depois de 8 s sem ordem nova). |
-| `jogo economia` | Auditoria da economia de todos os impérios (jogo + CurrencyMod), com alertas de valores fora da curva; grava `dev\out\economia_T<turno>.csv`. |
-| `jogo juros <E#> <%>\|auto` | Fixa os juros de uma nação (também da IA) para testar estratégias; `auto` devolve a regra automática. |
-| `jogo espectador on\|off` | A IA nativa joga pelo império local e os turnos andam sozinhos (testes de desempenho e balanceamento). |
-| `jogo menu` | Volta ao menu principal sem salvar. |
-| `jogo novo <jogadores> [Tiny\|Small\|Normal\|Large\|Huge]` | Partida nova pelo início rápido, com essas opções; `jogo novo restaurar <jogadores> <tamanho>` grava as opções do lobby. |
-| `jogo sair` | Fecha o jogo. A Steam ainda acusa AppError_16 depois: reabra com `steam -shutdown`, `steam -silent` e o link do jogo. |
-| `jogo detalhe industria\|estabilidade\|dinheiro [n]` | Detalhamento nativo (o mesmo do tooltip) da n-ésima cidade do jogador ou do dinheiro do império, com as linhas da economia (crédito, inflação, desemprego, juros). |
-| `jogo rpn [nome]` | Fórmula de dados do jogo (`RpnDefinition`); sem nome, lista todas. |
-| `jogo humor [E#]` | Humor da IA nativa de cada nação (com simpatia) ao lado da postura e do foco definidos pela IA de linguagem. O jogo só preenche o humor em relação ao jogador humano. |
-| `jogo batalha [auto\|recuar]` | Batalhas em andamento; responde pelo jogador às que esperam a confirmação dele, como os botões de resolução instantânea e de recuo. `jogo estado` avisa quando há uma. |
-| `jogo interacao esc\|tropa\|cidade\|fe\|sociedade\|comercio\|diplomacia E#\|aba <relacoes\|comercio\|tratados\|crise\|normal>\|estado` | Simula o que o jogador faz para testar se as janelas do mod fecham (ESC, clicar numa tropa ou cidade, abrir fé, sociedade ou comércio, abrir a diplomacia, trocar de aba). `estado` mostra o cursor, o estado da barra, as janelas do mod abertas, a aba Cartas e a nação e o modo da diplomacia. |
-| `jogo foco <caminho>\|off` | Põe o cursor num campo de texto (como o clique) ou solta. `jogo interacao estado` mostra "foco do teclado" e "digitando". |
-| `jogo comprar E# luxo\|estrategico [comprador E#]` | Compra todos os recursos da categoria (botão do comércio); sem comprador, é o jogador. Cria rota nova: o log mostra "Rota E…: StartTrade pelo caminho …". O comércio exige acordo econômico. |
-| `jogo posto E# T#` | Funda um posto avançado num território livre de terra (`EditorOrderCreateCampAt`). |
-| `jogo rotas detalhe` | Caminho inteiro de cada rota, território a território, com o dono. |
-| `jogo pedagio teste E# T_livre T_taxado E_esq E_dir [preço]` | Custo de passo do mod para o posto interno, com o contexto de uma rota real (use uma rota com mercadoria). |
-| `jogo alerta <texto\|off>` | Força o selo de alerta do Banco Central (teste visual). |
-| `jogo rendicao oferecer\|impor\|aceitar\|recusar\|cancelar E#` | O jogador age numa guerra como pela aba Crise (oferecer e impor com os termos padrão do jogo). |
-| `jogo camera T#\|tile` | Centraliza a câmera num território (centro administrativo ou visual) ou num tile, para prints de onde as coisas acontecem. |
-| `jogo congresso liberar E# \| encerrar lei\|K# \| consulado E# \| alavancagem E# E# n \| lei E# Nome \| propor V# \| votar lei A\|B \| votar K# E# \| subornar lei\|K# E# n \| cumprir\|guerra E#` | Testes do Congresso: libera as votações (como se essa nação tivesse cumprido o requisito), encerra uma votação agora, cria consulado, dá alavancagem, libera uma lei para uma nação, e o jogador propõe, vota, suborna e responde a um veredito pelas ordens do jogo. |
-| `jogo expansao [on\|off]` | Situação do DLC Together We Rule nesta sessão e a opção `ExpansaoEmSaveAntigo` (vale no próximo carregamento). |
-| `jogo civico E# NomeDoCivico` | A lei de um império agora: situação (`Enacted`, `Frozen`…), escolha ativa e turno da última troca. Confere o que aconteceu com uma lei imposta pelo Congresso. |
-| `jogo rotas` | Rotas entre impérios que atravessam um terceiro, com o que esse dono faz com cada lado, regras por dono e pedágios pagos no último fim de turno. |
-| `jogo pedagio E# E# livre\|pedagio\|bloqueio \| preco E# E# n \| peso n` | O primeiro império aplica o modo às rotas do segundo em todos os territórios dele; fixa o preço geral (0 = padrão); muda `PesoPedagioNasRotas`. |
+| `game state` | Estado do jogo, turno e se dá para passar o turno. |
+| `game saves [rescan]` | Lista os saves. `rescan`: relê a pasta (Cloud ou local, a escolha do jogador) para o jogo enxergar um save copiado com ele aberto. Sem isso, `game load` diz "não encontrado". |
+| `game load [title]` | Carrega o save pelo título (sem título: o mais recente). Funciona no menu principal. |
+| `game routes colors E#\|all` | Teste das cores das rotas: pinta como se o jogador fosse o E# (rotas em névoa não aparecem); `all` põe rótulo em toda rota colorida para conferir a posição; sem nada volta ao normal. Sair e entrar na visão de comércio para recalcular. |
+| `game save <title>` | Salva a partida. |
+| `game turn` | Passa o turno (mesma ordem do botão). Avisa se uma proposta espera o jogador: o jogo segura o fim do turno até ele responder. |
+| `game proposals` | Tratados e acordos pendentes entre o jogador e cada nação. |
+| `game answer <E#> accept\|ignore` | Responde pelo jogador. |
+| `game propose <E#> <type>` | Proposta formal do jogador (economico, informacao, cultural, militar, alianca, paz). |
+| `game crises [E#]` | Reclamações (com o índice G), exigências e crise de todas as relações, ou só das de uma nação. |
+| `game demand <E#> all\|G#…` | O jogador transforma reclamações em exigências (para testar as respostas das IAs). |
+| `game demands <E#> accept\|refuse\|stall\|withdraw` | O jogador responde às exigências de uma nação, ou retira as suas. |
+| `game stuck [n]` | Por que o fim do turno não termina: pendências diplomáticas, batalhas, ações, decisão obrigatória do jogador e as últimas n ordens (o TurnFinish só sai depois de 8 s sem ordem nova). |
+| `game economy` | Auditoria da economia de todos os impérios (jogo + CurrencyMod), com alertas de valores fora da curva; grava `dev\out\economia_T<turno>.csv`. |
+| `game interest <E#> <%>\|auto` | Fixa os juros de uma nação (também da IA) para testar estratégias; `auto` devolve a regra automática. |
+| `game spectator on\|off` | A IA nativa joga pelo império local e os turnos andam sozinhos (testes de desempenho e balanceamento). |
+| `game menu` | Volta ao menu principal sem salvar. |
+| `game new <players> [Tiny\|Small\|Normal\|Large\|Huge]` | Partida nova pelo início rápido, com essas opções; `game new restore <players> <size>` grava as opções do lobby. |
+| `game quit` | Fecha o jogo. A Steam ainda acusa AppError_16 depois: reabra com `steam -shutdown`, `steam -silent` e o link do jogo. |
+| `game breakdown industry\|stability\|money [n]` | Detalhamento nativo (o mesmo do tooltip) da n-ésima cidade do jogador ou do dinheiro do império, com as linhas da economia (crédito, inflação, desemprego, juros). |
+| `game rpn [name]` | Fórmula de dados do jogo (`RpnDefinition`); sem nome, lista todas. |
+| `game mood [E#]` | Humor da IA nativa de cada nação (com simpatia) ao lado da postura e do foco definidos pela IA de linguagem. O jogo só preenche o humor em relação ao jogador humano. |
+| `game battle [auto\|retreat]` | Batalhas em andamento; responde pelo jogador às que esperam a confirmação dele, como os botões de resolução instantânea e de recuo. `game state` avisa quando há uma. |
+| `game interaction esc\|unit\|city\|faith\|society\|trade\|diplomacy E#\|tab <relations\|trade\|treaties\|crisis\|normal>\|state` | Simula o que o jogador faz para testar se as janelas do mod fecham (ESC, clicar numa tropa ou cidade, abrir fé, sociedade ou comércio, abrir a diplomacia, trocar de aba). `state` mostra o cursor, o estado da barra, as janelas do mod abertas, a aba Cartas e a nação e o modo da diplomacia. |
+| `game focus <caminho>\|off` | Põe o cursor num campo de texto (como o clique) ou solta. `game interaction state` mostra "foco do teclado" e "digitando". |
+| `game buy E# luxury\|strategic [buyer E#]` | Compra todos os recursos da categoria (botão do comércio); sem comprador, é o jogador. Cria rota nova: o log mostra "Rota E…: StartTrade pelo caminho …". O comércio exige acordo econômico. |
+| `game outpost E# T#` | Funda um posto avançado num território livre de terra (`EditorOrderCreateCampAt`). |
+| `game routes detail` | Caminho inteiro de cada rota, território a território, com o dono. |
+| `game toll test E# T_free T_taxado E_esq E_dir [price]` | Custo de passo do mod para o posto interno, com o contexto de uma rota real (use uma rota com mercadoria). |
+| `game alert <text\|off>` | Força o selo de alerta do Banco Central (teste visual). |
+| `game surrender offer\|impose\|accept\|refuse\|cancel E#` | O jogador age numa guerra como pela aba Crise (oferecer e impor com os termos padrão do jogo). |
+| `game camera T#\|tile` | Centraliza a câmera num território (centro administrativo ou visual) ou num tile, para prints de onde as coisas acontecem. |
+| `game congress unlock E# \| close law\|K# \| consulate E# \| leverage E# E# n \| law E# Nome \| propose V# \| vote law A\|B \| vote K# E# \| bribe law\|K# E# n \| comply\|war E#` | Testes do Congresso: libera as votações (como se essa nação tivesse cumprido o requisito), encerra uma votação agora, cria consulado, dá alavancagem, libera uma lei para uma nação, e o jogador propõe, vota, suborna e responde a um veredito pelas ordens do jogo. |
+| `game expansion [on\|off]` | Situação do DLC Together We Rule nesta sessão e a opção `ExpansaoEmSaveAntigo` (vale no próximo carregamento). |
+| `game civic E# CivicName` | A lei de um império agora: situação (`Enacted`, `Frozen`…), escolha ativa e turno da última troca. Confere o que aconteceu com uma lei imposta pelo Congresso. |
+| `game routes` | Rotas entre impérios que atravessam um terceiro, com o que esse dono faz com cada lado, regras por dono e pedágios pagos no último fim de turno. |
+| `game toll E# E# free\|toll\|block \| price E# E# n \| weight n` | O primeiro império aplica o modo às rotas do segundo em todos os territórios dele; fixa o preço geral (0 = padrão); muda `PesoPedagioNasRotas`. |
 
 Comandos do Posto Comercial (`trade …`, mesmo canal):
 
@@ -356,7 +356,7 @@ Comandos do Posto Comercial (`trade …`, mesmo canal):
 |---|---|
 | `trade` | Regras, incidentes, pedágios pagos, preços gerais e por posto, recálculo pendente e situação da janela. |
 | `trade open <T#>` / `trade price <E#> up\|down` | Abre o Posto Comercial de um território seu; o mesmo que os botões `+`/`-` da linha do império. |
-| `trade previa <dono> <território\|-1> <alvo> <preço> [bloqueio]` | Prévia de desvio pelo caminho do jogo: das rotas do alvo que passariam por ali sem regra do dono, quantas passam e quantas desviam com esse preço, e o caminho de cada uma com e sem a regra. Rode duas vezes: a primeira pede, a segunda lê. |
+| `trade preview <owner> <territory|-1> <target> <price> [block]`\|-1> <alvo> <preço> [bloqueio]` | Prévia de desvio pelo caminho do jogo: das rotas do alvo que passariam por ali sem regra do dono, quantas passam e quantas desviam com esse preço, e o caminho de cada uma com e sem a regra. Rode duas vezes: a primeira pede, a segunda lê. |
 | `trade costs` / `trade mine` | Manutenção por nó de cada rota (a base do custo do pedágio) e as rotas que passam pelos seus territórios. |
 
 ## 8. Salvamento
@@ -412,7 +412,7 @@ Medido na bancada, por decisão no pico: ~US$ 0,015 → **US$ 0,0073 (−52%)**,
 Estimativa com 16 impérios: ~US$ 0,12 por turno no pico e ~US$ 0,06 fora; uma partida de 300 turnos, ~US$ 12–32 conforme o
 horário. Ainda falta a validação no jogo.
 
-### 9.2 A bancada (`_Modding\tools\ia-bench`)
+### 9.2 A bancada (`_Modding\tools\ai-bench`)
 
 Ferramenta fora do jogo que reexecuta decisões reais dos logs (copiadas para `corpus\`) com variantes de prompt e mede custo,
 cache simulado, validade e qualidade às cegas. **Toda mudança de prompt, dossiê ou modelo passa por ela antes de ir para o
@@ -493,12 +493,12 @@ jogo.** Comandos e cuidados estão no `README.md` de lá. Ela usa a credencial d
   `SendPlayerLetter(…, inReplyTo)` (−1 automático, −2 sem ligação, ≥ 0 a carta).
 
 **Comandos de teste:**
-- `ia correio open|close|secao 0..6|to E#`;
-- `ia correio responder [id]` (sem id: a primeira carta da lista);
-- `ia correio limpar` (apaga o rascunho e a ligação);
-- `ia correio texto <texto>` (só preenche o campo, com `\n` para quebrar linha; não envia);
-- `ia cartas E#` (abre a diplomacia daquela nação já na aba Cartas);
-- `jogo interacao …` (testes de fechar janelas: ESC, tropa, cidade, fé, abas da diplomacia, estado; veja §7).
+- `ai mail open|close|section 0..6|to E#`;
+- `ai mail reply [id]` (sem id: a primeira carta da lista);
+- `ai mail clear` (apaga o rascunho e a ligação);
+- `ai mail text <text>` (só preenche o campo, com `\n` para quebrar linha; não envia);
+- `ai letters E#` (abre a diplomacia daquela nação já na aba Cartas);
+- `game interaction …` (testes de fechar janelas: ESC, tropa, cidade, fé, abas da diplomacia, estado; veja §7).
 
 ## 12. Ações de verdade e travas da IA nativa (fase 4, núcleo — 2026-10-04)
 
@@ -583,7 +583,7 @@ jogo.** Comandos e cuidados estão no `README.md` de lá. Ela usa a credencial d
     der a um exército sob ordem. Batalha em curso e melhoria de unidades passam. Um postfix em
     `OrderPolicyController.GetPolicy` (cadeia Post) recusa a ordem marcada, pelo mesmo caminho de qualquer ordem
     recusada pela política do jogo.
-  - O `ia status` mostra "exércitos sob ordem", "tarefas nativas tiradas" e "ordens nativas barradas (última)".
+  - O `ai status` mostra "exércitos sob ordem", "tarefas nativas tiradas" e "ordens nativas barradas (última)".
 - **Memória:**
   - A missão fica no IaWorld (`ArmyMissions`: objetivo, alvo, situação, último turno em `HoldUntil`, ativa).
   - Ao carregar um save ou recarregar o núcleo, `ResumeMissions` reenvia as missões ativas com o prazo salvo.
@@ -602,7 +602,7 @@ jogo.** Comandos e cuidados estão no `README.md` de lá. Ela usa a credencial d
   - Os Ingleses declararam guerra ao jogador no turno 118, depois de um ultimato vencido.
   - No turno 119, Mu Guiying mandou A179 atacar São Paulo (C4), a capital do jogador. O caminho previsto era de 4
     turnos.
-  - A missão foi repostada a cada turno e, no turno 122, o exército chegou e montou o cerco (`jogo batalha` mostra
+  - A missão foi repostada a cada turno e, no turno 122, o exército chegou e montou o cerco (`game battle` mostra
     "E0 ataca E1 · Siege").
   - A missão terminou com "chegou e atacou São Paulo (C4); a batalha segue com seus generais".
   - No mesmo trajeto, o log mostrou a regra do mar profundo: um destino que parava em mar profundo foi recusado, e um
@@ -661,7 +661,7 @@ já viu, o dossiê mostra:
   hora da ordem, pela tabela publicada a cada turno (`LawStance`: o que a nação votou e o "se_perder"). A IA nativa
   responde em menos de um segundo, então decidir antes dava corrida. Votou na opção imposta → adota; "recusar" →
   descarta (se tiver influência); "adotar" → adota.
-- **Comandos:** `ia congresso [agora]` e `jogo congresso …` (§7).
+- **Comandos:** `ai congress [now]` e `game congress …` (§7).
 - **Testado** na partida de 16 impérios "Teste16" (T64 → T68, save "Teste16 TWR T64", DLC ligado por
   `ExpansaoEmSaveAntigo`):
   - liberação das votações por E3; votos das nações com o relatório certo do executor; recusas de voto com peso zero;
@@ -676,7 +676,7 @@ já viu, o dossiê mostra:
     motivo "minha opção vence hoje 10 a 3 e me protege da exigência de conversão de Alexandre"; votação até o T84;
   - votos e subornos nas crises, com o placar certo em cada relatório do executor;
   - **lei imposta com "se_perder":** E15 (votou B, "adotar") recebeu a lei A quando a votação foi encerrada à força; a
-    IA nativa ia recusar e a trava fez adotar (`jogo civico E15 Civics_Religion02`: escolha A, trocada no T76). O ramo
+    IA nativa ia recusar e a trava fez adotar (`game civic E15 Civics_Religion02`: escolha A, trocada no T76). O ramo
     "recusar" é o mesmo código com a outra ordem e ainda não aconteceu ao vivo; a volta da primeira sessão também não
     (a primeira sessão desta partida já passou).
 - **Furo achado e corrigido (recarga a quente):** a tabela de nações travadas (`NativeAiLocks.llmActive`) nascia vazia
@@ -686,7 +686,7 @@ já viu, o dossiê mostra:
   `Start` a devolve antes de aplicar os patches (log: "Travas da IA nativa vindas da geração anterior: 14 nação(ões)").
   Só acontecia em desenvolvimento (o jogador comum não recarrega o núcleo), mas deixou marcas na partida de teste.
 - **Registro:** cada lei imposta decidida pela posição da nação sai no log ("Lei imposta a E15 (…): adotada, como a
-  IA de linguagem quis (a IA nativa ia recusar)"), uma vez por evento, e o contador do `ia status` passou a contar
+  IA de linguagem quis (a IA nativa ia recusar)"), uma vez por evento, e o contador do `ai status` passou a contar
   também os casos em que a IA nativa já faria o mesmo.
 
 **Política comercial** (`politica_comercial`, `IaModule.ApplyTradeStance`; 2026-10-05):
@@ -741,12 +741,12 @@ já viu, o dossiê mostra:
   - Um postfix em `MandatoryDiplomaticPropositionPending.RefreshData` limpa o bit quando a rendição é forçada, o
     vencedor é o jogador e ele não tem rascunho aberto.
 - **Teste (turno 128, guerras dos Ingleses e dos Bizantinos contra o jogador):**
-  - `ia acao E7 {"acao":"oferecer_rendicao","nacao":"E1"}`: o executor abriu o rascunho, enviou e reportou "rendição
+  - `ai action E7 {"acao":"oferecer_rendicao","nacao":"E1"}`: o executor abriu o rascunho, enviou e reportou "rendição
     oferecida a E1: sem termos = 0 pontos". A tela nativa mostrou "A Rainha Zenóbia está se rendendo!" com Recusar e
-    Aceitar, e o jogador recusou (`jogo rendicao recusar E7`).
-  - `jogo rendicao oferecer E0`: o jogador ofereceu rendição aos Ingleses. O dossiê deles mostrou "RENDIÇÃO ESPERANDO
+    Aceitar, e o jogador recusou (`game surrender refuse E7`).
+  - `game surrender offer E0`: o jogador ofereceu rendição aos Ingleses. O dossiê deles mostrou "RENDIÇÃO ESPERANDO
     VOCÊ … 1 exigência(s) — 10 de 10 pontos".
-  - Com `ia agora E0`, Mu Guiying aceitou (`responder_rendicao`): a guerra virou paz, o cerco de São Paulo acabou, e
+  - Com `ai now E0`, Mu Guiying aceitou (`responder_rendicao`): a guerra virou paz, o cerco de São Paulo acabou, e
     ela escreveu ao jogador e fez uma declaração pública. Os Bizantinos ganharam a reclamação "SurrenderedToOurEnemy",
     regra nativa para os aliados do vencedor.
   - **Hold (turnos 129–130):** o jogador ofereceu rendição aos Bizantinos depois que Zenóbia já tinha decidido o turno
@@ -770,7 +770,7 @@ tabela a cada segundo (só nações travadas, `[IA] PosturaEFocoNaIANativa`), e 
   a 2), em `ComputeFIMSNeeds.Process` (comida, produção, dinheiro, ciência e influência; até 1,6×, limitado a 0–1) e
   em `FaithNeed.Process` (fé 1,6× por território).
 - O humor da IA nativa só é preenchido no jogo em relação ao jogador humano; entre IAs, a conferência é pelos
-  contadores do `ia status`.
+  contadores do `ai status`.
 - **Teste (turno 102):** humor ajustado 2.548×, animosidade 1.274×, objetivos 924×, necessidades 198×. A simpatia com
   o jogador caiu exatamente 0,15 nas cinco nações que o marcaram como "desconfiado" (ex.: Chou 0,33 → 0,18) e ficou
   igual nas outras. Edgar marcou Agamenão como alvo de guerra depois de recusar as exigências dele, e a IA nativa
@@ -838,10 +838,10 @@ precisa responder fica pendente de verdade, na tela nativa, até a resposta dela
   `Agreement`). O dossiê mostra "PROPOSTA ESPERANDO VOCÊ…" ou "Sua proposta de … aguarda a resposta deles".
 - **Ações novas:** `responder_tratado` e `responder_acordo` (aceitar ou ignorar). O validador só aceita quando há
   proposta daquela nação esperando.
-- **Teste (turnos 98–99):** o jogador propôs acordo de mapas a Edgar (`jogo propor E4 informacao`). A IA nativa não
+- **Teste (turnos 98–99):** o jogador propôs acordo de mapas a Edgar (`game propose E4 information`). A IA nativa não
   respondeu, o turno passou sem travar e a proposta sobreviveu à virada. No turno 99 o dossiê do Edgar mostrou a
   proposta, ele respondeu "aceitar", e o acordo foi assinado.
-- O `ia status` mostra as nações travadas e quanto a trava segurou.
+- O `ai status` mostra as nações travadas e quanto a trava segurou.
 
 **Teste na partida de teste (turnos 95–98):**
 - Turno 97: Edgar propôs paz a Agamenão, os Teutões aceitaram e a guerra Gregos × Teutões acabou de verdade
@@ -849,10 +849,10 @@ precisa responder fica pendente de verdade, na tela nativa, até a resposta dela
   recusada pelo jogo, por exigência pendente, e o motivo voltou para a nação.
 - Turno 98: a trava segurou 254 iniciativas de tratado e 24 vontades de guerra da IA nativa.
 - Cuidado ao passar o turno por comando: propostas da IA nativa feitas antes da trava ficaram esperando o jogador, e o
-  jogo parou em `SandboxState_TurnFinish` até `jogo responder`.
+  jogo parou em `SandboxState_TurnFinish` até `game answer`.
 - Turnos 99 e 100: o fim do turno parou porque um povo independente atacou o jogador e a batalha esperava a
-  confirmação dele (`jogo travado` mostrou "Battle stuck … State=Confirmation" e "travado por decisão obrigatória").
-  É regra do jogo, não do mod: resolvido com `jogo batalha auto`.
+  confirmação dele (`game stuck` mostrou "Battle stuck … State=Confirmation" e "travado por decisão obrigatória").
+  É regra do jogo, não do mod: resolvido com `game battle auto`.
 
 ### 12.x Revisão de bugs (2026-10-05)
 - **Load com chamada no ar:** `Apply` tirava a nação do `inFlight` antes de conferir a sessão e apagava a entrada da
@@ -882,12 +882,12 @@ precisa responder fica pendente de verdade, na tela nativa, até a resposta dela
 - **Consulado (decidido 2026-10-05):** a IA nativa não usa a alavancagem por uma nação da IA de linguagem
   (`ConsulateLeveragePatch` em `DoDiplomaticLeverageAction.GetContexts`) e não propõe nem cancela acordos de consulado
   (`ConsulateAgreementPatch` em `ManageConsulateAgreements.TryContinue`). Responder a um acordo que outro propôs fica
-  com ela, como a exigência forçada (a IA de linguagem não tem essa ação). Contador no `ia status`.
+  com ela, como a exigência forçada (a IA de linguagem não tem essa ação). Contador no `ai status`.
 - **Exércitos com a API fora (decidido 2026-10-05: "volta tudo para a IA nativa, 100%"):** sem a trava da nação, o
   `ArmyOrders.Tick` encerra a missão ("o exército volta à IA nativa") e o `ResumeMissions` não reenvia. Testado com
-  `ia off`: as 24 missões caíram na hora e as travas viraram "nenhuma"; com `ia on` as travas voltaram.
+  `ai off`: as 24 missões caíram na hora e as travas viraram "nenhuma"; com `ai on` as travas voltaram.
 - **Testado no jogo (partida de 16):** carta de nação eliminada sem "Responder"; " Aceitar " assinou o acordo
-  de verdade; parser, Congresso e conselho com `ia teste`; F8 e ESC com o teclado pelo `PostMessage` (ver o guia de
+  de verdade; parser, Congresso e conselho com `ai test`; F8 e ESC com o teclado pelo `PostMessage` (ver o guia de
   telas).
 - **Fora (baixo risco, sem mudança):** voto ou suborno atrasado que cai numa crise nova com o mesmo K#; tabelas de
   patrocínio, leis e exércitos que nascem vazias na recarga a quente (só no desenvolvimento).
@@ -967,17 +967,17 @@ Ficam de fora os enviados (agentes sem furtividade, visíveis) e os navios furti
 `CartasInterceptadasPorEspiao`.
 
 **Comandos:**
-- `ia espionagem`: espiões, pesos, chance por ponta, cartas a caminho com o risco na origem, últimos sorteios (chance e
+- `ai espionage`: espiões, pesos, chance por ponta, cartas a caminho com o risco na origem, últimos sorteios (chance e
   número tirado), detecção nas capitais e tráfego de cartas. Grava em `dev\out\espionagem.txt`.
-- `ia espionagem unidades`: unidades com marca de agente ou espiãs e os exércitos furtivos em campo.
-- `ia espionagem simular E# T# [vigiar] [fixar]`: peso e chance de um espião de teste; com `fixar`, ele vale no sorteio
-  até `ia espionagem limpar`.
-- `ia espionagem aba [furtividade|deteccao|estado]`: abre a espionagem na aba Cartas, simula o clique numa aba do jogo
+- `ai espionage units`: unidades com marca de agente ou espiãs e os exércitos furtivos em campo.
+- `ai espionage simulate E# T# [watch] [keep]`: peso e chance de um espião de teste; com `keep`, ele vale no sorteio
+  até `ai espionage clear`.
+- `ai espionage tab [stealth|detection|state]`: abre a espionagem na aba Cartas, simula o clique numa aba do jogo
   ou mostra o estado.
-- `ia interceptar <id> E#`: força a interceptação de uma carta privada que o destinatário ainda não leu.
-- `jogo espiao E# T# [unidade]`: cria um espião (ordem de depuração do jogo `OrderSpawnArmy`) num tile de terra livre
+- `ai intercept <id> E#`: força a interceptação de uma carta privada que o destinatário ainda não leu.
+- `game spy E# T# [unit]`: cria um espião (ordem de depuração do jogo `OrderSpawnArmy`) num tile de terra livre
   do território.
-- `jogo interacao espionagem`: abre a visão de espionagem.
+- `game interaction espionage`: abre a visão de espionagem.
 
 **Teste na partida de teste (turnos 106–109):**
 - **Antes:** a partida foi salva como "Antes espiao T106".
@@ -1134,7 +1134,7 @@ jogador.)
 - **Migração:** o `deepseek.key` é importado na primeira leitura e de novo se for editado depois (data mais nova que
   o `.dat`). Ele continua valendo. "Apagar a chave" do DeepSeek também esvazia o `deepseek.key`.
 - **Nunca expor:** a tela mostra só os 4 últimos caracteres; o campo é modo senha (`*`). Nada de chave em log, F10,
-  save, backup ou pacote (`backup.ps1` e `empacotar.ps1` recusam a pasta `credenciais` e procuram chaves dentro dos
+  save, backup ou pacote (`backup.ps1` e `package.ps1` recusam a pasta `credenciais` e procuram chaves dentro dos
   arquivos). Os comandos de desenvolvimento nunca recebem chave (o canal grava tudo no `result.txt`).
 
 ### 15.4 Logins (`OAuthLogin`)
@@ -1168,17 +1168,17 @@ jogador.)
 
 | Comando | O que faz |
 |---|---|
-| `ia provedor` | Provedores, fila, credencial (só os 4 últimos), modelo, chamadas, gasto e último erro. |
-| `ia provedor ordem a,b` | Muda a fila (sem nada = padrão). |
-| `ia provedor modelo <id> <modelo>` | Muda o modelo de um provedor. |
-| `ia provedor testar <id>` | "Testar conexão" (espera até 60 s). |
-| `ia provedor falso <id>` | Testa com uma chave falsa na memória (mensagem de chave errada). |
-| `ia provedor semrede <id>` | Testa um endereço que não existe (mensagem de sem internet). |
-| `ia provedor chave-falsa <id>` / `apagar <id>` | Grava/apaga uma chave falsa (testes da fila). |
-| `ia provedor rota` | Uma chamada mínima pela fila inteira, como as nações. |
-| `ia provedor login <id>` / `login` / `cancelar` | Começa, mostra ou cancela um login. |
-| `ia provedor login-teste <id>` | Login sem abrir o navegador; o teste faz o papel dele com um GET no retorno. |
-| `ia provedor tela abrir [id\|uso]` / `fechar` / `secao <id>` / `lista N` / `escolher N I` / `enter` | Controla a tela. |
+| `ai provider` | Provedores, fila, credencial (só os 4 últimos), modelo, chamadas, gasto e último erro. |
+| `ai provider order a,b` | Muda a fila (sem nada = padrão). |
+| `ai provider model <id> <model>` | Muda o modelo de um provedor. |
+| `ai provider test <id>` | "Testar conexão" (espera até 60 s). |
+| `ai provider fake <id>` | Testa com uma chave falsa na memória (mensagem de chave errada). |
+| `ai provider offline <id>` | Testa um endereço que não existe (mensagem de sem internet). |
+| `ai provider fake-key <id>` / `delete <id>` | Grava/apaga uma chave falsa (testes da fila). |
+| `ai provider route` | Uma chamada mínima pela fila inteira, como as nações. |
+| `ai provider login <id>` / `login` / `cancel` | Começa, mostra ou cancela um login. |
+| `ai provider login-test <id>` | Login sem abrir o navegador; o teste faz o papel dele com um GET no retorno. |
+| `ai provider screen open [id\|usage]` / `close` / `section <id>` / `list N` / `pick N I` / `enter` | Controla a tela. |
 
 ### 15.7 Testes (2026-10-06, Teste16, 16 impérios)
 
@@ -1191,7 +1191,7 @@ jogador.)
 - ChatGPT pelo Codex (gpt-6-luna, conta do lucas): Testar conexão em 6,8 s; turno T78 com 15/15 nações em ~1 min, US$ 0 (§15.8).
 - Campo da chave: digitação mascarada e validação pelo Enter do campo. O Enter mandado por `PostMessage` não chega
   ao jogo fora da partida (nem nas Configurações nativas), então ele foi testado pelo caminho do próprio campo
-  (`ia provedor tela enter`).
+  (`ai provider screen enter`).
 
 ### 15.8 ChatGPT pelo Codex (`Llm\Providers\CodexCli.cs`, 2026-10-06)
 

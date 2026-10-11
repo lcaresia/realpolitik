@@ -20,9 +20,9 @@ release/
 # tools/dev/ (scripts) é versionada.
 /dev/
 
-# ia-bench: dados capturados das partidas e resultados gerados
-tools/ia-bench/corpus/
-tools/ia-bench/resultados/
+# ai-bench: dados capturados das partidas e resultados gerados
+tools/ai-bench/corpus/
+tools/ai-bench/results/
 
 # Zips grandes (originais guardados nos backups em Documentos)
 Missing project files.zip
@@ -74,4 +74,4 @@ media/retratos/pessoais-teste/
 .serena/
 
 # Code maps (graphify): regenerable; the game map derives from decompiled SEGA/Amplitude code
-mapa/
+/codemap/

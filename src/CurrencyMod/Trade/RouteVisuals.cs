@@ -61,10 +61,10 @@ namespace CurrencyMod
 
         internal static bool Enabled => EconomyConfig.RouteColors.Value && !SavePatches.IsGameOnline();
 
-        /// <summary>Test ("jogo rotas cores E5"): paints as if the player were another empire (-1 = the local player).</summary>
+        /// <summary>Test ("game routes colors E5"): paints as if the player were another empire (-1 = the local player).</summary>
         internal static volatile int ViewAs = -1;
 
-        /// <summary>Test ("jogo rotas cores todas"): label on every colored route, to check the position.</summary>
+        /// <summary>Test ("game routes colors all"): label on every colored route, to check the position.</summary>
         internal static volatile bool LabelAll;
 
         // ---------------- Sandbox ----------------

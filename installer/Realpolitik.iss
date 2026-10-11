@@ -1,29 +1,31 @@
-; Instalador do Realpolitik: Living Nations for HUMANKIND (Inno Setup 6).
-; Não compile à mão: use _Modding\tools\gerar-release.ps1 -Versao X.Y.Z. Ele monta e confere o staging (lista branca e
-; trava de segredos) e passa /DVersao, /DStaging e /DSaida. Este script só lê arquivos do staging.
+; Realpolitik installer: Living Nations for HUMANKIND (Inno Setup 6).
+; Do not compile by hand: use _Modding\tools\make-release.ps1 -Version X.Y.Z. It assembles and checks the staging
+; (allowlist and secret guard) and passes /DReleaseVersion, /DStagingDir and /DOutputFolder. This script only reads staging files.
 ;
-; Regras (docs\prompt-instalador.md):
-; - Instala na pasta do jogo achada na Steam ou na Epic (ou escolhida à mão, validada pelo Humankind.exe).
-; - BepInEx 5.4.23.5 oficial só se faltar; 5.4.x existente fica; outro/6.x: avisa e nunca troca em silêncio.
-; - Nunca toca em BepInEx\config\*.cfg, BepInEx\config\credenciais, BepInEx\DiplomaciaIA nem nos saves.
-; - Sem administrador na Steam padrão; se a pasta não for gravável, reabre pedindo permissão.
-; - Desinstalar remove só o que instalou; o BepInEx só sai se foi este instalador que o pôs e não sobrou outro plugin.
+; Rules (docs\prompt-instalador.md):
+; - Installs into the game folder found in Steam or Epic (or picked by hand, validated by Humankind.exe).
+; - Official BepInEx 5.4.23.5 only if missing; an existing 5.4.x stays; another one/6.x: warns and never swaps it silently.
+; - Never touches BepInEx\config\*.cfg, BepInEx\config\credenciais, BepInEx\DiplomaciaIA or the saves.
+; - No administrator rights on the default Steam path; if the folder is not writable, relaunches asking for permission.
+; - Uninstalling removes only what it installed; BepInEx only goes if this installer put it there and no other plugin is left.
+; - Player-facing text is in [CustomMessages] (5 languages); installed file names (LEIA-ME_*, licencas\, the BepInEx
+;   marker) are data on the player's machine and keep their names.
 
-#ifndef Versao
-  #define Versao "0.0.0-dev"
+#ifndef ReleaseVersion
+  #define ReleaseVersion "0.0.0-dev"
 #endif
-#ifndef Staging
-  #define Staging "..\dist\staging\" + Versao
+#ifndef StagingDir
+  #define StagingDir "..\dist\staging\" + ReleaseVersion
 #endif
-#ifndef Saida
-  #define Saida "..\dist\" + Versao
+#ifndef OutputFolder
+  #define OutputFolder "..\dist\" + ReleaseVersion
 #endif
-; Versão só com números (o Windows não aceita "-beta" no recurso de versão do .exe).
-#define Dash Pos("-", Versao)
+; Numbers-only version (Windows does not accept "-beta" in the .exe version resource).
+#define Dash Pos("-", ReleaseVersion)
 #if Dash > 0
-  #define VersaoNum Copy(Versao, 1, Dash - 1)
+  #define ReleaseVersionNum Copy(ReleaseVersion, 1, Dash - 1)
 #else
-  #define VersaoNum Versao
+  #define ReleaseVersionNum ReleaseVersion
 #endif
 
 #define AppName "Realpolitik: Living Nations for HUMANKIND"
@@ -33,12 +35,12 @@
 [Setup]
 AppId={{8C1E5B7A-4D2F-4E19-9A6B-2F7C3D1E0A55}
 AppName={#AppName}
-AppVersion={#Versao}
-AppVerName={#AppName} {#Versao}
+AppVersion={#ReleaseVersion}
+AppVerName={#AppName} {#ReleaseVersion}
 AppPublisher=Realpolitik
 AppPublisherURL=https://github.com/lcaresia/realpolitik
 AppSupportURL=https://github.com/lcaresia/realpolitik/issues
-VersionInfoVersion={#VersaoNum}
+VersionInfoVersion={#ReleaseVersionNum}
 VersionInfoProductName={#AppName}
 VersionInfoDescription={#AppName} Setup
 DefaultDirName={code:DefaultGameDir}
@@ -53,12 +55,12 @@ UninstallDisplayName={#AppName}
 UninstallDisplayIcon={app}\BepInEx\Realpolitik\realpolitik.ico
 PrivilegesRequired=lowest
 PrivilegesRequiredOverridesAllowed=commandline
-OutputDir={#Saida}
-OutputBaseFilename=Realpolitik_Setup_{#Versao}
-SetupIconFile={#Staging}\art\realpolitik.ico
+OutputDir={#OutputFolder}
+OutputBaseFilename=Realpolitik_Setup_{#ReleaseVersion}
+SetupIconFile={#StagingDir}\art\realpolitik.ico
 WizardStyle=modern
-WizardImageFile={#Staging}\art\grande-164.bmp,{#Staging}\art\grande-328.bmp
-WizardSmallImageFile={#Staging}\art\pequena-55.bmp,{#Staging}\art\pequena-110.bmp
+WizardImageFile={#StagingDir}\art\grande-164.bmp,{#StagingDir}\art\grande-328.bmp
+WizardSmallImageFile={#StagingDir}\art\pequena-55.bmp,{#StagingDir}\art\pequena-110.bmp
 Compression=lzma2/max
 SolidCompression=yes
 ShowLanguageDialog=auto
@@ -68,14 +70,14 @@ CloseApplications=no
 ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
 MinVersion=10.0
-; Assinatura (opcional): o gerar-release.ps1 assina o .exe depois, se houver certificado.
+; Signing (optional): make-release.ps1 signs the .exe afterwards, if there is a certificate.
 
 [Languages]
-Name: "en"; MessagesFile: "compiler:Default.isl"; LicenseFile: "{#Staging}\docs\TERMOS_en.txt"
-Name: "pt"; MessagesFile: "compiler:Languages\BrazilianPortuguese.isl"; LicenseFile: "{#Staging}\docs\TERMOS_pt.txt"
-Name: "es"; MessagesFile: "compiler:Languages\Spanish.isl"; LicenseFile: "{#Staging}\docs\TERMOS_es.txt"
-Name: "fr"; MessagesFile: "compiler:Languages\French.isl"; LicenseFile: "{#Staging}\docs\TERMOS_fr.txt"
-Name: "de"; MessagesFile: "compiler:Languages\German.isl"; LicenseFile: "{#Staging}\docs\TERMOS_de.txt"
+Name: "en"; MessagesFile: "compiler:Default.isl"; LicenseFile: "{#StagingDir}\docs\TERMOS_en.txt"
+Name: "pt"; MessagesFile: "compiler:Languages\BrazilianPortuguese.isl"; LicenseFile: "{#StagingDir}\docs\TERMOS_pt.txt"
+Name: "es"; MessagesFile: "compiler:Languages\Spanish.isl"; LicenseFile: "{#StagingDir}\docs\TERMOS_es.txt"
+Name: "fr"; MessagesFile: "compiler:Languages\French.isl"; LicenseFile: "{#StagingDir}\docs\TERMOS_fr.txt"
+Name: "de"; MessagesFile: "compiler:Languages\German.isl"; LicenseFile: "{#StagingDir}\docs\TERMOS_de.txt"
 
 [CustomMessages]
 en.TaskMoreEmpires=Up to 16 empires on any map size (MoreEmpires)
@@ -168,19 +170,19 @@ de.KeepSettings=Realpolitik-Einstellungen und -Schlüssel (KI-Anbieter) auf dies
 Name: "moreempires"; Description: "{cm:TaskMoreEmpires}"; GroupDescription: "{cm:TaskMoreEmpiresNote}"
 
 [Files]
-; O mod
-Source: "{#Staging}\payload\BepInEx\plugins\CurrencyMod\CurrencyMod.Loader.dll"; DestDir: "{app}\BepInEx\plugins\CurrencyMod"; Flags: ignoreversion
-Source: "{#Staging}\payload\BepInEx\CurrencyModCore\CurrencyMod.dll"; DestDir: "{app}\BepInEx\CurrencyModCore"; Flags: ignoreversion
-Source: "{#Staging}\payload\BepInEx\plugins\MoreEmpires\MoreEmpires.dll"; DestDir: "{app}\BepInEx\plugins\MoreEmpires"; Tasks: moreempires; Flags: ignoreversion
-; Leia-me, termos, licenças e ícone do desinstalador
-Source: "{#Staging}\docs\*"; DestDir: "{app}\BepInEx\Realpolitik"; Flags: ignoreversion
-Source: "{#Staging}\licencas\*"; DestDir: "{app}\BepInEx\Realpolitik\licencas"; Flags: ignoreversion
-Source: "{#Staging}\art\realpolitik.ico"; DestDir: "{app}\BepInEx\Realpolitik"; Flags: ignoreversion
-; BepInEx oficial, só se faltar. Nunca é removido pelo desinstalador automático: o código decide (ver RemoveBepInEx).
-Source: "{#Staging}\bepinex\BepInEx\core\*"; DestDir: "{app}\BepInEx\core"; Check: NeedBepInExCore; Flags: ignoreversion uninsneveruninstall
-Source: "{#Staging}\bepinex\winhttp.dll"; DestDir: "{app}"; Check: NeedLoader; Flags: ignoreversion uninsneveruninstall
-Source: "{#Staging}\bepinex\doorstop_config.ini"; DestDir: "{app}"; Check: NeedLoader; Flags: onlyifdoesntexist uninsneveruninstall
-Source: "{#Staging}\bepinex\.doorstop_version"; DestDir: "{app}"; Check: NeedLoader; Flags: ignoreversion uninsneveruninstall
+; The mod
+Source: "{#StagingDir}\payload\BepInEx\plugins\CurrencyMod\CurrencyMod.Loader.dll"; DestDir: "{app}\BepInEx\plugins\CurrencyMod"; Flags: ignoreversion
+Source: "{#StagingDir}\payload\BepInEx\CurrencyModCore\CurrencyMod.dll"; DestDir: "{app}\BepInEx\CurrencyModCore"; Flags: ignoreversion
+Source: "{#StagingDir}\payload\BepInEx\plugins\MoreEmpires\MoreEmpires.dll"; DestDir: "{app}\BepInEx\plugins\MoreEmpires"; Tasks: moreempires; Flags: ignoreversion
+; Readme, terms, licenses and the uninstaller icon
+Source: "{#StagingDir}\docs\*"; DestDir: "{app}\BepInEx\Realpolitik"; Flags: ignoreversion
+Source: "{#StagingDir}\licencas\*"; DestDir: "{app}\BepInEx\Realpolitik\licencas"; Flags: ignoreversion
+Source: "{#StagingDir}\art\realpolitik.ico"; DestDir: "{app}\BepInEx\Realpolitik"; Flags: ignoreversion
+; Official BepInEx, only if missing. Never removed by the automatic uninstaller: the code decides (see RemoveBepInEx).
+Source: "{#StagingDir}\bepinex\BepInEx\core\*"; DestDir: "{app}\BepInEx\core"; Check: NeedBepInExCore; Flags: ignoreversion uninsneveruninstall
+Source: "{#StagingDir}\bepinex\winhttp.dll"; DestDir: "{app}"; Check: NeedLoader; Flags: ignoreversion uninsneveruninstall
+Source: "{#StagingDir}\bepinex\doorstop_config.ini"; DestDir: "{app}"; Check: NeedLoader; Flags: onlyifdoesntexist uninsneveruninstall
+Source: "{#StagingDir}\bepinex\.doorstop_version"; DestDir: "{app}"; Check: NeedLoader; Flags: ignoreversion uninsneveruninstall
 
 [Dirs]
 Name: "{app}\BepInEx\plugins"; Flags: uninsneveruninstall
@@ -192,19 +194,20 @@ Filename: "{app}\BepInEx\Realpolitik\LEIA-ME_{code:LangCode}.txt"; Description: 
 [Code]
 const
   SteamAppId = '{#SteamAppId}';
+  // File name already present on players' machines from earlier versions: data, keep it as is.
   Marker = 'bepinex-instalado-pelo-realpolitik.txt';
 
 var
   GameStore: String;        // steam, epic, manual
   BepInExState: String;     // missing, keep, other
-  BepInExFound: String;     // versão encontrada
+  BepInExFound: String;     // version found
   LoaderMissing: Boolean;
   DoorstopReenable: Boolean;
   PreviousVersion: String;
   Relaunched: Boolean;
   KeepSettings: Boolean;
 
-// ---------------- utilidades ----------------
+// ---------------- utilities ----------------
 
 function Unescape(S: String): String;
 begin
@@ -213,7 +216,7 @@ begin
   StringChangeEx(Result, '/', '\', True);
 end;
 
-// Valor entre aspas depois de uma chave: "chave" "valor" (vdf/acf) ou "chave": "valor" (json da Epic).
+// Quoted value after a key: "key" "value" (vdf/acf) or "key": "value" (Epic json).
 function QuotedValueAfter(Line, Key: String): String;
 var
   P: Integer;
@@ -247,17 +250,17 @@ begin
     Items := Service.ExecQuery('SELECT ProcessId FROM Win32_Process WHERE Name = ''Humankind.exe''');
     Result := Items.Count > 0;
   except
-    Log('Não consegui conferir se o jogo está aberto: ' + GetExceptionMessage);
+    Log('Could not check whether the game is running: ' + GetExceptionMessage);
   end;
 end;
 
-// Pede para fechar o jogo até fechar (ou cancelar). Silencioso: falha direto.
+// Asks to close the game until it is closed (or cancelled). Silent mode: fails right away.
 function WaitGameClosed: Boolean;
 begin
   Result := True;
   while IsGameRunning do
   begin
-    Log('HUMANKIND está aberto.');
+    Log('HUMANKIND is running.');
     if UninstallSilent or WizardSilent then
     begin
       Result := False;
@@ -271,7 +274,7 @@ begin
   end;
 end;
 
-// ---------------- achar o jogo ----------------
+// ---------------- finding the game ----------------
 
 function SteamGameDir: String;
 var
@@ -315,7 +318,7 @@ begin
       Dir := Lib + 'steamapps\common\' + InstallDir;
       if IsGameDir(Dir) then
       begin
-        Log('Steam: jogo em ' + Dir);
+        Log('Steam: game in ' + Dir);
         Result := Dir;
         Exit;
       end;
@@ -349,7 +352,7 @@ begin
         Dir := Location;
         if IsHumankind and IsGameDir(Dir) then
         begin
-          Log('Epic: jogo em ' + Dir);
+          Log('Epic: game in ' + Dir);
           Result := Dir;
           Exit;
         end;
@@ -379,7 +382,7 @@ function DirWritable(Dir: String): Boolean;
 var
   Probe: String;
 begin
-  Probe := AddBackslash(Dir) + 'realpolitik-teste-escrita.tmp';
+  Probe := AddBackslash(Dir) + 'realpolitik-write-test.tmp';
   Result := SaveStringToFile(Probe, 'x', False);
   if Result then DeleteFile(Probe);
 end;
@@ -429,7 +432,7 @@ begin
       StringChangeEx(L, ' ', '', True);
       if (Pos('enabled=false', L) = 1) then DoorstopReenable := True;
     end;
-  Log(Format('BepInEx: estado=%s versão=%s winhttp ausente=%d doorstop desligado=%d', [BepInExState, BepInExFound, Ord(LoaderMissing), Ord(DoorstopReenable)]));
+  Log(Format('BepInEx: state=%s version=%s winhttp missing=%d doorstop off=%d', [BepInExState, BepInExFound, Ord(LoaderMissing), Ord(DoorstopReenable)]));
 end;
 
 function NeedBepInExCore: Boolean;
@@ -456,17 +459,17 @@ begin
     StringChangeEx(L, ' ', '', True);
     if Pos('enabled=false', L) = 1 then Lines[I] := 'enabled = true';
   end;
-  if SaveStringsToFile(Ini, Lines, False) then Log('doorstop_config.ini: BepInEx religado.');
+  if SaveStringsToFile(Ini, Lines, False) then Log('doorstop_config.ini: BepInEx turned back on.');
 end;
 
-// ---------------- assistente ----------------
+// ---------------- wizard ----------------
 
 function InitializeSetup: Boolean;
 begin
   Result := True;
   if not RegQueryStringValue(HKCU, 'Software\Microsoft\Windows\CurrentVersion\Uninstall\{8C1E5B7A-4D2F-4E19-9A6B-2F7C3D1E0A55}_is1', 'DisplayVersion', PreviousVersion) then
     RegQueryStringValue(HKLM, 'Software\Microsoft\Windows\CurrentVersion\Uninstall\{8C1E5B7A-4D2F-4E19-9A6B-2F7C3D1E0A55}_is1', 'DisplayVersion', PreviousVersion);
-  Log('Versão anterior: ' + PreviousVersion + ' · nova: {#Versao} · admin: ' + IntToStr(Ord(IsAdminInstallMode)));
+  Log('Previous version: ' + PreviousVersion + ' - new: {#ReleaseVersion} - admin: ' + IntToStr(Ord(IsAdminInstallMode)));
 end;
 
 procedure InitializeWizard;
@@ -481,7 +484,7 @@ var
 begin
   Params := '/ALLUSERS /LANG=' + ActiveLanguage + ' /DIR="' + Dir + '"';
   Result := ShellExec('runas', ExpandConstant('{srcexe}'), Params, '', SW_SHOW, ewNoWait, Code);
-  Log('Reabrindo como administrador: ' + IntToStr(Ord(Result)));
+  Log('Relaunching as administrator: ' + IntToStr(Ord(Result)));
 end;
 
 function NextButtonClick(CurPageID: Integer): Boolean;
@@ -507,7 +510,7 @@ begin
   begin
     if WizardSilent then
     begin
-      Log('Pasta sem permissão de escrita e instalação silenciosa sem /ALLUSERS.');
+      Log('Folder not writable and silent install without /ALLUSERS.');
       Result := False;
       Exit;
     end;
@@ -523,17 +526,17 @@ begin
   if CompareText(SteamGameDir, Dir) = 0 then GameStore := 'steam'
   else if CompareText(EpicGameDir, Dir) = 0 then GameStore := 'epic'
   else GameStore := 'manual';
-  Log('Pasta do jogo: ' + Dir + ' · loja: ' + GameStore);
+  Log('Game folder: ' + Dir + ' - store: ' + GameStore);
   Dir := AddBackslash(Dir);
-  // Versão do jogo só no log (sem aviso ao comprador).
+  // Game version only in the log (no warning to the player).
   GameVer := '';
   GetVersionNumbersString(Dir + 'Humankind.exe', GameVer);
-  Log('Humankind.exe: ' + GameVer + ' (versão de referência: {#GameVersionTested})');
+  Log('Humankind.exe: ' + GameVer + ' (reference version: {#GameVersionTested})');
   InspectBepInEx(Dir);
   if BepInExState = 'other' then
     if WizardSilent or (MsgBox(FmtMessage(CustomMessage('OtherBepInEx'), [BepInExFound]), mbConfirmation, MB_YESNO) <> IDYES) then
     begin
-      Result := WizardSilent; // silencioso segue sem trocar o BepInEx (registrado no log)
+      Result := WizardSilent; // silent mode carries on without swapping BepInEx (recorded in the log)
       Exit;
     end;
   if DoorstopReenable and not WizardSilent then
@@ -549,7 +552,7 @@ function UpdateReadyMemo(Space, NewLine, MemoUserInfoInfo, MemoDirInfo, MemoType
 begin
   Result := CustomMessage('ReadyGame') + NewLine + Space + WizardDirValue + NewLine + NewLine;
   if (PreviousVersion <> '') then
-    Result := Result + FmtMessage(CustomMessage('ReadyUpdate'), [PreviousVersion, '{#Versao}']) + NewLine;
+    Result := Result + FmtMessage(CustomMessage('ReadyUpdate'), [PreviousVersion, '{#ReleaseVersion}']) + NewLine;
   if BepInExState = 'missing' then
     Result := Result + CustomMessage('ReadyBepInExInstall') + NewLine
   else
@@ -571,33 +574,33 @@ begin
   Dir := AddBackslash(WizardDirValue);
   if CurStep = ssInstall then
   begin
-    // MoreEmpires desmarcado: sai a DLL (a configuração dele fica).
+    // MoreEmpires unticked: the DLL goes (its configuration stays).
     Old := Dir + 'BepInEx\plugins\MoreEmpires\MoreEmpires.dll';
     if not WizardIsTaskSelected('moreempires') and FileExists(Old) then
-      if DeleteFile(Old) then Log('MoreEmpires desmarcado: DLL removida.');
+      if DeleteFile(Old) then Log('MoreEmpires unticked: DLL removed.');
   end;
   if CurStep = ssPostInstall then
   begin
     if BepInExState = 'missing' then
     begin
       ForceDirectories(Dir + 'BepInEx\Realpolitik');
-      SaveStringToFile(Dir + 'BepInEx\Realpolitik\' + Marker, 'BepInEx 5.4.23.5 instalado pelo Realpolitik {#Versao} em ' + GetDateTimeString('yyyy-mm-dd hh:nn', '-', ':') + #13#10, False);
-      Log('BepInEx instalado (marcado para sair junto na desinstalação, se não sobrar outro plugin).');
+      SaveStringToFile(Dir + 'BepInEx\Realpolitik\' + Marker, 'BepInEx 5.4.23.5 installed by Realpolitik {#ReleaseVersion} on ' + GetDateTimeString('yyyy-mm-dd hh:nn', '-', ':') + #13#10, False);
+      Log('BepInEx installed (marked to be removed on uninstall, if no other plugin is left).');
     end;
     if DoorstopReenable then ReenableDoorstop(Dir);
   end;
 end;
 
-// ---------------- desinstalar ----------------
+// ---------------- uninstall ----------------
 
 function InitializeUninstall: Boolean;
 begin
   Result := WaitGameClosed;
-  // Silencioso mantém tudo, a não ser com /APAGARTUDO (suporte e testes).
-  KeepSettings := Pos('/APAGARTUDO', Uppercase(GetCmdTail)) = 0;
+  // Silent mode keeps everything, unless /DELETEALL is passed (support and tests); /APAGARTUDO is the old spelling, still accepted.
+  KeepSettings := (Pos('/DELETEALL', Uppercase(GetCmdTail)) = 0) and (Pos('/APAGARTUDO', Uppercase(GetCmdTail)) = 0);
   if Result and not UninstallSilent then
     KeepSettings := MsgBox(CustomMessage('KeepSettings'), mbConfirmation, MB_YESNO) = IDYES;
-  Log('Desinstalar · manter configurações: ' + IntToStr(Ord(KeepSettings)));
+  Log('Uninstall - keep settings: ' + IntToStr(Ord(KeepSettings)));
 end;
 
 function OtherPluginsLeft(Dir: String): Boolean;
@@ -612,7 +615,7 @@ begin
     repeat
       if (FindRec.Name <> '.') and (FindRec.Name <> '..') then
       begin
-        Log('Sobrou em plugins: ' + FindRec.Name);
+        Log('Left in plugins: ' + FindRec.Name);
         Result := True;
       end;
     until not FindNext(FindRec);
@@ -634,7 +637,7 @@ begin
   RemoveDir(Dir + 'BepInEx\plugins');
   RemoveDir(Dir + 'BepInEx\config');
   RemoveDir(Dir + 'BepInEx');
-  Log('BepInEx removido (tinha sido instalado pelo Realpolitik e não sobrou outro plugin).');
+  Log('BepInEx removed (it was installed by Realpolitik and no other plugin is left).');
 end;
 
 procedure CleanupAfterExit(Dir: String);
@@ -649,7 +652,7 @@ begin
   Cmd := Cmd + ' & rd "' + Dir + 'BepInEx\config"';
   Cmd := Cmd + ' & rd "' + Dir + 'BepInEx"';
   if Exec(ExpandConstant('{cmd}'), Cmd, '', SW_HIDE, ewNoWait, Code) then
-    Log('Limpeza das pastas vazias agendada.');
+    Log('Cleanup of the empty folders scheduled.');
 end;
 
 procedure CurUninstallStepChanged(CurUninstallStep: TUninstallStep);
@@ -658,7 +661,7 @@ var
 begin
   if CurUninstallStep <> usPostUninstall then Exit;
   Dir := AddBackslash(ExpandConstant('{app}'));
-  // Pastas que eram só do mod (as DLLs já saíram pelo desinstalador).
+  // Folders that belonged only to the mod (the DLLs were already removed by the uninstaller).
   RemoveDir(Dir + 'BepInEx\plugins\CurrencyMod');
   RemoveDir(Dir + 'BepInEx\plugins\MoreEmpires');
   DeleteFile(Dir + 'BepInEx\CurrencyModCore\result.txt');
@@ -671,23 +674,23 @@ begin
     DelTree(Dir + 'BepInEx\DiplomaciaIA', True, True, True);
     DelTree(Dir + 'BepInEx\MoreEmpires', True, True, True);
     DelTree(Dir + 'BepInEx\CurrencyModCore', True, True, True);
-    Log('Configurações e chaves do Realpolitik apagadas.');
+    Log('Realpolitik settings and keys deleted.');
   end;
   RemoveDir(Dir + 'BepInEx\CurrencyModCore');
   if FileExists(Dir + 'BepInEx\Realpolitik\' + Marker) then
   begin
     DeleteFile(Dir + 'BepInEx\Realpolitik\' + Marker);
-    // As configurações guardadas (BepInEx\config) ficam mesmo sem o BepInEx: a pasta só some se estiver vazia.
+    // Saved settings (BepInEx\config) stay even without BepInEx: the folder only goes if it is empty.
     if not OtherPluginsLeft(Dir) then
       RemoveBepInEx(Dir)
     else
-      Log('BepInEx mantido (sobrou outro plugin na pasta).');
+      Log('BepInEx kept (another plugin is left in the folder).');
   end
   else
-    Log('BepInEx mantido (não foi instalado pelo Realpolitik).');
+    Log('BepInEx kept (it was not installed by Realpolitik).');
   RemoveDir(Dir + 'BepInEx\Realpolitik\licencas');
   RemoveDir(Dir + 'BepInEx\Realpolitik');
-  // Os arquivos do próprio desinstalador (BepInEx\Realpolitik) só saem depois deste passo, então as pastas de cima
-  // ainda não estão vazias. Agenda a remoção para logo depois: "rd" sem /s só apaga pasta VAZIA (nunca conteúdo).
+  // The uninstaller's own files (BepInEx\Realpolitik) only go after this step, so the folders above
+  // are not empty yet. Schedules the removal right after: "rd" without /s only deletes an EMPTY folder (never content).
   CleanupAfterExit(Dir);
 end;

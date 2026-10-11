@@ -19,12 +19,12 @@ namespace CurrencyMod.Diplomacy
     internal static class Espionage
     {
         /// <summary>
-        /// Simulated spies (command "ia espionagem simular ... fixar"): only in the mod's memory, to test the roll
-        /// without touching the game. They vanish on core reload or with "ia espionagem limpar".
+        /// Simulated spies (command "ai espionage simulate ... keep"): only in the mod's memory, to test the roll
+        /// without touching the game. They vanish on core reload or with "ai espionage clear".
         /// </summary>
         internal static readonly List<CapturedSpy> TestSpies = new List<CapturedSpy>();
 
-        /// <summary>Latest rolls (for the "ia espionagem" command): letter, empire, chance and number drawn.</summary>
+        /// <summary>Latest rolls (for the "ai espionage" command): letter, empire, chance and number drawn.</summary>
         internal static readonly List<string> LastRolls = new List<string>();
 
         /// <summary>Spies from the turn snapshot plus the simulated ones.</summary>
@@ -227,11 +227,11 @@ namespace CurrencyMod.Diplomacy
                 {
                     if (!budget.TryGetValue(candidate.Empire, out int left) || left <= 0)
                     {
-                        Remember($"T{turn} carta {letter.Id} E{letter.From}→E{letter.To}: E{candidate.Empire} sem espião livre neste turno");
+                        Remember($"T{turn} letter {letter.Id} E{letter.From}→E{letter.To}: E{candidate.Empire} has no free spy this turn");
                         continue;
                     }
                     double roll = Roll(world.GameGuid, letter.Id, candidate.Empire);
-                    Remember($"T{turn} carta {letter.Id} E{letter.From}→E{letter.To}: E{candidate.Empire} chance {candidate.Chance:0.00} (origem {candidate.Origin?.Chance ?? 0:0.00}, destino {candidate.Destination?.Chance ?? 0:0.00}) · tirou {roll:0.00} → {(roll < candidate.Chance ? "INTERCEPTADA" : "passou")}");
+                    Remember($"T{turn} letter {letter.Id} E{letter.From}→E{letter.To}: E{candidate.Empire} chance {candidate.Chance:0.00} (origin {candidate.Origin?.Chance ?? 0:0.00}, destination {candidate.Destination?.Chance ?? 0:0.00}) · rolled {roll:0.00} → {(roll < candidate.Chance ? "INTERCEPTED" : "passed")}");
                     if (roll >= candidate.Chance)
                     {
                         continue;
@@ -387,7 +387,7 @@ namespace CurrencyMod.Diplomacy
         internal static string Describe(WorldCapture capture, Letter letter)
         {
             string where = letter.InterceptedTerritory >= 0 ? capture?.TerritoryName(letter.InterceptedTerritory) ?? "T" + letter.InterceptedTerritory : "?";
-            return $"Carta {letter.Id} de E{letter.From} para E{letter.To} interceptada por E{letter.InterceptedBy} ({letter.InterceptedVia}: {letter.InterceptedSpy ?? "espião"} em {where}).";
+            return $"Letter {letter.Id} from E{letter.From} to E{letter.To} intercepted by E{letter.InterceptedBy} ({letter.InterceptedVia}: {letter.InterceptedSpy ?? "spy"} in {where}).";
         }
 
         /// <summary>Qualitative coverage of a chance (for the dossier and the UI).</summary>
@@ -407,90 +407,90 @@ namespace CurrencyMod.Diplomacy
             }
         }
 
-        /// <summary>Table for the "ia espionagem" command: spies, weights and each empire's chance at each end.</summary>
+        /// <summary>Table for the "ai espionage" command: spies, weights and each empire's chance at each end.</summary>
         internal static string Report(AiWorld world, WorldCapture capture)
         {
             var text = new StringBuilder();
-            text.AppendLine($"turno {capture.Turn} · {capture.Spies.Count} espião(ões){(TestSpies.Count > 0 ? $" + {TestSpies.Count} simulado(s)" : string.Empty)} · interceptação {(AiConfig.Interception.Value ? "ligada" : "desligada")} · Pmax {AiConfig.InterceptionMaxChance.Value:0.00} k {AiConfig.InterceptionCurve.Value:0.00} teto {AiConfig.InterceptionCap.Value:0.00}");
+            text.AppendLine($"turn {capture.Turn} · {capture.Spies.Count} spy(ies){(TestSpies.Count > 0 ? $" + {TestSpies.Count} simulated" : string.Empty)} · interception {(AiConfig.Interception.Value ? "on" : "off")} · Pmax {AiConfig.InterceptionMaxChance.Value:0.00} k {AiConfig.InterceptionCurve.Value:0.00} cap {AiConfig.InterceptionCap.Value:0.00}");
             foreach (CapturedSpy spy in AllSpies(capture).OrderBy(s => s.Owner))
             {
                 SpyWeight weight = Weigh(capture, world, spy);
-                string owner = spy.TerritoryOwner >= 0 ? "E" + spy.TerritoryOwner : "sem dono";
-                string infiltration = spy.Infiltration != null ? $" · {spy.Infiltration} contra E{spy.InfiltrationTarget}{(spy.Infiltrated ? " (concluída)" : $" ({spy.InfiltrationTurnsLeft} turnos)")}" : string.Empty;
-                string revealed = spy.TurnsBeforeRevealed == int.MaxValue ? "sem detecção" : $"revelado em {spy.TurnsBeforeRevealed}";
-                text.AppendLine($"E{spy.Owner} {spy.Name ?? spy.Key} em {capture.TerritoryName(spy.Territory)} (T{spy.Territory}, {owner}) · agentes {spy.Agents} vet {spy.Veterancy:0.#} · furtividade {spy.Stealth:0.#}/{spy.StealthMax:0.#} · oculto {(spy.Hidden ? "sim" : "não")} age {(spy.CanAct ? "sim" : "não")} · detecção dono {spy.OwnerDetection:0.##} hostil {spy.HostileDetection:0.##} ({revealed}){(spy.WatchingCity ? " · vigiando" : string.Empty)}{infiltration} → {(weight != null ? $"peso {weight.Weight:0.###} ({weight.Place}, {weight.Mission})" : "não conta")}");
+                string owner = spy.TerritoryOwner >= 0 ? "E" + spy.TerritoryOwner : "no owner";
+                string infiltration = spy.Infiltration != null ? $" · {spy.Infiltration} against E{spy.InfiltrationTarget}{(spy.Infiltrated ? " (done)" : $" ({spy.InfiltrationTurnsLeft} turns)")}" : string.Empty;
+                string revealed = spy.TurnsBeforeRevealed == int.MaxValue ? "not detected" : $"revealed in {spy.TurnsBeforeRevealed}";
+                text.AppendLine($"E{spy.Owner} {spy.Name ?? spy.Key} in {capture.TerritoryName(spy.Territory)} (T{spy.Territory}, {owner}) · agents {spy.Agents} vet {spy.Veterancy:0.#} · stealth {spy.Stealth:0.#}/{spy.StealthMax:0.#} · hidden {(spy.Hidden ? "yes" : "no")} acts {(spy.CanAct ? "yes" : "no")} · detection owner {spy.OwnerDetection:0.##} hostile {spy.HostileDetection:0.##} ({revealed}){(spy.WatchingCity ? " · watching" : string.Empty)}{infiltration} → {(weight != null ? $"weight {weight.Weight:0.###} ({weight.Place}, {weight.Mission})" : "does not count")}");
             }
             text.AppendLine();
-            text.AppendLine("Chance por ponta (quem intercepta → território de quem):");
+            text.AppendLine("Chance per end (who intercepts → whose territory):");
             foreach (int end in capture.AliveEmpires())
             {
                 List<InterceptRisk> risks = Risks(capture, world, end, -1, -1);
                 if (risks.Count > 0)
                 {
-                    text.AppendLine($"  em E{end}: " + string.Join(", ", risks.Select(r => $"E{r.Empire} {r.Chance:0.00} ({r.SpyName ?? r.SpyKey})")));
+                    text.AppendLine($"  in E{end}: " + string.Join(", ", risks.Select(r => $"E{r.Empire} {r.Chance:0.00} ({r.SpyName ?? r.SpyKey})")));
                 }
             }
             if (capture.StealthActivity.Count > 0)
             {
-                text.AppendLine("Atividade furtiva marcada pelo jogo: " + string.Join(", ", capture.StealthActivity.Select(t => $"{capture.TerritoryName(t)} (E{capture.OwnerOf(t)})")));
+                text.AppendLine("Stealth activity flagged by the game: " + string.Join(", ", capture.StealthActivity.Select(t => $"{capture.TerritoryName(t)} (E{capture.OwnerOf(t)})")));
             }
             List<Letter> recent = world.Letters.Where(l => l.Intercepted && l.InterceptedTurn >= capture.Turn - 10).OrderBy(l => l.Id).ToList();
             text.AppendLine();
-            text.AppendLine($"Interceptadas nos últimos 10 turnos: {recent.Count}");
+            text.AppendLine($"Intercepted in the last 10 turns: {recent.Count}");
             foreach (Letter letter in recent)
             {
-                text.AppendLine($"  T{letter.InterceptedTurn} " + Describe(capture, letter) + (letter.InterceptorRead ? " (lida)" : " (não lida)"));
+                text.AppendLine($"  T{letter.InterceptedTurn} " + Describe(capture, letter) + (letter.InterceptorRead ? " (read)" : " (unread)"));
             }
             List<Letter> waiting = world.Letters.Where(l => !l.InterceptionChecked).OrderBy(l => l.Id).ToList();
-            text.AppendLine($"Cartas privadas ainda a caminho (sorteio na chegada): {waiting.Count}");
+            text.AppendLine($"Private letters still on the way (rolled on arrival): {waiting.Count}");
             foreach (Letter letter in waiting)
             {
                 string risks = letter.OriginRisks != null && letter.OriginRisks.Count > 0
                     ? string.Join(", ", letter.OriginRisks.Select(r => $"E{r.Empire} {r.Chance:0.00}"))
-                    : "nenhum";
-                text.AppendLine($"  carta {letter.Id} E{letter.From}→E{letter.To} · escrita T{letter.SentTurn} · chega T{letter.DeliverTurn} · risco na origem: {risks}");
+                    : "none";
+                text.AppendLine($"  letter {letter.Id} E{letter.From}→E{letter.To} · written T{letter.SentTurn} · arrives T{letter.DeliverTurn} · risk at origin: {risks}");
             }
             if (LastRolls.Count > 0)
             {
-                text.AppendLine("Últimos sorteios:");
+                text.AppendLine("Last rolls:");
                 foreach (string line in LastRolls.Skip(Math.Max(0, LastRolls.Count - 20)))
                 {
                     text.AppendLine("  " + line);
                 }
             }
             text.AppendLine();
-            text.AppendLine("Detecção nas capitais: " + string.Join(", ", capture.AliveEmpires()
+            text.AppendLine("Detection in the capitals: " +string.Join(", ", capture.AliveEmpires()
                 .Select(e => capture.Empire(e)?.Cities.FirstOrDefault(c => c.Capital))
                 .Where(c => c != null && c.CenterTerritory >= 0 && c.CenterTerritory < capture.OwnerDetection.Length)
                 .Select(c => $"{c.Name} (E{capture.OwnerOf(c.CenterTerritory)}, T{c.CenterTerritory}) {capture.OwnerDetection[c.CenterTerritory]:0.##}")));
             var traffic = world.Letters.Where(l => !l.IsPublic && l.Type == "privada" && l.SentTurn >= capture.Turn - 10)
                 .SelectMany(l => new[] { l.From, l.To }).GroupBy(e => e).OrderByDescending(g => g.Count()).Select(g => $"E{g.Key} {g.Count()}");
-            text.AppendLine("Cartas privadas nos últimos 10 turnos (escritas + recebidas): " + string.Join(", ", traffic));
+            text.AppendLine("Private letters in the last 10 turns (written + received): " +string.Join(", ", traffic));
             return text.ToString().TrimEnd();
         }
 
         /// <summary>
-        /// "ia espionagem simular E# T# [vigiar] [fixar]": weight and chance of a test spy (1 agent, stealth 8) in a
-        /// foreign territory, with the owner's real detection there. "fixar" keeps the spy active in the roll.
+        /// "ai espionage simulate E# T# [watch] [keep]": weight and chance of a test spy (1 agent, stealth 8) in a
+        /// foreign territory, with the owner's real detection there. "keep" keeps the spy active in the roll.
         /// </summary>
         internal static string Simulate(AiWorld world, WorldCapture capture, int owner, int territory, bool watch, bool keep)
         {
             int end = capture.OwnerOf(territory);
             if (end < 0)
             {
-                return "erro: território sem dono (ou de povo independente)";
+                return "error: territory has no owner (or belongs to an independent people)";
             }
             if (end == owner)
             {
-                return "erro: o espião precisa estar em território estrangeiro";
+                return "error: the spy must be in a foreign territory";
             }
             CapturedCity capital = capture.Empire(end)?.Cities.FirstOrDefault(c => c.Capital);
             float detection = territory < capture.OwnerDetection.Length ? capture.OwnerDetection[territory] : 0f;
             var spy = new CapturedSpy
             {
                 Owner = owner,
-                Key = $"teste-{owner}-{territory}",
-                Name = "Espião de teste",
+                Key = $"test-{owner}-{territory}",
+                Name = "Test spy",
                 Territory = territory,
                 TerritoryOwner = end,
                 Agents = 1,
@@ -519,9 +519,9 @@ namespace CurrencyMod.Diplomacy
                 TestSpies.RemoveAll(s => s.Key == spy.Key);
                 TestSpies.Add(spy);
             }
-            return $"espião de teste de E{owner} em {capture.TerritoryName(territory)} (T{territory}, de E{end}){(watch && !watching ? " (vigiar só vale na região da capital)" : string.Empty)}: detecção do dono {detection:0.##}"
-                + $" → peso {(weight != null ? $"{weight.Weight:0.###} ({weight.Place}, {weight.Mission})" : "0")} → chance numa ponta {chance:0.00}"
-                + (keep ? " · fixado: vale no sorteio até 'ia espionagem limpar' ou a recarga do núcleo" : string.Empty);
+            return $"test spy of E{owner} in {capture.TerritoryName(territory)} (T{territory}, of E{end}){(watch && !watching ? " (watch only counts in the capital's region)" : string.Empty)}: owner detection {detection:0.##}"
+                + $" → weight {(weight != null ? $"{weight.Weight:0.###} ({weight.Place}, {weight.Mission})" : "0")} → chance at one end {chance:0.00}"
+                + (keep ? " · kept: counts in the roll until 'ai espionage clear' or the core reload" : string.Empty);
         }
     }
 }

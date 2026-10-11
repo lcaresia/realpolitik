@@ -49,7 +49,7 @@ namespace CurrencyMod.Diplomacy.Llm.Providers
         private const int TimeoutMinutes = 5;
         internal static LoginSession Current { get; private set; }
 
-        /// <summary>Tests only ("ia provedor login-teste"): does not open the browser.</summary>
+        /// <summary>Tests only ("ai provider login-test"): does not open the browser.</summary>
         internal static bool SuppressBrowser;
 
         /// <summary>Starts the login (main thread). Returns the session; the work continues on a thread.</summary>

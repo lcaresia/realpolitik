@@ -1,20 +1,20 @@
-# Gera uma versão do Realpolitik do zero e de forma repetível:
-#   dist\<versão>\Realpolitik_Setup_<versão>.exe   instalador (Inno Setup)
-#   dist\<versão>\Realpolitik_<versão>_manual.zip  mesmo conteúdo, para extrair na pasta do jogo (Steam Deck, plano B)
-#   dist\<versão>\MANIFEST.txt e SHA256SUMS.txt
-# Uso (na pasta do jogo):
-#   powershell -ExecutionPolicy Bypass -File _Modding\tools\gerar-release.ps1 -Versao 1.0.0
-#   ... -Versao 1.0.1-beta.1          versão de teste (o Plugin.ProductVersion tem que bater sem o sufixo)
-#   ... -Certificado C:\x.pfx         assina o Setup com signtool (senha em $env:REALPOLITIK_PFX_SENHA)
+# Builds a Realpolitik release from scratch, repeatably:
+#   dist\<version>\Realpolitik_Setup_<version>.exe   installer (Inno Setup)
+#   dist\<version>\Realpolitik_<version>_manual.zip  same content, to extract into the game folder (Steam Deck, plan B)
+#   dist\<version>\MANIFEST.txt and SHA256SUMS.txt
+# Usage (from the game folder):
+#   powershell -ExecutionPolicy Bypass -File _Modding\tools\make-release.ps1 -Version 1.0.0
+#   ... -Version 1.0.1-beta.1          test version (Plugin.ProductVersion must match without the suffix)
+#   ... -Certificate C:\x.pfx          signs the Setup with signtool (password in $env:REALPOLITIK_PFX_PASSWORD)
 #
-# Falha alto em qualquer problema: arquivo fora da lista branca, segredo ou caminho desta máquina dentro de qualquer
-# arquivo (inclusive DLLs, em ASCII e UTF-16), versão que não bate, BepInEx diferente do oficial. Nunca lê de
-# BepInEx\config, .env, credenciais ou da instalação do jogo: só compila do código e copia de _Modding\installer.
+# Fails loudly on any problem: a file outside the allowlist, a secret or a path of this machine inside any file
+# (DLLs included, as ASCII and UTF-16), a version mismatch, a BepInEx that is not the official one. Never reads from
+# BepInEx\config, .env, credentials or the game installation: it only builds from source and copies from _Modding\installer.
 param(
-    [Parameter(Mandatory = $true)][string]$Versao,
-    [string]$Certificado,
-    # Só para testar a trava: planta um .env falso e uma "chave" sk_live_ no staging; a geração TEM que falhar.
-    [switch]$TestarTrava
+    [Parameter(Mandatory = $true)][string]$Version,
+    [string]$Certificate,
+    # Only to test the guard: plants a fake .env and an sk_live_ "key" in the staging; the build MUST fail.
+    [switch]$TestSecretGuard
 )
 $ErrorActionPreference = 'Stop'
 $mod = Split-Path $PSScriptRoot -Parent
@@ -22,7 +22,7 @@ $installer = Join-Path $mod 'installer'
 $dotnet = 'C:\Program Files\dotnet\dotnet.exe'
 if (-not (Test-Path $dotnet)) { $dotnet = 'dotnet' }
 $iscc = @("$env:LOCALAPPDATA\Programs\Inno Setup 6\ISCC.exe", "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe", "$env:ProgramFiles\Inno Setup 6\ISCC.exe") | Where-Object { Test-Path $_ } | Select-Object -First 1
-if (-not $iscc) { throw 'Inno Setup 6 não encontrado (ISCC.exe).' }
+if (-not $iscc) { throw 'Inno Setup 6 not found (ISCC.exe).' }
 $bepZip = Join-Path $installer 'vendor\BepInEx_win_x64_5.4.23.5.zip'
 $bepSha = '82f9878551030f54657792c0740d9d51a09500eeae1fba21106b0c441e6732c4'
 $utf8Bom = New-Object Text.UTF8Encoding($true)
@@ -30,42 +30,44 @@ $utf8Bom = New-Object Text.UTF8Encoding($true)
 function Step([string]$text) { Write-Host "`n== $text" -ForegroundColor Cyan }
 function Sha([string]$path) { (Get-FileHash $path -Algorithm SHA256).Hash.ToLower() }
 
-# ---------------- 1. versão ----------------
-Step "Versão $Versao"
-if ($Versao -notmatch '^\d+\.\d+\.\d+(-[0-9A-Za-z.]+)?$') { throw "Versão inválida: $Versao (use 1.0.0 ou 1.0.1-beta.1)" }
-$base = $Versao.Split('-')[0]
+# ---------------- 1. version ----------------
+Step "Version $Version"
+if ($Version -notmatch '^\d+\.\d+\.\d+(-[0-9A-Za-z.]+)?$') { throw "Invalid version: $Version (use 1.0.0 or 1.0.1-beta.1)" }
+$base = $Version.Split('-')[0]
 $pluginCs = Get-Content (Join-Path $mod 'src\CurrencyMod\Plugin.cs') -Raw
 $product = [regex]::Match($pluginCs, 'ProductVersion\s*=\s*"([^"]+)"').Groups[1].Value
-if ($product -ne $base) { throw "Plugin.ProductVersion = $product, mas a versão pedida é $base. Ajuste Plugin.cs (o aviso de atualização do jogo usa esse número)." }
-if ((Sha $bepZip) -ne $bepSha) { throw 'O zip do BepInEx não é o oficial (sha256 diferente).' }
+if ($product -ne $base) { throw "Plugin.ProductVersion = $product, but the requested version is $base. Fix Plugin.cs (the in-game update notice uses this number)." }
+if ((Sha $bepZip) -ne $bepSha) { throw 'The BepInEx zip is not the official one (sha256 mismatch).' }
 
 $dist = Join-Path $mod 'dist'
-$stage = Join-Path $dist "staging\$Versao"
-$out = Join-Path $dist $Versao
+$stage = Join-Path $dist "staging\$Version"
+$out = Join-Path $dist $Version
 foreach ($d in $stage, $out) { if (Test-Path $d) { Remove-Item $d -Recurse -Force -Confirm:$false } }
 New-Item -ItemType Directory -Force $stage, $out | Out-Null
 
-# ---------------- 2. compilar (sem instalar no jogo, sem pdb e sem caminho desta máquina dentro da DLL) ----------------
-Step 'Compilando em Release'
+# ---------------- 2. build (no install into the game, no pdb and no path of this machine inside the DLL) ----------------
+Step 'Building in Release'
 $build = Join-Path $stage 'build'
 $projects = [ordered]@{ 'CurrencyMod.Loader' = 'CurrencyMod.Loader.dll'; 'CurrencyMod' = 'CurrencyMod.dll'; 'MoreEmpires' = 'MoreEmpires.dll' }
 foreach ($p in $projects.Keys) {
     $o = Join-Path $build $p
     & $dotnet build (Join-Path $mod "src\$p") -c Release --no-incremental -nologo -v q `
         -p:SkipDeploy=true -p:Deploy=false -p:DebugType=none -p:DebugSymbols=false -p:Deterministic=true "-p:OutDir=$o\"
-    if ($LASTEXITCODE -ne 0) { throw "Falha ao compilar $p" }
-    if (-not (Test-Path (Join-Path $o $projects[$p]))) { throw "Saída não encontrada: $p" }
+    if ($LASTEXITCODE -ne 0) { throw "Build failed: $p" }
+    if (-not (Test-Path (Join-Path $o $projects[$p]))) { throw "Output not found: $p" }
 }
 
-# ---------------- 3. montar o staging ----------------
-Step 'Montando o staging'
+# ---------------- 3. assemble the staging ----------------
+# The staged file and folder names (docs\LEIA-ME_*, licencas\, art\grande-*.bmp...) are what gets installed on the
+# player's machine; they are data and keep their names.
+Step 'Assembling the staging'
 function Put([string]$from, [string]$rel) {
     $to = Join-Path $stage $rel
     New-Item -ItemType Directory -Force (Split-Path $to -Parent) | Out-Null
     Copy-Item $from $to
 }
 function PutText([string]$from, [string]$rel) {
-    # Texto sempre em UTF-8 com BOM (o Inno exige BOM para mostrar acentos).
+    # Text always as UTF-8 with BOM (Inno needs the BOM to show accents).
     $to = Join-Path $stage $rel
     New-Item -ItemType Directory -Force (Split-Path $to -Parent) | Out-Null
     $text = [IO.File]::ReadAllText($from)
@@ -86,8 +88,8 @@ $bepDir = Join-Path $stage 'bepinex'
 Expand-Archive $bepZip $bepDir
 Remove-Item (Join-Path $bepDir 'changelog.txt') -Force -Confirm:$false
 
-# ---------------- 4. lista branca ----------------
-Step 'Lista branca'
+# ---------------- 4. allowlist ----------------
+Step 'Allowlist'
 $bepFiles = (Get-ChildItem $bepDir -Recurse -File -Force | ForEach-Object { 'bepinex\' + $_.FullName.Substring($bepDir.Length + 1) })
 $allowed = @(
     'payload\BepInEx\plugins\CurrencyMod\CurrencyMod.Loader.dll'
@@ -97,23 +99,23 @@ $allowed = @(
     'licencas\BepInEx-LICENSE.txt', 'licencas\UnityDoorstop-LICENSE.txt', 'licencas\HarmonyX-LICENSE.txt', 'licencas\MonoMod-LICENSE.txt', 'licencas\Mono.Cecil-LICENSE.txt'
     'art\realpolitik.ico', 'art\grande-164.bmp', 'art\grande-328.bmp', 'art\pequena-55.bmp', 'art\pequena-110.bmp'
 ) + ($langs | ForEach-Object { "docs\LEIA-ME_$_.txt"; "docs\TERMOS_$_.txt" })
-# O BepInEx entra arquivo por arquivo do zip oficial (sha256 já conferido), sem nada a mais.
+# BepInEx goes in file by file from the official zip (sha256 already checked), with nothing extra.
 $bepExpected = @('bepinex\.doorstop_version', 'bepinex\doorstop_config.ini', 'bepinex\winhttp.dll') + `
     @('0Harmony.dll', '0Harmony.xml', '0Harmony20.dll', 'BepInEx.dll', 'BepInEx.Harmony.dll', 'BepInEx.Harmony.xml', 'BepInEx.Preloader.dll',
       'BepInEx.Preloader.xml', 'BepInEx.xml', 'HarmonyXInterop.dll', 'Mono.Cecil.dll', 'Mono.Cecil.Mdb.dll', 'Mono.Cecil.Pdb.dll', 'Mono.Cecil.Rocks.dll',
       'MonoMod.RuntimeDetour.dll', 'MonoMod.RuntimeDetour.xml', 'MonoMod.Utils.dll', 'MonoMod.Utils.xml' | ForEach-Object { "bepinex\BepInEx\core\$_" })
 $allowed += $bepExpected
 $present = Get-ChildItem $stage -Recurse -File -Force | Where-Object { $_.FullName -notlike "$build\*" } | ForEach-Object { $_.FullName.Substring($stage.Length + 1) }
-if ($present | Where-Object { $_ -match '(?i)mapping' }) { throw 'O mapa da ofuscação entrou no staging' }
+if ($present | Where-Object { $_ -match '(?i)mapping' }) { throw 'The obfuscation map got into the staging' }
 $extra = $present | Where-Object { $allowed -notcontains $_ }
 $missing = $allowed | Where-Object { $present -notcontains $_ }
-if ($extra) { throw "Arquivo fora da lista branca: $($extra -join ', ')" }
-if ($missing) { throw "Faltou no staging: $($missing -join ', ')" }
+if ($extra) { throw "File outside the allowlist: $($extra -join ', ')" }
+if ($missing) { throw "Missing from the staging: $($missing -join ', ')" }
 Remove-Item $build -Recurse -Force -Confirm:$false
-Write-Host "  $($present.Count) arquivos, todos na lista branca"
+Write-Host "  $($present.Count) files, all on the allowlist"
 
-# ---------------- 5. trava de segredos ----------------
-Step 'Trava de segredos'
+# ---------------- 5. secret guard ----------------
+Step 'Secret guard'
 function Test-Secrets([string]$root) {
     $problems = @()
     $patterns = @(
@@ -122,10 +124,10 @@ function Test-Secrets([string]$root) {
         'Bearer [A-Za-z0-9_\-]{24,}', 'RPLN-(?!XXXXX)[0-9A-Z]{5}-[0-9A-Z]{5}',
         'Users\\lucas', 'steamapps\\common\\Humankind', 'Program Files \(x86\)\\Steam', '[A-Za-z]:\\[^\x00"]{0,80}_Modding'
     )
-    # Só nas nossas DLLs: nenhum caminho de .pdb (compiladas com DebugType=none). As do BepInEx são as oficiais,
-    # conferidas pelo sha256 do zip, e citam o .pdb de quem as compilou.
+    # Only in our DLLs: no .pdb path (built with DebugType=none). The BepInEx ones are the official files,
+    # checked through the zip's sha256, and mention the .pdb of whoever built them.
     $ownOnly = @('\.pdb')
-    # Os próprios valores do .env (chaves reais), procurados literalmente. Nunca são impressos.
+    # The .env values themselves (real keys), searched literally. They are never printed.
     $envFile = Join-Path $mod '.env'
     $literals = @()
     if (Test-Path $envFile) {
@@ -137,29 +139,30 @@ function Test-Secrets([string]$root) {
     if (Test-Path $deepseek) { $k = ([IO.File]::ReadAllText($deepseek)).Trim(); if ($k.Length -ge 12 -and $k -notmatch '\s') { $literals += $k } }
     foreach ($f in Get-ChildItem $root -Recurse -File -Force) {
         $rel = $f.FullName.Substring($root.Length + 1)
-        if ($f.Name -match '(?i)^\.env|\.key$|\.pdb$|\.dat$|deepseek' -or $rel -match '(?i)credenciais|_Modding|decompiled') { $problems += "nome proibido: $rel"; continue }
+        # "credenciais" is the mod's credentials folder name on disk (data).
+        if ($f.Name -match '(?i)^\.env|\.key$|\.pdb$|\.dat$|deepseek' -or $rel -match '(?i)credenciais|_Modding|decompiled') { $problems += "forbidden name: $rel"; continue }
         $bytes = [IO.File]::ReadAllBytes($f.FullName)
         foreach ($text in @([Text.Encoding]::ASCII.GetString($bytes), [Text.Encoding]::Unicode.GetString($bytes), [Text.Encoding]::Unicode.GetString($bytes, 1, [Math]::Max(0, $bytes.Length - 1)))) {
-            foreach ($p in $patterns) { if ($text -match $p) { $problems += "padrão '$p' em $rel"; break } }
+            foreach ($p in $patterns) { if ($text -match $p) { $problems += "pattern '$p' in $rel"; break } }
             if ($rel -notmatch '^bepinex\\' -and $rel -notmatch '^BepInEx\\core\\' -and $rel -notmatch '^(winhttp\.dll|doorstop_config\.ini|\.doorstop_version)$') {
-                foreach ($p in $ownOnly) { if ($text -match $p) { $problems += "padrão '$p' em $rel"; break } }
+                foreach ($p in $ownOnly) { if ($text -match $p) { $problems += "pattern '$p' in $rel"; break } }
             }
-            foreach ($v in $literals) { if ($text.Contains($v)) { $problems += "valor do .env/deepseek.key em $rel"; break } }
+            foreach ($v in $literals) { if ($text.Contains($v)) { $problems += ".env/deepseek.key value in $rel"; break } }
         }
     }
     return $problems | Select-Object -Unique
 }
-if ($TestarTrava) {
+if ($TestSecretGuard) {
     [IO.File]::WriteAllText((Join-Path $stage 'docs\.env'), 'FAKE=1')
-    [IO.File]::AppendAllText((Join-Path $stage 'docs\THIRD-PARTY.txt'), "`r`nsk_live_TESTE1234567890")
+    [IO.File]::AppendAllText((Join-Path $stage 'docs\THIRD-PARTY.txt'), "`r`nsk_live_TEST1234567890")
 }
 $found = Test-Secrets $stage
-if ($found) { throw "TRAVA DE SEGREDOS: $($found -join ' | ')" }
-Write-Host '  nenhum segredo, chave ou caminho desta máquina'
+if ($found) { throw "SECRET GUARD: $($found -join ' | ')" }
+Write-Host '  no secret, key or path of this machine'
 
-# ---------------- 6. manifesto ----------------
-Step 'Manifesto'
-$manifest = @("Realpolitik: Living Nations for HUMANKIND $Versao", "Gerado em $(Get-Date -Format 'yyyy-MM-dd HH:mm') por gerar-release.ps1", '', 'tamanho  sha256  caminho (staging)')
+# ---------------- 6. manifest ----------------
+Step 'Manifest'
+$manifest = @("Realpolitik: Living Nations for HUMANKIND $Version", "Generated on $(Get-Date -Format 'yyyy-MM-dd HH:mm') by make-release.ps1", '', 'size  sha256  path (staging)')
 foreach ($rel in ($present | Sort-Object)) {
     $f = Get-Item (Join-Path $stage $rel)
     $manifest += '{0,9}  {1}  {2}' -f $f.Length, (Sha $f.FullName), $rel
@@ -167,21 +170,21 @@ foreach ($rel in ($present | Sort-Object)) {
 [IO.File]::WriteAllLines((Join-Path $out 'MANIFEST.txt'), $manifest, $utf8Bom)
 
 # ---------------- 7. Setup.exe ----------------
-Step 'Compilando o Setup (Inno Setup)'
-& $iscc /Q "/DVersao=$Versao" "/DStaging=$stage" "/DSaida=$out" (Join-Path $installer 'Realpolitik.iss')
-if ($LASTEXITCODE -ne 0) { throw 'Falha no ISCC' }
-$setup = Join-Path $out "Realpolitik_Setup_$Versao.exe"
-if (-not (Test-Path $setup)) { throw 'O Setup não apareceu' }
-if ($Certificado) {
+Step 'Building the Setup (Inno Setup)'
+& $iscc /Q "/DReleaseVersion=$Version" "/DStagingDir=$stage" "/DOutputFolder=$out" (Join-Path $installer 'Realpolitik.iss')
+if ($LASTEXITCODE -ne 0) { throw 'ISCC failed' }
+$setup = Join-Path $out "Realpolitik_Setup_$Version.exe"
+if (-not (Test-Path $setup)) { throw 'The Setup did not show up' }
+if ($Certificate) {
     $signtool = Get-ChildItem "${env:ProgramFiles(x86)}\Windows Kits\10\bin\*\x64\signtool.exe" -ErrorAction SilentlyContinue | Sort-Object FullName -Descending | Select-Object -First 1
-    if (-not $signtool) { throw 'signtool.exe não encontrado (Windows SDK).' }
-    & $signtool.FullName sign /f $Certificado /p $env:REALPOLITIK_PFX_SENHA /fd sha256 /tr http://timestamp.digicert.com /td sha256 /d 'Realpolitik: Living Nations for HUMANKIND' $setup
-    if ($LASTEXITCODE -ne 0) { throw 'Falha ao assinar' }
+    if (-not $signtool) { throw 'signtool.exe not found (Windows SDK).' }
+    & $signtool.FullName sign /f $Certificate /p $env:REALPOLITIK_PFX_PASSWORD /fd sha256 /tr http://timestamp.digicert.com /td sha256 /d 'Realpolitik: Living Nations for HUMANKIND' $setup
+    if ($LASTEXITCODE -ne 0) { throw 'Signing failed' }
 }
 
-# ---------------- 8. zip manual ----------------
-Step 'Zip manual'
-$zipTree = Join-Path $dist "staging\$Versao-zip"
+# ---------------- 8. manual zip ----------------
+Step 'Manual zip'
+$zipTree = Join-Path $dist "staging\$Version-zip"
 if (Test-Path $zipTree) { Remove-Item $zipTree -Recurse -Force -Confirm:$false }
 Copy-Item (Join-Path $stage 'bepinex') $zipTree -Recurse
 Copy-Item (Join-Path $stage 'payload\BepInEx\*') (Join-Path $zipTree 'BepInEx') -Recurse -Force
@@ -189,20 +192,20 @@ New-Item -ItemType Directory -Force (Join-Path $zipTree 'BepInEx\Realpolitik\lic
 Copy-Item (Join-Path $stage 'docs\*') (Join-Path $zipTree 'BepInEx\Realpolitik')
 Copy-Item (Join-Path $stage 'licencas\*') (Join-Path $zipTree 'BepInEx\Realpolitik\licencas')
 New-Item -ItemType Directory -Force (Join-Path $zipTree 'BepInEx\plugins') | Out-Null
-# Um leia-me só na raiz (os 5 idiomas), para quem abre o zip antes de extrair.
+# A single readme at the root (all 5 languages), for whoever opens the zip before extracting.
 $readme = ($langs | ForEach-Object { [IO.File]::ReadAllText((Join-Path $stage "docs\LEIA-ME_$_.txt")).TrimStart([char]0xFEFF) }) -join "`r`n`r`n"
 [IO.File]::WriteAllText((Join-Path $zipTree 'REALPOLITIK-README.txt'), $readme, $utf8Bom)
 $zipFound = Test-Secrets $zipTree
-if ($zipFound) { throw "TRAVA DE SEGREDOS (zip): $($zipFound -join ' | ')" }
-$zip = Join-Path $out "Realpolitik_$($Versao)_manual.zip"
+if ($zipFound) { throw "SECRET GUARD (zip): $($zipFound -join ' | ')" }
+$zip = Join-Path $out "Realpolitik_$($Version)_manual.zip"
 Add-Type -AssemblyName System.IO.Compression.FileSystem
 [IO.Compression.ZipFile]::CreateFromDirectory($zipTree, $zip, 'Optimal', $false)
 Remove-Item $zipTree -Recurse -Force -Confirm:$false
 
-# ---------------- 9. resumo ----------------
-Step 'Pronto'
+# ---------------- 9. summary ----------------
+Step 'Done'
 $sums = foreach ($f in $setup, $zip) { '{0}  {1}' -f (Sha $f), (Split-Path $f -Leaf) }
 [IO.File]::WriteAllLines((Join-Path $out 'SHA256SUMS.txt'), $sums)
 foreach ($f in $setup, $zip) { '  {0,-40} {1,8:N0} KB  {2}' -f (Split-Path $f -Leaf), ((Get-Item $f).Length / 1KB), (Sha $f) }
-"  staging: $($present.Count) arquivos · trava de segredos OK · $out"
-"  Publicar: crie a tag v$Versao e envie (git push origin v$Versao); a Action 'release' gera tudo de novo e publica no GitHub."
+"  staging: $($present.Count) files - secret guard OK - $out"
+"  Publish: create the tag v$Version and push it (git push origin v$Version); the 'release' Action builds everything again and publishes it on GitHub."

@@ -4,18 +4,19 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 
-namespace IaBench
+namespace AiBench
 {
     /// <summary>
-    /// Variantes do prompt aplicadas ao texto dos logs (sistema + dossiê), para medir antes de mudar o mod.
-    /// Combine com "+": "ordem+enxuto".
+    /// Prompt variants applied to the log text (system + dossier), to measure before changing the mod.
+    /// Dossier section titles and inserted texts are the mod's LLM prompt prose and stay in Portuguese.
+    /// Combine with "+": "order+lean".
     /// </summary>
     internal static class Variants
     {
-        internal const string Header = "CABEÇALHO";
-        internal const string Closing = "FECHO";
+        internal const string Header = "HEADER";
+        internal const string Closing = "CLOSING";
 
-        /// <summary>Seções do dossiê na ordem em que aparecem: (chave curta, texto inteiro com o título).</summary>
+        /// <summary>Dossier sections in order of appearance: (short key, whole text including the title).</summary>
         internal static List<(string key, string text)> Sections(string dossier)
         {
             var list = new List<(string, string)>();
@@ -43,7 +44,7 @@ namespace IaBench
             return (paren > 0 ? title.Substring(0, paren) : title).Trim();
         }
 
-        /// <summary>A variante sem o nível de raciocínio ("x+y@off" → "x+y").</summary>
+        /// <summary>The variant without the reasoning level ("x+y@off" → "x+y").</summary>
         internal static string Spec(string variant) => variant.Contains("@") ? variant.Substring(0, variant.IndexOf('@')) : variant;
 
         internal static (string system, string user) Apply(string spec, string system, string dossier)
@@ -55,33 +56,33 @@ namespace IaBench
                     case "base":
                     case "base16":
                         break;
-                    case "ordem":
+                    case "order":
                         dossier = Reorder(dossier);
                         break;
-                    case "curto":
+                    case "short":
                         system = InsertBefore(system, "QUEM VOCÊ É", ThinkBrief);
                         break;
-                    case "enxuto":
+                    case "lean":
                         dossier = CompactCorrespondence(dossier, recentTurns: 4);
                         break;
-                    case "leitura":
+                    case "reading":
                         system = InsertBefore(system, "COMO PENSAR", ReadingGuide);
                         break;
-                    case "nacoes":
+                    case "nations":
                         dossier = RelevantNations(dossier);
                         break;
                     default:
-                        if (part.StartsWith("estimulo:"))
+                        if (part.StartsWith("stimulus:"))
                         {
-                            dossier = AddIncoming(dossier, Flaws.Stimulus(part.Substring(9), dossier));
+                            dossier = AddIncoming(dossier, Flaws.Stimulus(part.Substring("stimulus:".Length), dossier));
                             break;
                         }
-                        if (part.StartsWith("defeito:"))
+                        if (part.StartsWith("flaw:"))
                         {
-                            system = InsertBefore(system, "Interprete esse personagem", Flaws.Persona(part.Substring(8).Split('/')));
+                            system = InsertBefore(system, "Interprete esse personagem", Flaws.Persona(part.Substring("flaw:".Length).Split('/')));
                             break;
                         }
-                        throw new ArgumentException("variante desconhecida: " + part);
+                        throw new ArgumentException("unknown variant: " + part);
                 }
             }
             return (system, dossier);
@@ -92,14 +93,14 @@ namespace IaBench
             "- Pense pouco e como o personagem: o que mudou desde o último turno, o que você quer, o que vai fazer. Depois escreva o json.\n" +
             "- Não releia nem resuma o dossiê no raciocínio e não reabra decisão já tomada. Se uma regra parecer ambígua, fique com a leitura mais simples e siga.\n\n";
 
-        /// <summary>Põe uma carta no topo de "CARTAS QUE CHEGARAM" (tirando o "(nenhuma)").</summary>
+        /// <summary>Puts a letter at the top of "CARTAS QUE CHEGARAM" (incoming letters), dropping the "(nenhuma)" placeholder.</summary>
         private static string AddIncoming(string dossier, string letter)
         {
             dossier = dossier.Replace("\r\n", "\n");
             Match m = Regex.Match(dossier, @"== CARTAS QUE CHEGARAM[^\n]*==\n");
             if (!m.Success)
             {
-                throw new InvalidOperationException("dossiê sem a seção de cartas que chegaram");
+                throw new InvalidOperationException("dossier has no incoming letters section");
             }
             int at = m.Index + m.Length;
             string rest = dossier.Substring(at);
@@ -123,8 +124,8 @@ namespace IaBench
         }
 
         /// <summary>
-        /// Correspondência recente: as cartas dos últimos turnos ficam como estão (resumo de 60 palavras); as mais velhas
-        /// viram só o cabeçalho e o assunto (quem, quando, sobre o quê). A memória e o diário guardam o essencial delas.
+        /// Recent correspondence: letters from the last turns stay as they are (60-word summary); older ones
+        /// keep only the header and the subject (who, when, about what). Memory and the diary keep what matters of them.
         /// </summary>
         private static string CompactCorrespondence(string dossier, int recentTurns)
         {
@@ -151,7 +152,7 @@ namespace IaBench
                     }
                     int sent = int.Parse(head.Groups[1].Value);
                     output.Append(line).Append('\n');
-                    // O corpo é a linha seguinte (e a "Exigência:", se houver, vem antes dele).
+                    // The body is the next line (and the "Exigência:" demand line, if any, comes before it).
                     if (sent < turn - recentTurns)
                     {
                         while (i + 1 < lines.Length && lines[i + 1].Length > 0 && !lines[i + 1].StartsWith("["))
@@ -169,9 +170,9 @@ namespace IaBench
         }
 
         /// <summary>
-        /// Nações por relevância: vizinhos, guerra, aliança, proposta/exigência/reclamação/rendição/crise pendente, quem
-        /// escreveu neste turno e quem aparece nas pendências ficam inteiros; o resto fica com o cabeçalho, a relação e a
-        /// postura (o detalhe — cidades, postos, histórico, tropas longe — sai).
+        /// Nations by relevance: neighbors, war, alliance, pending proposal/demand/grievance/surrender/crisis, whoever
+        /// wrote this turn and whoever appears in the pending items stay whole; the rest keep the header, the relation and the
+        /// stance (the detail — cities, outposts, history, distant troops — is dropped).
         /// </summary>
         internal static string RelevantNations(string dossier)
         {
@@ -208,7 +209,7 @@ namespace IaBench
             return dossier.Substring(0, section.Groups[1].Index) + output + dossier.Substring(section.Groups[1].Index + section.Groups[1].Length);
         }
 
-        /// <summary>O que muda devagar primeiro; o turno (cabeçalho, situação, cartas novas) por último.</summary>
+        /// <summary>What changes slowly first; the turn itself (header, situation, new letters) last.</summary>
         internal static readonly string[] StableFirst =
         {
             "NOMES DO JOGO", "CORRESPONDÊNCIA RECENTE", "POVOS INDEPENDENTES QUE VOCÊ CONHECE", "SUA MEMÓRIA",

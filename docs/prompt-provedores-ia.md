@@ -49,7 +49,7 @@ vem carregada: leia `installable-goal.md`, `llm-diplomacy-idea.md`, `translation
   - Todas são **dentro da partida**. A tela nova é no **menu principal, fora da partida**: procure um doador lá (por exemplo
     a tela de opções ou a de mods do menu) e documente no guia.
 - **Tradução:** `L.cs` e `docs\traducao.md`. Todo texto novo entra com `L.T`, `L.F` ou `L.N` e é traduzido para en, es,
-  fr e de com os scripts `tools\dev\extrair-textos.ps1` e `validar-traducao.ps1`.
+  fr e de com os scripts `tools\dev\extract-texts.ps1` e `validate-translation.ps1`.
 - **Recarga a quente:** só o núcleo (`src\CurrencyMod`) recarrega com o jogo aberto. O carregador exige reiniciar o jogo.
 
 ## Fase 0: pesquisa (sem código)
@@ -136,7 +136,7 @@ usuário disser que pode fazer.
    - **Migração:** o `deepseek.key` atual é importado uma vez, e o arquivo antigo continua funcionando.
    - **Nunca expor:** chave e token não aparecem em log, visualizador F10, save, backup, pacote nem chat.
      - Na tela, aparecem só os 4 últimos caracteres.
-     - O `empacotar.ps1` e o `backup.ps1` passam a recusar a pasta `credenciais`.
+     - O `package.ps1` e o `backup.ps1` passam a recusar a pasta `credenciais`.
    - **Login OAuth:**
      - PKCE com `state` aleatório;
      - retorno só em `127.0.0.1`, numa porta livre, com `HttpListener`;
@@ -163,9 +163,9 @@ usuário disser que pode fazer.
 
 ## Testes
 
-- **Sempre numa partida de 16 impérios.** A de teste é a "Teste16", guid b57b0e07. Para começar uma nova: `jogo novo 16 Normal`.
+- **Sempre numa partida de 16 impérios.** A de teste é a "Teste16", guid b57b0e07. Para começar uma nova: `game new 16 Normal`.
 - **Instalação:**
-  - nunca instale o núcleo com nações pensando: antes, `ia status` tem que dizer "pensando agora: 0";
+  - nunca instale o núcleo com nações pensando: antes, `ai status` tem que dizer "thinking now: 0";
   - compile com `-p:SkipDeploy=true` enquanto elas pensam.
 - **Testes sem custo:**
   - a tela no menu principal e dentro da partida, com prints em pt e em en, de/es/fr (procure texto cortado);

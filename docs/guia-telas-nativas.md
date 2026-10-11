@@ -41,8 +41,8 @@ Só mudanças no **carregador** pedem reinício do jogo.
 | `nbank open\|close\|tab N\|scroll inicio\|fim` | Controla a tela cheia do Banco Central (seções 0 a 4: Câmbio, Comércio, Política, Ciclo, Sua moeda; `nbank fake` inventa um histórico de comércio para testar a tela, `nbank ledger` lista no log o último ponto gravado). `scroll` rola a lista para conferir os cartões de baixo nas capturas. |
 | `hover <caminho>` / `hover off` | Abre o tooltip nativo de um elemento como se o mouse estivesse em cima (`UITooltipManager.Instance.OnTooltipHovered`). Serve para capturar tooltips sem mexer no mouse. `hover off` fecha também o balão do mouse de verdade (`CurrentlyHoveredTooltip`): o cursor parado em cima de algo (ex.: a "Atitude" no topo da diplomacia) cobria metade da aba Crise nos prints. O jogo só abre outro quando o cursor entra num elemento de novo. |
 | `click <caminho>` | O mesmo que um clique num toggle ou botão do jogo, pelo responder dele (`UIToggleResponder.TrySwitchState`, `UIButtonResponder.OnLeftClick`), sem mexer no mouse. Ex.: `click _CrisisGroup/Table/DemandsGroup/DemandsToggle` abre a seção recolhida "Exigências deles" da aba Crise (as seções são sanfona: abrir uma fecha a outra). Em botão de ação ("Exigir tudo", "Aceitar exigências"), a ação acontece de verdade. |
-| `jogo detalhe industria\|estabilidade\|dinheiro [n]` | Pede ao jogo o detalhamento nativo (o mesmo do tooltip) da n-ésima cidade do jogador ou do dinheiro do império e grava as linhas como o jogo as monta. A resposta chega numa entrada própria do `result.txt`. |
-| `jogo rpn [nome]` | Mostra uma fórmula de dados do jogo (`RpnDefinition`: operações, constantes, propriedades); sem nome, lista todas. Ex.: `PublicOrderGain`. |
+| `game breakdown industry\|stability\|money [n]` | Pede ao jogo o detalhamento nativo (o mesmo do tooltip) da n-ésima cidade do jogador ou do dinheiro do império e grava as linhas como o jogo as monta. A resposta chega numa entrada própria do `result.txt`. |
+| `game rpn [name]` | Mostra uma fórmula de dados do jogo (`RpnDefinition`: operações, constantes, propriedades); sem nome, lista todas. Ex.: `PublicOrderGain`. |
 | `trade info\|mine\|open <território>\|close\|set <território> <império> free\|toll\|block` | Bloqueio comercial: regras, incidentes, pedágios, estado da janela; lista seus territórios com rotas; abre o posto; muda uma regra. |
 
 Caminhos aceitam sufixo único: `SecondaryToggles/Item002` em vez do caminho inteiro.
@@ -56,7 +56,7 @@ Cada geração tem os próprios campos estáticos, que nascem zerados. Estado qu
 tabela de nações travadas da IA nativa) precisa passar para a geração nova **antes** dos patches dela entrarem
 (`AppDomain.CurrentDomain.SetData` no `ModEntry.Stop`, leitura no começo do `Start`; ver `NativeAiLocks.Carry`). Senão,
 no intervalo até o primeiro `Update` do componente, a trava fica aberta. E nunca recarregue com as nações da IA
-pensando (`ia status` → "pensando agora: 0"): as chamadas em voo se perdem.
+pensando (`ai status` → "thinking now: 0"): as chamadas em voo se perdem.
 
 ---
 
@@ -237,10 +237,10 @@ campos no código; não dá para registrar uma aba de verdade. A aba nossa finge
   - **postfix:** reafirma a aba nossa se ela continua ativa.
 - **Fechar a tela (ESC):** a aba volta inativa. Ao reabrir, o jogo abre em Relações como sempre.
 - **Testes:**
-  - `ia cartas E#` abre direto na aba;
-  - `jogo interacao aba relacoes|crise|…` clica nas abas do jogo;
-  - `jogo interacao diplomacia E#` troca de nação;
-  - `jogo interacao estado` mostra a aba e o modo.
+  - `ai letters E#` abre direto na aba;
+  - `game interaction tab relations|crisis|…` clica nas abas do jogo;
+  - `game interaction diplomacy E#` troca de nação;
+  - `game interaction state` mostra a aba e o modo.
 
 ### Aba de modo na janela de espionagem (cantos pelo estilo)
 Exemplo: `Diplomacia\UI\InterceptedLettersTab.cs` (aba Cartas ao lado de Furtividade e Detecção).
@@ -306,7 +306,7 @@ uma ou duas frases, sem exagero. Utilitários:
 | `NullReferenceException` montando a janela | `UIComponent.UITransform` só existe depois do `Load` | Usar `GetComponent<UITransform>()` antes do carregamento. |
 | Erro "não é possível alterar modificadores ao substituir" | Publicizer tornou públicos métodos que sobrescrevemos | `<DoNotPublicize Include="Amplitude.UI:Amplitude.UI.Windows.UIWindow.PostLoad" />` (idem `PreUnload`). |
 | Campo de texto apaga o que você digita | Lista branca do doador | `whiteList = string.Empty`. |
-| Campo de texto "só leitura": o clique não dá foco (achado 2026-10-10) | O doador `TextFieldOptionItem` (semente do mundo) vem com `InteractiveSelf = false` **dentro da partida**, e o clone herda. O teste antigo usou `jogo foco`, que não passa pelo clique | `InteractiveSelf = true` no item e no `TextField` (`NativeBankWindow.EnsureCurrencyFieldsInteractive`). Diagnóstico: `responders <x> <y>` lista quem disputa o clique naquele ponto (y conta de baixo: use `1080 - y` do screenshot) com `interativo=`/`focável`. |
+| Campo de texto "só leitura": o clique não dá foco (achado 2026-10-10) | O doador `TextFieldOptionItem` (semente do mundo) vem com `InteractiveSelf = false` **dentro da partida**, e o clone herda. O teste antigo usou `game focus`, que não passa pelo clique | `InteractiveSelf = true` no item e no `TextField` (`NativeBankWindow.EnsureCurrencyFieldsInteractive`). Diagnóstico: `responders <x> <y>` lista quem disputa o clique naquele ponto (y conta de baixo: use `1080 - y` do screenshot) com `interativo=`/`focável`. |
 | Peça esticada ao mover | Âncora de cima e de baixo presas ao mesmo tempo | Soltar uma (`BottomAnchor.SetAttach(false)`) e definir `Height`. |
 | Diminuir altura de um cartão desalinha o conteúdo | Filhos ancorados em baixo/pivô para a altura antiga | Para cada filho: soltar `BottomAnchor` e `PivotYAnchor`, `SetTopBorder(margem)` e `Height` fixa; depois mudar só a altura do `Top` (a tabela e o `UIParentResizer` acompanham). Ver `HideOutputs`/`PinToTop`. |
 | "?" no lugar de um símbolo | A fonte do jogo não tem o caractere (ex.: ₹, ₽, ℳ) | Usar letras (Rs, Rb, Mk). |
@@ -325,7 +325,7 @@ uma ou duas frases, sem exagero. Utilitários:
 | Título do cartão encosta no botão da direita | Título e botão dividem a mesma linha (~460 px de janela) | Títulos curtos (nome do império, "Pedágio: R$ 6/recurso") e botões de uma palavra ("Taxar", "Bloquear", "Liberar"); estado e detalhes vão nos chips. |
 | Ambiguidade de evento com o Publicizer (`VisibilityChange`, `TextValidation` do responder) | O evento e o campo dele têm o mesmo nome depois de publicizados | Usar o evento do próprio componente quando existir (`UITextField.TextValidation`, que repassa ao responder atual) ou ligar por reflexão (`EventInfo.GetAddMethod(true)` + `Delegate.CreateDelegate` com o `MethodInfo` privado). Ver `ProvidersScreen.HookExternal`. |
 | Enter no campo de texto clonado não faz nada | O campo cria o responder de novo ao carregar, e a assinatura feita logo depois de clonar se perde; além disso, o doador não valida no Enter | `actionOnReturn = Validate` e religar o `TextValidation` sempre que `TextFieldResponder` mudar (`ProvidersScreen.HookKeyField`). |
-| Teclas por `PostMessage` não chegam fora da partida | No menu principal e no menu de pausa, nem o ESC nem o Enter mandados por mensagem chegam (nem nas Configurações nativas) | Testar o caminho do jogo direto: `jogo interacao esc` (`WindowsManager.ExitWindow`) e o `OnReturnKeyDown` do responder (`ia provedor tela enter`). |
+| Teclas por `PostMessage` não chegam fora da partida | No menu principal e no menu de pausa, nem o ESC nem o Enter mandados por mensagem chegam (nem nas Configurações nativas) | Testar o caminho do jogo direto: `game interaction esc` (`WindowsManager.ExitWindow`) e o `OnReturnKeyDown` do responder (`ai provider screen enter`). |
 | Texto de ajuda do campo fica no idioma antigo | `InstructionText` é montado quando a linha nasce | Reaplicar no refresh se mudou. || Botão do cartão não responde ao clique | O `LiberateButton` do doador vem com `InteractiveSelf = false` (cidade que não pode ser libertada) | `SetButtonText` já liga `InteractiveSelf = true`; vale para qualquer botão clonado. |
 | Painel nativo "vaza" por baixo/pelas bordas da janela sobreposta | O desfoque da janela some nas bordas (`fadeEndSize`) | Enquanto a janela do mod estiver aberta, `VisibleSelf = false` no `UITransform` da janela nativa do mesmo lugar; devolver ao fechar e ao destruir (ver `SetTradePanelHidden`). |
 | Lista mostra impérios "Desconhecido" | Impérios ainda não encontrados | Filtrar com `Snapshots.DiplomaticSnapshot.PresentationData.LocalEmpireDiplomaticSummary.RelationSummaries[i].IsKnownByOwner()`. |
@@ -388,7 +388,7 @@ usa `NativeUI\ExclusiveWindows`:
 - **No `Update`, `Interrupted(janela, abertaEm)`:** fecha se o cursor deixou de ser o normal, se um menu da barra
   abriu ou se outra janela lateral apareceu. Tem 0,5 s de folga para as outras terminarem de sair.
 - **ESC:** `CatchInputEvent` com `IsExitEvent()` nas laterais. Nas telas cheias o grupo já fecha.
-- **Teste sem teclado nem mouse:** `jogo interacao esc|tropa|cidade|fe|sociedade|comercio|diplomacia E#|aba <nome>|normal|estado`
+- **Teste sem teclado nem mouse:** `game interaction esc|unit|city|faith|society|trade|diplomacy E#|tab <name>|normal|state`
   faz o que o jogador faria pelos mesmos caminhos do jogo (`WindowsManager.ExitWindow`, `ChangeToArmyCursor`,
   `RequestReligionState`, `ChangeToDiplomaticCursor`...) e lista as janelas abertas.
 - **Resultado do teste (2026-10-04):**
@@ -416,21 +416,21 @@ Dois cuidados a mais (revisão de 2026-10-05):
 - **Esconder a janela não solta o foco.** Escondido, o campo continua com o foco e, com `KeyboardOnly`, engole o ESC e
   os atalhos do jogo até o próximo clique (`UIControlResponder.CatchKeyDownEvent` bloqueia mesmo sem estar
   interativo). No `SetOpen(false)` de toda janela com campo de texto, chame `NativeUIKit.ReleaseTextFocus()`.
-- `jogo interacao estado` mostra o foco do teclado ("foco do teclado: …").
+- `game interaction state` mostra o foco do teclado ("foco do teclado: …").
 
 **Testar teclado sem mexer no PC do usuário.** `SendKeys` e `SetForegroundWindow` não chegam ao jogo (o Windows não
 deixa outro processo pôr a janela na frente). Mandar a mensagem direto para a janela funciona, com o jogo em segundo
 plano: `PostMessage(MainWindowHandle, WM_KEYDOWN/WM_KEYUP, vk, 1 | scan<<16)` para teclas (F8 = 0x77/0x42, ESC =
-0x1B/0x01) e `WM_CHAR` (0x102) para digitar. Com `jogo foco <caminho do campo>` antes, dá para testar campo de texto,
+0x1B/0x01) e `WM_CHAR` (0x102) para digitar. Com `game focus <caminho do campo>` antes, dá para testar campo de texto,
 atalhos e ESC do começo ao fim (testado em 2026-10-05: "ola" entrou no campo; F8 bloqueado no campo; foco solto ao
 fechar o correio; F8 e ESC voltaram).
 
 ## Revisão geral da interface (2026-10-07): lições
 - **Nunca use `show InternationalScreen`/`show` em telas cheias do jogo para "abrir a diplomacia".** Deixa a câmera em visão estratégica,
-  esconde os banners e a diplomacia não abre mais até reiniciar o jogo. O caminho certo é `jogo interacao diplomacia E#` (E# tem de ser
-  uma nação que o jogador conhece; veja `jogo crises` para saber quais) e depois `jogo interacao aba comercio|tratados|crise`; a aba
+  esconde os banners e a diplomacia não abre mais até reiniciar o jogo. O caminho certo é `game interaction diplomacy E#` (E# tem de ser
+  uma nação que o jogador conhece; veja `game crises` para saber quais) e depois `game interaction tab trade|treaties|crisis`; a aba
   Cartas é `click CurrencyMod_LettersTab`.
-- **`jogo zoom 0..1`** ajusta o zoom da câmera sem a roda do mouse (0 = chão, 1 = visão estratégica). Com a visão estratégica o HUD some.
+- **`game zoom 0..1`** ajusta o zoom da câmera sem a roda do mouse (0 = chão, 1 = visão estratégica). Com a visão estratégica o HUD some.
 - **Botão clonado com largura mudada:** o rótulo do botão doador tem largura automática de 65 a 80 e o texto continua centrado nessa
   faixa, não no botão (o "+" caía fora, "Livre" ficava à esquerda). Depois de `Place`, iguale `AutoAdjustWidthMin/Max` à largura do botão
   e reaplique o texto (`FitLabel` em `DiplomacyTradePolicyPanel.cs`).
@@ -445,7 +445,7 @@ O Banco Central deixou de ser janela lateral e virou **tela cheia**, como o Corr
 - **Painel da direita:** resumo (saldo, inflação, juros, câmbio), diagnóstico, "Sua posição no mundo" e "Ranking das moedas" com barras (peças da diplomacia: `_NegociationGroup/_MyMoral/Gauge`, `Label`, `MoneyGroup/Labels/Stock`).
 - **Gráfico de histórico** (`NativeUI\BankChart.cs`): linhas, grade, área e referência tracejada desenhadas numa `Texture2D` RGBA32 de 1700×420 (as últimas 60 rodadas de `EmpireCurrency.History`; câmbio na aba Câmbio, juros × inflação em Política e Ciclo). **Armadilha:** a imagem clonada do chip (`PopCount/Picto`) usa o material `DistanceField` (ícone SDF): mostra só o alfa, em branco e com borda dura. Para textura colorida, `image.Material = new UIMaterialId("Default")`.
 - **Chips extras** num cartão: `ExtraChip(top, n)` clona o chip `PopCount` na `StatsTable`; `MakeTextCard` faz o cartão de texto com várias linhas (técnica da aba Ciclo) em qualquer lista.
-- **Teste:** `nbank open`, `nbank tab 0..3`, `idioma de|fr|es|en|Auto` + `reload` (os títulos fixos só trocam quando a tela é recriada).
+- **Teste:** `nbank open`, `nbank tab 0..3`, `language de|fr|es|en|Auto` + `reload` (os títulos fixos só trocam quando a tela é recriada).
 - **Seção Comércio (dinheiro que você ganha e paga a cada império):** `NativeUI\NativeBankTrade.cs` (classe parcial do `NativeBankWindow`) e `NativeBankChartHover.cs`. O livro é `CurrencyWorld.TradeHistory` (60 turnos, esparso): cada `TradePoint` tem `Money` (`MoneyFlow {From, To, Paid, Gain, Kind}`: Paid sai do caixa de From na moeda dele, Gain entra no de To na moeda dele) e `Flows` (`TradeFlow`, só para contar recursos). Quem grava: compras de recursos e presentes em `TransferConversion.Settle` (o comprador paga na hora e o vendedor ganha uma parte, UMA VEZ; o jogo não paga o vendedor por turno), manutenção das rotas em `EconomySimulation.RecordTrade` (por turno, só o comprador paga, não vai para ninguém) e pedágios em `TradeBlockade.CollectTolls`. A tela soma só o que envolve o jogador e mostra médias (cartões: 10 turnos; linhas do gráfico: média móvel de 5). As barras por país são o chip do jogo (`StatsTable/PopCount`) clonado no cartão, com largura proporcional e a cor do fundo (`UISquircleImage.Color`) trocada. **Balão do gráfico:** a imagem é interativa e `UpdateChartHover` converte `UIInteractivityManager.GetMousePosition` (espaço da interface) no turno sob o cursor e refaz o texto do balão nativo. **Barras clonadas da diplomacia:** `NativeUIKit.StyleGauge` põe cor fixa no preenchimento (vem na cor do estado de moral da sessão) e esconde o separador e o `DeltaGroup` (marca no meio). Teste: `nbank fake` (histórico inventado), `nbank ledger` (último ponto no log). Hover real do mouse: `SetCursorPos` sobre a janela do jogo (ela pode estar em outro monitor: use `ClientToScreen` e escale por 1920/largura do cliente).
 - **Revisão de código (2026-10-07):** o painel Economia limpa `rows` ao reconstruir; botão do banco não se desliga mais; `TradePostWindow.SetOpen(-1)` não cria a janela só para fechar; gráfico pinta fora do `CurrencyManager.Lock`; Enter na aba Sua moeda religa `TextValidation` quando o responder do campo muda (`HookCurrencyFields`), igual à tela de provedores; linhas de texto da tela de provedores crescem com o texto.
 
@@ -453,9 +453,9 @@ O Banco Central deixou de ser janela lateral e virou **tela cheia**, como o Corr
 - **O `UILabel` nativo para de desenhar com pouco mais de ~2050 caracteres.** Até 2050 o texto aparece; com 2100 o rótulo
   some inteiro, com ou sem quebras de linha. O campo continua com o texto e o contador conta certo, então parece
   "transparente". Não é coisa do colar nem do `\r\n` (o `TryInsertString` já troca `\r\n`). Em campo de texto longo, ponha
-  `maximumChars` em no máximo 2000 (cartas: `IaConfig.PlayerLetterLimit`). Reprodução: `ia correio colar <arquivo>`.
+  `maximumChars` em no máximo 2000 (cartas: `IaConfig.PlayerLetterLimit`). Reprodução: `ai mail paste <arquivo>`.
 - **Saves na nuvem:** com a opção de nuvem ligada, o jogo usa `Save Files\Cloud` e só enxerga o que estava lá quando leu a
-  pasta. Para testar com um save copiado: copie para a pasta em uso e rode `jogo saves reler`. Os autosaves do teste
+  pasta. Para testar com um save copiado: copie para a pasta em uso e rode `game saves rescan`. Os autosaves do teste
   entram no rodízio dessa pasta (o mais antigo é apagado): faça backup antes.
 - **Linhas desenhadas na GPU (rotas):** dá para mudar cor e largura por linha com estilos próprios
   (`WorldSpaceLinesWithSteps.UpdateStyles`). Ponha os estilos do mod logo depois dos do jogo, sempre na mesma posição, ou

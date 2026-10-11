@@ -281,7 +281,7 @@ namespace CurrencyMod.Diplomacy.Council
 
         // ---------------- Player ----------------
 
-        /// <summary>The player speaks to the council (council screen or "ia conselho falar").</summary>
+        /// <summary>The player speaks to the council (council screen or "ai council speak").</summary>
         internal static string Speak(string text)
         {
             AiModule module = AiModule.Instance;
@@ -365,7 +365,7 @@ namespace CurrencyMod.Diplomacy.Council
         }
 
         /// <summary>
-        /// The player appoints one of the 3 candidates for a vacant portfolio (council screen or "ia conselho nomear pasta
+        /// The player appoints one of the 3 candidates for a vacant portfolio (council screen or "ai council appoint portfolio
         /// id"). Costs influence (CouncilEngine.AppointCost), deducted through the game's own order.
         /// </summary>
         internal static string Appoint(string portfolio, string personalityId)
@@ -735,7 +735,7 @@ namespace CurrencyMod.Diplomacy.Council
         }
 
         /// <summary>
-        /// Test ("ia teste conselho-json"): a response out of format (speech as loose text, portfolio and advice as a list)
+        /// Test ("ai test council-json"): a response out of format (speech as loose text, portfolio and advice as a list)
         /// goes through the real ApplyMeeting and ApplyExchange, in a throwaway meeting. It used to throw an exception and
         /// the meeting stayed "pensando", repeating the paid call.
         /// </summary>
@@ -743,8 +743,8 @@ namespace CurrencyMod.Diplomacy.Council
         {
             AiNation nation = world.Ensure(player);
             string portfolio = nation.Council.FirstOrDefault(m => m.Portfolio != "mao")?.Portfolio ?? "guerra";
-            JObject json = JObject.Parse("{\"mao\":\"Teste da Mão.\",\"falas\":[\"fala solta\",42,{\"pasta\":[\"x\"],\"texto\":\"pasta em lista\"},"
-                + "{\"pasta\":\"" + portfolio + "\",\"texto\":\"Fala válida.\",\"conselho\":[\"conselho\",\"em lista\"]}]}");
+            JObject json = JObject.Parse("{\"mao\":\"Hand test.\",\"falas\":[\"loose speech\",42,{\"pasta\":[\"x\"],\"texto\":\"portfolio as a list\"},"
+                + "{\"pasta\":\"" + portfolio + "\",\"texto\":\"Valid speech.\",\"conselho\":[\"advice\",\"as a list\"]}]}");
             bool autoOpen = AutoOpenPending;
             float readyAt = ReadyAt;
             var text = new StringBuilder();
@@ -752,14 +752,14 @@ namespace CurrencyMod.Diplomacy.Council
             {
                 var meeting = new CouncilMeeting { Turn = -1, Status = "pensando" };
                 ApplyMeeting(meeting, nation, new Result { Json = json, Raw = json.ToString() });
-                text.AppendLine($"reunião: {meeting.Status}; falas aproveitadas: {string.Join(", ", meeting.Speeches.Select(s => s.Portfolio + (s.Advice != null ? " (conselho: " + s.Advice + ")" : string.Empty)))}");
+                text.AppendLine($"meeting: {meeting.Status}; speeches kept: {string.Join(", ", meeting.Speeches.Select(s => s.Portfolio + (s.Advice != null ? " (advice: " + s.Advice + ")" : string.Empty)))}");
                 var exchange = new CouncilExchange { Turn = -1, Status = "pensando" };
                 ApplyExchange(exchange, nation, new Result { Json = json, Raw = json.ToString() });
-                text.AppendLine($"resposta: {exchange.Status}; réplicas aproveitadas: {exchange.Replies.Count}");
+                text.AppendLine($"answer: {exchange.Status}; replies kept: {exchange.Replies.Count}");
             }
             catch (Exception ex)
             {
-                text.AppendLine("FALHOU com exceção: " + ex.GetType().Name + ": " + ex.Message);
+                text.AppendLine("FAILED with exception: " + ex.GetType().Name + ": " + ex.Message);
             }
             finally
             {
@@ -1076,16 +1076,16 @@ namespace CurrencyMod.Diplomacy.Council
         {
             if (!AiConfig.PlayerCouncil.Value)
             {
-                return "conselho do jogador: desligado ([IA] ConselhoDoJogador)";
+                return "player council: off ([IA] ConselhoDoJogador)";
             }
             CouncilMeeting meeting = Meeting(world, turn);
             if (meeting == null)
             {
-                return "conselho do jogador: sem reunião neste turno";
+                return "player council: no meeting this turn";
             }
-            string state = meeting.Status == "pronta" ? $"pronta, {meeting.Speeches.Count - 1} fala(s)" : meeting.Status == "erro" ? "erro: " + meeting.Error : "reunindo";
-            return $"conselho do jogador: reunião do turno {meeting.Turn} {state} · {meeting.Exchanges.Count} resposta(s) sua(s) · US$ {meeting.CostUsd:0.0000}"
-                + (meeting.Seen ? " · vista" : string.Empty) + (inFlight ? " · chamada em curso" : string.Empty);
+            string state = meeting.Status == "pronta" ? $"ready, {meeting.Speeches.Count - 1} speech(es)" : meeting.Status == "erro" ? "error: " + meeting.Error : "meeting";
+            return $"player council: turn {meeting.Turn} meeting {state} · {meeting.Exchanges.Count} answer(s) of yours · US$ {meeting.CostUsd:0.0000}"
+                + (meeting.Seen ? " · seen" : string.Empty) + (inFlight ? " · call in flight" : string.Empty);
         }
     }
 }

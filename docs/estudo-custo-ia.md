@@ -46,7 +46,7 @@ nação de pensar todo turno.
 Decisões do lucas: `low` em tudo; nada de raciocínio por camadas por enquanto; só o DeepSeek nos testes, mas cada mudança
 tem que baixar o custo em porcentagem com qualquer provedor; gastar à vontade na bancada, com placar.
 
-**A bancada** (`_Modding\tools\ia-bench`, ver o README de lá): 12 cenários difíceis do corpus × 4 repetições por variante,
+**A bancada** (`_Modding\tools\ai-bench`, ver o README de lá): 12 cenários difíceis do corpus × 4 repetições por variante,
 métricas objetivas, simulação de cache sem custo sobre as 279 decisões e comparação às cegas. Gasto total: ~US$ 0,95.
 
 | Versão (por decisão, no pico) | Raciocínio | Entrada | Cache (simulado) | Custo | Corte |
@@ -82,7 +82,7 @@ Previsão: ~US$ 0,08 por turno no pico. Passar disso exige mexer no raciocínio 
 ### Validação no jogo (Teste16, 16 impérios, 2026-10-06)
 
 Os mesmos 10 turnos (T83–T92), a partir do mesmo save ("Teste16 T82 site2"), com a versão antiga (o backup das 11:08,
-com o bug) e com a nova. Os dois fora do pico. Logs em `ia-bench\corpus\b57b0e07_antigo` e `b57b0e07_novo`.
+com o bug) e com a nova. Os dois fora do pico. Logs em `ai-bench\corpus\b57b0e07_antigo` e `b57b0e07_novo`.
 
 | | Antiga | Nova | |
 |---|---:|---:|---:|
@@ -330,7 +330,7 @@ A resposta já é enxuta (8% do gasto). Encurtar chaves do json economizaria <2%
 
 ### 5.11 Outras coisas que os dados mostraram
 - **`IaLog.Prune` apagou os logs da Teste16** enquanto eu lia: carregar um save mais antigo apaga os turnos "do futuro". Para a
-  bancada, os logs agora são copiados para `_Modding\tools\ia-bench\corpus\`. Sugestão: o Prune só apaga os turnos velhos, não
+  bancada, os logs agora são copiados para `_Modding\tools\ai-bench\corpus\`. Sugestão: o Prune só apaga os turnos velhos, não
   os "do futuro".
 - **Horário:** jogar fora do pico do DeepSeek já corta pela metade. A tela de provedores poderia mostrar "agora: preço cheio /
   meio preço".

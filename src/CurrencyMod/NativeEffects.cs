@@ -75,7 +75,7 @@ namespace CurrencyMod
             {
                 return 0;
             }
-            return EconomySimulation.InterestFlow((float)major.MoneyStock.Value, effects.InterestRate, effects.InflationRate, effects.SmoothedIncome);
+            return EconomySimulation.InterestFlow((float)major.MoneyStock.Value, effects.InterestRate, effects.InflationRate, effects.SmoothedIncome, effects.Gdp);
         }
 
         /// <summary>Per-turn income the game shows: its own plus the projected interest (MoneyNetDisplayPatch).</summary>

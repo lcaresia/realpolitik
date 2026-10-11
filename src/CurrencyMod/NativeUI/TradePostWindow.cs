@@ -799,7 +799,11 @@ namespace CurrencyMod.NativeUI
             Destroy(window.gameObject);
         }
 
-        /// <summary>Commands: "open &lt;territory&gt;", "close", "info", "set &lt;territory&gt; &lt;empire&gt; free|toll|block", "mine".</summary>
+        /// <summary>
+        /// Commands: "info" (default), "open &lt;territory&gt;", "close",
+        /// "preview &lt;owner&gt; &lt;territory|-1&gt; &lt;target&gt; &lt;price&gt; [block]", "price &lt;empire&gt; up|down",
+        /// "mine", "costs", "set &lt;territory&gt; &lt;empire&gt; free|toll|block".
+        /// </summary>
         internal static string DevCommand(string args)
         {
             string[] parts = args.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
@@ -809,38 +813,38 @@ namespace CurrencyMod.NativeUI
             {
                 case "open":
                     SetOpen(int.Parse(parts[1]));
-                    return Instance != null ? "ok" : "erro: janela não criada";
+                    return Instance != null ? "ok" : "error: window not created";
                 case "close":
                     SetOpen(-1);
                     return "ok";
-                case "previa":
+                case "preview":
                 {
-                    // "trade previa <owner> <territory|-1> <target> <price> [bloqueio]": detour preview (requests and shows the
+                    // "trade preview <owner> <territory|-1> <target> <price> [block]": detour preview (requests and shows the
                     // already computed answer; run again to read the result of a new request).
                     if (parts.Length < 5 || !int.TryParse(parts[1], out int owner) || !int.TryParse(parts[2], out int territory)
                         || !int.TryParse(parts[3], out int target) || !double.TryParse(parts[4], out double asked))
                     {
-                        return "uso: trade previa <dono> <território|-1> <alvo> <preço> [bloqueio]";
+                        return "usage: trade preview <owner> <territory|-1> <target> <price> [block]";
                     }
                     var ask = new TollPreview.Ask
                     {
                         Owner = owner,
                         Territory = territory,
                         Target = target,
-                        Mode = parts.Length > 5 && parts[5].StartsWith("bloq") ? TradeMode.Block : TradeMode.Toll,
+                        Mode = parts.Length > 5 && parts[5].StartsWith("block") ? TradeMode.Block : TradeMode.Toll,
                         Price = asked,
                     };
                     TollPreview.Request(ask, maxAgeSeconds: 0.5f);
                     TollPreview.Answer answer = TollPreview.Get(ask);
-                    return answer == null ? "pedido feito; rode de novo para ler"
-                        : $"rotas de E{target} que passariam por {(territory < 0 ? $"territórios de E{owner}" : $"T{territory}")} sem regra: {answer.Routes} · com {ask.Mode} {asked}: passam {answer.Stay}, desviam {answer.Away}\n{answer.Detail}";
+                    return answer == null ? "request sent; run again to read it"
+                        : $"routes of E{target} that would cross {(territory < 0 ? $"territories of E{owner}" : $"T{territory}")} without a rule: {answer.Routes} · with {ask.Mode} {asked}: {answer.Stay} stay, {answer.Away} detour\n{answer.Detail}";
                 }
                 case "price":
                 {
                     // "trade price <empire> up|down": same as the row's + and − buttons (window open).
                     if (Instance == null || !Instance.Shown || parts.Length < 3 || !int.TryParse(parts[1], out int empire))
                     {
-                        return "uso: trade price <império> up|down (com a janela do posto aberta)";
+                        return "usage: trade price <empire> up|down (with the trade post window open)";
                     }
                     Instance.ChangePrice(empire, parts[2] == "down" ? -1 : +1);
                     return "ok";
@@ -853,7 +857,7 @@ namespace CurrencyMod.NativeUI
                         TradeBlockade.PublishTransit(Amplitude.Mercury.Sandbox.Sandbox.TradeController);
                     }
                     var lines = MyTerritories(me).Select(t => $"{t}: {Utils.GameUtils.GetTerritoryName(t)} — " +
-                        string.Join(", ", TradePolicy.RoutesThrough(t).Select(r => $"{r.Left}↔{r.Right} (compra {r.LeftBuys}/{r.RightBuys}{(r.Suspended ? ", suspensa" : "")})")));
+                        string.Join(", ", TradePolicy.RoutesThrough(t).Select(r => $"{r.Left}↔{r.Right} (buys {r.LeftBuys}/{r.RightBuys}{(r.Suspended ? ", suspended" : "")})")));
                     return string.Join("\n", lines);
                 }
                 case "costs":
@@ -871,7 +875,7 @@ namespace CurrencyMod.NativeUI
                         double upkeep = (float)l.TradeUpkeepAfterResourceDiversification.Value + (float)r.TradeUpkeepAfterResourceDiversification.Value;
                         int nodes = Math.Max(l.TradeNodes.Count, r.TradeNodes.Count);
                         int goods = (int)l.NumberOfDifferentResourceTraded.Value + (int)r.NumberOfDifferentResourceTraded.Value;
-                        text.AppendLine($"{relation.LeftEmpireIndex}↔{relation.RightEmpireIndex}: territórios={relation.PathAsTerritories.Count} nós={nodes} recursos={goods} manutenção={upkeep:0.#} por nó={(nodes > 0 ? upkeep / nodes : 0):0.##}");
+                        text.AppendLine($"{relation.LeftEmpireIndex}↔{relation.RightEmpireIndex}: territories={relation.PathAsTerritories.Count} nodes={nodes} resources={goods} upkeep={upkeep:0.#} perNode={(nodes > 0 ? upkeep / nodes : 0):0.##}");
                     }
                     return text.ToString();
                 }
@@ -884,39 +888,39 @@ namespace CurrencyMod.NativeUI
                     var territories = Snapshots.GameSnapshot.PresentationData.TerritoryInfo.Data;
                     if (territories == null || territory < 0 || territory >= territories.Length || target < 0 || target >= majors)
                     {
-                        return "erro: território ou império inválido";
+                        return "error: invalid territory or empire";
                     }
                     int owner = territories[territory].EmpireIndex;
                     if (owner < 0 || owner >= majors)
                     {
-                        return "erro: território sem dono maior";
+                        return "error: territory without a major owner";
                     }
                     lock (CurrencyManager.Lock)
                     {
                         TradePolicy.SetRule(world, owner, territory, target, mode);
                     }
-                    return $"ok: dono {owner}";
+                    return $"ok: owner {owner}";
                 }
                 default:
                 {
                     if (world == null)
                     {
-                        return "sem estado";
+                        return "no state";
                     }
                     lock (CurrencyManager.Lock)
                     {
                         var text = new System.Text.StringBuilder();
-                        text.AppendLine($"Regras ({world.TradeRules.Count}):");
+                        text.AppendLine($"Rules ({world.TradeRules.Count}):");
                         foreach (TradeRule rule in world.TradeRules)
                         {
-                            text.AppendLine($"  dono {rule.Owner} território {rule.Territory} alvo {rule.Target}: {rule.Mode}");
+                            text.AppendLine($"  owner {rule.Owner} territory {rule.Territory} target {rule.Target}: {rule.Mode}");
                         }
-                        text.AppendLine("Incidentes: " + string.Join(", ", world.TradeIncidents.Select(i => $"{i.Owner}→{i.Victim}")));
-                        text.AppendLine("Pedágios: " + string.Join(", ", world.LastTolls.Select(t => $"{t.Payer} pagou {t.PaidByPayer} a {t.Owner}")));
-                        text.AppendLine("Preços gerais: " + string.Join(", ", world.TollPrices.Select(p => $"{p.Owner}→{p.Target}: {p.Price}")));
-                        text.AppendLine("Preços por posto: " + string.Join(", ", world.TradeRules.Where(r => r.Price > 0).Select(r => $"{r.Owner} T{r.Territory}→{r.Target}: {r.Price}")));
-                        text.AppendLine($"Recalcular rotas pendente: {TradePolicy.PathsDirty}");
-                        text.AppendLine($"Janela: existe={Instance != null} estado={Instance?.Visibility} shown={Instance?.Shown} visible={Instance?.GetComponent<UITransform>().VisibleSelf} pendente={Instance?.pendingOpen} loaded={Instance?.Loaded} visaoComercio={InTradeView()} cursor={Amplitude.Mercury.Presentation.Presentation.PresentationCursorController?.CurrentCursor?.GetType().Name}");
+                        text.AppendLine("Incidents: " + string.Join(", ", world.TradeIncidents.Select(i => $"{i.Owner}→{i.Victim}")));
+                        text.AppendLine("Tolls: " + string.Join(", ", world.LastTolls.Select(t => $"{t.Payer} paid {t.PaidByPayer} to {t.Owner}")));
+                        text.AppendLine("General prices: " + string.Join(", ", world.TollPrices.Select(p => $"{p.Owner}→{p.Target}: {p.Price}")));
+                        text.AppendLine("Prices per post: " + string.Join(", ", world.TradeRules.Where(r => r.Price > 0).Select(r => $"{r.Owner} T{r.Territory}→{r.Target}: {r.Price}")));
+                        text.AppendLine($"Route recompute pending: {TradePolicy.PathsDirty}");
+                        text.AppendLine($"Window: exists={Instance != null} state={Instance?.Visibility} shown={Instance?.Shown} visible={Instance?.GetComponent<UITransform>().VisibleSelf} pending={Instance?.pendingOpen} loaded={Instance?.Loaded} tradeView={InTradeView()} cursor={Amplitude.Mercury.Presentation.Presentation.PresentationCursorController?.CurrentCursor?.GetType().Name}");
                         return text.ToString();
                     }
                 }

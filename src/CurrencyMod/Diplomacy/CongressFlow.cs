@@ -367,16 +367,16 @@ namespace CurrencyMod.Diplomacy
             return leader >= 0 && turn - seen >= maxTurns;
         }
 
-        /// <summary>Test ("ia teste congresso"): the 1st-session wait over a sequence of turns and presidents.</summary>
+        /// <summary>Test ("ai test congress"): the 1st-session wait over a sequence of turns and presidents.</summary>
         internal static string SelfTestFirstSession()
         {
             int seen = -1, seenLeader = -1;
             var steps = new[] { (10, 3), (11, 3), (12, 3), (13, 3), (13, 5), (14, 5), (15, -1), (16, 5), (18, 5), (19, 5) };
-            var text = new System.Text.StringBuilder("prazo 3 turnos; (turno, presidente) → a IA nativa propõe?\n");
+            var text = new System.Text.StringBuilder("deadline 3 turns; (turn, president) → does the native AI propose?\n");
             foreach ((int turn, int leader) in steps)
             {
                 bool fallback = FirstSessionStep(turn, leader, 3, ref seen, ref seenLeader);
-                text.AppendLine($"T{turn} E{leader}: {(fallback ? "SIM" : "não")} (esperando desde T{seen})");
+                text.AppendLine($"T{turn} E{leader}: {(fallback ? "YES" : "no")} (waiting since T{seen})");
             }
             return text.ToString();
         }
@@ -518,47 +518,47 @@ namespace CurrencyMod.Diplomacy
 
         // ---------------- Test commands (main thread) ----------------
 
-        /// <summary>"jogo congresso liberar E#": the game's own three debug orders; whoever posts presides over the 1st session.</summary>
+        /// <summary>"game congress unlock E#": the game's own three debug orders; whoever posts presides over the 1st session.</summary>
         internal static string ForceUnlock(int empire)
         {
             InternationalAncillary congress = Sandbox.InternationalAncillary;
             if (congress == null || !CongressCapture.ExpansionActive || congress.IsInternationalDisabled)
             {
-                return "erro: a partida não tem o Congresso (expansão desligada ou opção da partida desligada); forçar criaria votações que nunca terminam";
+                return "error: this game has no Congress (expansion off or game option off); forcing it would create votes that never end";
             }
             if (!GameAccess.IsTurnMain())
             {
-                return "erro: só no turno principal";
+                return "error: only during the main turn";
             }
             SandboxManager.PostOrder(new OrderInternationalAction { InternationalAction = InternationalAction.ForceUnlockCivicVote }, empire);
             SandboxManager.PostOrder(new OrderInternationalAction { InternationalAction = InternationalAction.ForceUnlockCrisisVote }, empire);
             SandboxManager.PostOrder(new OrderInternationalAction { InternationalAction = InternationalAction.ForceUnlockIdeologicalConsensus }, empire);
-            return $"ok: Congresso forçado por E{empire} (ela preside a 1ª sessão). Todas as nações passam a se conhecer. Salve e recarregue para o consenso mostrar os valores certos.";
+            return $"ok: Congress forced by E{empire} (it presides over the 1st session). All nations now know each other. Save and reload so the consensus shows the right values.";
         }
 
-        /// <summary>"jogo congresso encerrar lei|K#": closes the vote immediately (game debug order).</summary>
+        /// <summary>"game congress close law|K#": closes the vote immediately (game debug order).</summary>
         internal static string ForceEnd(string what)
         {
             InternationalAncillary congress = Sandbox.InternationalAncillary;
             Sandbox sandbox = SandboxManager.Sandbox;
             if (congress == null || sandbox == null)
             {
-                return "erro: sem partida";
+                return "error: no game";
             }
-            if ((what ?? string.Empty).StartsWith("lei", StringComparison.OrdinalIgnoreCase))
+            if (string.Equals(what, "law", StringComparison.OrdinalIgnoreCase))
             {
                 SandboxManager.PostOrder(new OrderInternationalAction { InternationalAction = InternationalAction.ForceEndCivicVote }, sandbox.LocalEmpireIndex);
-                return "ok: votação de lei encerrada (o resultado sai agora)";
+                return "ok: law vote closed (the result comes out now)";
             }
             if (what != null && what.StartsWith("K", StringComparison.OrdinalIgnoreCase) && int.TryParse(what.Substring(1), out int pool))
             {
                 SandboxManager.PostOrder(new OrderInternationalAction { InternationalAction = InternationalAction.ForceEndCrisisVote, CrisisVoteIndex = pool }, sandbox.LocalEmpireIndex);
-                return $"ok: votação de crise K{pool} encerrada (o resultado sai agora)";
+                return $"ok: crisis vote K{pool} closed (the result comes out now)";
             }
-            return "uso: jogo congresso encerrar lei|K#";
+            return "usage: game congress close law|K#";
         }
 
-        /// <summary>"jogo congresso consulado E#": creates the Consulate district on a free tile of the capital's territory (editor order).</summary>
+        /// <summary>"game congress consulate E#": creates the Consulate district on a free tile of the capital's territory (editor order).</summary>
         internal static string CreateConsulate(int empire)
         {
             MajorEmpire major = Sandbox.MajorEmpires[empire];
@@ -572,7 +572,7 @@ namespace CurrencyMod.Diplomacy
             }
             if (capital == null)
             {
-                return $"erro: E{empire} não tem capital";
+                return $"error: E{empire} has no capital";
             }
             string definition = null;
             foreach (ConstructibleDefinition item in Amplitude.Framework.Databases.GetDatabase<ConstructibleDefinition>())
@@ -585,7 +585,7 @@ namespace CurrencyMod.Diplomacy
             }
             if (definition == null)
             {
-                return "erro: definição do consulado não encontrada";
+                return "error: consulate definition not found";
             }
             Amplitude.Mercury.Simulation.World world = Sandbox.World;
             int center = world.TileInfo.Data[capital.WorldPosition.ToTileIndex()].TerritoryIndex;
@@ -602,45 +602,45 @@ namespace CurrencyMod.Diplomacy
                     continue;
                 }
                 SandboxManager.PostOrder(new EditorOrderCreateExtensionDistrictAt { DistrictDefinitionName = new StaticString(definition), TileIndex = tile });
-                return $"ok: consulado ({definition}) pedido no tile {tile} de T{center} (capital de E{empire})";
+                return $"ok: consulate ({definition}) requested on tile {tile} of T{center} (capital of E{empire})";
             }
-            return $"erro: nenhuma casa livre no território da capital de E{empire}";
+            return $"error: no free tile in the capital territory of E{empire}";
         }
 
-        /// <summary>"jogo congresso alavancagem E# E# n": gives (or removes) leverage of the first against the second (editor order).</summary>
+        /// <summary>"game congress leverage E# E# n": gives (or removes) leverage of the first against the second (editor order).</summary>
         internal static string AddLeverage(int empire, int other, int delta)
         {
             SandboxManager.PostOrder(new EditorOrderAddOrRemoveLeveragePointStock { EmpireIndex = empire, OtherEmpireIndex = other, PointDelta = delta }, empire);
-            return $"ok: {delta:+0;-0} de alavancagem para E{empire} contra E{other}";
+            return $"ok: {delta:+0;-0} leverage for E{empire} against E{other}";
         }
 
-        /// <summary>"jogo congresso lei E# NomeDoCivico": makes a law available to the nation (editor order).</summary>
+        /// <summary>"game congress law E# CivicName": makes a law available to the nation (editor order).</summary>
         internal static string UnlockLaw(int empire, string civic)
         {
             SandboxManager.PostOrder(new EditorOrderUnlockCivic { EmpireIndex = empire, CivicName = new StaticString(civic) });
-            return $"ok: lei {civic} liberada para E{empire}";
+            return $"ok: law {civic} unlocked for E{empire}";
         }
 
-        /// <summary>"ia congresso": full diagnostics from the turn snapshot (and from the simulation, for what changes during the turn).</summary>
+        /// <summary>"ai congress": full diagnostics from the turn snapshot (and from the simulation, for what changes during the turn).</summary>
         internal static string Describe(WorldCapture capture)
         {
             InternationalAncillary live = Sandbox.InternationalAncillary;
             var text = new System.Text.StringBuilder();
-            text.AppendLine($"Expansão Together We Rule na partida: {(CongressCapture.ExpansionActive ? "sim" : "NÃO")} · Congresso na partida: {(live == null ? "?" : live.IsInternationalDisabled ? "DESLIGADO" : "ligado")}"
+            text.AppendLine($"Together We Rule expansion in the game: {(CongressCapture.ExpansionActive ? "yes" : "NO")} · Congress in the game: {(live == null ? "?" : live.IsInternationalDisabled ? "OFF" : "on")}"
                 + $" · {ExpansionSaveHint()}");
             CapturedCongress congress = capture?.Congress;
             if (congress == null)
             {
-                text.AppendLine("Sem Congresso na foto do turno (sem a expansão ou desligado; ou foto de antes de ligar).");
+                text.AppendLine("No Congress in the turn snapshot (no expansion or turned off; or a snapshot from before it was turned on).");
                 return text.ToString().TrimEnd();
             }
-            text.AppendLine($"lei liberada: {congress.CivicUnlocked} · crise liberada: {congress.CrisisUnlocked} · consenso liberado: {congress.ConsensusUnlocked} · quem formou: E{congress.Unlocker}"
-                + $" · era mínima {congress.MinEra} ({GameText.EraName(congress.MinEra)}) · fração conhecida {congress.MinMetFraction:0.##}");
+            text.AppendLine($"law unlocked: {congress.CivicUnlocked} · crisis unlocked: {congress.CrisisUnlocked} · consensus unlocked: {congress.ConsensusUnlocked} · formed by: E{congress.Unlocker}"
+                + $" · minimum era {congress.MinEra} ({GameText.EraName(congress.MinEra)}) · known fraction {congress.MinMetFraction:0.##}");
             if (congress.LeaderOrder.Length > 0)
             {
-                text.AppendLine("ordem da presidência: " + string.Join(" → ", congress.LeaderOrder.Select(e => "E" + e)));
+                text.AppendLine("presidency order: " + string.Join(" → ", congress.LeaderOrder.Select(e => "E" + e)));
             }
-            text.AppendLine($"sessões até agora: {congress.SessionCount} · próximo presidente: E{congress.NextLeader} a partir do turno {congress.NextSessionTurn} · leis propuníveis: {congress.Proposable.Count}"
+            text.AppendLine($"sessions so far: {congress.SessionCount} · next president: E{congress.NextLeader} from turn {congress.NextSessionTurn} · proposable laws: {congress.Proposable.Count}"
                 + (congress.Proposable.Count > 0 ? " (" + string.Join(", ", congress.Proposable.Select(l => $"V{l.Code} {l.Civic}")) + ")" : string.Empty));
             var rows = new List<string>();
             for (int i = 0; i < congress.Sway.Length; i++)
@@ -651,33 +651,33 @@ namespace CurrencyMod.Diplomacy
                     continue;
                 }
                 double leverage = i < congress.Leverage.Length ? congress.Leverage[i].Sum() : 0;
-                string blocked = i < congress.UnlockBlocked.Length && !string.IsNullOrEmpty(congress.UnlockBlocked[i]) ? $" falta[{congress.UnlockBlocked[i]}]" : string.Empty;
-                rows.Add($"E{i}{(empire.Human ? "*" : string.Empty)} peso {congress.Sway[i]:0.#} consulado {(congress.Consulate[i] ? "sim" : "não")} alavancagem {leverage:0.#} {empire.EraName}{blocked}");
+                string blocked = i < congress.UnlockBlocked.Length && !string.IsNullOrEmpty(congress.UnlockBlocked[i]) ? $" missing[{congress.UnlockBlocked[i]}]" : string.Empty;
+                rows.Add($"E{i}{(empire.Human ? "*" : string.Empty)} sway {congress.Sway[i]:0.#} consulate {(congress.Consulate[i] ? "yes" : "no")} leverage {leverage:0.#} {empire.EraName}{blocked}");
             }
             text.AppendLine(string.Join("\n", rows));
             if (congress.LawVote != null)
             {
                 CongressLawVote vote = congress.LawVote;
-                text.AppendLine($"VOTAÇÃO DE LEI: V{vote.Law.Code} {vote.Law.Civic} (A {vote.Law.ChoiceA} × B {vote.Law.ChoiceB}) · presidente E{vote.Leader} · turnos {vote.TurnBegin}–{vote.TurnEnd} · estado {vote.State}");
-                text.AppendLine("   cédulas: " + string.Join(" ", vote.Ballots.Select((b, i) => b == null ? null : $"E{i}:{(b.Choice == 0 ? "A" : b.Choice == 1 ? "B" : "-")}({b.Sway:0.#}{(b.BribeBonus > 0 ? $"+sub {b.BribeBonus:0.#}" : string.Empty)}{(b.BribePending > 0 ? $"+pend {b.BribePending:0.#}" : string.Empty)})").Where(s => s != null)));
+                text.AppendLine($"LAW VOTE: V{vote.Law.Code} {vote.Law.Civic} (A {vote.Law.ChoiceA} × B {vote.Law.ChoiceB}) · president E{vote.Leader} · turns {vote.TurnBegin}–{vote.TurnEnd} · state {vote.State}");
+                text.AppendLine("   ballots: " + string.Join(" ", vote.Ballots.Select((b, i) => b == null ? null : $"E{i}:{(b.Choice == 0 ? "A" : b.Choice == 1 ? "B" : "-")}({b.Sway:0.#}{(b.BribeBonus > 0 ? $"+bribe {b.BribeBonus:0.#}" : string.Empty)}{(b.BribePending > 0 ? $"+pending {b.BribePending:0.#}" : string.Empty)})").Where(s => s != null)));
             }
             foreach (CongressLawVote vote in congress.LawHistory)
             {
-                text.AppendLine($"lei encerrada: {vote.Law.Civic} · turnos {vote.TurnBegin}–{vote.TurnEnd} · {vote.State} · vencedor {(vote.Winner == 0 ? "A" : vote.Winner == 1 ? "B" : "empate")}");
+                text.AppendLine($"law closed: {vote.Law.Civic} · turns {vote.TurnBegin}–{vote.TurnEnd} · {vote.State} · winner {(vote.Winner == 0 ? "A" : vote.Winner == 1 ? "B" : "tie")}");
             }
             foreach (CongressCrisis crisis in congress.Crises)
             {
-                text.AppendLine($"CRISE K{crisis.Pool}: E{crisis.Declarator} contra E{crisis.Target} · turnos {crisis.TurnBegin}–{crisis.TurnEnd} · {crisis.State}"
-                    + (crisis.Active ? string.Empty : $" · vencedor E{crisis.Winner}{(crisis.WaitingLoser ? $" · espera E{crisis.Loser}" : string.Empty)}"));
-                text.AppendLine("   cédulas: " + string.Join(" ", crisis.Ballots.Select((b, i) => b == null || b.Choice < 0 ? null : $"E{i}→E{b.Choice}({b.Sway:0.#})").Where(s => s != null)));
+                text.AppendLine($"CRISIS K{crisis.Pool}: E{crisis.Declarator} against E{crisis.Target} · turns {crisis.TurnBegin}–{crisis.TurnEnd} · {crisis.State}"
+                    + (crisis.Active ? string.Empty : $" · winner E{crisis.Winner}{(crisis.WaitingLoser ? $" · waiting for E{crisis.Loser}" : string.Empty)}"));
+                text.AppendLine("   ballots: " +string.Join(" ", crisis.Ballots.Select((b, i) => b == null || b.Choice < 0 ? null : $"E{i}→E{b.Choice}({b.Sway:0.#})").Where(s => s != null)));
             }
             foreach (CongressAxis axis in congress.Consensus)
             {
-                text.AppendLine($"consenso I{axis.Index} {axis.Definition}: {(axis.Unlocked ? $"em vigor desde {axis.UnlockTurn} ({axis.Orientation})" : $"{axis.Count}/{axis.Required}")}");
+                text.AppendLine($"consensus I{axis.Index} {axis.Definition}: {(axis.Unlocked ? $"in force since {axis.UnlockTurn} ({axis.Orientation})" : $"{axis.Count}/{axis.Required}")}");
             }
             foreach (CongressImposedLaw law in congress.ImposedLaws)
             {
-                text.AppendLine($"lei imposta: E{law.Empire} recebe {law.Civic} → {law.Choice} (evento {law.EventIndex}, recusar custa {law.DiscardCost:0.#}{(law.CanDiscard ? string.Empty : ", sem influência")})");
+                text.AppendLine($"law imposed: E{law.Empire} receives {law.Civic} → {law.Choice} (event {law.EventIndex}, refusing costs {law.DiscardCost:0.#}{(law.CanDiscard ? string.Empty : ", not enough influence")})");
             }
             text.AppendLine(NativeAiLocks.DescribeCongress());
             return text.ToString().TrimEnd();
@@ -685,7 +685,7 @@ namespace CurrencyMod.Diplomacy
 
         /// <summary>Whether the expansion was force-enabled in this save (test patch on saves created without it).</summary>
         internal static string ExpansionSaveHint() => ExpansionSavePatch.Forced || ExpansionSavePatch.ForcedBySession()
-            ? "expansão LIGADA À FORÇA neste save ([IA] ExpansaoEmSaveAntigo)" : "expansão como o save foi criado";
+            ? "expansion FORCED ON in this save ([IA] ExpansaoEmSaveAntigo)" : "expansion as the save was created";
 
         // ---------------- Dossier codes ----------------
 

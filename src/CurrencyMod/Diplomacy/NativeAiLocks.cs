@@ -31,7 +31,7 @@ namespace CurrencyMod.Diplomacy
         private static int lockedWarChecks;
         private static volatile string lastBlocked;
 
-        /// <summary>Summary for "ia status": locked nations and what the lock has held back so far.</summary>
+        /// <summary>Summary for "ai status": locked nations and what the lock has held back so far.</summary>
         internal static string Describe()
         {
             bool[] current = llmActive;
@@ -43,10 +43,10 @@ namespace CurrencyMod.Diplomacy
                     locked.Add("E" + i);
                 }
             }
-            return $"travas da IA nativa: {(locked.Count > 0 ? string.Join(", ", locked) : "nenhuma")} · iniciativas de tratado seguradas: {blockedTreaties}"
-                + $" · reclamações seguradas: {blockedGrievances} · respostas a exigências seguradas: {blockedDemands}"
-                + $"{(lastBlocked != null ? $" (última: {lastBlocked})" : string.Empty)} · checagens de guerra travadas: {lockedWarChecks}"
-                + $" · rendições seguradas: {blockedSurrenders} · {DescribeMinors()} · {DescribeCongress()}";
+            return $"native AI locks: {(locked.Count > 0 ? string.Join(", ", locked) : "none")} · treaty initiatives held: {blockedTreaties}"
+                + $" · grievances held: {blockedGrievances} · demand answers held: {blockedDemands}"
+                + $"{(lastBlocked != null ? $" (last: {lastBlocked})" : string.Empty)} · war checks locked: {lockedWarChecks}"
+                + $" · surrenders held: {blockedSurrenders} · {DescribeMinors()} · {DescribeCongress()}";
         }
 
         /// <summary>Called by the main thread (AiModule) every second.</summary>
@@ -368,7 +368,7 @@ namespace CurrencyMod.Diplomacy
             patronage = table ?? new System.Collections.Generic.Dictionary<int, int>();
         }
 
-        internal static string DescribeMinors() => $"povos: vassalagens/anexações seguradas {blockedMinorTreaties} · patrocínios mantidos {keptPatronage}";
+        internal static string DescribeMinors() => $"minor peoples: vassalizations/annexations held {blockedMinorTreaties} · patronages kept {keptPatronage}";
 
         /// <summary>Vassalizing and annexing an independent people are big decisions: only through the language AI (tratado_povo).</summary>
         [HarmonyPatch(typeof(Amplitude.Mercury.AI.Brain.Generators.MinorRelation.EnactMinorPuppetTreaty), "IsTreatyValid")]
@@ -523,8 +523,8 @@ namespace CurrencyMod.Diplomacy
         }
 
         internal static string DescribeCongress() =>
-            $"Congresso: vereditos segurados {blockedVerdicts}, de volta à IA nativa {verdictFallback.Count} · leis impostas respondidas como a IA de linguagem quis {keptStances} · consulado: iniciativas seguradas {BlockedConsulateActions}"
-            + (leaderFallback.Count > 0 ? $" · 1ª sessão proposta pela IA nativa de E{string.Join(", E", leaderFallback)}" : string.Empty);
+            $"Congress: verdicts held {blockedVerdicts}, handed back to the native AI {verdictFallback.Count} · imposed laws answered as the language AI wanted {keptStances} · consulate: initiatives held {BlockedConsulateActions}"
+            + (leaderFallback.Count > 0 ? $" · 1st session proposed by the native AI of E{string.Join(", E", leaderFallback)}" : string.Empty);
 
         private static bool BlocksCongress(MajorEmpireBrain brain)
         {

@@ -1,15 +1,15 @@
-﻿# Instala, desinstala ou empacota o MoreEmpires (até 16 impérios + nascimento aleatório).
-# Uso (na pasta do jogo):
-#   powershell -ExecutionPolicy Bypass -File _Modding\tools\instalar-moreempires.ps1              # compila e instala
-#   powershell -ExecutionPolicy Bypass -File _Modding\tools\instalar-moreempires.ps1 -Desinstalar # desliga (renomeia a DLL)
-#   powershell -ExecutionPolicy Bypass -File _Modding\tools\instalar-moreempires.ps1 -Pacote      # gera _Modding\dist\MoreEmpires_<versão>.zip
+﻿# Installs, uninstalls or packages MoreEmpires (up to 16 empires + random spawn).
+# Usage (from the game folder):
+#   powershell -ExecutionPolicy Bypass -File _Modding\tools\install-moreempires.ps1             # build and install
+#   powershell -ExecutionPolicy Bypass -File _Modding\tools\install-moreempires.ps1 -Uninstall  # turn off (renames the DLL)
+#   powershell -ExecutionPolicy Bypass -File _Modding\tools\install-moreempires.ps1 -Package    # build _Modding\dist\MoreEmpires_<version>.zip
 #
-# O plugin é carregado só quando o jogo abre: instale/desinstale com o jogo FECHADO e abra o jogo depois.
-# A configuração fica em BepInEx\config\lucas.humankind.moreempires.cfg (criada no primeiro início).
+# The plugin only loads when the game starts: install/uninstall with the game CLOSED and start the game afterwards.
+# Its configuration lives in BepInEx\config\lucas.humankind.moreempires.cfg (created on first start).
 
 param(
-    [switch]$Desinstalar,
-    [switch]$Pacote
+    [switch]$Uninstall,
+    [switch]$Package
 )
 
 $ErrorActionPreference = 'Stop'
@@ -25,33 +25,34 @@ function Test-GameRunning {
     return [bool](Get-Process -Name 'Humankind' -ErrorAction SilentlyContinue)
 }
 
-if ($Desinstalar) {
-    if (Test-GameRunning) { throw 'Feche o Humankind antes de desinstalar (a DLL fica em uso enquanto o jogo roda).' }
+if ($Uninstall) {
+    if (Test-GameRunning) { throw 'Close Humankind before uninstalling (the DLL is in use while the game runs).' }
     if (Test-Path $dll) {
-        $off = "$dll.desligado"
+        $off = "$dll.disabled"
         if (Test-Path $off) { Move-Item $off "$off.$(Get-Date -Format yyyyMMddHHmmss)" }
         Move-Item $dll $off
-        Write-Host "MoreEmpires desligado: $off (o BepInEx só carrega arquivos .dll). Para voltar, rode este script sem parâmetros."
+        Write-Host "MoreEmpires turned off: $off (BepInEx only loads .dll files). To turn it back on, run this script without parameters."
     } else {
-        Write-Host 'MoreEmpires não está instalado.'
+        Write-Host 'MoreEmpires is not installed.'
     }
     return
 }
 
 $pluginCs = Get-Content (Join-Path $project 'Plugin.cs') -Raw
 $version = [regex]::Match($pluginCs, 'Version\s*=\s*"([^"]+)"').Groups[1].Value
-if (-not $version) { throw 'Não achei a versão em Plugin.cs' }
+if (-not $version) { throw 'Version not found in Plugin.cs' }
 
-if ($Pacote) {
-    Write-Host "Compilando MoreEmpires $version (sem instalar)..."
+if ($Package) {
+    Write-Host "Building MoreEmpires $version (without installing)..."
     & $dotnet build $project -c Release -nologo -v q
-    if ($LASTEXITCODE -ne 0) { throw 'Falha ao compilar o MoreEmpires' }
+    if ($LASTEXITCODE -ne 0) { throw 'MoreEmpires build failed' }
     $dist = Join-Path $modding 'dist'
     $stage = Join-Path $dist "MoreEmpires_$version"
     if (Test-Path $stage) { Remove-Item $stage -Recurse -Force -Confirm:$false }
     New-Item -ItemType Directory -Force (Join-Path $stage 'BepInEx\plugins\MoreEmpires') | Out-Null
     Copy-Item (Join-Path $project 'bin\Release\net472\MoreEmpires.dll') (Join-Path $stage 'BepInEx\plugins\MoreEmpires\')
     Copy-Item (Join-Path $modding 'docs\pesquisa-30-jogadores.md') (Join-Path $stage 'MoreEmpires-detalhes.md')
+    # Player-facing readme (Portuguese, as shipped to players).
     @"
 MoreEmpires $version - até 16 impérios em qualquer tamanho de mapa + nascimento aleatório (Humankind)
 
@@ -64,13 +65,13 @@ Saves com mais de 10 impérios só abrem com o mod instalado.
     $zip = Join-Path $dist "MoreEmpires_$version.zip"
     if (Test-Path $zip) { Remove-Item $zip -Force -Confirm:$false }
     Compress-Archive -Path (Join-Path $stage '*') -DestinationPath $zip
-    Write-Host "Pacote pronto: $zip"
+    Write-Host "Package ready: $zip"
     return
 }
 
-if (Test-GameRunning) { throw 'Feche o Humankind antes de instalar: plugins só são carregados quando o jogo abre (e a DLL fica em uso).' }
-Write-Host "Compilando e instalando MoreEmpires $version em $pluginDir ..."
+if (Test-GameRunning) { throw 'Close Humankind before installing: plugins only load when the game starts (and the DLL is in use).' }
+Write-Host "Building and installing MoreEmpires $version into $pluginDir ..."
 & $dotnet build $project -c Release -nologo -v q -p:Deploy=true
-if ($LASTEXITCODE -ne 0) { throw 'Falha ao compilar o MoreEmpires' }
-if (-not (Test-Path $dll)) { throw "A DLL não apareceu em $dll" }
-Write-Host 'Instalado. Abra o jogo e confira no BepInEx\LogOutput.log a linha "MoreEmpires ...: MaxImperios = ..." e "Patches aplicados: N ok, 0 com falha".'
+if ($LASTEXITCODE -ne 0) { throw 'MoreEmpires build failed' }
+if (-not (Test-Path $dll)) { throw "The DLL did not show up in $dll" }
+Write-Host 'Installed. Start the game and check BepInEx\LogOutput.log for the MoreEmpires startup lines (max empires and patches applied, 0 failed).'

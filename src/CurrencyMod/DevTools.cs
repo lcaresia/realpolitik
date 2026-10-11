@@ -18,14 +18,25 @@ namespace CurrencyMod
     ///
     /// Commands:
     ///   screenshot [name]          captures the game screen
+    ///   rec &lt;name&gt; &lt;seconds&gt; [fps] records jpg frames at a fixed fps into dev\out\rec_&lt;name&gt;\
     ///   find &lt;text&gt;               finds labels whose visible text contains the text
     ///   tree [visible|all] [root]  tree of UITransforms (optionally only under a root)
     ///   inspect &lt;path&gt; [depth]   detailed dump (components, styles, serialized fields)
+    ///   layout &lt;path&gt;             state of a UILayout
+    ///   findtype &lt;type&gt;           objects of a component type
+    ///   responders &lt;x&gt; &lt;y&gt;      responders under a screen point, in click order
     ///   windows                    lists windows (UIWindow) and whether they are visible
     ///   styles [filter]            lists UI style names
-    ///   bank open|close|tab &lt;n&gt;   controls the Central Bank
-    ///   ia &lt;command&gt;              AI diplomacy (see Diplomacia\AiCommands.cs)
-    ///   jogo &lt;command&gt;            load/save game and end the turn (see GameCommands.cs)
+    ///   show|hide &lt;Window&gt;        opens/closes a game window by type
+    ///   hover &lt;path&gt;|off          opens/closes an element's native tooltip
+    ///   click &lt;path&gt;              clicks a toggle or button (the action really happens)
+    ///   texdump &lt;path&gt;            saves an image's texture as PNG and measures channels
+    ///   bank open|close|tab &lt;n&gt;   controls the old Central Bank window
+    ///   nbank ...                  native Central Bank window (see NativeUI\NativeBankWindow.cs)
+    ///   trade ...                  trade post window (see NativeUI\TradePostWindow.cs)
+    ///   ai &lt;command&gt;              AI diplomacy (see Diplomacy\AiCommands.cs)
+    ///   game &lt;command&gt;            load/save game and end the turn (see GameCommands.cs)
+    ///   language [code|missing]    language in use / switch it / untranslated texts
     /// </summary>
     internal class DevTools : MonoBehaviour
     {
@@ -74,7 +85,7 @@ namespace CurrencyMod
                             // No active component: Unity writes the file at the end of the frame.
                             string file = Path.Combine(OutDir, Sanitize(args.Length > 0 ? args : "shot") + ".png");
                             ScreenCapture.CaptureScreenshot(file);
-                            Write(line, $"ok (assíncrono): {file}");
+                            Write(line, $"ok (async): {file}");
                         }
                         return;
                     case "rec":
@@ -84,7 +95,7 @@ namespace CurrencyMod
                             string[] ra = args.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
                             if (instance == null || ra.Length < 2 || !float.TryParse(ra[1], System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out float secs))
                             {
-                                Write(line, "uso: rec <nome> <segundos> [fps]");
+                                Write(line, "usage: rec <name> <seconds> [fps]");
                                 return;
                             }
                             int recFps = ra.Length > 2 && int.TryParse(ra[2], out int f) ? f : 30;
@@ -106,11 +117,11 @@ namespace CurrencyMod
                         var layout = target != null ? target.GetComponent<Amplitude.UI.Layouts.UILayout>() : null;
                         if (layout == null)
                         {
-                            Write(line, "sem UILayout");
+                            Write(line, "no UILayout");
                             return;
                         }
                         UITransform ui = layout.UITransform;
-                        Write(line, $"uiTransformNulo={ui == null} sortingValido={(ui != null && ui.SortingRange.IsValid)} visivel={(ui != null && ui.VisibleGlobally)} ativo={layout.gameObject.activeInHierarchy} carregado={layout.Loaded} autoArrange={layout.autoArrangeChildren} enabled={layout.enabled}");
+                        Write(line, $"uiTransformNull={ui == null} sortingValid={(ui != null && ui.SortingRange.IsValid)} visible={(ui != null && ui.VisibleGlobally)} active={layout.gameObject.activeInHierarchy} loaded={layout.Loaded} autoArrange={layout.autoArrangeChildren} enabled={layout.enabled}");
                         return;
                     }
                     case "findtype":
@@ -130,7 +141,7 @@ namespace CurrencyMod
                         return;
                     case "nbank":
                         NativeUI.NativeBankWindow.DevCommand(args);
-                        Write(line, NativeUI.NativeBankWindow.Instance != null ? "ok" : "erro: janela nativa não existe");
+                        Write(line, NativeUI.NativeBankWindow.Instance != null ? "ok" : "error: native window does not exist");
                         return;
                     case "trade":
                         Write(line, NativeUI.TradePostWindow.DevCommand(args));
@@ -148,46 +159,46 @@ namespace CurrencyMod
                     case "texdump":
                         Write(line, DumpTexture(args));
                         return;
-                    case "ia":
+                    case "ai":
                         Write(line, Diplomacy.AiCommands.Execute(args, OutDir));
                         return;
-                    case "jogo":
+                    case "game":
                         Write(line, GameCommands.Execute(args));
                         return;
-                    case "idioma":
+                    case "language":
                         Write(line, LanguageCommand(args));
                         return;
                     default:
-                        Write(line, "erro: comando desconhecido");
+                        Write(line, "error: unknown command");
                         return;
                 }
             }
             catch (Exception ex)
             {
-                Write(line, $"erro: {ex}");
+                Write(line, $"error: {ex}");
             }
         }
 
         /// <summary>
-        /// "idioma": language in use and table size; "idioma &lt;Auto|pt|en|es|fr|de&gt;": switches it (writes to the .cfg);
-        /// "idioma faltando": requested texts without translation, in dev\out\idioma_faltando_&lt;code&gt;.txt.
+        /// "language": language in use and table size; "language &lt;Auto|pt|en|es|fr|de&gt;": switches it (writes to the .cfg);
+        /// "language missing": requested texts without translation, in dev\out\language_missing_&lt;code&gt;.txt.
         /// </summary>
         private static string LanguageCommand(string args)
         {
-            if (args.Equals("faltando", StringComparison.OrdinalIgnoreCase))
+            if (args.Equals("missing", StringComparison.OrdinalIgnoreCase))
             {
                 List<string> missing = L.Missing();
                 missing.Sort(StringComparer.Ordinal);
-                string file = Path.Combine(OutDir, $"idioma_faltando_{L.Code}.txt");
+                string file = Path.Combine(OutDir, $"language_missing_{L.Code}.txt");
                 File.WriteAllLines(file, missing, new UTF8Encoding(true));
-                return $"{missing.Count} textos sem tradução em {L.Code}: {file}";
+                return $"{missing.Count} texts without translation in {L.Code}: {file}";
             }
             if (args.Length > 0)
             {
                 L.Language.Value = args;
                 L.Refresh(force: true);
             }
-            return $"idioma {L.Code} (cfg: {L.Language.Value}), {L.TableSize} traduções, cultura {L.Culture.Name}";
+            return $"language {L.Code} (cfg: {L.Language.Value}), {L.TableSize} translations, culture {L.Culture.Name}";
         }
 
         private static Amplitude.UI.Interactables.UITooltip hoveredTooltip;
@@ -201,7 +212,7 @@ namespace CurrencyMod
             var manager = Amplitude.UI.Interactables.UITooltipManager.Instance;
             if (manager == null)
             {
-                return "erro: gerenciador de tooltips indisponível";
+                return "error: tooltip manager unavailable";
             }
             if (hoveredTooltip != null)
             {
@@ -217,17 +228,17 @@ namespace CurrencyMod
                 {
                     manager.OnTooltipHovered(current, false);
                 }
-                return "tooltip fechado";
+                return "tooltip closed";
             }
             Transform target = FindByPath(path);
             var tooltip = target != null ? target.GetComponent<Amplitude.UI.Interactables.UITooltip>() : null;
             if (tooltip == null)
             {
-                return "sem UITooltip em " + path;
+                return "no UITooltip at " + path;
             }
             hoveredTooltip = tooltip;
             manager.OnTooltipHovered(tooltip, true);
-            return "tooltip aberto: " + PathOf(target);
+            return "tooltip open: " + PathOf(target);
         }
 
         /// <summary>
@@ -240,21 +251,21 @@ namespace CurrencyMod
             Transform target = string.IsNullOrEmpty(path) ? null : FindByPath(path);
             if (target == null)
             {
-                return "uso: click <caminho> (não achei " + path + ")";
+                return "usage: click <path> (not found: " + path + ")";
             }
             var toggle = target.GetComponent<Amplitude.UI.Interactables.UIToggle>();
             if (toggle != null)
             {
                 ((Amplitude.UI.Interactables.UIToggleResponder)toggle.Responder).TrySwitchState();
-                return $"toggle {PathOf(target)}: {(toggle.State ? "ligado" : "desligado")}";
+                return $"toggle {PathOf(target)}: {(toggle.State ? "on" : "off")}";
             }
             var button = target.GetComponent<Amplitude.UI.Interactables.UIButton>();
             if (button != null)
             {
                 ((Amplitude.UI.Interactables.UIButtonResponder)button.Responder).OnLeftClick();
-                return "clique em " + PathOf(target);
+                return "clicked " + PathOf(target);
             }
-            return "sem UIToggle nem UIButton em " + PathOf(target);
+            return "no UIToggle or UIButton at " + PathOf(target);
         }
 
         /// <summary>Response that arrives later (asynchronous requests to the game): goes into result.txt like a regular response.</summary>
@@ -267,7 +278,7 @@ namespace CurrencyMod
             {
                 string file = Path.Combine(OutDir, $"{DateTime.Now:HHmmss}_{Sanitize(command)}.txt");
                 File.WriteAllText(file, message, Encoding.UTF8);
-                message = $"ok: {message.Length} caracteres em {file}";
+                message = $"ok: {message.Length} characters in {file}";
             }
             File.AppendAllText(ResultPath, $"[{DateTime.Now:HH:mm:ss}] > {command}\n{message}\n\n", Encoding.UTF8);
         }
@@ -322,7 +333,7 @@ namespace CurrencyMod
                 }
             }
             Time.captureFramerate = previous;
-            Write(command, $"ok: {total} quadros a {fps} fps em {dir}");
+            Write(command, $"ok: {total} frames at {fps} fps in {dir}");
         }
 
         // ---------------- UI X-ray ----------------
@@ -371,10 +382,10 @@ namespace CurrencyMod
                 if (visible != null && visible.IndexOf(text, StringComparison.OrdinalIgnoreCase) >= 0)
                 {
                     bool shown = label.gameObject.activeInHierarchy && label.UITransform != null && label.UITransform.VisibleGlobally;
-                    builder.AppendLine($"{(shown ? "[visível]" : "[oculto] ")} {PathOf(label.transform)}  key=\"{label.Text}\"  texto=\"{visible}\"");
+                    builder.AppendLine($"{(shown ? "[visible]" : "[hidden] ")} {PathOf(label.transform)}  key=\"{label.Text}\"  text=\"{visible}\"");
                 }
             }
-            return builder.Length > 0 ? builder.ToString() : "nenhum rótulo encontrado";
+            return builder.Length > 0 ? builder.ToString() : "no label found";
         }
 
         private static string DumpTree(string args)
@@ -390,7 +401,7 @@ namespace CurrencyMod
                 Transform root = FindByPath(rootPath);
                 if (root == null)
                 {
-                    return $"raiz não encontrada: {rootPath}";
+                    return $"root not found: {rootPath}";
                 }
                 roots = new[] { root };
             }
@@ -437,7 +448,7 @@ namespace CurrencyMod
                 }
                 if (!visible)
                 {
-                    builder.Append("  (oculto)");
+                    builder.Append("  (hidden)");
                 }
             }
             UILabel label = transform.GetComponent<UILabel>();
@@ -462,28 +473,28 @@ namespace CurrencyMod
             string[] parts = args.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
             if (parts.Length < 2 || !float.TryParse(parts[0], out float x) || !float.TryParse(parts[1], out float y))
             {
-                return "uso: responders <x> <y>";
+                return "usage: responders <x> <y>";
             }
             var manager = Amplitude.UI.Interactables.UIInteractivityManager.Instance;
             if (manager == null)
             {
-                return "sem UIInteractivityManager";
+                return "no UIInteractivityManager";
             }
             var builder = new StringBuilder();
-            builder.AppendLine($"foco atual: {manager.FocusedResponder}");
+            builder.AppendLine($"current focus: {manager.FocusedResponder}");
             var screen = new Vector2(x, Screen.height - y);
             for (int v = manager.perViewSortedResponders.Count - 1; v >= 0; v--)
             {
                 var viewed = manager.perViewSortedResponders[v];
                 Vector2 point = viewed.View.ScreenPositionToStandardizedPosition(screen);
-                builder.AppendLine($"vista {viewed.View.name}: ponto {point}");
+                builder.AppendLine($"view {viewed.View.name}: point {point}");
                 var data = viewed.SortedResponders.Data;
                 for (int i = 0; i < viewed.SortedResponders.Count; i++)
                 {
                     if (data[i].Responder is Amplitude.UI.Interactables.UIResponder responder && responder.Contains(point))
                     {
-                        string focusable = responder is Amplitude.UI.Interactables.UIControlResponder control ? (control.Control.Focusable ? " focável" : string.Empty) + $" bloqueia={control.Control.BlockedEvents}" : string.Empty;
-                        builder.AppendLine($"  #{i} camada={data[i].LayerIndex} sens={data[i].EventSensitivity} interativo={responder.IsInteractive}{focusable}  {responder}");
+                        string focusable = responder is Amplitude.UI.Interactables.UIControlResponder control ? (control.Control.Focusable ? " focusable" : string.Empty) + $" blocks={control.Control.BlockedEvents}" : string.Empty;
+                        builder.AppendLine($"  #{i} layer={data[i].LayerIndex} sens={data[i].EventSensitivity} interactive={responder.IsInteractive}{focusable}  {responder}");
                     }
                 }
             }
@@ -503,7 +514,7 @@ namespace CurrencyMod
             Transform root = FindByPath(path);
             if (root == null)
             {
-                return $"não encontrado: {path}";
+                return $"not found: {path}";
             }
             var builder = new StringBuilder();
             AppendInspect(builder, root, 0, maxDepth);
@@ -569,7 +580,7 @@ namespace CurrencyMod
 
             if (component is UILabel label)
             {
-                yield return $"(texto visível) = \"{Truncate(VisibleText(label), 120)}\"";
+                yield return $"(visible text) =\"{Truncate(VisibleText(label), 120)}\"";
             }
             if (component is UITransform ui)
             {
@@ -667,12 +678,12 @@ namespace CurrencyMod
             Transform target = FindByPath(path);
             if (target == null)
             {
-                return $"não encontrado: {path}";
+                return $"not found: {path}";
             }
             var image = target.GetComponent<UIAbstractImage>();
             if (image == null)
             {
-                return "sem UIAbstractImage";
+                return "no UIAbstractImage";
             }
             UITexture uiTexture = image.texture;
             var builder = new StringBuilder();
@@ -682,9 +693,9 @@ namespace CurrencyMod
             UIRenderingManager.Instance.RetrieveTextureSource(sourceIndex, out Texture texture, out bool _);
             if (texture == null)
             {
-                return builder.Append("textura não carregada").ToString();
+                return builder.Append("texture not loaded").ToString();
             }
-            builder.AppendLine($"textura={texture.name} {texture.width}x{texture.height} tipo={texture.GetType().Name} coords={coordinates} graphicsFormat={texture.graphicsFormat}");
+            builder.AppendLine($"texture={texture.name} {texture.width}x{texture.height} type={texture.GetType().Name} coords={coordinates} graphicsFormat={texture.graphicsFormat}");
 
             // Copies the icon's region (may be an atlas) into a readable texture.
             int width = Mathf.Max(1, Mathf.RoundToInt(coordinates.width * texture.width));
@@ -710,12 +721,12 @@ namespace CurrencyMod
                     max = Mathf.Max(max, v);
                     sum += v;
                 }
-                builder.AppendLine($"canal {"RGBA"[channel]}: min={min:0.000} max={max:0.000} média={sum / pixels.Length:0.000}");
+                builder.AppendLine($"channel {"RGBA"[channel]}: min={min:0.000} max={max:0.000} mean={sum / pixels.Length:0.000}");
             }
             string file = Path.Combine(OutDir, "tex_" + Sanitize(target.name + "_" + texture.name) + ".png");
             File.WriteAllBytes(file, readable.EncodeToPNG());
             UnityEngine.Object.Destroy(readable);
-            builder.AppendLine($"salvo em {file} ({width}x{height})");
+            builder.AppendLine($"saved to {file} ({width}x{height})");
             return builder.ToString();
         }
 
@@ -724,14 +735,14 @@ namespace CurrencyMod
             Type type = AccessTools.TypeByName(typeName);
             if (type == null)
             {
-                return $"tipo não encontrado: {typeName}";
+                return $"type not found: {typeName}";
             }
             var builder = new StringBuilder();
             foreach (Component c in Resources.FindObjectsOfTypeAll(type).OfType<Component>().Where(c => c.gameObject.scene.IsValid()))
             {
-                builder.AppendLine($"{(c.gameObject.activeInHierarchy ? "[ativo]" : "[inativo]")} {PathOf(c.transform)}");
+                builder.AppendLine($"{(c.gameObject.activeInHierarchy ? "[active]" : "[inactive]")} {PathOf(c.transform)}");
             }
-            return builder.Length > 0 ? builder.ToString() : "nenhum";
+            return builder.Length > 0 ? builder.ToString() : "none";
         }
 
         private static string ShowOrHideWindow(string typeName, bool show)
@@ -739,15 +750,15 @@ namespace CurrencyMod
             Type type = AccessTools.TypeByName(typeName.Contains(".") ? typeName : "Amplitude.Mercury.UI." + typeName);
             if (type == null)
             {
-                return $"tipo não encontrado: {typeName}";
+                return $"type not found: {typeName}";
             }
             var window = Resources.FindObjectsOfTypeAll(type).Cast<Amplitude.UI.Windows.UIWindow>().FirstOrDefault(w => w.gameObject.scene.IsValid());
             if (window == null)
             {
-                return "janela não encontrada";
+                return "window not found";
             }
             Amplitude.Mercury.UI.Helpers.WindowsUtils.UpdateWindowVisibility(window, show);
-            return $"ok: {(show ? "aberta" : "fechada")} {type.Name}";
+            return $"ok: {(show ? "opened" : "closed")} {type.Name}";
         }
 
         private static string ListWindows()
@@ -758,7 +769,7 @@ namespace CurrencyMod
             {
                 UITransform ui = window.GetComponent<UITransform>();
                 bool shown = window.gameObject.activeInHierarchy && ui != null && ui.VisibleGlobally;
-                builder.AppendLine($"{(shown ? "[aberta]" : "[fechada]")} {window.GetType().FullName}  {PathOf(window.transform)}");
+                builder.AppendLine($"{(shown ? "[open]" : "[closed]")} {window.GetType().FullName}  {PathOf(window.transform)}");
             }
             return builder.ToString();
         }
@@ -769,7 +780,7 @@ namespace CurrencyMod
             UnityEngine.Object manager = managerType != null ? Resources.FindObjectsOfTypeAll(managerType).FirstOrDefault() : null;
             if (manager == null)
             {
-                return "UIStyleManager não encontrado";
+                return "UIStyleManager not found";
             }
             object all = AccessTools.Property(managerType, "AllStyles")?.GetValue(manager, null);
             var names = new List<string>();
@@ -787,7 +798,7 @@ namespace CurrencyMod
                 }
             }
             names.Sort(StringComparer.Ordinal);
-            return $"{names.Count} estilos\n" + string.Join("\n", names);
+            return $"{names.Count} styles\n" + string.Join("\n", names);
         }
     }
 }

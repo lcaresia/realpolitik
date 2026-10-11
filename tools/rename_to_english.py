@@ -51,14 +51,14 @@ def main():
         if os.path.exists(old):
             git('mv', 'src/CurrencyMod/Diplomacy/%s.cs' % name, 'src/CurrencyMod/Diplomacy/Ai%s.cs' % name[2:])
     changed = 0
-    for base in (SRC, os.path.join(ROOT, 'tools', 'ia-bench', 'src')):
+    for base in (SRC, os.path.join(ROOT, 'tools', 'ai-bench', 'src')):
         for root, _, files in os.walk(base):
             if os.sep + 'obj' in root or os.sep + 'bin' in root:
                 continue
             for name in files:
                 if name.endswith('.cs'):
                     changed += rewrite(os.path.join(root, name))
-    for project in (os.path.join(SRC, 'CurrencyMod.csproj'), os.path.join(ROOT, 'tools', 'ia-bench', 'IaBench.csproj')):
+    for project in (os.path.join(SRC, 'CurrencyMod.csproj'), os.path.join(ROOT, 'tools', 'ai-bench', 'AiBench.csproj')):
         changed += rewrite(project, path_rewrite=True)
     print('files changed:', changed)
 

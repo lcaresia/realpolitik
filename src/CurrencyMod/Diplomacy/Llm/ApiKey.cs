@@ -76,6 +76,6 @@ namespace CurrencyMod.Diplomacy.Llm
         }
 
         /// <summary>Safe description for display (never shows any part of the key).</summary>
-        internal static string Describe() => IsConfigured ? "chave configurada" : $"sem chave (coloque em {FilePath})";
+        internal static string Describe() => IsConfigured ? "key configured" : $"no key (put it in {FilePath})";
     }
 }

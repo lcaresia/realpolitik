@@ -1,10 +1,11 @@
-# Gera os retratos dos ministros com o Codex do WSL (geração de imagem embutida, cota do ChatGPT do jogador).
-# Genérico por cargo (decisão do Lucas em 2026-10-10, para poupar a cota): 12 cargos x 3 épocas x homem/mulher = 72.
-#   épocas: 1 = Antiga/Clássica, 2 = Medieval/Moderna (início), 3 = Industrial/Contemporânea.
-# Cada cargo é uma chamada "codex exec" que salva media/retratos/originais/<cargo>_<época>_<m|f>.png.
-# Medido: 3 imagens gastam ~10% da janela de 5 h e ~1% da semana (plano Plus). Quando a janela enche, o script espera
-# ela renovar (resets_at das sessões do Codex) e continua.
-# Uso (no WSL, por gerar.sh): python3 gerar-retratos.py [cargo ...]   (sem cargo: os que faltam).
+# Generates the ministers' portraits with the Codex in WSL (built-in image generation, the player's ChatGPT quota).
+# Generic per office (Lucas's decision on 2026-10-10, to save quota): 12 offices x 3 eras x man/woman = 72.
+#   eras: 1 = Ancient/Classical, 2 = Medieval/Early Modern, 3 = Industrial/Contemporary.
+# Each office is one "codex exec" call that saves media/retratos/originais/<office>_<era>_<m|f>.png.
+# The office keys (mao, chanceler, ...) are part of the portrait file names the mod loads: they are data, keep them.
+# Measured: 3 images use ~10% of the 5 h window and ~1% of the week (Plus plan). When the window fills up, the script
+# waits for it to reset (resets_at from the Codex sessions) and carries on.
+# Usage (in WSL, through generate.sh): python3 generate_portraits.py [office ...] [--parallel N]   (no office: the missing ones).
 import concurrent.futures, glob, json, os, subprocess, sys, time
 
 BASE = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -21,7 +22,7 @@ ERAS = {
     3: 'INDUSTRIAL TO CONTEMPORARY era (roughly 1850-1970)',
 }
 
-CARGOS = {
+OFFICES = {
     'mao': 'Hand of the Throne, the chief advisor who chairs the council: rich robes, a heavy chain of office, a signet ring',
     'chanceler': 'Chancellor of foreign relations, a diplomat: fine layered garments, a sealed letter or wax seal, an ambassador insignia',
     'guerra': 'Minister of War, a general: armor or military uniform of the era, a cloak or sash, battle insignia',
@@ -39,24 +40,24 @@ CARGOS = {
 GENDERS = {'m': 'a man', 'f': 'a woman'}
 
 
-def files_for(cargo):
-    return [f'{cargo}_{e}_{g}.png' for e in ERAS for g in GENDERS]
+def files_for(office):
+    return [f'{office}_{e}_{g}.png' for e in ERAS for g in GENDERS]
 
 
-def prompt_for(cargo, wanted=None):
-    wanted = wanted or files_for(cargo)
+def prompt_for(office, wanted=None):
+    wanted = wanted or files_for(office)
     lines = [f'Use your built-in image generation tool to create {len(wanted)} separate square images and save each one as PNG in the current folder with exactly the file names below. {STYLE}',
-             f'All of them show the same office: {CARGOS[cargo]}. Middle-aged, dignified; each image a different person with a different ethnicity. Clothing, props and hairstyle must be accurate to the era.', '']
+             f'All of them show the same office: {OFFICES[office]}. Middle-aged, dignified; each image a different person with a different ethnicity. Clothing, props and hairstyle must be accurate to the era.', '']
     for e, era in ERAS.items():
         for g, who in GENDERS.items():
-            if f'{cargo}_{e}_{g}.png' in wanted:
-                lines.append(f'- {cargo}_{e}_{g}.png: {who}, {era}.')
+            if f'{office}_{e}_{g}.png' in wanted:
+                lines.append(f'- {office}_{e}_{g}.png: {who}, {era}.')
     lines += ['', 'Generate them one by one. Do not write any other file. Reply only with the list of saved file names.']
     return '\n'.join(lines)
 
 
 def quota():
-    """(uso da janela de 5 h em %, horário de renovação em epoch) pelo último evento das sessões do Codex."""
+    """(5 h window usage in %, reset time as epoch) from the latest event in the Codex sessions."""
     found = (0.0, 0)
     files = sorted(glob.glob(os.path.expanduser('~/.codex/sessions/**/*.jsonl'), recursive=True), key=os.path.getmtime)[-5:]
     for f in files:
@@ -74,32 +75,32 @@ def quota():
     return found
 
 
-def run(cargo):
+def run(office):
     for attempt in range(4):
-        missing = [f for f in files_for(cargo) if not os.path.exists(os.path.join(OUT, f))]
+        missing = [f for f in files_for(office) if not os.path.exists(os.path.join(OUT, f))]
         if not missing:
-            return f'{cargo}: completo'
+            return f'{office}: complete'
         used, resets = quota()
         if used >= 85 and resets > time.time():
             wait = resets - time.time() + 60
-            print(f'janela de 5 h em {used:.0f}%: esperando {wait / 60:.0f} min', flush=True)
+            print(f'5 h window at {used:.0f}%: waiting {wait / 60:.0f} min', flush=True)
             time.sleep(wait)
         try:
-            subprocess.run([CODEX, 'exec', '--skip-git-repo-check', '--sandbox', 'workspace-write', '--color', 'never', '-C', OUT, prompt_for(cargo, missing)],
+            subprocess.run([CODEX, 'exec', '--skip-git-repo-check', '--sandbox', 'workspace-write', '--color', 'never', '-C', OUT, prompt_for(office, missing)],
                            capture_output=True, text=True, timeout=2400)
         except subprocess.TimeoutExpired:
             pass
-    done = [f for f in files_for(cargo) if os.path.exists(os.path.join(OUT, f))]
-    return f'{cargo}: {len(done)}/6'
+    done = [f for f in files_for(office) if os.path.exists(os.path.join(OUT, f))]
+    return f'{office}: {len(done)}/6'
 
 
 if __name__ == '__main__':
     os.makedirs(OUT, exist_ok=True)
     argv = sys.argv[1:]
     parallel = 1
-    if '--paralelo' in argv:
-        parallel = int(argv[argv.index('--paralelo') + 1])
-    cargos = [a for a in argv if a in CARGOS] or list(CARGOS)
+    if '--parallel' in argv:
+        parallel = int(argv[argv.index('--parallel') + 1])
+    offices = [a for a in argv if a in OFFICES] or list(OFFICES)
     with concurrent.futures.ThreadPoolExecutor(max_workers=parallel) as pool:
-        for line in pool.map(run, cargos):
+        for line in pool.map(run, offices):
             print(line, flush=True)

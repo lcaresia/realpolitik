@@ -47,13 +47,13 @@ namespace CurrencyMod.Diplomacy
                 int number = (int)DownloadableContents.DiplomacyExpansionPack;
                 bool owned = service != null && service.IsSubscribed(number);
                 bool available = service != null && service.IsAvailable(number);
-                return $"expansão na conta: {(owned ? "comprada" : "não comprada")}, {(available ? "ativada no menu de DLCs" : "desativada no menu de DLCs")}"
-                    + $" · na partida: {((Sandbox.DownloadableContents & ExpansionBit) != 0 ? "sim" : "não")}{(Forced ? " (ligada à força)" : string.Empty)}"
+                return $"expansion on the account: {(owned ? "owned" : "not owned")}, {(available ? "enabled in the DLC menu" : "disabled in the DLC menu")}"
+                    + $" · in the game: {((Sandbox.DownloadableContents & ExpansionBit) != 0 ? "yes" : "no")}{(Forced ? " (forced on)" : string.Empty)}"
                     + $" · [IA] ExpansaoEmSaveAntigo = {AiConfig.ExpansionInOldSaves.Value}";
             }
             catch (Exception ex)
             {
-                return "erro ao ler as DLCs: " + ex.Message;
+                return "error reading the DLCs: " + ex.Message;
             }
         }
 

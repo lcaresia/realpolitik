@@ -28,7 +28,7 @@ Código a revisar (≈ 35 mil linhas):
 
 | Pasta | O que é | Linhas |
 |---|---|---|
-| `src\CurrencyMod\` (raiz) | núcleo: economia, câmbio, conversão, textos, `NativeEffects`, saves, comandos `jogo`, kit de desenvolvimento | ~5 mil |
+| `src\CurrencyMod\` (raiz) | núcleo: economia, câmbio, conversão, textos, `NativeEffects`, saves, comandos `game`, kit de desenvolvimento | ~5 mil |
 | `src\CurrencyMod\Diplomacia\` e subpastas | IA de linguagem (DeepSeek): foto do turno, dossiê, prompt, parser, chamada à API, executor de ordens, travas e viés da IA nativa, Congresso, rendição, exércitos, correio, espionagem, conselho, visualizador | ~20 mil |
 | `src\CurrencyMod\NativeUI\` | Banco Central, Posto Comercial, painéis na diplomacia, `NativeUIKit` | ~3,5 mil |
 | `src\CurrencyMod\Trade\` | bloqueio comercial, pedágio, IA de regras, prévia de desvio | ~1,4 mil |
@@ -44,11 +44,11 @@ Código a revisar (≈ 35 mil linhas):
   recarrega sozinho em ~15 s (o `BepInEx\LogOutput.log` mostra "Núcleo carregado (geração N)"). Com
   `-p:SkipDeploy=true` só compila.
 - **Carregador e MoreEmpires:** só com o jogo fechado (o carregador exige reiniciar o jogo; o MoreEmpires instala com
-  `tools\instalar-moreempires.ps1`).
-- **Canal de teste com o jogo aberto:** `_Modding\tools\dev\devcmd.ps1 -Commands @("ia status", "jogo estado")`. Ele
+  `tools\install-moreempires.ps1`).
+- **Canal de teste com o jogo aberto:** `_Modding\tools\dev\devcmd.ps1 -Commands @("ai status", "game state")`. Ele
   escreve em `dev\cmd.txt` e mostra as respostas novas de `dev\out\result.txt`; respostas longas vão para um arquivo
   em `dev\out`. Os comandos estão em `docs\diplomacia-ia.md` §7 e em `docs\guia-telas-nativas.md` §1: `screenshot`,
-  `find`, `tree`, `inspect`, `hover`, `click`, `ia …`, `jogo …`, `trade …`, `nbank …`.
+  `find`, `tree`, `inspect`, `hover`, `click`, `ai …`, `game …`, `trade …`, `nbank …`.
 - `tools\dev\passturn.ps1` passa um turno esperando todas as nações decidirem; `passturns.ps1 -Target N` passa
   vários; `backup.ps1` faz o backup.
 - **Partida de teste:** "Teste16 T76 congresso" (16 impérios, DLC Together We Rule ligado; `jogo carregar Teste16 T76
@@ -60,9 +60,9 @@ Código a revisar (≈ 35 mil linhas):
 
 - A chave da API fica só em `BepInEx\config\deepseek.key`. Nunca a mostre, logue, copie para backup ou pacote, nem
   a cole no chat.
-- **Nunca instale o núcleo com as nações pensando:** antes, `ia status` tem que dizer "pensando agora: 0" (a recarga
+- **Nunca instale o núcleo com as nações pensando:** antes, `ai status` tem que dizer "thinking now: 0" (a recarga
   perde as chamadas em voo). Depois de instalar, espere ~18 s antes de mandar comandos.
-- Não rode `ia reset`. Não mande cartas em nome do usuário sem perguntar. Não use `DiplomaticAmbassy` para bloqueio.
+- Não rode `ai reset`. Não mande cartas em nome do usuário sem perguntar. Não use `DiplomaticAmbassy` para bloqueio.
 - Fora do escopo: o pacote de instalação e mais de 16 impérios.
 - **Não mude balanceamento nem decisões de design sem perguntar** (valores do `.cfg`, regras do jogo, o que as nações
   podem fazer). Conta errada é bug; "acho que deveria ser outro número" não é.

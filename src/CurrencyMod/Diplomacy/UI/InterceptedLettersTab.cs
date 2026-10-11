@@ -650,38 +650,38 @@ namespace CurrencyMod.Diplomacy.UI
         }
 
         /// <summary>
-        /// "ia espionagem aba": opens the espionage view already on the Letters tab. "ia espionagem aba furtividade|deteccao":
-        /// the same as clicking the game's tab (StatModeTab_Switch). "ia espionagem aba estado": which tab is active.
+        /// "ai espionage tab": opens the espionage view already on the Letters tab. "ai espionage tab stealth|detection":
+        /// the same as clicking the game's tab (StatModeTab_Switch). "ai espionage tab state": which tab is active.
         /// </summary>
         internal static string DevOpen(string which)
         {
             AllMilitaryForcesStealthLayerWindow target = WindowsUtils.GetWindow<AllMilitaryForcesStealthLayerWindow>();
-            if (which == "furtividade" || which == "deteccao")
+            if (which == "stealth" || which == "detection")
             {
                 if (target == null || !target.Shown)
                 {
-                    return "erro: a janela de espionagem não está aberta";
+                    return "error: the espionage window is not open";
                 }
-                target.StatModeTab_Switch(which == "furtividade" ? AllMilitaryForcesStealthLayerStatMode.Stealth : AllMilitaryForcesStealthLayerStatMode.Detection);
-                return $"ok: clique na aba {which}";
+                target.StatModeTab_Switch(which == "stealth" ? AllMilitaryForcesStealthLayerStatMode.Stealth : AllMilitaryForcesStealthLayerStatMode.Detection);
+                return $"ok: clicked the {which} tab";
             }
-            if (which == "estado")
+            if (which == "state")
             {
                 Transform listing = target?.transform.Find(ListingPath);
-                return $"janela {(target != null && target.Shown ? "aberta" : "fechada")} · modo do jogo {target?.currentLayerStatMode} · aba Cartas {(Active ? "ativa" : "inativa")}"
-                    + $" · listagem {(listing != null && listing.GetComponent<UITransform>().VisibleSelf ? "visível" : "escondida")}"
-                    + $" · painel {(Instance?.panel != null && Instance.panel.GetComponent<UITransform>().VisibleSelf ? "visível" : "escondido")}"
-                    + $" · altura do painel {Instance?.panel?.GetComponent<UITransform>().Height:0} · conteúdo {Instance?.listTable?.Height:0}";
+                return $"window {(target != null && target.Shown ? "open" : "closed")} · game mode {target?.currentLayerStatMode} · Letters tab {(Active ? "active" : "inactive")}"
+                    + $" · listing {(listing != null && listing.GetComponent<UITransform>().VisibleSelf ? "visible" : "hidden")}"
+                    + $" · panel {(Instance?.panel != null && Instance.panel.GetComponent<UITransform>().VisibleSelf ? "visible" : "hidden")}"
+                    + $" · panel height {Instance?.panel?.GetComponent<UITransform>().Height:0} · content {Instance?.listTable?.Height:0}";
             }
             ControlBanner banner = WindowsUtils.GetWindow<ControlBanner>();
             if (banner == null)
             {
-                return "erro: barra de controle não existe";
+                return "error: control banner does not exist";
             }
             banner.RequestStealthState();
             pendingOpen = true;
             pendingSince = Time.unscaledTime;
-            return "ok: espionagem aberta; a aba Cartas ativa quando a janela aparecer";
+            return "ok: espionage opened; the Letters tab activates when the window appears";
         }
 
         private static bool pendingOpen;

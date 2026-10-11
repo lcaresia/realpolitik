@@ -32,8 +32,8 @@ Context for any key: `_Modding\src\CurrencyMod\Lang\_chaves.tsv` (tab-separated:
 ## How to work
 - Translate in batches (e.g. 150 keys at a time). Read the JSON, write the translated JSON back (UTF-8, valid JSON — escape `"` and `\` inside values). Keep keys verbatim — the safest way is to copy each key line and only fill the value.
 - After writing, normalize and validate (both scripts only touch your language):
-  `powershell -ExecutionPolicy Bypass -File "C:\Program Files (x86)\Steam\steamapps\common\Humankind\_Modding\tools\dev\extrair-textos.ps1" -Idioma <LANG>`
-  `powershell -ExecutionPolicy Bypass -File "C:\Program Files (x86)\Steam\steamapps\common\Humankind\_Modding\tools\dev\validar-traducao.ps1" -Idioma <LANG>`
+  `powershell -ExecutionPolicy Bypass -File "C:\Program Files (x86)\Steam\steamapps\common\Humankind\_Modding\tools\dev\extract-texts.ps1" -Language <LANG>`
+  `powershell -ExecutionPolicy Bypass -File "C:\Program Files (x86)\Steam\steamapps\common\Humankind\_Modding\tools\dev\validate-translation.ps1" -Language <LANG>`
   The extractor keeps your values and re-sorts the file; if it reports "traduções de textos que saíram do código", you changed a key — fix it. The validator must end with `0 vazios, 0 com problema`.
 - Do not edit any other file. Do not build.
 

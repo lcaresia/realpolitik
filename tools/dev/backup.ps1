@@ -1,8 +1,8 @@
-﻿# Backup do projeto de modding em Documentos\HumankindModding\backups\HumankindModding_<data>.zip: src (sem bin/obj),
-# docs, research, cronicas, tools, README, DLLs instaladas, config do mod e memória do Claude.
-# NUNCA inclui BepInEx\config\deepseek.key (a chave da API) nem BepInEx\config\credenciais (chaves e logins dos
-# provedores): o script para com erro se algum deles entrar na lista.
-# Uso: powershell -File _Modding\tools\dev\backup.ps1
+﻿# Backup of the modding project to Documents\HumankindModding\backups\HumankindModding_<date>.zip: src (without bin/obj),
+# docs, research, cronicas, tools, README, installed DLLs, the mod's config and Claude's memory.
+# NEVER includes BepInEx\config\deepseek.key (the API key) nor BepInEx\config\credenciais (the providers' keys and
+# logins): the script stops with an error if any of them gets into the list.
+# Usage: powershell -File _Modding\tools\dev\backup.ps1
 $ErrorActionPreference = 'Stop'
 Add-Type -AssemblyName System.IO.Compression
 Add-Type -AssemblyName System.IO.Compression.FileSystem
@@ -42,9 +42,9 @@ Add-File (Join-Path $root 'BepInEx\config\lucas.humankind.currency.cfg') 'instal
 Add-File (Join-Path $root 'BepInEx\config\lucas.humankind.moreempires.cfg') 'installed\config\lucas.humankind.moreempires.cfg'
 Add-Tree $memory 'claude-memory'
 
-if ($entries | Where-Object { $_[0] -match 'deepseek\.key' }) { throw 'chave da API entrou na lista' }
-# Chaves e logins dos provedores (criptografados, mas pessoais) nunca vão para o backup.
-if ($entries | Where-Object { $_[0] -match '\\credenciais\\' -or $_[1] -match '\\credenciais\\' }) { throw 'credenciais dos provedores entraram na lista' }
+if ($entries | Where-Object { $_[0] -match 'deepseek\.key' }) { throw 'the API key got into the list' }
+# The providers' keys and logins (encrypted, but personal) never go into the backup.
+if ($entries | Where-Object { $_[0] -match '\\credenciais\\' -or $_[1] -match '\\credenciais\\' }) { throw 'the providers credentials got into the list' }
 
 $zip = [IO.Compression.ZipFile]::Open($zipPath, 'Create')
 try {
@@ -59,4 +59,4 @@ try {
 } finally { $zip.Dispose() }
 
 $len = (Get-Item $zipPath).Length
-"$zipPath - $($entries.Count) arquivos, $([Math]::Round($len / 1KB)) KB"
+"$zipPath - $($entries.Count) files, $([Math]::Round($len / 1KB)) KB"

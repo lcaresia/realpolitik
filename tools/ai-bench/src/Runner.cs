@@ -5,12 +5,12 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using Newtonsoft.Json.Linq;
 
-namespace IaBench
+namespace AiBench
 {
-    /// <summary>Roda uma variante nos cenários fixos e guarda resposta, raciocínio, uso e métricas objetivas.</summary>
+    /// <summary>Runs a variant on the fixed scenarios and stores the answer, reasoning, usage and objective metrics.</summary>
     internal static class Runner
     {
-        internal static string ScenarioFile = "cenarios.txt";
+        internal static string ScenarioFile = "scenarios.txt";
 
         internal static List<(string file, string label)> Scenarios()
         {
@@ -25,7 +25,7 @@ namespace IaBench
 
         internal static int Run(string variant, int reps, string effort = "low")
         {
-            // "variante@off" ou "variante@high": o nível de raciocínio faz parte do nome (pasta própria de resultados).
+            // "variant@off" or "variant@high": the reasoning level is part of the name (its own results folder).
             if (variant.Contains("@"))
             {
                 effort = variant.Substring(variant.IndexOf('@') + 1);
@@ -34,12 +34,12 @@ namespace IaBench
             {
                 variant += "@" + effort;
             }
-            string folder = Path.Combine(Bench.Root, "resultados", variant.Replace(':', '_'));
+            string folder = Path.Combine(Bench.Root, "results", variant.Replace(':', '_'));
             Directory.CreateDirectory(folder);
             var jobs = (from s in Scenarios() from r in Enumerable.Range(1, reps) select (s.file, rep: r))
                 .Where(j => !File.Exists(Path.Combine(folder, $"{Id(j.file)}_r{j.rep}.json")))
                 .ToList();
-            Console.WriteLine($"{variant}: {jobs.Count} chamadas a fazer");
+            Console.WriteLine($"{variant}: {jobs.Count} calls to make");
             jobs.AsParallel().WithDegreeOfParallelism(8).ForAll(job =>
             {
                 JObject log = JObject.Parse(File.ReadAllText(Path.Combine(Bench.Root, "corpus", job.file)));
@@ -54,19 +54,19 @@ namespace IaBench
                     ["resposta"] = r.Content, ["raciocinioDoModelo"] = r.Reasoning, ["entradaChars"] = system.Length + user.Length,
                 };
                 File.WriteAllText(Path.Combine(folder, $"{Id(job.file)}_r{job.rep}.json"), record.ToString());
-                Console.WriteLine($"  {Id(job.file)} r{job.rep}: {(r.Ok ? "ok" : r.Error)} fim={r.Finish} raciocínio={r.ReasoningTokens} US$ {r.Cost:0.0000}");
+                Console.WriteLine($"  {Id(job.file)} r{job.rep}: {(r.Ok ? "ok" : r.Error)} finish={r.Finish} reasoning={r.ReasoningTokens} US$ {r.Cost:0.0000}");
             });
-            Console.WriteLine("placar: US$ " + ((double)Scoreboard.Read()["gastoUSD"]).ToString("0.0000"));
+            Console.WriteLine("score: US$ " + ((double)Scoreboard.Read()["gastoUSD"]).ToString("0.0000"));
             return 0;
         }
 
-        /// <summary>Tabela comparando as variantes já rodadas.</summary>
+        /// <summary>Table comparing the variants already run.</summary>
         internal static int Report(string variants)
         {
-            Console.WriteLine("variante                 n   ok%  cortes  entrada  cache%  raciocínio  resposta  US$/decisão(pico)  cartas  palavras  ações  nomes?  códigosNaCarta");
+            Console.WriteLine("variant                  n   ok%    cuts    input  cache%   reasoning    answer  US$/decision(peak) letters     words actions names? codesInLetter");
             foreach (string variant in variants.Split(','))
             {
-                string folder = Path.Combine(Bench.Root, "resultados", variant.Replace(':', '_'));
+                string folder = Path.Combine(Bench.Root, "results", variant.Replace(':', '_'));
                 if (!Directory.Exists(folder))
                 {
                     continue;
@@ -78,8 +78,8 @@ namespace IaBench
                 double input = Avg(r => (int)r["uso"]["entrada"]);
                 double reasoning = Avg(r => (int)r["uso"]["raciocinio"]);
                 double answer = Avg(r => (int)r["uso"]["saida"] - (int)r["uso"]["raciocinio"]);
-                // Custo comparável entre variantes: no pico, com o cache simulado do jogo (o do servidor na bancada
-                // depende de quem rodou antes) e a saída real.
+                // Cost comparable across variants: at peak, with the game's simulated cache (the server cache on the bench
+                // depends on who ran before) and the real output.
                 double cacheShare = Simulate.CacheShare(Variants.Spec(variant));
                 double cost = Avg(r => ((int)r["uso"]["entrada"] * ((1 - cacheShare) * 0.30 + cacheShare * 0.006) + (int)r["uso"]["saida"] * 1.20) / 1_000_000);
                 Console.WriteLine($"{variant,-22} {runs.Count,3} {100 * ok,5:0} {cut,6} {input,8:0} {100 * cacheShare,6:0} {reasoning,10:0} {answer,9:0} {cost,17:0.00000}"
@@ -90,7 +90,7 @@ namespace IaBench
         }
     }
 
-    /// <summary>Métricas objetivas de uma resposta, aproximando o validador do mod (DecisionParser/Grounding).</summary>
+    /// <summary>Objective metrics of an answer, approximating the mod's validator (DecisionParser/Grounding).</summary>
     internal static class Metrics
     {
         internal static JObject Measure(string content, string finish, string dossier, string system)
@@ -125,7 +125,7 @@ namespace IaBench
             {
                 string text = (string)letter["texto"] ?? "";
                 codesInLetters += Regex.Matches(text, @"\b[ACTGMEK]\d{1,3}\b").Count;
-                // Nome próprio no meio da frase que não aparece em lugar nenhum do dossiê nem do sistema.
+                // Proper noun mid-sentence that appears nowhere in the dossier or the system prompt.
                 foreach (Match name in Regex.Matches(text, @"(?<=[a-zà-ú,;:] )\p{Lu}[\p{Ll}'’-]{2,}"))
                 {
                     if (known.IndexOf(name.Value, StringComparison.Ordinal) < 0)
@@ -137,7 +137,7 @@ namespace IaBench
             m["nomesDesconhecidos"] = unknown.Distinct().Count();
             m["listaNomes"] = string.Join(", ", unknown.Distinct());
             m["codigosNaCarta"] = codesInLetters;
-            // Códigos usados nas ações que não existem no dossiê (exército, cidade, território, queixa...).
+            // Codes used in the actions that do not exist in the dossier (army, city, territory, grievance...).
             string actions = json["acoes"]?.ToString() ?? "";
             var missing = Regex.Matches(actions, @"\b[ACTGMEK]\d{1,3}\b").Cast<Match>().Select(x => x.Value).Distinct()
                 .Where(code => !Regex.IsMatch(dossier, @"\b" + code + @"\b")).ToList();

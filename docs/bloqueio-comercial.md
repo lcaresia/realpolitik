@@ -50,9 +50,9 @@ entra no custo de cada passo (postfix em `TradePathfindContext.GetAdjacentTransi
     `TradeNodes`. Por isso o primeiro caminho saía com o piso da manutenção, e nada pedia recálculo. O pós-fixo
     `StartTradePatch` marca `NeedPathRefresh`, e o `OnOrderProcessedOrTurnBeginOrTurnEnd` do jogo refaz o caminho
     com os valores reais. Vale também quando a rota ganha mercadoria.
-  - **Testes no jogo:** `jogo pedagio teste E2 T55 T56 E7 E12 50` (contexto da rota E7↔E12) dá +49,53 tanto entrando
+  - **Testes no jogo:** `game toll test E2 T55 T56 E7 E12 50` (contexto da rota E7↔E12) dá +49,53 tanto entrando
     de fora quanto vindo do posto livre do mesmo dono (antes: +0 nesse passo). Rotas novas criadas com
-    `jogo comprar` aparecem no log ("StartTrade … marcada para recalcular") e seguem ativas depois do recálculo.
+    `game buy` aparecem no log ("StartTrade … marcada para recalcular") e seguem ativas depois do recálculo.
   - **Índice das regras:** o `Rebuild` agora lê e publica dentro do `CurrencyManager.Lock`, e baixa o `stale` antes de
     ler. Antes, uma regra mudada no meio de um `Rebuild` era apagada pelo índice velho até a próxima mudança.
 
@@ -93,8 +93,8 @@ Pedido do usuário: ao definir um preço novo, mostrar **na hora** quantas rotas
 
 ## 5. Comandos de teste
 
-`jogo rotas`, `jogo pedagio …`, `trade`, `trade open <T#>`, `trade price <E#> up|down`,
-`trade previa <dono> <território|-1> <alvo> <preço> [bloqueio]`, `trade costs`, `trade mine`. Descrição em
+`game routes`, `game toll …`, `trade`, `trade open <T#>`, `trade price <E#> up|down`,
+`trade preview <owner> <territory|-1> <target> <price> [block]`, `trade costs`, `trade mine`. Descrição em
 `docs\diplomacia-ia.md` §7.
 
 ## 6. Configuração (`[BloqueioComercial]`)

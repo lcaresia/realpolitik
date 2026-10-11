@@ -1,10 +1,11 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <!-- Bancada de custo × qualidade da IA (fora do jogo). Não vai no pacote de venda. Ver README.md. -->
+  <!-- AI cost x quality bench (outside the game). Not shipped in the release package. See README.md. -->
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>net472</TargetFramework>
-    <AssemblyName>IaBench</AssemblyName>
+    <AssemblyName>AiBench</AssemblyName>
+    <RootNamespace>AiBench</RootNamespace>
     <LangVersion>latest</LangVersion>
     <Nullable>disable</Nullable>
     <GameDir>$(MSBuildThisFileDirectory)..\..\..\</GameDir>
@@ -20,7 +21,7 @@
 
   <ItemGroup>
     <Compile Include="src\**\*.cs" />
-    <!-- A credencial é lida pelo mesmo código do mod (DPAPI): a bancada nunca vê o arquivo nem mostra a chave. -->
+    <!-- The credential is read by the same code as the mod (DPAPI): the bench never sees the file or shows the key. -->
     <Compile Include="$(ModSrc)Diplomacy\Llm\Providers\Credentials.cs" Link="mod\Credentials.cs" />
     <Compile Include="$(ModSrc)Diplomacy\Llm\ApiKey.cs" Link="mod\ApiKey.cs" />
   </ItemGroup>

@@ -7,15 +7,15 @@ using System.Text;
 using CurrencyMod.Diplomacy.Llm.Providers;
 using Newtonsoft.Json.Linq;
 
-namespace IaBench
+namespace AiBench
 {
-    /// <summary>Uma chamada ao DeepSeek, com o corpo montado pela bancada (para testar variações do corpo do mod).</summary>
+    /// <summary>One DeepSeek call, with the body built by the bench (to test variations of the mod's request body).</summary>
     internal sealed class Call
     {
         public string System;
         public List<(string role, string content)> Turns = new List<(string, string)>();
         public int MaxTokens = 12000;
-        /// <summary>"nested" (como o mod faz hoje), "top" (como a documentação pede) ou "off".</summary>
+        /// <summary>"nested" (as the mod does today), "top" (as the documentation asks) or "off".</summary>
         public string EffortPlacement = "top";
         public string Effort = "low";
         public string Model = "deepseek-flash";
@@ -32,6 +32,7 @@ namespace IaBench
         public double Cost;
         public double Seconds;
 
+        // The JSON keys stay as they were: they are stored in the existing results\ records, which the table command reads.
         public JObject ToJson() => new JObject
         {
             ["ok"] = Ok, ["erro"] = Error, ["fim"] = Finish, ["entrada"] = Prompt, ["cache"] = Hit, ["semCache"] = Miss,
@@ -83,7 +84,7 @@ namespace IaBench
             string bearer = Credentials.Get("deepseek")?.Bearer;
             if (string.IsNullOrEmpty(bearer))
             {
-                result.Error = "sem credencial do DeepSeek";
+                result.Error = "no DeepSeek credential";
                 return result;
             }
             try
@@ -147,7 +148,7 @@ namespace IaBench
             return result;
         }
 
-        /// <summary>Pico do DeepSeek: 01–04 e 06–10 UTC, de segunda a sexta (o mesmo padrão do .cfg).</summary>
+        /// <summary>DeepSeek peak hours: 01–04 and 06–10 UTC, Monday to Friday (same default as the .cfg).</summary>
         internal static bool IsPeak(DateTime utc)
         {
             if (utc.DayOfWeek == DayOfWeek.Saturday || utc.DayOfWeek == DayOfWeek.Sunday)
@@ -158,7 +159,7 @@ namespace IaBench
         }
     }
 
-    /// <summary>Placar do gasto da bancada (placar.json): toda chamada soma, inclusive as que falham.</summary>
+    /// <summary>Bench spending scoreboard (placar.json): every call adds up, failed ones included.</summary>
     internal static class Scoreboard
     {
         private static readonly object Gate = new object();

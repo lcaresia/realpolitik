@@ -1275,15 +1275,18 @@ namespace CurrencyMod.Diplomacy.UI
 
         // ---------------- Test commands and removal ----------------
 
-        /// <summary>"ia provedor tela abrir [id]|fechar|secao id": drives the screen through the dev channel.</summary>
+        /// <summary>
+        /// "ai provider screen open [id|usage]|close|section id|list N|pick N I|enter": drives the screen through the dev
+        /// channel. "usage" is the usage section, whose section id is null.
+        /// </summary>
         internal static string DevCommand(string args)
         {
             string[] parts = (args ?? string.Empty).Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
-            string sub = parts.Length > 0 ? parts[0] : "abrir";
-            string id = parts.Length > 1 ? (parts[1] == "uso" ? null : parts[1]) : null;
+            string sub = parts.Length > 0 ? parts[0] : "open";
+            string id = parts.Length > 1 ? (parts[1] == "usage" ? null : parts[1]) : null;
             switch (sub)
             {
-                case "abrir":
+                case "open":
                     if (CentralBankWindow.IsInGame)
                     {
                         ProvidersButtons.OpenInGame(section: id); // in game, always on top of the pause menu
@@ -1292,21 +1295,21 @@ namespace CurrencyMod.Diplomacy.UI
                     {
                         SetOpen(true, id);
                     }
-                    return Instance == null ? "erro: doador ainda não está pronto" : "ok: abrindo";
-                case "fechar":
+                    return Instance == null ? "error: donor not ready yet" : "ok: opening";
+                case "close":
                     SetOpen(false);
-                    return "ok: fechada";
-                case "secao":
+                    return "ok: closed";
+                case "section":
                     Instance?.SelectSection(id);
-                    return Instance == null ? "erro: tela não criada" : "ok: seção " + (id ?? "uso");
-                case "lista":
+                    return Instance == null ? "error: screen not created" : "ok: section " + (id ?? "usage");
+                case "list":
                 {
-                    // "ia provedor tela lista 2": opens the dropdown of row N (for screenshots).
+                    // "ai provider screen list 2": opens the dropdown of row N (for screenshots).
                     int index = parts.Length > 1 && int.TryParse(parts[1], out int n) ? n : 0;
                     Row row = Instance?.DropRows().ElementAtOrDefault(index);
                     if (row == null)
                     {
-                        return "erro: linha não encontrada";
+                        return "error: row not found";
                     }
                     bool openNow = !row.Drop.Popup.VisibleSelf;
                     if (openNow)
@@ -1314,17 +1317,17 @@ namespace CurrencyMod.Diplomacy.UI
                         row.Root.SetAsLastSibling();
                     }
                     row.Drop.UpdatePopupVisibility(openNow, instant: true);
-                    return "ok: lista " + index + (openNow ? " aberta" : " fechada");
+                    return "ok: list " + index + (openNow ? " open" : " closed");
                 }
-                case "escolher":
+                case "pick":
                 {
-                    // "ia provedor tela escolher <row> <index>": the same as clicking an option in the list.
+                    // "ai provider screen pick <row> <index>": the same as clicking an option in the list.
                     int index = parts.Length > 1 && int.TryParse(parts[1], out int n) ? n : -1;
                     int option = parts.Length > 2 && int.TryParse(parts[2], out int o) ? o : -1;
                     Row row = Instance?.DropRows().ElementAtOrDefault(index);
                     if (row == null || option < 0 || option >= row.Choices.Count)
                     {
-                        return "erro: linha ou opção inválida";
+                        return "error: invalid row or option";
                     }
                     row.Drop.SelectIndex(option);
                     return "ok: " + row.Choices[option].Text;
@@ -1335,13 +1338,13 @@ namespace CurrencyMod.Diplomacy.UI
                     UITextFieldResponder responder = Instance?.keyField?.TextFieldResponder;
                     if (responder == null)
                     {
-                        return "erro: campo da chave não está na tela";
+                        return "error: key field is not on screen";
                     }
                     responder.OnReturnKeyDown(false);
-                    return "ok: Enter no campo (ligado: " + (Instance.hookedResponder == responder ? "sim" : "não") + ")";
+                    return "ok: Enter in the field (hooked: " + (Instance.hookedResponder == responder ? "yes" : "no") + ")";
                 }
                 default:
-                    return "uso: ia provedor tela abrir [id|uso]|fechar|secao id|lista N|escolher N I|enter";
+                    return "usage: ai provider screen open [id|usage]|close|section id|list N|pick N I|enter";
             }
         }
 

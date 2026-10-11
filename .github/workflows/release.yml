@@ -34,7 +34,7 @@ jobs:
 
       - name: Reference assemblies (metadata only) + BepInEx core
         shell: pwsh
-        run: ./game/_Modding/tools/ci/preparar-referencias.ps1
+        run: ./game/_Modding/tools/ci/prepare-references.ps1
 
       - name: Version
         id: version
@@ -52,7 +52,7 @@ jobs:
 
       - name: Build (compile, whitelist, secret gate, Setup, zip)
         shell: powershell
-        run: powershell -ExecutionPolicy Bypass -File game/_Modding/tools/gerar-release.ps1 -Versao ${{ steps.version.outputs.value }}
+        run: powershell -ExecutionPolicy Bypass -File game/_Modding/tools/make-release.ps1 -Version ${{ steps.version.outputs.value }}
 
       - uses: actions/upload-artifact@v4
         with:

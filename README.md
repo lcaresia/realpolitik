@@ -255,13 +255,13 @@ Tested in game with 16 empires on Tiny, Normal and Huge maps. Saves with more th
   - Scripts live in `tools\dev\` (`devcmd.ps1`, `passturn.ps1`, `passturns.ps1`).
 - **Native UI kit** (`NativeUIKit.cs`) plus a full guide ([docs/guia-telas-nativas.md](docs/guia-telas-nativas.md)):
   how to clone the game's own widgets into new screens, tabs and tooltips.
-- **ia-bench** (`tools\ia-bench\`): replays real decisions outside the game to compare models and prompts, including
+- **ai-bench** (`tools\ai-bench\`): replays real decisions outside the game to compare models and prompts, including
   blind A/B tests.
-- **Translation tools:** `extrair-textos.ps1` and `validar-traducao.ps1`.
+- **Translation tools:** `extract-texts.ps1` and `validate-translation.ps1`.
 
 ### 8. Installer and release pipeline
 
-- **`tools\gerar-release.ps1`:**
+- **`tools\make-release.ps1`:**
   - builds everything in Release, deterministic and without symbols;
   - stages only the files on a whitelist;
   - runs a secret gate that scans every file, including DLLs, for keys and local paths;
@@ -298,7 +298,7 @@ reference assemblies of the game and Unity in [`refs/`](refs/README.md), with no
 
 ```
 git clone https://github.com/lcaresia/realpolitik.git _Modding
-powershell -ExecutionPolicy Bypass -File _Modding\tools\ci\preparar-referencias.ps1
+powershell -ExecutionPolicy Bypass -File _Modding\tools\ci\prepare-references.ps1
 dotnet build _Modding\src\CurrencyMod -c Release -p:SkipDeploy=true
 ```
 
@@ -307,7 +307,7 @@ To develop against a real install, clone into the game folder as `_Modding`
 while the game is running. To build the installer you also need Inno Setup 6:
 
 ```
-powershell -ExecutionPolicy Bypass -File _Modding\tools\gerar-release.ps1 -Versao 1.2.0
+powershell -ExecutionPolicy Bypass -File _Modding\tools\make-release.ps1 -Version 1.2.0
 ```
 
 ## How releases are built (transparency)
@@ -335,7 +335,7 @@ Every Setup.exe on the Releases page is built by GitHub Actions from the public 
 | `src/MoreEmpires/` | Separate plugin: 2 to 16 empires on every map size. |
 | `refs/` | Metadata-only reference assemblies, so CI can build without the game. |
 | `installer/` | Inno Setup script, texts in 5 languages, art, the BepInEx redistributable and its licenses. |
-| `tools/` | Release pipeline, CI helper, dev scripts (`tools/dev/`), AI benchmark (`ia-bench/`). |
+| `tools/` | Release pipeline, CI helper, dev scripts (`tools/dev/`), AI benchmark (`ai-bench/`). |
 | `docs/` | Technical docs (mostly in Portuguese). Start with `docs/mapa-do-projeto.md`. |
 | `research/` | Notes on the game's internals behind each feature. |
 | `media/` | Trailer, GIFs and screenshots used in this README. |

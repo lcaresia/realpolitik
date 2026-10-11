@@ -43,6 +43,7 @@ namespace CurrencyMod
             internal double InterestRate;
             internal double InflationRate;
             internal double SmoothedIncome;
+            internal double Gdp;
             internal bool Active;
 
             internal double StabilityLoss => InflationLoss + UnemploymentLoss;
@@ -101,6 +102,7 @@ namespace CurrencyMod
                 InterestRate = currency.InterestRate,
                 InflationRate = currency.InflationRate,
                 SmoothedIncome = currency.SmoothedIncome,
+                Gdp = currency.Gdp,
                 Active = true,
             };
         }
@@ -528,8 +530,18 @@ namespace CurrencyMod
         /// Interest on the balance (or debt) in one turn. A positive balance with a positive real rate has a soft cap: the
         /// bank invests well up to ~N turns of income and the rest yields less and less. Inflation above interest erodes
         /// the whole balance; debt pays a spread, and high inflation erodes debt too. The income projection uses the same math.
+        /// The cap's base is the larger of income and a share of GDP: an empire with a big treasury and a deficit (imports
+        /// paid from savings) still earns on it; with income alone as the base, a negative income collapsed the cap to the
+        /// 20-per-turn floor and a 2,600 balance yielded almost nothing (real save, 2026-10-11).
         /// </summary>
-        internal static double InterestFlow(double stock, double interestRate, double inflationRate, double smoothedIncome)
+        /// <summary>Balance that yields almost fully: N turns of the larger of income (min 20) and a share of GDP.</summary>
+        internal static double SavingsCapacity(double smoothedIncome, double gdp)
+        {
+            double basis = Math.Max(Math.Max(20.0, smoothedIncome), EconomyConfig.SavingsCapacityGdpShare.Value * Math.Max(0, gdp));
+            return EconomyConfig.SavingsCapacityTurns.Value * basis;
+        }
+
+        internal static double InterestFlow(double stock, double interestRate, double inflationRate, double smoothedIncome, double gdp = 0)
         {
             double maxRate = EconomyConfig.MaxRealRatePerTurn.Value;
             if (stock < 0)
@@ -541,7 +553,7 @@ namespace CurrencyMod
             {
                 return stock * realRate;
             }
-            double capacity = EconomyConfig.SavingsCapacityTurns.Value * Math.Max(20.0, smoothedIncome);
+            double capacity = SavingsCapacity(smoothedIncome, gdp);
             double invested = capacity > 0 ? stock * capacity / (stock + capacity) : stock;
             return invested * realRate;
         }
@@ -559,7 +571,7 @@ namespace CurrencyMod
             }
 
             double stock = (float)empire.MoneyStock.Value;
-            double interestFlow = InterestFlow(stock, currency.InterestRate, currency.InflationRate, currency.SmoothedIncome);
+            double interestFlow = InterestFlow(stock, currency.InterestRate, currency.InflationRate, currency.SmoothedIncome, currency.Gdp);
 
             // Interest on money income (off by default: the cost of interest moved to production).
             double income = (float)empire.MoneyNet.Value;

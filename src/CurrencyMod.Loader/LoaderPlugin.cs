@@ -8,9 +8,9 @@ using UnityEngine;
 namespace CurrencyMod.Loader
 {
     /// <summary>
-    /// Plugin fixo que carrega o núcleo do CurrencyMod (BepInEx\CurrencyModCore\CurrencyMod.dll)
-    /// e o recarrega a quente quando a DLL muda ou quando o comando "reload" chega.
-    /// O núcleo expõe CurrencyMod.ModEntry com Start/Stop/Command (chamados por reflexão).
+    /// Fixed plugin that loads the CurrencyMod core (BepInEx\CurrencyModCore\CurrencyMod.dll)
+    /// and hot-reloads it when the DLL changes or when the "reload" command arrives.
+    /// The core exposes CurrencyMod.ModEntry with Start/Stop/Command (called through reflection).
     /// </summary>
     [BepInPlugin("lucas.humankind.currency", "CurrencyMod", "1.1.0")]
     public class LoaderPlugin : BaseUnityPlugin
@@ -31,7 +31,7 @@ namespace CurrencyMod.Loader
         private void Awake()
         {
             corePath = Path.Combine(Paths.BepInExRootPath, "CurrencyModCore", "CurrencyMod.dll");
-            // Canal de comandos de desenvolvimento: só existe em máquinas com a pasta _Modding (instalação de dev).
+            // Development command channel: only exists on machines with the _Modding folder (dev install).
             string modding = Path.Combine(Paths.GameRootPath, "_Modding");
             string devDir = Path.Combine(modding, "dev");
             if (Directory.Exists(modding))
@@ -68,7 +68,7 @@ namespace CurrencyMod.Loader
                 pendingSince = -1f;
                 return;
             }
-            // Espera a DLL parar de mudar (cópia do build) antes de recarregar.
+            // Waits for the DLL to stop changing (build copy) before reloading.
             if (writeTime != pendingWriteTime)
             {
                 pendingWriteTime = writeTime;
@@ -77,7 +77,7 @@ namespace CurrencyMod.Loader
             }
             if (pendingSince >= 0 && Time.unscaledTime - pendingSince > 1.0f)
             {
-                Logger.LogInfo("Nova versão do núcleo detectada, recarregando...");
+                Logger.LogInfo("New core version detected, reloading...");
                 Reload();
             }
         }
@@ -96,7 +96,7 @@ namespace CurrencyMod.Loader
             }
             catch (IOException)
             {
-                return; // arquivo ainda sendo escrito
+                return; // file still being written
             }
 
             foreach (string raw in lines)
@@ -109,7 +109,7 @@ namespace CurrencyMod.Loader
                 if (line.Equals("reload", StringComparison.OrdinalIgnoreCase))
                 {
                     Reload();
-                    WriteResult(line, entryType != null ? $"ok: núcleo recarregado (geração {generation})" : "erro: o núcleo não carregou (ver BepInEx\\LogOutput.log)");
+                    WriteResult(line, entryType != null ? $"ok: core reloaded (generation {generation})" : "error: the core did not load (see BepInEx\\LogOutput.log)");
                     continue;
                 }
                 InvokeEntry("Command", line);
@@ -126,7 +126,7 @@ namespace CurrencyMod.Loader
         {
             if (!File.Exists(corePath))
             {
-                Logger.LogError($"Núcleo não encontrado em {corePath}.");
+                Logger.LogError($"Core not found at {corePath}.");
                 return;
             }
             try
@@ -144,23 +144,23 @@ namespace CurrencyMod.Loader
 
                 entryType.GetMethod("Start").Invoke(null, new object[] { Logger, Config, host, carriedState, resultPath });
                 carriedState = null;
-                Logger.LogInfo($"Núcleo carregado (geração {generation}).");
+                Logger.LogInfo($"Core loaded (generation {generation}).");
             }
             catch (Exception ex)
             {
-                Logger.LogError($"Falha ao carregar o núcleo: {ex}");
+                Logger.LogError($"Failed to load the core: {ex}");
                 entryType = null;
-                // Sem isto a mesma DLL nunca mais era tentada (a data já constava como carregada) e o mod ficava
-                // desligado até um build novo. Ex.: antivírus ou o build ainda segurando o arquivo. Tenta de novo em ~5 s.
+                // Without this the same DLL was never tried again (its date already counted as loaded) and the mod stayed
+                // off until a new build. E.g. an antivirus or the build still holding the file. Tries again in ~5 s.
                 loadedWriteTime = default(DateTime);
                 pendingSince = Time.unscaledTime + 4f;
             }
         }
 
         /// <summary>
-        /// A Unity associa componentes (MonoBehaviour) pelo nome do assembly. Se toda versão
-        /// recarregada tivesse o mesmo nome, AddComponent usaria as classes da primeira versão.
-        /// Por isso cada geração recebe um nome único antes de ser carregada.
+        /// Unity binds components (MonoBehaviour) by assembly name. If every reloaded version
+        /// had the same name, AddComponent would use the classes of the first version.
+        /// So each generation gets a unique name before being loaded.
         /// </summary>
         private static byte[] WithUniqueAssemblyName(byte[] original, int generation)
         {
@@ -188,7 +188,7 @@ namespace CurrencyMod.Loader
                 }
                 catch (Exception ex)
                 {
-                    Logger.LogError($"Falha ao parar o núcleo: {ex}");
+                    Logger.LogError($"Failed to stop the core: {ex}");
                 }
             }
             if (host != null)
@@ -203,7 +203,7 @@ namespace CurrencyMod.Loader
         {
             if (entryType == null)
             {
-                WriteResult(argument, "erro: núcleo não carregado");
+                WriteResult(argument, "error: core not loaded");
                 return;
             }
             try
@@ -212,7 +212,7 @@ namespace CurrencyMod.Loader
             }
             catch (Exception ex)
             {
-                WriteResult(argument, $"erro: {ex.InnerException ?? ex}");
+                WriteResult(argument, $"error: {ex.InnerException ?? ex}");
             }
         }
 

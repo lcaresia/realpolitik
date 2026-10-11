@@ -33,7 +33,7 @@ namespace CurrencyMod.NativeUI
 
         public static event Action<bool> Clicked;
 
-        /// <summary>Alert forced by a test command ("jogo alerta"), to check the badge without waiting for a crisis.</summary>
+        /// <summary>Alert forced by a test command ("game alert"), to check the badge without waiting for a crisis.</summary>
         internal static string TestAlert;
 
         public static bool Exists => instance != null && instance.button != null;

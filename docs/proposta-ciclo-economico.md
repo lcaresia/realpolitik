@@ -30,7 +30,7 @@ porque usam a regra automática; o jogador no modo manual pode cair.
 
 ## 2. Auditoria da partida de 16 impérios (turno 64, só IA nativa)
 
-`jogo economia` (grava `dev\out\economia_T64.csv`):
+`game economy` (grava `dev\out\economia_T64.csv`):
 - nenhum valor inválido, câmbio, inflação ou juros no limite, nem salto de câmbio;
 - câmbio de 0,32 a 2,44; inflação de 0,21% a 1,69% por turno; índice de preços de 1,26 a 1,95;
 - juros do saldo desprezíveis (de −5 a +2 por turno): as IAs guardam pouco dinheiro;
@@ -120,13 +120,13 @@ Taxas por turno; neutro = 1%.
 - **Cidade em modo ciência:** a indústria dela vira ciência (o jogo devolve 0 em `ComputeProductionIncome`) e já entra
   no `ResearchNet`. Somar a produção dela também contava duas vezes (PIB, câmbio e pressão).
 - **Juros mudados na janela:** o botão Automático e o controle deslizante agora refazem a tabela de efeitos na hora,
-  como o comando `jogo juros`. Antes, a renda da barra do topo e as linhas de juros e crédito mostravam a taxa velha
+  como o comando `game interest`. Antes, a renda da barra do topo e as linhas de juros e crédito mostravam a taxa velha
   até o fim do turno, embora o pagamento já usasse a nova. A tabela também passou a ser publicada dentro do lock.
 - **Dinheiro parado com renda zero ou negativa (decidido 2026-10-05):** a parcela é zero. Quem gasta a reserva não está
   entesourando; antes, o piso de renda 5 dava a inflação máxima dessa parcela (+1%/turno). Testado: os Tribo Nômade
-  (tesouro 102, renda 0) ficaram com 0,00% (antes ~0,2%). `jogo economia` mostra a parcela na coluna "parado%".
+  (tesouro 102, renda 0) ficaram com 0,00% (antes ~0,2%). `game economy` mostra a parcela na coluna "parado%".
 
-### Testes (2026-10-04, `jogo economia`, `jogo juros`, `jogo espectador`)
+### Testes (2026-10-04, `game economy`, `game interest`, `game spectator`)
 
 - **v1 (cobertura contra a média do mundo), mapa Tiny com 16 impérios, turnos 21–82:**
   - industrial (0%) e financeiro (5%) viraram as maiores potências;
@@ -238,13 +238,13 @@ jogo. Chaves novas na configuração:
 - O tooltip de Santa Catarina passou a dizer "até alcançar 9%" (meta do jogo 10).
 - A renda do topo foi de +226,8 para +211 com os juros, e a linha −14 entrou no detalhamento de dinheiro.
 
-**Conferência sem mouse:** `jogo detalhe industria|estabilidade|dinheiro [n]` pede ao jogo o mesmo detalhamento do
+**Conferência sem mouse:** `game breakdown industry|stability|money [n]` pede ao jogo o mesmo detalhamento do
 tooltip, e `hover <caminho>` abre um tooltip nativo para capturas (ver guia-telas-nativas.md).
 
 ## 10. Calibração (2026-10-05)
 
 Relatório completo, explicado de forma simples: `docs\relatorios\Economia-Calibracao-ELI5.pdf` (gerado só com os dados
-já coletados: saves, auditorias `jogo economia` dos turnos 35, 49, 54, 76, 82 e da partida longa, e este documento).
+já coletados: saves, auditorias `game economy` dos turnos 35, 49, 54, 76, 82 e da partida longa, e este documento).
 
 **O que está bom:** em 64 turnos da partida longa nada disparou. Inflação, juros e câmbio ficaram longe dos tetos,
 ninguém viveu de juros, e o caminho financeiro deixou de escalar (guarda 20% a mais, mas produz 19% menos).
@@ -270,7 +270,7 @@ ninguém viveu de juros, e o caminho financeiro deixou de escalar (guarda 20% a 
 4. **Custo do caminho industrial:** leve (+6% de produção, moeda mais fraca). **Decidido: fica como está** até o
    usuário achar fraco jogando.
 
-`jogo economia` ganhou as colunas `dívInf%` (parte da inflação vinda da dívida) e `regra%` (juros que a regra pede).
+`game economy` ganhou as colunas `dívInf%` (parte da inflação vinda da dívida) e `regra%` (juros que a regra pede).
 
 **Limpeza feita:**
 - 12 chaves antigas que não faziam mais nada saem do `.cfg` sozinhas (`EconomyConfig.RemoveObsoleteKeys`, lista

@@ -1730,21 +1730,24 @@ namespace CurrencyMod.Diplomacy.UI
 
         // ---------------- Development and teardown ----------------
 
-        /// <summary>Commands: "open", "close", "secao 0..6", "to E#", "responder &lt;id&gt;", "texto ...".</summary>
+        /// <summary>
+        /// "ai mail ..." commands: "open", "close", "section 0..6" ("tab" also works), "to E#", "reply [id]", "clear",
+        /// "paste [file]", "group N|new", "member E#", "subject ...", "send", "text ...".
+        /// </summary>
         internal static string DevCommand(string args)
         {
             string[] parts = (args ?? string.Empty).Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
             string sub = parts.Length > 0 ? parts[0] : "open";
             if (Instance == null)
             {
-                return "erro: tela do correio não existe (abra uma partida)";
+                return "error: mail screen does not exist (load a game)";
             }
             switch (sub)
             {
                 case "close":
                     SetOpen(false);
-                    return "ok: fechada";
-                case "secao":
+                    return "ok: closed";
+                case "section":
                 case "tab":
                     SetOpen(true);
                     if (parts.Length > 1 && int.TryParse(parts[1], out int section))
@@ -1759,7 +1762,7 @@ namespace CurrencyMod.Diplomacy.UI
                         Instance.ComposeTo(empire, null);
                     }
                     return "ok";
-                case "responder":
+                case "reply":
                     SetOpen(true);
                     if (parts.Length > 1 && int.TryParse(parts[1], out int id))
                     {
@@ -1771,7 +1774,7 @@ namespace CurrencyMod.Diplomacy.UI
                         Instance.StartReply(Instance.letterRows[0].Letter);
                     }
                     return "ok";
-                case "limpar":
+                case "clear":
                     // Clears the draft (text, subject, demand) and the reply link, without sending.
                     Instance.bodyField?.ReplaceText(string.Empty);
                     Instance.subjectField?.ReplaceText(string.Empty);
@@ -1779,33 +1782,33 @@ namespace CurrencyMod.Diplomacy.UI
                     Instance.replyToId = -1;
                     Instance.feedback = null;
                     Instance.nextRefresh = 0;
-                    return "ok: rascunho apagado";
-                case "colar":
+                    return "ok: draft cleared";
+                case "paste":
                 {
-                    // "ia correio colar <arquivo>": pastes the file content (relative to _Modding\dev) into the letter field through
+                    // "ai mail paste <file>": pastes the file content (relative to _Modding\dev) into the letter field through
                     // the same path as Ctrl+V (focus + TryInsertString), to reproduce the pasted text that vanished. Does not send.
                     SetOpen(true);
                     UITextField field = Instance.bodyField;
                     if (field == null)
                     {
-                        return "erro: campo ainda não montado";
+                        return "error: field not built yet";
                     }
-                    string file = System.IO.Path.Combine(DevTools.DevDir, parts.Length > 1 ? parts[1] : "colar.txt");
+                    string file = System.IO.Path.Combine(DevTools.DevDir, parts.Length > 1 ? parts[1] : "paste.txt");
                     if (!System.IO.File.Exists(file))
                     {
-                        return "erro: arquivo não encontrado: " + file;
+                        return "error: file not found: " + file;
                     }
                     Amplitude.UI.Interactables.UIInteractivityManager.Instance?.SetFocus(field.TextFieldResponder);
                     field.ReplaceText(string.Empty);
                     bool inserted = field.TryInsertString(System.IO.File.ReadAllText(file));
-                    return $"ok: colado={inserted}, {field.Text?.Length ?? 0} caracteres no campo, editando={field.IsEditing}, rótulo y={field.label?.UITransform.Y:0}";
+                    return $"ok: inserted={inserted}, {field.Text?.Length ?? 0} characters in the field, editing={field.IsEditing}, label y={field.label?.UITransform.Y:0}";
                 }
-                case "grupo":
-                    // "grupo N" writes to group N; "grupo novo" opens creation (members with "membro E#", name in the subject).
+                case "group":
+                    // "group N" writes to group N; "group new" opens creation (members with "member E#", name in the subject).
                     SetOpen(true);
                     Instance.ComposeToGroup(parts.Length > 1 && int.TryParse(parts[1], out int groupId) ? groupId : -1);
                     return "ok";
-                case "membro":
+                case "member":
                     // Same as clicking "+ Group" on the nation's row.
                     if (parts.Length > 1 && int.TryParse(parts[1].TrimStart('E', 'e'), out int member) && Instance.composeGroup < 0
                         && !Instance.newGroupMembers.Remove(member) && Instance.newGroupMembers.Count + 1 < ChatGroup.MaxMembers)
@@ -1813,22 +1816,22 @@ namespace CurrencyMod.Diplomacy.UI
                         Instance.newGroupMembers.Add(member);
                     }
                     Instance.nextRefresh = 0;
-                    return "ok: membros " + string.Join(",", Instance.newGroupMembers);
-                case "assunto":
+                    return "ok: members " + string.Join(",", Instance.newGroupMembers);
+                case "subject":
                     Instance.subjectField?.ReplaceText(string.Join(" ", parts.Skip(1)));
                     return "ok";
-                case "enviar":
+                case "send":
                     // Same as the Send button (really sends).
                     Instance.Send();
                     return "ok: " + (Instance.feedback ?? "?");
-                case "texto":
+                case "text":
                     // Only fills the field (visual test of multiline text); sends nothing.
                     SetOpen(true);
                     Instance.bodyField?.ReplaceText(string.Join(" ", parts.Skip(1)).Replace("\\n", "\n"));
-                    return "ok: texto no campo (não enviado)";
+                    return "ok: text in the field (not sent)";
                 default:
                     SetOpen(true);
-                    return "ok: aberta";
+                    return "ok: open";
             }
         }
 

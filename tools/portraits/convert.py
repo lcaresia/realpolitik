@@ -1,6 +1,7 @@
-# Converte os retratos gerados (media/retratos/originais/*.png, ~2 MB cada) para o tamanho do jogo:
-# src/CurrencyMod/Retratos/<cargo>_<época>_<m|f>.jpg, 256 px, embutidos na DLL (CurrencyMod.csproj).
-# Uso (no WSL): python3 converter.py
+# Converts the generated portraits (media/retratos/originais/*.png, ~2 MB each) to the in-game size:
+# src/CurrencyMod/Retratos/<office>_<era>_<m|f>.jpg, 256 px, embedded in the DLL (CurrencyMod.csproj).
+# The media/retratos and src/CurrencyMod/Retratos folders are data folders and keep their names.
+# Usage (in WSL): python3 convert.py
 import glob, os
 from PIL import Image
 
@@ -19,4 +20,4 @@ for path in sorted(glob.glob(os.path.join(SRC, '*.png'))):
     with Image.open(path) as image:
         image.convert('RGB').resize((SIZE, SIZE), Image.LANCZOS).save(target, quality=86, optimize=True)
     count += 1
-print(f'{count} convertido(s); {len(glob.glob(os.path.join(DST, "*.jpg")))} no total em {DST}')
+print(f'{count} converted; {len(glob.glob(os.path.join(DST, "*.jpg")))} in total in {DST}')

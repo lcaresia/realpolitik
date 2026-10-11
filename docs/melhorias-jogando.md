@@ -256,7 +256,7 @@ Caminhos relativos a `src\CurrencyMod\Diplomacia\`.
 - **Correção proposta, qualquer que seja a causa**:
   - Marcar como lida **só quando a carta foi vista de fato**: tela visível (`VisibleSelf` do grupo, não só `Shown`) e linha desenhada.
   - E/ou manter em "Novas" toda carta que chegou neste turno ou no anterior, mesmo já lida, até o jogador trocar de seção **depois de ter visto**.
-- **Reproduzir** pelo canal de dev: `ia correio open` → `ia correio secao 0` → `jogo turno` → `screenshot` + `ia correio`/log. Não faço isso agora para não mexer na partida do Lucas.
+- **Reproduzir** pelo canal de dev: `ai mail open` → `ai mail section 0` → `game turn` → `screenshot` + `ai mail`/log. Não faço isso agora para não mexer na partida do Lucas.
 - **Status**: feito no código em 2026-10-10 (testado no Teste16 em 2026-10-10, ver "Testes de 2026-10-10" no fim): marca como lida só com a lista visível (`NativeUIKit.IsReallyVisible`), e "Novas" mostra também as que chegaram no turno.
 
 ### 13. Comunicados públicos: avisar e destacar em dourado os que citam o jogador
@@ -296,7 +296,7 @@ Caminhos relativos a `src\CurrencyMod\Diplomacia\`.
 - **Status**: feito em 2026-10-10. Testado no Teste16 o lado do jogador: criar grupo (Nações → "+ Grupo", nome no assunto), mensagem a grupo existente, seção "Grupos" com cartões, botões Escrever/Sair. Traduzido para en/es/fr/de.
   - Modelo: `ChatGroup` (`IaWorld.cs`), carta com `To = Letter.Group`, `GroupId` e `Members` fixados no envio.
   - IA: `criar_grupo`, `sair_grupo` e carta tipo "grupo"; o dossiê mostra "SEUS GRUPOS". **Falta ver a IA usando** (sem cota do Codex em 2026-10-10).
-  - Comandos: `ia grupo ver|criar|msg`; `ia correio grupo N|novo`, `membro E#`, `assunto`, `enviar`.
+  - Comandos: `ai group show|create|msg`; `ai mail group N|new`, `member E#`, `subject`, `send`.
   - Fora da v1: interceptação de mensagem de grupo.
 - **Hoje**: a carta é privada (1 destinatário) ou pública (todos que conhecem o remetente). Não existe destinatário múltiplo nem conversa persistente (`Letter.To` é um índice só, `IaWorld.cs:376`).
 - **Ideia**:
@@ -319,7 +319,7 @@ Caminhos relativos a `src\CurrencyMod\Diplomacia\`.
   - `BlocCongress.cs`: a pauta "congresso" aprovada manda o mesmo voto (`votar_congresso`) para cada membro da IA que ainda não votou. Testado: E7 apoiou E0 na crise K6 com peso 95.
   - IA: `fundar_bloco`, `responder_bloco`, `pauta_bloco` (o presidente põe em votação, os outros sugerem), `abrir_pauta`, `votar_pauta`, `votar_presidente`, `sair_bloco` (`BlocActions.cs`); seção BLOCOS no dossiê (`BlocDossier.cs`).
   - Tela **Alianças** (`UI\AlliancesScreen.cs`, botão de três anéis com selo "!" em `UI\AlliancesButton.cs`). Seções: Meu bloco (cabeçalho, 4 benefícios com números, membros com fama, força e era), Pautas e eleição (Sim/Não, pôr em votação/descartar, candidatos), Convites, Blocos do mundo, Histórico. À direita: fundar (nome + "+ Convidar") ou propor pauta (tipo/nação/valor com "Trocar", motivo) e sair com confirmação.
-  - Comandos: `ia bloco ver|fundar|aceitar|recusar|sair|pautar|abrir|descartar|votar|presidente|turno [+N]` (com "como E#" age como outra nação); `ia aliancas abrir|secao N|tipo N|alvo E#|valor N|texto|convidar E#|enviar`.
+  - Comandos: `ai bloc show|found|accept|decline|leave|propose|open|discard|vote|president|turn [+N]` (com "as E#" age como outra nação); `ai alliances open|section N|kind N|target E#|value N|text|invite E#|send`.
   - IA testada em 2026-10-11 (T85, Codex): E9 leu o convite no dossiê e recusou com `responder_bloco` (aplicada). O jogador vota no Congresso pela tela nativa (o bloco só avisa).
 - **Hoje**: o jogo só tem acordos **bilaterais** (comércio, fronteiras abertas, mapas, não agressão, aliança), e o mod usa esses (`propor_acordo economico|informacao|cultural|militar|alianca`, `Prompts.cs:65`). Não existe entidade "bloco".
 - **Ideias de bônus**, para discutir:
@@ -359,7 +359,7 @@ Caminhos relativos a `src\CurrencyMod\Diplomacia\`.
     - escapar ou trocar `<`/`>`;
     - trocar emoji/glifos sem suporte por "?".
   - Aplicar a mesma limpeza no envio (`IaModule.cs:~1714`), para o que vai para a IA e para o save ficar limpo.
-- **Reproduzir**: pelo canal de dev, `ia correio texto ...` com `\r\n`, com `<b>` e com emoji, e depois `screenshot`. Se puder, me mande de onde veio o texto (site, Word, WhatsApp…) ou o próprio texto, para ver qual dos três é.
+- **Reproduzir**: pelo canal de dev, `ai mail text ...` com `\r\n`, com `<b>` e com emoji, e depois `screenshot`. Se puder, me mande de onde veio o texto (site, Word, WhatsApp…) ou o próprio texto, para ver qual dos três é.
 - **Status**: feito no código em 2026-10-10 (testado no Teste16 em 2026-10-10, ver "Testes de 2026-10-10" no fim): reposicionamento do texto depois de colar (`NativeUIKit.FixLayoutAfterPaste`) nos campos do Correio, da aba Cartas e do conselho.
 - **Checagem 2026-10-10** (logs T077/T078): **o texto chegou inteiro e foi entendido.**
   - A carta colada é a declaração pública "Carta Pública às Nações do Mundo" (escrita no turno 75, chegou no 77): ~2.700 caracteres, ~450 palavras, 20+ parágrafos.
@@ -401,29 +401,29 @@ Caminhos relativos a `src\CurrencyMod\Diplomacia\`.
 
 | Item | Resultado no jogo |
 |---|---|
-| 1 | Turno 83 sem reunião automática (próxima no 89); `ia conselho convocar` fez a audiência pelo Codex. |
+| 1 | Turno 83 sem reunião automática (próxima no 89); `ai council convene` fez a audiência pelo Codex. |
 | 4 | Cartão "Resumo do conselho" no topo, uma linha por ministro. |
 | 5 | Reunião nova sem mecanismo inventado. Ajuste: o prompt também proíbe os códigos do Congresso (K6, V2, I3). |
 | 6 | Ordem decrescente (não fotografado: a aba fica dentro da diplomacia). |
 | 7 | Compilado; depende de cartas novas das IAs para ver na prática. |
-| 8 | Rota do jogador em **azul** (Café para os Axumitas). Rótulo testado com `jogo rotas cores todas`. Estilos não se acumulam mais a cada recarga. |
+| 8 | Rota do jogador em **azul** (Café para os Axumitas). Rótulo testado com `game routes colors all`. Estilos não se acumulam mais a cada recarga. |
 | 9 | Contador "N/2000 caracteres". |
 | 10 | Aba "Recursos" com o Café (1 acesso, luxo, "Seu · vendido para os Axumitas"). Gráfico vazio com a mensagem dentro do cartão. |
 | 11 | "O que isso significa no jogo:" em cartas reais ("transformou queixas em exigências formais", "propôs um acordo econômico"). |
 | 12 | Correio aberto em "Novas" + passar o turno: a carta do turno 83 apareceu como nova. |
-| 13 | `ia mencoes`: reconhece "Icaresia" com I e "o Persa"; marcou o comunicado real "O bronze de Mykênê", que cita o Persa. |
+| 13 | `ai mentions`: reconhece "Icaresia" com I e "o Persa"; marcou o comunicado real "O bronze de Mykênê", que cita o Persa. |
 | 14 | "Os Garamantes · Kiviuq" (o artigo ficava minúsculo; corrigido). |
 | 17 | Prévia: pagar = passa mesmo com pedágio 400; automático = desvia com 401; desviar = desvia com 7. |
 | 18 | **Causa real achada**: o rótulo do campo nativo para de desenhar com pouco mais de **2050 caracteres** (até 2050 aparece, com 2100 some, com ou sem quebras de linha). Não era colar nem `\r\n`. Correção: carta do jogador limitada a **2000 caracteres** (`IaConfig.PlayerLetterLimit`; o campo para de aceitar texto nesse ponto). A carta pública do Lucas tinha ~2550. |
 | 19 | Ver item 19. |
 
 **Ferramentas de teste novas**:
-- `jogo saves reler`: relê a pasta de saves, para o jogo ver um save copiado com ele aberto.
-- `ia mencoes [texto]`
-- `ia correio colar [arquivo em _Modding\dev]`
-- `jogo rotas cores E#|todas`: ver as cores como outro império, ou rótulo em toda rota.
+- `game saves rescan`: relê a pasta de saves, para o jogo ver um save copiado com ele aberto.
+- `ai mentions [text]`
+- `ai mail paste [arquivo em _Modding\dev]`
+- `game routes colors E#|all`: ver as cores como outro império, ou rótulo em toda rota.
 
-**Testado em 2026-10-11 (antes "ainda não visto")**: rótulo de pedágio pago na visão de comércio ("Tl 4/t" em dourado, comando `jogo rotas rotulos`); item 7: os Han, sem cavalos nem seda, recusaram oferecer o que não têm; item 5: o conselho disse não conhecer o "Tesouro dos Grãos Sagrados" (nada a cortar); tarifa comum de bloqueio desviou a rota E1↔E7 do território do bloco; Fé +10% medida (`ia conselho fe T#`: 3 → 3,3); IA escrevendo em grupo (Nascas no GRP1); 7 ações de bloco pelo validador da IA (`ia acao E# {json}`). Bug achado e corrigido: candidatos a ministro não marcavam o mundo como alterado (sorteio novo depois de recarga). Itens antigos desta lista:
+**Testado em 2026-10-11 (antes "ainda não visto")**: rótulo de pedágio pago na visão de comércio ("Tl 4/t" em dourado, comando `game routes labels`); item 7: os Han, sem cavalos nem seda, recusaram oferecer o que não têm; item 5: o conselho disse não conhecer o "Tesouro dos Grãos Sagrados" (nada a cortar); tarifa comum de bloqueio desviou a rota E1↔E7 do território do bloco; Fé +10% medida (`ai council faith T#`: 3 → 3,3); IA escrevendo em grupo (Nascas no GRP1); 7 ações de bloco pelo validador da IA (`ai action E# {json}`). Bug achado e corrigido: candidatos a ministro não marcavam o mundo como alterado (sorteio novo depois de recarga). Itens antigos desta lista:
 - rótulo de pedágio real (nenhuma rota cruza as terras do jogador no Teste16; o rótulo foi visto no modo de teste);
 - carta devolvida por oferecer recurso que a nação não tem (item 7);
 - frase cortada pelo filtro do conselho (item 5): nada inventado apareceu.
@@ -508,9 +508,9 @@ Caminhos relativos a `src\CurrencyMod\Diplomacia\`.
 - **Tela:**
   - seção Ministros com os que estão no cargo (chip "Veterano +N%"/"Novato");
   - pastas vagas com "Escolher", que abre os 3 candidatos, cada um com "Nomear · custo".
-- **Comandos de teste:** `ia conselho candidatos`, `ia conselho nomear <pasta> <1|2|3|p###>`, `ia conselho veterano <pasta> <turnos>`.
+- **Comandos de teste:** `ai council candidates`, `ai council appoint <portfolio> <1|2|3|p###>`, `ai council veteran <portfolio> <turns>`.
 - **Retratos** (pedido do Lucas: "na hora de escolher deve ser bem bonito"):
-  - gerados com o **Codex do WSL** (geração de imagem embutida, plano Plus): `tools\retratos\gerar-retratos.py` + `gerar.sh`, depois `converter.py` (256 px, embutidos na DLL como `retrato.<cargo>_<época>_<g>.jpg`);
+  - gerados com o **Codex do WSL** (geração de imagem embutida, plano Plus): `tools\portraits\generate_portraits.py` + `generate.sh`, depois `convert.py` (256 px, embutidos na DLL como `retrato.<cargo>_<época>_<g>.jpg`);
   - carregados por `Council\Portraits.cs` e mostrados à esquerda dos cartões de ministro, candidato e fala.
   - **Escolha do Lucas:** genérico por cargo × 3 épocas × gênero (72 imagens), para poupar a cota. O retrato por pessoa (216) gastaria ~72% da semana.
   - **Medido:** 3 imagens ≈ 10% da janela de 5 h e ≈ 1% da semana. O script espera a janela renovar quando passa de 85%.

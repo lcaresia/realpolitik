@@ -157,8 +157,8 @@ namespace CurrencyMod.Diplomacy
 
         internal static string Describe()
         {
-            return $"viés da IA nativa (postura e foco): humor ajustado {scoreTouches}× · animosidade {animosityTouches}× · inimigo principal forçado {nemesisForced}×"
-                + $"{(lastNemesis != null ? $" ({lastNemesis})" : string.Empty)} · objetivos {goalTouches}× · necessidades {needTouches}×";
+            return $"native AI bias (posture and focus): mood adjusted {scoreTouches}× · animosity {animosityTouches}× · main enemy forced {nemesisForced}×"
+                + $"{(lastNemesis != null ? $" ({lastNemesis})" : string.Empty)} · goals {goalTouches}× · needs {needTouches}×";
         }
 
         private static Posture PostureOf(int empire, int other, out int since)

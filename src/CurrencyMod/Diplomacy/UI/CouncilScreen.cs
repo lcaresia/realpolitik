@@ -1170,21 +1170,21 @@ namespace CurrencyMod.Diplomacy.UI
 
         // ---------------- Development and removal ----------------
 
-        /// <summary>Commands: "abrir", "fechar", "secao 0..2".</summary>
+        /// <summary>"ai council open|close|section 0..2" commands (the rest of "ai council" is in AiCommands).</summary>
         internal static string DevCommand(string args)
         {
             string[] parts = (args ?? string.Empty).Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
-            string sub = parts.Length > 0 ? parts[0] : "abrir";
+            string sub = parts.Length > 0 ? parts[0] : "open";
             if (Instance == null)
             {
-                return "erro: tela do conselho não existe (abra uma partida)";
+                return "error: council screen does not exist (load a game)";
             }
             switch (sub)
             {
-                case "fechar":
+                case "close":
                     SetOpen(false);
-                    return "ok: fechada";
-                case "secao":
+                    return "ok: closed";
+                case "section":
                     SetOpen(true);
                     if (parts.Length > 1 && int.TryParse(parts[1], out int section))
                     {
@@ -1193,7 +1193,7 @@ namespace CurrencyMod.Diplomacy.UI
                     return "ok";
                 default:
                     SetOpen(true);
-                    return "ok: aberta";
+                    return "ok: open";
             }
         }
 

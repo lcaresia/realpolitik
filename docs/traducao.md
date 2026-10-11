@@ -8,7 +8,7 @@
   - `L.N("Ministros")` só marca o texto, para listas estáticas. Traduza com `L.T` na hora de mostrar.
 - As tabelas ficam em `src\CurrencyMod\Lang\en.json`, `es.json`, `fr.json` e `de.json`, no formato `{"texto em português": "tradução"}`. Elas vão dentro da DLL.
 - **Tradução da comunidade:** um arquivo em `BepInEx\CurrencyModCore\lang\<código>.json`, se existir, passa por cima da tabela embutida. Serve para corrigir ou completar uma tradução sem recompilar.
-- **Texto sem tradução** aparece em português, e o comando `idioma faltando` lista quais são.
+- **Texto sem tradução** aparece em português, e o comando `language missing` lista quais são.
 
 ## Configuração (`BepInEx\config\lucas.humankind.currency.cfg`)
 
@@ -49,17 +49,17 @@
    - **Nome com artigo do português** ("dos Chou"): na interface use `GameText.OfUi` ou `InlineUi`. Fora do português eles devolvem só o nome, e a preposição fica na tradução.
 2. Rode o extrator:
    ```
-   powershell -ExecutionPolicy Bypass -File _Modding\tools\dev\extrair-textos.ps1 [-Idioma en] [-Relatorio]
+   powershell -ExecutionPolicy Bypass -File _Modding\tools\dev\extract-texts.ps1 [-Language en] [-Report]
    ```
    - os textos novos entram com tradução vazia;
    - os que saíram do código vão para `Lang\_removidos.txt`;
-   - `-Relatorio` grava `Lang\_chaves.tsv`, com o arquivo de origem de cada texto.
+   - `-Report` grava `Lang\_chaves.tsv`, com o arquivo de origem de cada texto.
 3. Traduza os vazios e valide cada idioma:
    ```
-   powershell -ExecutionPolicy Bypass -File _Modding\tools\dev\validar-traducao.ps1 -Idioma en
+   powershell -ExecutionPolicy Bypass -File _Modding\tools\dev\validate-translation.ps1 -Language en
    ```
    O validador confere marcadores `{0}`, tags `<c=...>`, ícones `[money]`, chaves `{{ }}` e espaços nas pontas. Tem que terminar em "0 vazios, 0 com problema".
-4. **Teste com o jogo aberto:** `idioma en|es|fr|de|pt|Auto` troca na hora (e grava no `.cfg`), e `idioma faltando` grava `dev\out\idioma_faltando_<código>.txt`. Tire prints das telas: botões e chips não quebram linha, então tradução longa corta. Encurte a tradução, como "Prod. ×{0}" em vez de "Produktion ×{0}".
+4. **Teste com o jogo aberto:** `language en|es|fr|de|pt|Auto` troca na hora (e grava no `.cfg`), e `language missing` grava `dev\out\idioma_faltando_<código>.txt`. Tire prints das telas: botões e chips não quebram linha, então tradução longa corta. Encurte a tradução, como "Prod. ×{0}" em vez de "Produktion ×{0}".
 
 ## Escolhas de tradução
 

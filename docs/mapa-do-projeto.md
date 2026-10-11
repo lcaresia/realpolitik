@@ -14,9 +14,9 @@ Mods de código para Humankind via BepInEx 5 + Harmony. Single-player.
 | `docs\bloqueio-comercial.md` | Bloqueio comercial por dentro: regras, preços, custo do pedágio no caminho, cobrança, IA e prévia de desvio. | Sim |
 | `cronicas\` | Crônicas da partida para compartilhar (PDF e o HTML que gerou o PDF). | Sim |
 | `docs\relatorios\` | Relatórios em PDF (ex.: `Economia-Calibracao-ELI5.pdf`, a calibração da economia explicada de forma simples). | Sim |
-| `src\CurrencyMod\Lang\` + `L.cs` | **Tradução** da interface (en, es, fr, de; o português é a chave). Como mexer: `docs\traducao.md`; scripts `tools\dev\extrair-textos.ps1` e `validar-traducao.ps1`. | Sim |
+| `src\CurrencyMod\Lang\` + `L.cs` | **Tradução** da interface (en, es, fr, de; o português é a chave). Como mexer: `docs\traducao.md`; scripts `tools\dev\extract-texts.ps1` e `validate-translation.ps1`. | Sim |
 | `docs\instalacao.md` | **Instalação em outra máquina** (vai no pacote como LEIA-ME). | Sim |
-| `tools\empacotar.ps1` | Gera `dist\HumankindMod_<versão>.zip` sem a chave da API. | Sim |
+| `tools\package.ps1` | Gera `dist\HumankindMod_<versão>.zip` sem a chave da API. | Sim |
 | `tools\dev\` | Scripts de teste com o jogo aberto: `devcmd.ps1` (manda comandos pelo canal `dev\cmd.txt` e mostra as respostas), `passturn.ps1` / `passturns.ps1 -Target N` (passa turnos esperando as nações da IA decidirem) e `backup.ps1` (zip em Documentos, sem a chave da API). | Sim |
 | `docs\prompt-*.md` | Prompts prontos para sessões novas do Claude Code (16 impérios; revisão de bugs; pacote para outros jogadores). | Sim |
 | `docs\negociacao\` | Material do módulo de negociação, ainda em conversa (prints da aba Crise de hoje). | Sim |
@@ -75,7 +75,7 @@ ilspycmd -p -o _Modding\decompiled\<Assembly> -r Humankind_Data\Managed Humankin
     "e se" (`Trade\TollPreview.cs`), sem mexer em nenhuma rota. Na diplomacia, a mesma prévia vale para o preço geral.
   - **Nações da IA de linguagem** escolhem a própria política comercial (`politica_comercial`: livre, pedágio com
     preço, bloqueio) contra cada império; a IA de regras (`Trade\TradeAi.cs`) só taxa quem usa os postos dela.
-  - Comandos de teste: `jogo rotas`, `jogo pedagio …`, `trade previa …` (ver `docs\diplomacia-ia.md` §7).
+  - Comandos de teste: `game routes`, `game toll …`, `trade preview …` (ver `docs\diplomacia-ia.md` §7).
   - Detalhes técnicos: `docs\bloqueio-comercial.md`.
 
 ## Diplomacia IA
@@ -108,21 +108,21 @@ ilspycmd -p -o _Modding\decompiled\<Assembly> -r Humankind_Data\Managed Humankin
   apreço deles por você muda. Na aba Ministros você demite quem não serve mais.
 - **F10** abre o visualizador no navegador (`http://localhost:8765/`): cartas do mundo, diários, dossiês, prompts,
   respostas e custos; dá para escrever cartas para as nações por lá.
-- Comandos de dev: `ia status`, `ia dossie <n>`, `ia agora [n]`, `ia carta <n> <texto>`... em `_Modding\dev\cmd.txt`.
+- Comandos de dev: `ai status`, `ai dossier <n>`, `ai now [n]`, `ai letter <n> <text>`... em `_Modding\dev\cmd.txt`.
 - Detalhes: `docs\diplomacia-ia.md`. Design: `docs\design-diplomacia-ia.md`.
 
 ## Gerar uma versão (venda)
 1. Ajuste `Plugin.ProductVersion` em `src\CurrencyMod\Plugin.cs`. Ele precisa bater com a versão, porque o aviso de
    atualização do jogo usa esse número.
-2. `powershell -ExecutionPolicy Bypass -File _Modding\tools\gerar-release.ps1 -Versao 1.0.1` gera em `dist\<versão>\`:
+2. `powershell -ExecutionPolicy Bypass -File _Modding\tools\make-release.ps1 -Version 1.0.1` gera em `dist\<versão>\`:
    - o `Realpolitik_Setup_<versão>.exe` (Inno Setup, `installer\Realpolitik.iss`);
    - o `Realpolitik_<versão>_manual.zip`;
    - o `MANIFEST.txt` e o `SHA256SUMS.txt`.
 
    O script compila sem tocar no jogo, **ofusca o núcleo** (Obfuscar; regras em `installer\obfuscar.xml`, conferidas por `installer\conferir-ofuscacao.ps1`; o mapa de nomes fica em `dist\mapas\`) e monta um staging com **lista branca** de arquivos. Ele faz a **trava de
    segredos**: chaves, valores do `.env` e caminhos desta máquina, procurados até dentro das DLLs. Falha alto em
-   qualquer problema. `-TestarTrava` prova que a trava funciona.
-3. Testes: `installer\testes\testar-instalador.ps1 -Versao X -Teste T1..T11`, sempre com o backup antes e a restauração
+   qualquer problema. `-TestSecretGuard` prova que a trava funciona.
+3. Testes: `installer\tests\test-installer.ps1 -Version X -Test T1..T11`, sempre com o backup antes e a restauração
    conferida depois. Roteiro e resultados de 1.0.0: `docs\relatorios\instalador-1.0.0.md`.
 4. Envie o Setup à Microsoft (`docs\envio-microsoft.md`).
 5. Crie a tag `vX.Y.Z` e envie (`git push origin vX.Y.Z`): a GitHub Action `release` compila tudo e publica o Setup em Releases.
@@ -130,9 +130,9 @@ ilspycmd -p -o _Modding\decompiled\<Assembly> -r Humankind_Data\Managed Humankin
 Peças do instalador:
 - `installer\textos\`: leia-me e termos em 5 idiomas e o `THIRD-PARTY.txt`;
 - `installer\vendor\`: o zip oficial do BepInEx e as licenças;
-- `installer\art\`: ícone e imagens, gerados por `gerar-arte.ps1`.
+- `installer\art\`: ícone e imagens, gerados por `generate-art.ps1`.
 
-O antigo `tools\empacotar.ps1` (zip simples, sem BepInEx) foi substituído pelo `gerar-release.ps1`.
+O antigo `tools\package.ps1` (zip simples, sem BepInEx) foi substituído pelo `make-release.ps1`.
 
 ## Backups
 Ficam em `Documentos\HumankindModding\backups\` (fora da pasta da Steam).
@@ -140,7 +140,7 @@ Ficam em `Documentos\HumankindModding\backups\` (fora da pasta da Steam).
 ## Repositório e versões
 - Repositório público: `github.com/lcaresia/realpolitik`. A raiz é esta pasta (`_Modding`).
 - Use o Git do **WSL**, não o do Windows: `wsl -e bash -c "cd '/mnt/c/Program Files (x86)/Steam/steamapps/common/Humankind/_Modding' && git status"`.
-- O `.gitignore` deixa de fora o `.env` e as chaves, o `decompiled\` (código do jogo), o `dev\`, o `dist\`, o `bin`/`obj` e os dados do `ia-bench`.
+- O `.gitignore` deixa de fora o `.env` e as chaves, o `decompiled\` (código do jogo), o `dev\`, o `dist\`, o `bin`/`obj` e os dados do `ai-bench`.
 - Cada versão publicada recebe uma tag `vX.Y.Z` (ex.: `v1.0.0`) no commit que gerou o pacote. Versões de teste usam o sufixo `-beta.N`.
 - O número de versão do produto (Realpolitik) é separado do número interno das DLLs.
 
@@ -162,7 +162,7 @@ Detalhes, fontes e dados: `docs\pesquisa-30-jogadores.md`, seção "Etapa 1". Es
 |---|---|
 | `src\MoreEmpires\` | O plugin. `Core\` tem config, log, canal de comandos e os algoritmos puros; `Features\` tem um arquivo por tarefa. |
 | `src\MoreEmpires\Tests\` | Testes fora do jogo e o leitor das opções do bundle. Não entram na DLL. |
-| `tools\instalar-moreempires.ps1` | Instalar, desligar e empacotar. |
+| `tools\install-moreempires.ps1` | Instalar, desligar e empacotar. |
 
 **Instalado em:** `BepInEx\plugins\MoreEmpires\MoreEmpires.dll`. É um plugin comum, sem recarga a quente: qualquer mudança exige reiniciar o jogo.
 
@@ -173,13 +173,13 @@ Detalhes, fontes e dados: `docs\pesquisa-30-jogadores.md`, seção "Etapa 1". Es
 
 **Instalar nesta máquina** (com o jogo fechado):
 ```
-powershell -ExecutionPolicy Bypass -File _Modding\tools\instalar-moreempires.ps1
+powershell -ExecutionPolicy Bypass -File _Modding\tools\install-moreempires.ps1
 ```
 Compila com `-p:Deploy=true`; sem esse parâmetro, o build não copia nada para o BepInEx.
 
 **Desligar:**
 ```
-powershell -ExecutionPolicy Bypass -File _Modding\tools\instalar-moreempires.ps1 -Desinstalar
+powershell -ExecutionPolicy Bypass -File _Modding\tools\install-moreempires.ps1 -Uninstall
 ```
 Renomeia a DLL para `.desligado`; não apaga nada.
 
@@ -192,7 +192,7 @@ Renomeia a DLL para `.desligado`; não apaga nada.
 1. Instale o BepInEx 5 x64 na pasta do jogo.
 2. Gere o pacote:
    ```
-   powershell -ExecutionPolicy Bypass -File _Modding\tools\instalar-moreempires.ps1 -Pacote
+   powershell -ExecutionPolicy Bypass -File _Modding\tools\install-moreempires.ps1 -Package
    ```
    O resultado é `dist\MoreEmpires_<versão>.zip`, com `BepInEx\plugins\MoreEmpires\MoreEmpires.dll`, `LEIA-ME.txt` e o documento de detalhes.
 3. Copie a pasta `BepInEx` do pacote para a pasta do jogo e abra o jogo.

@@ -5,7 +5,7 @@ using System.Linq;
 using System.Threading;
 using Newtonsoft.Json.Linq;
 
-namespace IaBench
+namespace AiBench
 {
     internal static class Bench
     {
@@ -20,30 +20,30 @@ namespace IaBench
             GameDir = Path.GetFullPath(Path.Combine(Root, "..", "..", ".."));
             if (args.Length == 0)
             {
-                Console.WriteLine("uso: IaBench prova <log.json> | placar");
+                Console.WriteLine("usage: AiBench simulate|run|table|blind|probe|score ... (see README.md)");
                 return 1;
             }
             switch (args[0])
             {
-                case "prova":
-                    return args.Length > 2 ? Proof(args[1], args[2]) : Proof(args[1]);
-                case "simular":
+                case "probe":
+                    return args.Length > 2 ? Probe(args[1], args[2]) : Probe(args[1]);
+                case "simulate":
                     return Simulate.Run(Path.Combine(Root, "corpus", args.Length > 2 ? args[2] : "b44f3e76"), args.Length > 1 ? args[1] : "base");
-                case "rodar":
+                case "run":
                     if (args.Length > 4)
                     {
                         Runner.ScenarioFile = args[4];
                     }
                     return Runner.Run(args[1], args.Length > 2 ? int.Parse(args[2]) : 2, args.Length > 3 ? args[3] : "low");
-                case "cego":
+                case "blind":
                     return Blind.Build(args[1], args[2], args.Length > 3 ? args[3] : "1,2", args.Length > 4 ? int.Parse(args[4]) : Environment.TickCount);
-                case "tabela":
+                case "table":
                     return Runner.Report(args[1]);
-                case "placar":
+                case "score":
                     Console.WriteLine(Scoreboard.Read());
                     return 0;
                 default:
-                    Console.WriteLine("comando desconhecido: " + args[0]);
+                    Console.WriteLine("unknown command: " + args[0]);
                     return 1;
             }
         }
@@ -51,15 +51,15 @@ namespace IaBench
         private static string FindRoot()
         {
             string dir = AppDomain.CurrentDomain.BaseDirectory;
-            while (dir != null && !File.Exists(Path.Combine(dir, "IaBench.csproj")))
+            while (dir != null && !File.Exists(Path.Combine(dir, "AiBench.csproj")))
             {
                 dir = Path.GetDirectoryName(dir.TrimEnd('\\'));
             }
             return dir ?? Directory.GetCurrentDirectory();
         }
 
-        /// <summary>A mesma decisão real, com o reasoning_effort aninhado (como o mod faz) e no nível de cima.</summary>
-        private static int Proof(string logPaths, string variantSpec = "nested:low,top:low")
+        /// <summary>The same real decision, with reasoning_effort nested (as the mod does) and at the top level.</summary>
+        private static int Probe(string logPaths, string variantSpec = "nested:low,top:low")
         {
             var jobs = (from path in logPaths.Split(',')
                         from variant in variantSpec.Split(',')
@@ -74,13 +74,13 @@ namespace IaBench
             }).ToList();
             foreach (var (path, variant, r) in results.OrderBy(x => x.variant).ThenBy(x => x.path))
             {
-                Console.WriteLine($"{variant,-11} {Path.GetFileName(path),-14} ok={r.Ok} fim={r.Finish} entrada={r.Prompt} cache={r.Hit} saida={r.Completion} raciocinio={r.ReasoningTokens} US$ {r.Cost:0.00000} {r.Seconds:0}s {r.Error}");
+                Console.WriteLine($"{variant,-11} {Path.GetFileName(path),-14} ok={r.Ok} finish={r.Finish} input={r.Prompt} cache={r.Hit} output={r.Completion} reasoning={r.ReasoningTokens} US$ {r.Cost:0.00000} {r.Seconds:0}s {r.Error}");
             }
             foreach (var group in results.GroupBy(x => x.variant))
             {
-                Console.WriteLine($"MÉDIA {group.Key,-11} raciocinio={group.Average(x => x.r.ReasoningTokens):0} saida={group.Average(x => x.r.Completion):0} US$ {group.Average(x => x.r.Cost):0.00000}");
+                Console.WriteLine($"AVERAGE {group.Key,-11} reasoning={group.Average(x => x.r.ReasoningTokens):0} output={group.Average(x => x.r.Completion):0} US$ {group.Average(x => x.r.Cost):0.00000}");
             }
-            Console.WriteLine("placar: " + Scoreboard.Read()["gastoUSD"]);
+            Console.WriteLine("score: " + Scoreboard.Read()["gastoUSD"]);
             return 0;
         }
     }

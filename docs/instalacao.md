@@ -142,6 +142,6 @@ Logs detalhados de cada decisão da IA ficam em `BepInEx\DiplomaciaIA\logs\`.
 
 ## Para quem desenvolve
 - **Código e compilação:** `_Modding\README.md`. Precisa do .NET SDK 8 e do código do jogo descompilado.
-- **Gerar este pacote:** `powershell -ExecutionPolicy Bypass -File _Modding\tools\empacotar.ps1`. O pacote sai em
+- **Gerar este pacote:** `powershell -ExecutionPolicy Bypass -File _Modding\tools\package.ps1`. O pacote sai em
   `_Modding\dist\`. O script compila sem instalar e se recusa a empacotar se achar uma chave de API.
 - O canal de comandos de desenvolvimento (`_Modding\dev\cmd.txt`) só existe em máquinas com a pasta `_Modding`.

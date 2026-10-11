@@ -73,8 +73,8 @@ namespace CurrencyMod.Diplomacy
 
         internal static bool IsKnown(ulong army) => locked.Contains(army);
 
-        internal static string Describe() => $"exércitos sob ordem: {locked.Count} · tarefas nativas tiradas: {locksApplied} · ordens nativas barradas: {ordersBlocked}"
-            + (lastBlocked != null ? $" (última: {lastBlocked})" : string.Empty);
+        internal static string Describe() => $"armies under orders: {locked.Count} · native tasks removed: {locksApplied} · native orders blocked: {ordersBlocked}"
+            + (lastBlocked != null ? $" (last: {lastBlocked})" : string.Empty);
 
         private static void Publish()
         {

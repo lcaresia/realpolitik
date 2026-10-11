@@ -1,15 +1,15 @@
-﻿# Extrai os textos marcados com L.T / L.F / L.N no núcleo e atualiza as tabelas de tradução
-# (_Modding\src\CurrencyMod\Lang\<idioma>.json: {"texto em português": "tradução"}).
-# Textos novos entram com tradução vazia (""): o mod mostra o português até alguém traduzir.
-# Textos que sumiram do código saem da tabela (a lista vai para Lang\_removidos.txt).
-# Uso: powershell -ExecutionPolicy Bypass -File _Modding\tools\dev\extrair-textos.ps1 [-Relatorio] [-Idioma en]
-# Com -Idioma, só aquela tabela é regravada (para traduzir vários idiomas ao mesmo tempo).
-param([switch]$Relatorio, [string]$Idioma)
+﻿# Extracts the texts marked with L.T / L.F / L.N in the core and updates the translation tables
+# (_Modding\src\CurrencyMod\Lang\<language>.json: {"Portuguese text": "translation"}).
+# New texts come in with an empty translation (""): the mod shows the Portuguese until someone translates them.
+# Texts that left the code leave the table (the list goes to Lang\_removidos.txt).
+# Usage: powershell -ExecutionPolicy Bypass -File _Modding\tools\dev\extract-texts.ps1 [-Report] [-Language en]
+# With -Language, only that table is rewritten (to translate several languages at the same time).
+param([switch]$Report, [string]$Language)
 $ErrorActionPreference = 'Stop'
 $mod = Split-Path (Split-Path $PSScriptRoot -Parent) -Parent
 $src = Join-Path $mod 'src\CurrencyMod'
 $langDir = Join-Path $src 'Lang'
-$languages = if ($Idioma) { @($Idioma) } else { @('en', 'es', 'fr', 'de') }
+$languages = if ($Language) { @($Language) } else { @('en', 'es', 'fr', 'de') }
 
 function Unescape-CSharp([string]$s) {
     $sb = New-Object System.Text.StringBuilder
@@ -66,7 +66,7 @@ foreach ($lang in $languages) {
     $path = Join-Path $langDir "$lang.json"
     $old = New-Object 'System.Collections.Generic.Dictionary[string,string]' ([StringComparer]::Ordinal)
     if (Test-Path $path) {
-        # ConvertFrom-Json não aceita chaves que só mudam maiúsculas: usa o leitor do .NET.
+        # ConvertFrom-Json rejects keys that differ only in case: uses the .NET reader.
         Add-Type -AssemblyName System.Web.Extensions
         $serializer = New-Object System.Web.Script.Serialization.JavaScriptSerializer
         $serializer.MaxJsonLength = [int]::MaxValue
@@ -82,14 +82,14 @@ foreach ($lang in $languages) {
     }
     foreach ($k in $old.Keys) { if (-not $keys.Contains($k) -and $old[$k]) { $removed.Add("[$lang] $k") } }
     [IO.File]::WriteAllText($path, "{`n" + ($lines -join ",`n") + "`n}`n", $utf8)
-    "{0}: {1} textos, {2} traduzidos, {3} faltando" -f $lang, $keys.Count, $done, ($keys.Count - $done)
+    "{0}: {1} texts, {2} translated, {3} missing" -f $lang, $keys.Count, $done, ($keys.Count - $done)
 }
 if ($removed.Count -gt 0) {
-    [IO.File]::WriteAllLines((Join-Path $langDir ('_removidos' + $(if ($Idioma) { "_$Idioma" } else { '' }) + '.txt')), $removed, $utf8)
-    "$($removed.Count) traduções de textos que saíram do código: Lang\_removidos.txt"
+    [IO.File]::WriteAllLines((Join-Path $langDir ('_removidos' + $(if ($Language) { "_$Language" } else { '' }) + '.txt')), $removed, $utf8)
+    "$($removed.Count) translations of texts that left the code: Lang\_removidos.txt"
 }
-if ($Relatorio) {
-    $report = foreach ($k in $keys) { "$($where[$k])`t$k" }
-    [IO.File]::WriteAllLines((Join-Path $langDir '_chaves.tsv'), $report, $utf8)
-    "Arquivo de cada texto: Lang\_chaves.tsv"
+if ($Report) {
+    $reportLines = foreach ($k in $keys) { "$($where[$k])`t$k" }
+    [IO.File]::WriteAllLines((Join-Path $langDir '_chaves.tsv'), $reportLines, $utf8)
+    "Source file of each text: Lang\_chaves.tsv"
 }

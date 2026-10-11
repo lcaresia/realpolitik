@@ -32,18 +32,18 @@ namespace CurrencyMod
         private static bool IsMajor(int empireIndex) => empireIndex >= 0 && empireIndex < Sandbox.NumberOfMajorEmpires;
 
         /// <summary>
-        /// "jogo rotas": active trade routes between major empires that cross a third party's territory, with what
+        /// "game routes": active trade routes between major empires that cross a third party's territory, with what
         /// that owner does to each side; toll and blockade rules per owner; tolls paid at the last end of turn.
         /// </summary>
         internal static string Describe(bool fullPaths = false)
         {
             if (Sandbox.TradeController == null || Sandbox.World == null)
             {
-                return "erro: sem partida";
+                return "error: no game";
             }
             if (fullPaths)
             {
-                // "jogo rotas detalhe": the full path of each active route, territory by territory, with the owner.
+                // "game routes detail": the full path of each active route, territory by territory, with the owner.
                 var paths = new System.Text.StringBuilder();
                 foreach (ExternalTradeRelation relation in Sandbox.TradeController.ExternalTradeRelations)
                 {
@@ -91,9 +91,9 @@ namespace CurrencyMod
                     TradeMode forLeft = IsMajor(left) ? TradePolicy.GetMode(territory.Index, left, owner.Index) : TradeMode.Free;
                     TradeMode forRight = IsMajor(right) ? TradePolicy.GetMode(territory.Index, right, owner.Index) : TradeMode.Free;
                     tolled |= forLeft == TradeMode.Toll || forRight == TradeMode.Toll;
-                    crossed.Add($"T{territory.Index} de E{owner.Index}"
-                        + (forLeft != TradeMode.Free ? $" ({TradePolicy.ModeName(forLeft)} p/ E{left})" : string.Empty)
-                        + (forRight != TradeMode.Free ? $" ({TradePolicy.ModeName(forRight)} p/ E{right})" : string.Empty));
+                    crossed.Add($"T{territory.Index} of E{owner.Index}"
+                        + (forLeft != TradeMode.Free ? $" ({forLeft} for E{left})" : string.Empty)
+                        + (forRight != TradeMode.Free ? $" ({forRight} for E{right})" : string.Empty));
                 }
                 if (crossed.Count == 0)
                 {
@@ -104,11 +104,11 @@ namespace CurrencyMod
                 {
                     charged++;
                 }
-                text.AppendLine($"E{left} ↔ E{right} ({goods} recurso(s)): {string.Join(", ", crossed)}");
+                text.AppendLine($"E{left} ↔ E{right} ({goods} resource(s)): {string.Join(", ", crossed)}");
             }
             CurrencyWorld world = CurrencyManager.Current;
             var summary = new System.Text.StringBuilder();
-            summary.AppendLine($"rotas ativas entre impérios: {active} · atravessam terceiros: {crossing} · com pedágio a cobrar: {charged}");
+            summary.AppendLine($"active routes between empires: {active} · crossing third parties: {crossing} · with a toll to charge: {charged}");
             if (world != null)
             {
                 lock (CurrencyManager.Lock)
@@ -126,15 +126,15 @@ namespace CurrencyMod
                     var owners = new List<string>();
                     foreach (KeyValuePair<int, int[]> pair in byOwner)
                     {
-                        owners.Add($"E{pair.Key}: {pair.Value[1]} pedágio(s), {pair.Value[2]} bloqueio(s)");
+                        owners.Add($"E{pair.Key}: {pair.Value[1]} toll(s), {pair.Value[2]} block(s)");
                     }
-                    summary.AppendLine("regras (por território e alvo): " + (owners.Count > 0 ? string.Join(" · ", owners) : "nenhuma"));
+                    summary.AppendLine("rules (per territory and target): " + (owners.Count > 0 ? string.Join(" · ", owners) : "none"));
                     var tolls = new List<string>();
                     foreach (TollRecord toll in world.LastTolls)
                     {
-                        tolls.Add($"E{toll.Payer} pagou {toll.PaidByPayer:0} a E{toll.Owner} ({toll.Routes} rota(s))");
+                        tolls.Add($"E{toll.Payer} paid {toll.PaidByPayer:0} to E{toll.Owner} ({toll.Routes} route(s))");
                     }
-                    summary.AppendLine($"pedágios do último fim de turno (turno {world.LastTradeTurn}): " + (tolls.Count > 0 ? string.Join("; ", tolls) : "nenhum"));
+                    summary.AppendLine($"tolls at the last end of turn (turn {world.LastTradeTurn}): " + (tolls.Count > 0 ? string.Join("; ", tolls) : "none"));
                 }
             }
             return summary.ToString() + text.ToString().TrimEnd();
@@ -317,8 +317,8 @@ namespace CurrencyMod
         }
 
         /// <summary>
-        /// Test ("jogo pedagio teste dono T_livre T_taxado E_esq E_dir [preço]"): the mod's step cost, with the context of the
-        /// real route between E_esq and E_dir, for entering the tolled post from outside, from the same owner's free post
+        /// Test ("game toll test owner T_free T_tolled E_left E_right [price]"): the mod's step cost, with the context of the
+        /// real route between E_left and E_right, for entering the tolled post from outside, from the same owner's free post
         /// (the inner post) and for going to the free post. The tolled post uses the preview's "what if" scenario (this territory only).
         /// </summary>
         internal static string SelfTestInnerPost(int owner, int free, int tolled, int left, int right, double price)
@@ -326,17 +326,17 @@ namespace CurrencyMod
             ExternalTradeRelation relation = Sandbox.TradeController?.GetExternalTradeRelation(left, right);
             if (relation == null || Sandbox.World == null)
             {
-                return $"erro: não há relação comercial E{left}↔E{right}";
+                return $"error: there is no trade relation E{left}↔E{right}";
             }
             if (OwnerOf(free)?.Index != owner || OwnerOf(tolled)?.Index != owner)
             {
-                return $"erro: T{free} e T{tolled} precisam ser de E{owner}";
+                return $"error: T{free} and T{tolled} must belong to E{owner}";
             }
             int outside = -1;
             for (int t = 0; t < Sandbox.World.Territories.Length && outside < 0; t++)
             {
-                int o = OwnerOf(t)?.Index ?? -1;
-                if (o == left || o == right)
+                int territoryOwner = OwnerOf(t)?.Index ?? -1;
+                if (territoryOwner == left || territoryOwner == right)
                 {
                     outside = t;
                 }
@@ -358,10 +358,10 @@ namespace CurrencyMod
                 }
                 MajorEmpire ownerEmpire = Sandbox.MajorEmpires[owner];
                 float alone = TollPathCost(tolled, ownerEmpire, left, right);
-                return $"rota E{left}↔E{right}, dono E{owner}, T{tolled} taxado a {price} (custo do pedágio sozinho: {alone:0.##}), T{free} livre:\n"
-                    + $"  de fora (T{outside}) → T{tolled}: +{Step(outside, tolled):0.##}\n"
-                    + $"  de T{free} (mesmo dono, livre) → T{tolled}: +{Step(free, tolled):0.##}   ← posto interno (antes da correção: +0)\n"
-                    + $"  de T{tolled} → T{free}: +{Step(tolled, free):0.##}";
+                return $"route E{left}↔E{right}, owner E{owner}, T{tolled} tolled at {price} (toll cost alone: {alone:0.##}), T{free} free:\n"
+                    + $"  from outside (T{outside}) → T{tolled}: +{Step(outside, tolled):0.##}\n"
+                    + $"  from T{free} (same owner, free) → T{tolled}: +{Step(free, tolled):0.##}   ← inner post (before the fix: +0)\n"
+                    + $"  from T{tolled} → T{free}: +{Step(tolled, free):0.##}";
             }
             finally
             {

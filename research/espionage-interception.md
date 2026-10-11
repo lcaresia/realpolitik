@@ -183,7 +183,7 @@ detecção a calibrar; segurar no inbox do jogador as cartas ainda não resolvid
 inteiras por turno no dossiê.
 
 ## 6. Plano
-1. `ia espionagem` (dump de agentes, infiltrações, detecção e tabela de exposição) + dumps da interface.
+1. `ai espionage` (dump de agentes, infiltrações, detecção e tabela de exposição) + dumps da interface.
 2. `EspionageCapture` na foto do turno.
 3. `[IA]` no `.cfg`: Pmax, k, pesos, teto, orçamento por espião, popup.
 4. `Letter`: `InterceptionChecked`, `InterceptedBy`, `InterceptedTurn`, `InterceptedTerritory`, `InterceptedArmy*`,
@@ -191,7 +191,7 @@ inteiras por turno no dossiê.
 5. `Diplomacia\Espionage.cs`: risco na origem, resolução, hash, orçamento, log.
 6. Filtros do inbox do jogador e seções do dossiê; regras no prompt.
 7. `InterceptedLettersTab.cs` com os 2 patches; helpers de cartão em classe comum; selo.
-8. F10 e `ia interceptar <carta> <E>` para testar.
+8. F10 e `ai intercept <carta> <E>` para testar.
 9. Testes: vigiar capital de IA → cartas IA↔IA na aba; espião de IA na capital do jogador → carta do jogador some
    ("Entregue" sem "Lida"); aliados nunca se interceptam; save/load com os mesmos sorteios; recarga a quente sem sobras;
    primeira era sem erro.

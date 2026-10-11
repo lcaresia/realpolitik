@@ -57,7 +57,7 @@ O mod se chama **MoreEmpires** e é um plugin BepInEx separado do CurrencyMod.
 | Configuração | `BepInEx\config\lucas.humankind.moreempires.cfg`, criada no primeiro início |
 | Medição de turnos | `BepInEx\MoreEmpires\turnos.csv` |
 | Testes fora do jogo | `src\MoreEmpires\Tests\` |
-| Instalar / desligar / empacotar | `tools\instalar-moreempires.ps1` |
+| Instalar / desligar / empacotar | `tools\install-moreempires.ps1` |
 
 **Compilar sem instalar:**
 ```
@@ -66,13 +66,13 @@ O mod se chama **MoreEmpires** e é um plugin BepInEx separado do CurrencyMod.
 
 **Instalar** (com o jogo fechado):
 ```
-powershell -ExecutionPolicy Bypass -File _Modding\tools\instalar-moreempires.ps1
+powershell -ExecutionPolicy Bypass -File _Modding\tools\install-moreempires.ps1
 ```
 Compila com `-p:Deploy=true`. O alvo de cópia fica desligado por padrão.
 
 **Desligar:**
 ```
-powershell -ExecutionPolicy Bypass -File _Modding\tools\instalar-moreempires.ps1 -Desinstalar
+powershell -ExecutionPolicy Bypass -File _Modding\tools\install-moreempires.ps1 -Uninstall
 ```
 Renomeia a DLL para `.desligado`; não apaga nada.
 
@@ -311,8 +311,8 @@ O log registra cada tentativa (`[Mapa] Tentativa N: área de região X, Y tiles,
 
 ### Testes no jogo (2026-10-04)
 
-As partidas foram criadas com o comando `jogo novo <jogadores> <tamanho>` do CurrencyMod. Ele usa o início rápido com
-as opções do lobby e, com `jogo espectador on`, a IA nativa joga pelo império local.
+As partidas foram criadas com o comando `game new <players> <size>` do CurrencyMod. Ele usa o início rápido com
+as opções do lobby e, com `game spectator on`, a IA nativa joga pelo império local.
 
 - **Normal, 16 impérios:** 64 turnos sem exceções.
   - Auditoria da economia sem valores inválidos.
@@ -320,7 +320,7 @@ as opções do lobby e, com `jogo espectador on`, a IA nativa joga pelo império
 - **Tiny, 16 impérios:** o ajuste automático do mapa funcionou na 2ª tentativa (16/16 pontos válidos). Rodou 82 turnos.
 - **Huge, 16 impérios:** 16/16 pontos válidos na 1ª tentativa. 76 turnos sem exceções.
 - **Atalho de visibilidade:** as 160 conferências com a recursão original deram resultados idênticos.
-- **Compatibilidade com o CurrencyMod:** a economia (moedas, juros, câmbio e a auditoria `jogo economia`) rodou com
+- **Compatibilidade com o CurrencyMod:** a economia (moedas, juros, câmbio e a auditoria `game economy`) rodou com
   16 impérios. As outras mudanças da tarefa 7 não foram exercitadas em jogo: chaves `*256`, rolagem do Banco Central
   e correio limitado a 60 cartas.
 - **Não medido:** o tempo dos turnos. A medição começa no clique de fim de turno (`Empire.SetReady`), e no modo
@@ -377,7 +377,7 @@ Ao todo são duas sessões do jogo: **A**, com `MaxImperios = 16`, e **B**, com 
 #### Preparação (≈ 5 min)
 1. Com o jogo fechado, instale:
    ```
-   powershell -ExecutionPolicy Bypass -File _Modding\tools\instalar-moreempires.ps1
+   powershell -ExecutionPolicy Bypass -File _Modding\tools\install-moreempires.ps1
    ```
 2. Abra o jogo e, no menu, confira o `BepInEx\LogOutput.log`:
    - `MoreEmpires 1.0.0: MaxImperios = 16 (ativo), cores = 16 ...`

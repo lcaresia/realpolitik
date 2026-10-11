@@ -67,23 +67,23 @@ namespace CurrencyMod
         {
             if (instance == null)
             {
-                return "erro: janela não existe";
+                return "error: window does not exist";
             }
             string[] parts = args.Split(' ');
             switch (parts[0])
             {
                 case "open":
                     instance.visible = true;
-                    return "ok: aberta";
+                    return "ok: opened";
                 case "close":
                     instance.visible = false;
-                    return "ok: fechada";
+                    return "ok: closed";
                 case "tab" when parts.Length > 1 && int.TryParse(parts[1], out int index) && index >= 0 && index <= 3:
                     instance.tab = (Tab)index;
                     instance.visible = true;
-                    return $"ok: aba {instance.tab}";
+                    return $"ok: tab {instance.tab}";
                 default:
-                    return "uso: bank open|close|tab 0-3";
+                    return "usage: bank open|close|tab 0-3";
             }
         }
 
@@ -596,7 +596,7 @@ namespace CurrencyMod
 
             GUILayout.Label(L.T("EFEITO ESPERADO NO PRÓXIMO TURNO"), Theme.SectionHeader);
             GUILayout.BeginHorizontal();
-            StatCard(stock >= 0 ? L.T("SALDO (JURO REAL)") : L.T("DÍVIDA (JURO REAL)"), Format.SignedPercent(realRate), $"{Format.SignedMoney(EconomySimulation.InterestFlow(stock, mine.InterestRate, mine.InflationRate, mine.SmoothedIncome))} {mine.Symbol}", realRate * Math.Sign(stock) >= 0 ? Theme.Positive : Theme.Negative);
+            StatCard(stock >= 0 ? L.T("SALDO (JURO REAL)") : L.T("DÍVIDA (JURO REAL)"), Format.SignedPercent(realRate), $"{Format.SignedMoney(EconomySimulation.InterestFlow(stock, mine.InterestRate, mine.InflationRate, mine.SmoothedIncome, mine.Gdp))} {mine.Symbol}", realRate * Math.Sign(stock) >= 0 ? Theme.Positive : Theme.Negative);
             StatCard(L.T("PRODUÇÃO (CRÉDITO)"), "×" + Format.Rate(mine.CreditFactor), L.F("indo para ×{0}", Format.Rate(creditTarget)), mine.CreditFactor >= 1 ? Theme.Positive : Theme.Negative);
             StatCard(L.T("PRESSÃO NA INFLAÇÃO"), Format.SignedPercent(inflationPush), inflationPush <= 0 ? L.T("Segura os preços") : L.T("Aquece os preços"), inflationPush <= 0 ? Theme.Positive : Theme.Gold);
             StatCard(L.T("META DE INFLAÇÃO"), Format.Percent(EconomyConfig.TargetInflation.Value), L.T("Usada pelo automático"), Theme.Neutral);

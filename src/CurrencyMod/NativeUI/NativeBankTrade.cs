@@ -425,7 +425,7 @@ namespace CurrencyMod.NativeUI
         {
             if (!CentralBankWindow.TryGetGameData(out GameSnapshot.Data game))
             {
-                return "erro: sem partida";
+                return "error: no game";
             }
             int me = game.LocalEmpireInfo.EmpireIndex;
             CurrencyWorld world = CurrencyManager.Ensure(game.GameID, game.NumberOfMajorEmpires);
@@ -459,7 +459,7 @@ namespace CurrencyMod.NativeUI
                     }
                 }
             }
-            return $"ok: livro de dinheiro inventado com {string.Join(", ", partners.Select(p => "E" + p))}";
+            return $"ok: fake money ledger with {string.Join(", ", partners.Select(p => "E" + p))}";
         }
     }
 }

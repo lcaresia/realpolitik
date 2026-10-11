@@ -1505,14 +1505,15 @@ namespace CurrencyMod.Diplomacy
         }
 
         /// <summary>
-        /// Test ("ia exercito E# A# objetivo destino [turnos]"): the same order the language AI would give, recorded in
-        /// the nation's memory (the result shows up in "ia acoes").
+        /// Test ("ai army E# A# goal target [turns]"): the same order the language AI would give, recorded in
+        /// the nation's memory (the result shows up in "ai actions"). The goal arrives already mapped to its stored value
+        /// (mover|atacar|defender|parar).
         /// </summary>
         internal string DevArmyOrder(int empire, string armyHandle, string goal, string target, int turns)
         {
             if (World == null || currentTurn < 0)
             {
-                return "erro: sem partida";
+                return "error: no game";
             }
             var item = new JObject { ["acao"] = "ordem_exercito", ["exercito"] = armyHandle, ["objetivo"] = goal, ["destino"] = target, ["turnos"] = turns, ["motivo"] = "teste" };
             var action = new ActionDraft { Name = "ordem_exercito", Json = item.ToString(Formatting.None), Summary = $"{goal} {armyHandle} → {target} (teste)" };
@@ -1520,27 +1521,27 @@ namespace CurrencyMod.Diplomacy
             ActionIntent intent = BuildIntent(job, action, out string problem);
             if (intent == null)
             {
-                return "erro: " + (problem ?? "ordem inválida");
+                return "error: " + (problem ?? "invalid order");
             }
             intent.Id = World.NextActionId++;
             ActionExecutor.Pending.Enqueue(intent);
             RememberMission(intent, currentTurn);
             World.Ensure(empire).Actions.Add(new ActionRecord { Id = intent.Id, Turn = currentTurn, Name = action.Name, Json = action.Json, Status = "enviada ao jogo (teste)" });
             dirty = true;
-            return $"ok: ordem #{intent.Id} enviada: {action.Summary} ({intent.TargetLabel})";
+            return $"ok: order #{intent.Id} sent: {action.Summary} ({intent.TargetLabel})";
         }
 
         /// <summary>
-        /// Test ("ia teste carta-de E# texto"): a private letter from a nation to you, delivered now and asking for a reply.
+        /// Test ("ai test letter-from E# text"): a private letter from a nation to you, delivered now and asking for a reply.
         /// Also works with an eliminated nation, to check that the mail does not offer "Reply" to someone who no longer exists.
         /// </summary>
         internal string DevLetterFrom(int from, string text)
         {
             if (World == null || currentTurn < 0)
             {
-                return "erro: sem partida";
+                return "error: no game";
             }
-            // "[Assunto] texto": optional subject and type ("[Assunto|publica] texto" makes the letter public).
+            // "[Subject] text": optional subject and type ("[Subject|public] text" makes the letter public; any word starting with "p").
             string devSubject = "Carta de teste";
             string devType = "privada";
             string devText = text ?? string.Empty;
@@ -1548,9 +1549,9 @@ namespace CurrencyMod.Diplomacy
             {
                 string head = devText.TrimStart().Substring(1, devText.TrimStart().IndexOf(']') - 1);
                 devText = devText.TrimStart().Substring(devText.TrimStart().IndexOf(']') + 1);
-                string[] hp = head.Split('|');
-                devSubject = hp[0].Trim();
-                if (hp.Length > 1 && hp[1].Trim().StartsWith("p", StringComparison.OrdinalIgnoreCase)) { devType = "publica"; }
+                string[] headParts = head.Split('|');
+                devSubject = headParts[0].Trim();
+                if (headParts.Length > 1 && headParts[1].Trim().StartsWith("p", StringComparison.OrdinalIgnoreCase)) { devType = "publica"; }
             }
             var letter = new Letter
             {
@@ -1568,11 +1569,11 @@ namespace CurrencyMod.Diplomacy
             World.Letters.Add(letter);
             dirty = true;
             bool alive = TurnCapture.Latest?.AiEmpires().Contains(from) ?? false;
-            return $"ok: carta {letter.Id} de E{from} ({(alive ? "viva" : "não está entre as nações vivas")}) para você";
+            return $"ok: letter {letter.Id} from E{from} ({(alive ? "alive" : "not among the living nations")}) to you";
         }
 
         /// <summary>
-        /// Test ("ia teste parser E#"): a decision with bad letters (unknown recipient, too long, empty, ultimatum without
+        /// Test ("ai test parser E#"): a decision with bad letters (unknown recipient, too long, empty, ultimatum without
         /// a demand) and one good letter, validated as on the 1st attempt and as on the last one (lenient).
         /// </summary>
         internal string DevParserTest(int empire)
@@ -1580,20 +1581,20 @@ namespace CurrencyMod.Diplomacy
             WorldCapture capture = TurnCapture.Latest;
             if (World == null || capture?.Empire(empire) == null)
             {
-                return "erro: sem foto do turno ou nação inválida";
+                return "error: no turn snapshot or invalid nation";
             }
             ValidationContext context = DossierBuilder.Build(World, capture, empire).Context;
             string known = context.KnownEmpires.Keys.FirstOrDefault(k => k.StartsWith("E")) ?? "E0";
-            string longText = string.Join(" ", Enumerable.Repeat("palavra", context.MaxLetterWords * 2));
+            string longText = string.Join(" ", Enumerable.Repeat("word", context.MaxLetterWords * 2));
             string json = new JObject
             {
-                ["diario"] = "Diário de teste.",
+                ["diario"] = "Test diary.",
                 ["cartas"] = new JArray
                 {
-                    new JObject { ["para"] = "E99", ["tipo"] = "privada", ["texto"] = "Para quem não existe." },
+                    new JObject { ["para"] = "E99", ["tipo"] = "privada", ["texto"] = "To someone who does not exist." },
                     new JObject { ["para"] = known, ["tipo"] = "privada", ["texto"] = longText },
-                    new JObject { ["para"] = known, ["tipo"] = "telegrama", ["texto"] = "Tipo que não existe." },
-                    new JObject { ["para"] = known, ["tipo"] = "ultimato", ["texto"] = "Ultimato sem exigência." },
+                    new JObject { ["para"] = known, ["tipo"] = "telegrama", ["texto"] = "A type that does not exist." },
+                    new JObject { ["para"] = known, ["tipo"] = "ultimato", ["texto"] = "Ultimatum without a demand." },
                     new JObject { ["para"] = known, ["tipo"] = "privada", ["texto"] = "" },
                 },
             }.ToString(Formatting.None);
@@ -1602,7 +1603,7 @@ namespace CurrencyMod.Diplomacy
             {
                 var errors = new List<string>();
                 Decision decision = DecisionParser.Parse(json, context, errors, lenient);
-                text.AppendLine($"{(lenient ? "última tentativa" : "1ª tentativa")}: decisão {(decision != null ? "ACEITA" : "recusada")} · erros {errors.Count} · cartas {decision?.Letters.Count ?? 0}");
+                text.AppendLine($"{(lenient ? "last attempt" : "1st attempt")}: decision {(decision != null ? "ACCEPTED" : "rejected")} · errors {errors.Count} · letters {decision?.Letters.Count ?? 0}");
                 foreach (string line in (decision?.Warnings ?? new List<string>()).Concat(errors))
                 {
                     text.AppendLine("  - " + (line.Length > 140 ? line.Substring(0, 140) + "…" : line));
@@ -1612,14 +1613,14 @@ namespace CurrencyMod.Diplomacy
         }
 
         /// <summary>
-        /// Test ("ia acao E# {json}"): any action of an AI nation, as if it had decided it (without going through the
-        /// dossier validation; the executor checks everything in the game). Recorded in the nation's memory, shows up in "ia acoes".
+        /// Test ("ai action E# {json}"): any action of an AI nation, as if it had decided it (without going through the
+        /// dossier validation; the executor checks everything in the game). Recorded in the nation's memory, shows up in "ai actions".
         /// </summary>
         internal string DevAction(int empire, string json)
         {
             if (World == null || currentTurn < 0)
             {
-                return "erro: sem partida";
+                return "error: no game";
             }
             JObject item;
             try
@@ -1628,12 +1629,12 @@ namespace CurrencyMod.Diplomacy
             }
             catch (Exception ex)
             {
-                return "erro: json inválido: " + ex.Message;
+                return "error: invalid json: " + ex.Message;
             }
             string name = ((string)item["acao"])?.Trim().ToLowerInvariant();
             if (string.IsNullOrEmpty(name))
             {
-                return "erro: falta \"acao\"";
+                return "error: missing \"acao\"";
             }
             if (name == "politica_comercial" || name == "rota_pedagio")
             {
@@ -1666,50 +1667,50 @@ namespace CurrencyMod.Diplomacy
             {
                 // Bloc actions: through the same validator as the turn decision and the same applier.
                 var errors = new List<string>();
-                string decisionJson = new JObject { ["diario"] = "Teste.", ["acoes"] = new JArray { item } }.ToString(Formatting.None);
+                string decisionJson = new JObject { ["diario"] = "Test.", ["acoes"] = new JArray { item } }.ToString(Formatting.None);
                 Decision decision = DecisionParser.Parse(decisionJson, context, errors, false);
                 ActionDraft parsed = decision?.Actions.FirstOrDefault(a => a.Name == name);
                 if (parsed == null)
                 {
-                    return "recusada pelo validador: " + string.Join(" | ", errors.Concat(decision?.Warnings ?? new List<string>()));
+                    return "rejected by the validator: " +string.Join(" | ", errors.Concat(decision?.Warnings ?? new List<string>()));
                 }
                 string status = Blocs.BlocActions.Apply(World, empire, name, parsed.Json, context, currentTurn);
                 World.Ensure(empire).Actions.Add(new ActionRecord { Id = 0, Turn = currentTurn, Name = name, Json = parsed.Json, Status = status + " (teste)" });
                 dirty = true;
-                return $"validada ({parsed.Summary}) · {status}";
+                return $"validated ({parsed.Summary}) · {status}";
             }
             var action = new ActionDraft { Name = name, Json = item.ToString(Formatting.None), Summary = name + " (teste)" };
             ActionIntent intent = BuildIntent(new DecisionJob { Turn = currentTurn, EmpireIndex = empire, Context = context }, action, out string problem);
             if (intent == null)
             {
-                return "erro: " + (problem ?? "ação inválida");
+                return "error: " + (problem ?? "invalid action");
             }
             intent.Id = World.NextActionId++;
             ActionExecutor.Pending.Enqueue(intent);
             World.Ensure(empire).Actions.Add(new ActionRecord { Id = intent.Id, Turn = currentTurn, Name = name, Json = action.Json, Status = "enviada ao jogo (teste)" });
             dirty = true;
-            return $"ok: ação #{intent.Id} ({name}) de E{empire} enviada";
+            return $"ok: action #{intent.Id} ({name}) of E{empire} sent";
         }
 
-        /// <summary>Test ("ia exercitos E#"): the nation's armies with their A code (creates the code if there is none yet).</summary>
+        /// <summary>Test ("ai armies E#"): the nation's armies with their A code (creates the code if there is none yet).</summary>
         internal string DevListArmies(int empire)
         {
             WorldCapture capture = TurnCapture.Latest;
             CapturedEmpire me = capture?.Empire(empire);
             if (World == null || me == null)
             {
-                return "erro: sem foto do turno";
+                return "error: no turn snapshot";
             }
             var text = new System.Text.StringBuilder();
             foreach (CapturedArmy army in me.Armies.OrderByDescending(a => a.Strength))
             {
                 ArmyMission mission = World.MissionFor(army.Key);
-                text.AppendLine($"{World.ArmyHandle(army.Key)} {army.Name} em {capture.TerritoryName(army.Territory)} (T{army.Territory}) · {army.Units} unidade(s), força {army.Strength:0}"
-                    + $"{(army.Spy ? " · espião" : string.Empty)}{(army.Naval ? " · naval" : string.Empty)}{(army.Moving ? " · em marcha" : string.Empty)}"
-                    + (mission != null ? $" · missão: {mission.Goal} → {mission.TargetLabel} ({mission.Status}{(mission.Active ? string.Empty : ", encerrada")})" : string.Empty));
+                text.AppendLine($"{World.ArmyHandle(army.Key)} {army.Name} in {capture.TerritoryName(army.Territory)} (T{army.Territory}) · {army.Units} unit(s), strength {army.Strength:0}"
+                    + $"{(army.Spy ? " · spy" : string.Empty)}{(army.Naval ? " · naval" : string.Empty)}{(army.Moving ? " · marching" : string.Empty)}"
+                    + (mission != null ? $" · mission: {mission.Goal} → {mission.TargetLabel} ({mission.Status}{(mission.Active ? string.Empty : ", ended")})" : string.Empty));
             }
             dirty = true;
-            return text.Length > 0 ? text.ToString().TrimEnd() : "nenhum exército";
+            return text.Length > 0 ? text.ToString().TrimEnd() : "no armies";
         }
 
         /// <summary>Readable name of an army order's target, for the reports and the dossier ("Harappa (T137)").</summary>

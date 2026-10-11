@@ -18,7 +18,7 @@ namespace CurrencyMod
     ///   L.N("Ministros")                → only marks the text for extraction (static lists); translate with L.T when showing it.
     /// The tables live in the core itself (Lang\en.json, es.json, fr.json, de.json: {"text in pt": "translation"}).
     /// A file at BepInEx\CurrencyModCore\lang\&lt;code&gt;.json, if present, overrides them (community translations).
-    /// Untranslated text falls back to Portuguese and goes into the missing list (command "idioma faltando").
+    /// Untranslated text falls back to Portuguese and goes into the missing list (command "language missing").
     /// </summary>
     internal static class L
     {
@@ -219,7 +219,7 @@ namespace CurrencyMod
         /// <summary>Only marks the text for extraction (static lists); returns the Portuguese itself.</summary>
         internal static string N(string pt) => pt;
 
-        /// <summary>Requested texts that have no translation in the current language (for the command "idioma faltando").</summary>
+        /// <summary>Requested texts that have no translation in the current language (for the command "language missing").</summary>
         internal static List<string> Missing()
         {
             lock (missing)

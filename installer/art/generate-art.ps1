@@ -1,14 +1,15 @@
-# Gera a arte do instalador a partir do selo do site (site\assets\perfil\perfil-selo-1-512.png):
-#   realpolitik.ico            ícone do Setup e do desinstalador (256/48/32/16, PNG dentro do .ico)
-#   pequena-55.bmp, -110.bmp   canto superior direito das páginas (100% e 200%)
-#   grande-164.bmp, -328.bmp   lateral das páginas de boas-vindas e fim (100% e 200%)
-# Uso: powershell -ExecutionPolicy Bypass -File _Modding\installer\art\gerar-arte.ps1
+# Builds the installer art from the site seal (site\assets\perfil\perfil-selo-1-512.png):
+#   realpolitik.ico            Setup and uninstaller icon (256/48/32/16, PNG inside the .ico)
+#   pequena-55.bmp, -110.bmp   top right corner of the pages (100% and 200%)
+#   grande-164.bmp, -328.bmp   side image of the welcome and finish pages (100% and 200%)
+# The output file names are referenced by Realpolitik.iss and make-release.ps1 (asset names, kept as they are).
+# Usage: powershell -ExecutionPolicy Bypass -File _Modding\installer\art\generate-art.ps1
 $ErrorActionPreference = 'Stop'
 Add-Type -AssemblyName System.Drawing
 $here = $PSScriptRoot
 $mod = Split-Path (Split-Path $here -Parent) -Parent
 $src = [Drawing.Image]::FromFile((Join-Path $mod 'site\assets\perfil\perfil-selo-1-512.png'))
-$seal = New-Object Drawing.Rectangle 92, 118, 300, 300   # recorte no selo (lacre + pena)
+$seal = New-Object Drawing.Rectangle 92, 118, 300, 300   # crop of the seal (wax seal + quill)
 $navy = [Drawing.ColorTranslator]::FromHtml('#0c1522')
 $gold = [Drawing.ColorTranslator]::FromHtml('#e2c172')
 
@@ -20,13 +21,13 @@ function New-Canvas([int]$w, [int]$h) {
 }
 
 function Save-Bmp($bmp, [string]$name) {
-    # BMP de 24 bits (o Inno não usa transparência em BMP).
+    # 24-bit BMP (Inno does not use transparency in BMP).
     $flat = New-Object Drawing.Bitmap $bmp.Width, $bmp.Height, ([Drawing.Imaging.PixelFormat]::Format24bppRgb)
     $g = [Drawing.Graphics]::FromImage($flat); $g.Clear($navy); $g.DrawImage($bmp, 0, 0, $bmp.Width, $bmp.Height); $g.Dispose()
     $flat.Save((Join-Path $here $name), [Drawing.Imaging.ImageFormat]::Bmp); $flat.Dispose()
 }
 
-# Ícone: PNGs de 256, 48, 32 e 16 dentro de um .ico.
+# Icon: 256, 48, 32 and 16 PNGs inside an .ico.
 $pngs = @()
 foreach ($s in 256, 48, 32, 16) {
     $bmp, $g = New-Canvas $s $s
@@ -46,14 +47,14 @@ foreach ($p in $pngs) {
 foreach ($p in $pngs) { $w.Write($p[1]) }
 [IO.File]::WriteAllBytes((Join-Path $here 'realpolitik.ico'), $ico.ToArray())
 
-# Imagem pequena (canto): o selo sobre o azul do site.
+# Small image (corner): the seal over the site's navy blue.
 foreach ($s in 55, 110) {
     $bmp, $g = New-Canvas $s $s
     $g.Clear($navy); $g.DrawImage($src, (New-Object Drawing.Rectangle 0, 0, $s, $s), $seal, 'Pixel'); $g.Dispose()
     Save-Bmp $bmp "pequena-$s.bmp"; $bmp.Dispose()
 }
 
-# Imagem grande (lateral): azul, o selo no alto, o nome em dourado embaixo.
+# Large image (side): navy, the seal at the top, the name in gold below.
 foreach ($k in 1, 2) {
     $W = 164 * $k; $H = 314 * $k
     $bmp, $g = New-Canvas $W $H

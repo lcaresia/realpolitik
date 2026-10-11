@@ -1,9 +1,9 @@
-﻿param([Parameter(Mandatory = $true)][string[]]$Commands, [int]$TimeoutSec = 30)
+param([Parameter(Mandatory = $true)][string[]]$Commands, [int]$TimeoutSec = 30)
 
-# Manda comandos pelo canal de desenvolvimento do mod (_Modding\dev\cmd.txt, lido pelo carregador com o jogo aberto) e
-# mostra só as respostas novas do _Modding\dev\out\result.txt. Respostas longas vão para um arquivo próprio em dev\out
-# (o result.txt diz "ok: N caracteres em <arquivo>").
-# Uso: powershell -File _Modding\tools\dev\devcmd.ps1 -Commands @("ia status", "jogo estado")
+# Sends commands through the mod's dev channel (_Modding\dev\cmd.txt, read by the loader while the game is running) and
+# prints only the new answers from _Modding\dev\out\result.txt. Long answers go to their own file in dev\out
+# (result.txt says "ok: N characters in <file>"). Command reference: _Modding\docs\dev-commands.md.
+# Usage: powershell -File _Modding\tools\dev\devcmd.ps1 -Commands @("ai status", "game state")
 $modding = Split-Path (Split-Path $PSScriptRoot -Parent) -Parent
 $dev = Join-Path $modding 'dev'
 $result = Join-Path $dev 'out\result.txt'
@@ -25,7 +25,7 @@ while ((Get-Date) -lt $deadline) {
         }
     }
 }
-"(tempo esgotado: $answers de $($Commands.Count) respostas)"
+"(timed out: $answers of $($Commands.Count) answers)"
 if (Test-Path $result) {
     $text = [IO.File]::ReadAllText($result, [Text.Encoding]::UTF8)
     if ($text.Length -gt $start) { $text.Substring($start) }

@@ -1451,55 +1451,55 @@ namespace CurrencyMod.Diplomacy.UI
 
         // ---------------- Development and removal ----------------
 
-        /// <summary>Commands: "abrir", "fechar", "secao 0..4", "tipo N", "alvo E#", "valor N", "texto ...", "convidar E#", "enviar".</summary>
+        /// <summary>"ai alliances ..." commands: "open", "close", "section 0..4", "kind N", "target E#", "value N", "text ...", "invite E#", "send".</summary>
         internal static string DevCommand(string args)
         {
             string[] parts = (args ?? string.Empty).Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
-            string sub = parts.Length > 0 ? parts[0] : "abrir";
+            string sub = parts.Length > 0 ? parts[0] : "open";
             if (Instance == null)
             {
-                return "erro: tela das alianças não existe (abra uma partida)";
+                return "error: alliances screen does not exist (load a game)";
             }
             View view = Instance.Current();
             switch (sub)
             {
-                case "fechar":
+                case "close":
                     SetOpen(false);
-                    return "ok: fechada";
-                case "secao":
+                    return "ok: closed";
+                case "section":
                     SetOpen(true);
                     if (parts.Length > 1 && int.TryParse(parts[1], out int section))
                     {
                         Instance.SelectSection((Section)Mathf.Clamp(section, 0, SectionNames.Length - 1));
                     }
                     return "ok";
-                case "tipo":
+                case "kind":
                     Instance.kindIndex = parts.Length > 1 && int.TryParse(parts[1], out int kind) ? Mathf.Clamp(kind, 0, MotionKinds.Length - 1) : 0;
                     Instance.nextRefresh = 0;
                     return "ok: " + MotionKinds[Instance.kindIndex];
-                case "alvo":
+                case "target":
                     Instance.target = parts.Length > 1 && int.TryParse(parts[1].TrimStart('E', 'e'), out int who) ? who : -1;
                     Instance.nextRefresh = 0;
                     return "ok";
-                case "valor":
+                case "value":
                     Instance.valueIndex = parts.Length > 1 && int.TryParse(parts[1], out int value) ? value : 0;
                     Instance.nextRefresh = 0;
                     return "ok";
-                case "texto":
+                case "text":
                     Instance.field?.ReplaceText(string.Join(" ", parts.Skip(1)));
                     return "ok";
-                case "convidar":
+                case "invite":
                     if (parts.Length > 1 && int.TryParse(parts[1].TrimStart('E', 'e'), out int guest) && !Instance.invitees.Remove(guest))
                     {
                         Instance.invitees.Add(guest);
                     }
                     Instance.nextRefresh = 0;
                     return "ok: " + string.Join(",", Instance.invitees);
-                case "enviar":
+                case "send":
                     // The same as the panel's send button (found, or propose the assembled agenda item).
                     if (view == null)
                     {
-                        return "erro: sem partida";
+                        return "error: no game";
                     }
                     if (view.Mine == null)
                     {
@@ -1512,7 +1512,7 @@ namespace CurrencyMod.Diplomacy.UI
                     return "ok: " + (Instance.feedback ?? "?");
                 default:
                     SetOpen(true);
-                    return "ok: aberta";
+                    return "ok: open";
             }
         }
 

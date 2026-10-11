@@ -699,11 +699,11 @@ namespace CurrencyMod.NativeUI
             {
                 double turns = EconomyConfig.SavingsCapacityTurns.Value;
                 double income = hasDemandData ? mine.SmoothedIncome : (float)game.EmpireInfo[localIndex].MoneyNet;
-                double capacity = turns * Math.Max(20.0, income);
+                double capacity = EconomySimulation.SavingsCapacity(income, mine.Gdp);
                 if (real > 0)
                 {
                     FillCycleCard(CycleCard.Savings, L.F("Rendimento do saldo: {0}/turno", Colored(Format.SignedMoney(flow), flowColor)),
-                        L.F("O saldo rende juros reais (juros − inflação). Até cerca de {0:0} turnos de renda ({1} {2}) rende quase tudo; acima disso, cada vez menos. Os juros já entram na renda por turno da barra do topo.", turns, mine.Symbol, Format.Money(capacity)),
+                        L.F("O saldo rende juros reais (juros − inflação). Até cerca de {1} {2} rende quase tudo: {0:0} turnos da sua renda ou de uma parte do PIB, o que for maior (quem importa muito e tem caixa grande também rende). Acima disso, cada vez menos. Os juros já entram na renda por turno da barra do topo.", turns, mine.Symbol, Format.Money(capacity)),
                         L.F("Juro real {0}", SignedPct(real)), L.F("Rende bem até {0} {1}", mine.Symbol, Format.Money(capacity)));
                 }
                 else
@@ -1200,7 +1200,7 @@ namespace CurrencyMod.NativeUI
             return false;
         }
 
-        /// <summary>Development commands: "open", "close", "tab 0..3", "scroll inicio|fim".</summary>
+        /// <summary>Development commands: "open", "close", "tab 0..3", "scroll top|bottom", "ledger", "fake".</summary>
         internal static void DevCommand(string args)
         {
             string[] parts = args.Split(' ');
@@ -1224,7 +1224,7 @@ namespace CurrencyMod.NativeUI
             if (parts[0] == "scroll" && Instance != null)
             {
                 Amplitude.UI.Interactables.UIScrollView scroll = Instance.GetComponentInChildren<Amplitude.UI.Interactables.UIScrollView>(true);
-                scroll?.ResetVertically(toEnd: parts.Length > 1 && parts[1] == "fim");
+                scroll?.ResetVertically(toEnd: parts.Length > 1 && parts[1] == "bottom");
                 return;
             }
             SetOpen(true);

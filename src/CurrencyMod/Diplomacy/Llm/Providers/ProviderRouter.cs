@@ -147,16 +147,16 @@ namespace CurrencyMod.Diplomacy.Llm.Providers
             }
         }
 
-        /// <summary>Short text for F10 and "ia status": provider and model in use.</summary>
+        /// <summary>Short text for F10 and "ai status": provider and model in use.</summary>
         internal static string Describe()
         {
             List<ProviderDef> ready = Ready();
             if (ready.Count == 0)
             {
-                return Chain().Count == 0 ? "nenhum provedor configurado (tela Realpolitik)" : "sem chave/login nos provedores da fila";
+                return Chain().Count == 0 ? "no provider configured (Realpolitik screen)" : "no key/login on the queued providers";
             }
             ProviderDef current = Current;
-            string rest = ready.Count > 1 ? " · reserva: " + string.Join(", ", ready.Where(p => p != current).Select(p => p.Name)) : string.Empty;
+            string rest = ready.Count > 1 ? " · fallback: " +string.Join(", ", ready.Where(p => p != current).Select(p => p.Name)) : string.Empty;
             return $"{current.Name} ({ModelFor(current)}){rest}";
         }
 

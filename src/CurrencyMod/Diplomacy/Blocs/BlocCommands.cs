@@ -5,63 +5,63 @@ using System.Linq;
 namespace CurrencyMod.Diplomacy.Blocs
 {
     /// <summary>
-    /// "ia bloco ..." on the dev channel. By default acts as the player; "como E#" at the end acts as another nation
+    /// "ai bloc ..." on the dev channel. By default acts as the player; "as E#" at the end acts as another nation
     /// (to test invites, votes and elections without waiting for the AIs).
     /// </summary>
     internal static class BlocCommands
     {
-        internal const string Usage = "uso: ia bloco ver | fundar <nome_com_underscores> E1 E2 [...] | aceitar BLC# | recusar BLC# | sair"
-            + " | pautar <tipo> [E#] [arg] | abrir <pauta#> | descartar <pauta#> | votar <pauta#> sim|nao | presidente E# | turno   (+ \"como E#\" no fim)";
+        internal const string Usage = "usage: ai bloc show | found <name_with_underscores> E1 E2 [...] | accept BLC# | decline BLC# | leave"
+            + " | propose <kind> [E#] [arg] | open <motion#> | discard <motion#> | vote <motion#> yes|no | president E# | turn [+N]   (+ \"as E#\" at the end)";
 
         internal static string Run(AiModule module, string rest)
         {
             AiWorld world = AiModule.World;
             if (world == null || module == null)
             {
-                return "erro: sem partida";
+                return "error: no game";
             }
             List<string> bits = (rest ?? string.Empty).Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries).ToList();
             int actor = module.PlayerIndex;
-            int como = bits.FindIndex(b => b == "como");
-            if (como >= 0 && como + 1 < bits.Count)
+            int asIndex = bits.FindIndex(b => b == "as");
+            if (asIndex >= 0 && asIndex + 1 < bits.Count)
             {
-                actor = Empire(bits[como + 1]);
-                bits.RemoveRange(como, 2);
+                actor = Empire(bits[asIndex + 1]);
+                bits.RemoveRange(asIndex, 2);
             }
             int turn = module.CurrentTurn;
-            string sub = bits.Count > 0 ? bits[0] : "ver";
+            string sub = bits.Count > 0 ? bits[0] : "show";
             string problem;
             switch (sub)
             {
-                case "ver":
+                case "show":
                     return Describe(world, turn);
-                case "fundar" when bits.Count >= 2:
+                case "found" when bits.Count >= 2:
                     problem = BlocEngine.Found(world, actor, bits[1], bits.Skip(2).Select(Empire).Where(e => e >= 0), turn, out Bloc made);
-                    return Done(module, problem, made != null ? $"ok: {made.Handle} '{made.Name}' fundado por E{actor}; convites: {string.Join(", ", made.Invites.Select(i => "E" + i.Empire))}" : null);
-                case "aceitar" when bits.Count >= 2:
-                case "recusar" when bits.Count >= 2:
-                    problem = BlocEngine.Respond(world, actor, BlocEngine.ByHandle(world, bits[1]), sub == "aceitar", turn);
-                    return Done(module, problem, $"ok: E{actor} {(sub == "aceitar" ? "aceitou" : "recusou")}");
-                case "sair":
-                    return Done(module, BlocEngine.Leave(world, actor, turn), $"ok: E{actor} saiu");
-                case "pautar" when bits.Count >= 2:
+                    return Done(module, problem, made != null ? $"ok: {made.Handle} '{made.Name}' founded by E{actor}; invites: {string.Join(", ", made.Invites.Select(i => "E" + i.Empire))}" : null);
+                case "accept" when bits.Count >= 2:
+                case "decline" when bits.Count >= 2:
+                    problem = BlocEngine.Respond(world, actor, BlocEngine.ByHandle(world, bits[1]), sub == "accept", turn);
+                    return Done(module, problem, $"ok: E{actor} {(sub == "accept" ? "accepted" : "declined")}");
+                case "leave":
+                    return Done(module, BlocEngine.Leave(world, actor, turn), $"ok: E{actor} left");
+                case "propose" when bits.Count >= 2:
                 {
                     int target = bits.Count >= 3 ? Empire(bits[2]) : -1;
                     string arg = target >= 0 ? string.Join(" ", bits.Skip(3)) : string.Join(" ", bits.Skip(2));
                     problem = BlocEngine.Propose(world, actor, bits[1], target, arg.Length > 0 ? arg.Replace('_', ' ') : null, "(teste)", turn, out BlocMotion motion);
-                    return Done(module, problem, motion != null ? $"ok: pauta {motion.Id} ({motion.Kind}) {motion.Status}" : null);
+                    return Done(module, problem, motion != null ? $"ok: motion {motion.Id} ({motion.Kind}) {motion.Status}" : null);
                 }
-                case "abrir" when bits.Count >= 2:
-                case "descartar" when bits.Count >= 2:
-                    problem = BlocEngine.Schedule(world, actor, int.TryParse(bits[1], out int id) ? id : -1, sub == "abrir", turn);
+                case "open" when bits.Count >= 2:
+                case "discard" when bits.Count >= 2:
+                    problem = BlocEngine.Schedule(world, actor, int.TryParse(bits[1], out int id) ? id : -1, sub == "open", turn);
                     return Done(module, problem, "ok");
-                case "votar" when bits.Count >= 3:
-                    problem = BlocEngine.Vote(world, actor, int.TryParse(bits[1], out int voteId) ? voteId : -1, bits[2].StartsWith("s"), turn);
-                    return Done(module, problem, "ok: voto de E" + actor);
-                case "presidente" when bits.Count >= 2:
-                    return Done(module, BlocEngine.VotePresident(world, actor, Empire(bits[1]), turn), "ok: voto de E" + actor);
-                case "turno":
-                    // Runs the turn step now, as if N turns had passed (for deadlines): "turno [+N]".
+                case "vote" when bits.Count >= 3:
+                    problem = BlocEngine.Vote(world, actor, int.TryParse(bits[1], out int voteId) ? voteId : -1, bits[2] == "yes", turn);
+                    return Done(module, problem, "ok: vote by E" + actor);
+                case "president" when bits.Count >= 2:
+                    return Done(module, BlocEngine.VotePresident(world, actor, Empire(bits[1]), turn), "ok: vote by E" + actor);
+                case "turn":
+                    // Runs the turn step now, as if N turns had passed (for deadlines): "turn [+N]".
                     int ahead = bits.Count >= 2 && int.TryParse(bits[1].TrimStart('+'), out int n) ? n : 0;
                     BlocEngine.Tick(world, turn + ahead);
                     module.MarkDirty();
@@ -74,7 +74,7 @@ namespace CurrencyMod.Diplomacy.Blocs
         {
             if (problem != null)
             {
-                return "erro: " + problem;
+                return "error: " + problem;
             }
             module.MarkDirty();
             return ok ?? "ok";
@@ -86,32 +86,32 @@ namespace CurrencyMod.Diplomacy.Blocs
         {
             if (world.Blocs.Count == 0)
             {
-                return "(nenhum bloco)";
+                return "(no blocs)";
             }
             var lines = new List<string>();
             foreach (Bloc b in world.Blocs)
             {
-                lines.Add($"{b.Handle} '{b.Name}' {(b.Formed ? "formado T" + b.FormedTurn : "em formação")} · membros {string.Join(", ", b.Members.Select(m => "E" + m))}"
-                    + $" · presidente E{b.President} (mandato até T{b.TermEnds}){(b.ElectionOpened >= 0 ? $" · ELEIÇÃO aberta T{b.ElectionOpened}: {string.Join(", ", b.ElectionVotes.Select(v => $"E{v.Key}→E{v.Value}"))}" : string.Empty)}"
-                    + $" · grupo GRP{b.GroupId}");
+                lines.Add($"{b.Handle} '{b.Name}' {(b.Formed ? "formed T" + b.FormedTurn : "forming")} · members {string.Join(", ", b.Members.Select(m => "E" + m))}"
+                    + $" · president E{b.President} (term until T{b.TermEnds}){(b.ElectionOpened >= 0 ? $" · ELECTION open T{b.ElectionOpened}: {string.Join(", ", b.ElectionVotes.Select(v => $"E{v.Key}→E{v.Value}"))}" : string.Empty)}"
+                    + $" · group GRP{b.GroupId}");
                 if (b.Invites.Count > 0)
                 {
-                    lines.Add("  convites: " + string.Join(", ", b.Invites.Select(i => $"E{i.Empire} (T{i.Turn}, vence T{i.Turn + Bloc.InviteTurns})")));
+                    lines.Add("  invites: " + string.Join(", ", b.Invites.Select(i => $"E{i.Empire} (T{i.Turn}, expires T{i.Turn + Bloc.InviteTurns})")));
                 }
                 foreach (BlocMotion m in b.Motions.Where(m => m.Status == BlocMotion.Voting || m.Status == BlocMotion.Suggested || turn - m.ClosedTurn <= 3))
                 {
-                    lines.Add($"  pauta {m.Id} {m.Kind}{(m.Target >= 0 ? " E" + m.Target : string.Empty)}{(m.Arg != null ? " " + m.Arg : string.Empty)} · {m.Status}"
-                        + $" · sim {m.Yes} não {m.No}{(m.Status == BlocMotion.Voting ? " · prazo T" + m.Deadline : string.Empty)} · por E{m.Author}");
+                    lines.Add($"  motion {m.Id} {m.Kind}{(m.Target >= 0 ? " E" + m.Target : string.Empty)}{(m.Arg != null ? " " + m.Arg : string.Empty)} · {m.Status}"
+                        + $" · yes {m.Yes} no {m.No}{(m.Status == BlocMotion.Voting ? " · deadline T" + m.Deadline : string.Empty)} · by E{m.Author}");
                 }
                 if (b.Tariffs.Count > 0)
                 {
-                    lines.Add("  tarifa comum: " + string.Join(", ", b.Tariffs.Select(t => $"{t.Mode} contra E{t.Target} (desde T{t.Since})")));
+                    lines.Add("  common tariff: " + string.Join(", ", b.Tariffs.Select(t => $"{t.Mode} against E{t.Target} (since T{t.Since})")));
                 }
                 if (b.CongressLine != null)
                 {
-                    lines.Add($"  Congresso: {b.CongressLine.Choice} (T{b.CongressLine.Turn}, sessão {b.CongressLine.SessionKey ?? "?"})");
+                    lines.Add($"  Congress: {b.CongressLine.Choice} (T{b.CongressLine.Turn}, session {b.CongressLine.SessionKey ?? "?"})");
                 }
-                lines.Add("  histórico: " + string.Join(" | ", b.History.Skip(Math.Max(0, b.History.Count - 6)).Select(e => $"T{e.Turn} {e.Kind}{(e.Actor >= 0 ? " E" + e.Actor : string.Empty)}{(e.Target >= 0 ? "→E" + e.Target : string.Empty)}{(e.Arg != null ? " " + e.Arg : string.Empty)}")));
+                lines.Add("  history: " + string.Join(" | ", b.History.Skip(Math.Max(0, b.History.Count - 6)).Select(e => $"T{e.Turn} {e.Kind}{(e.Actor >= 0 ? " E" + e.Actor : string.Empty)}{(e.Target >= 0 ? "→E" + e.Target : string.Empty)}{(e.Arg != null ? " " + e.Arg : string.Empty)}")));
             }
             return string.Join("\n", lines);
         }

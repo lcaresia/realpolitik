@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -8,23 +8,34 @@ using CurrencyMod.Diplomacy.Llm;
 namespace CurrencyMod.Diplomacy
 {
     /// <summary>
-    /// AI development commands, through the _Modding\dev\cmd.txt channel ("ia" prefix):
-    ///   ia status                 state, spending, nations
-    ///   ia dossie &lt;n|todas&gt;      builds the dossier now (without calling the API) and writes it to dev\out
-    ///   ia prompt &lt;n&gt;            writes the full prompt (system + dossier) of nation n
-    ///   ia agora [n]              makes nation n (or all) think now, even if it already thought this turn
-    ///   ia carta &lt;n&gt; &lt;texto&gt;     your private letter to nation n (arrives by the delivery rule)
-    ///   ia carta! &lt;n&gt; &lt;texto&gt;    the same, but delivered on the current turn (tests)
-    ///   ia foto                   takes a turn snapshot now, on the main thread (tests)
-    ///   ia on | ia off            turns the AI on/off (writes [IA] Ativo to the .cfg)
-    ///   ia viewer                 opens the viewer in the browser
-    ///   ia reset                  erases this match's AI memory (tests)
-    ///   ia correio open|close|secao N|to E#|responder [id]|limpar|texto ...   controls the Diplomatic Mail screen
-    ///   ia cartas E#              opens the nation's diplomacy directly on the Letters tab
-    ///   ia espionagem             spies, weights, interception chance at each end and recent interceptions
-    ///   ia interceptar &lt;id&gt; E#   forces the interception of a private letter (tests)
-    ///   ia acoes [turnos]         nations' actions in the last turns (default 3) and what the game did with them
-    ///   ia mencoes [texto]        public statements that mention you; with text, tests the detector on that text
+    /// AI development commands, through the _Modding\dev\cmd.txt channel ("ai" prefix):
+    ///   ai status                 state, spending, nations
+    ///   ai reasoning [value]      shows/changes [IA] Raciocinio (stored config values unchanged)
+    ///   ai actions [turns]        nations' actions in the last turns (default 3) and what the game did with them
+    ///   ai action E# {json}       runs an action through the same path as the decisions
+    ///   ai snapshot               takes a turn snapshot now, on the main thread (tests)
+    ///   ai dossier &lt;n|all&gt;       builds the dossier now (without calling the API) and writes it to dev\out
+    ///   ai prompt &lt;n&gt;            writes the full prompt (system + dossier) of nation n
+    ///   ai now [n]                makes nation n (or all) think now, even if it already thought this turn
+    ///   ai letter &lt;n&gt; &lt;text&gt;     your private letter to nation n (arrives by the delivery rule)
+    ///   ai letter! &lt;n&gt; &lt;text&gt;    the same, but delivered on the current turn (tests)
+    ///   ai letters E#             opens the nation's diplomacy directly on the Letters tab
+    ///   ai on | ai off            turns the AI on/off (writes [IA] Ativo to the .cfg)
+    ///   ai viewer                 opens the viewer in the browser
+    ///   ai reset                  erases this match's AI memory (tests)
+    ///   ai mail open|close|section N|to E#|reply [id]|clear|paste [file]|group N|new|member E#|subject ...|send|text ...
+    ///                             controls the Diplomatic Mail screen
+    ///   ai group show|create &lt;name&gt; E# E#...|msg GRP# &lt;text&gt;   the player's group conversations
+    ///   ai bloc ...               blocs (see Blocs\BlocCommands.cs)
+    ///   ai alliances ...          controls the Alliances screen
+    ///   ai mentions [text]        public statements that mention you; with text, tests the detector on that text
+    ///   ai espionage [units|tab ...|simulate ...|clear]   spies, weights, interception chance at each end and recent interceptions
+    ///   ai intercept &lt;id&gt; E#     forces the interception of a private letter (tests)
+    ///   ai armies E# / ai army E# A# move|attack|defend|stop [target] [turns]   army list / army order test
+    ///   ai congress [now]         Congress diagnostics
+    ///   ai council ...            the player's council
+    ///   ai provider ... / ai providers   LLM providers (see Llm\Providers\ProviderCommands.cs)
+    ///   ai test letter-from E# [text]|parser E#|congress|council-json   bug-review scenarios
     /// </summary>
     internal static class AiCommands
     {
@@ -36,27 +47,27 @@ namespace CurrencyMod.Diplomacy
             AiModule module = AiModule.Instance;
             if (module == null)
             {
-                return "erro: módulo da IA não está ativo";
+                return "error: AI module is not active";
             }
 
             switch (command)
             {
                 case "status":
                     return Status(module);
-                case "raciocinio":
+                case "reasoning":
                     // Changes [IA] Raciocinio without restarting (cost and quality tests); applies from the next decisions on.
                     if (rest.Length == 0)
                     {
-                        return $"raciocínio: {AiConfig.Reasoning.Value} (uso: ia raciocinio low|high|max|desligado)";
+                        return $"reasoning: {AiConfig.Reasoning.Value} (usage: ai reasoning low|high|max|desligado)";
                     }
                     AiConfig.Reasoning.Value = rest.ToLowerInvariant();
-                    return $"ok: raciocínio = {AiConfig.Reasoning.Value}";
-                case "acoes":
+                    return $"ok: reasoning = {AiConfig.Reasoning.Value}";
+                case "actions":
                 {
                     AiWorld world = AiModule.World;
                     if (world == null)
                     {
-                        return "erro: sem partida";
+                        return "error: no game";
                     }
                     int span = int.TryParse(rest, out int turns) && turns > 0 ? turns : 3;
                     int last = world.Nations.Count > 0 ? world.Nations.Max(n => n.LastDecisionTurn) : 0;
@@ -68,27 +79,27 @@ namespace CurrencyMod.Diplomacy
                             text.AppendLine($"T{action.Turn} E{nation.EmpireIndex} {action.Name} #{action.Id} — {action.Status} · {action.Json}");
                         }
                     }
-                    return text.Length > 0 ? text.ToString().TrimEnd() : "nenhuma ação nesses turnos";
+                    return text.Length > 0 ? text.ToString().TrimEnd() : "no actions in those turns";
                 }
-                case "foto":
+                case "snapshot":
                 {
                     WorldCapture capture = TurnCapture.CaptureFromMainThread();
                     if (capture == null)
                     {
-                        return "erro: sem partida";
+                        return "error: no game";
                     }
                     TurnCapture.Latest = capture;
-                    return $"ok: foto do turno {capture.Turn}, {capture.Empires.Length} impérios, {capture.TerritoryNames.Length} territórios";
+                    return $"ok: snapshot of turn {capture.Turn}, {capture.Empires.Length} empires, {capture.TerritoryNames.Length} territories";
                 }
-                case "dossie":
+                case "dossier":
                 case "prompt":
                 {
                     WorldCapture capture = CaptureFor(module);
                     if (AiModule.World == null || capture == null)
                     {
-                        return "erro: sem partida ou sem foto do turno (use 'ia foto')";
+                        return "error: no game or no turn snapshot (use 'ai snapshot')";
                     }
-                    var targets = rest == "todas" || rest.Length == 0
+                    var targets = rest == "all" || rest.Length == 0
                         ? capture.AiEmpires().ToList()
                         : rest.Split(' ').Select(s => int.TryParse(s.TrimStart('E', 'e'), out int v) ? v : -1).Where(v => v >= 0).ToList();
                     var report = new StringBuilder();
@@ -100,196 +111,199 @@ namespace CurrencyMod.Diplomacy
                         {
                             AiNation nation = AiModule.World.Ensure(empire);
                             Persona persona = nation.Persona ?? Prompts.CreatePersona(build.Facts, AiModule.World.GameGuid);
-                            text = "=== SISTEMA ===\n" + Prompts.WorldRules(congress: capture.Congress != null) + "\n\n" + Prompts.PersonaSection(build.Facts, persona) + "\n\n=== TURNO ===\n" + build.Text;
+                            text = "=== SYSTEM ===\n" + Prompts.WorldRules(congress: capture.Congress != null) + "\n\n" + Prompts.PersonaSection(build.Facts, persona) + "\n\n=== TURN ===\n" + build.Text;
                         }
-                        string file = Path.Combine(outDir, $"ia_{command}_E{empire}.txt");
+                        string file = Path.Combine(outDir, $"ai_{command}_E{empire}.txt");
                         File.WriteAllText(file, text, Encoding.UTF8);
-                        report.AppendLine($"E{empire} {build.Facts.EmpireName}: {text.Length} caracteres (~{text.Length / 4} tokens) → {file}");
+                        report.AppendLine($"E{empire} {build.Facts.EmpireName}: {text.Length} characters (~{text.Length / 4} tokens) → {file}");
                     }
-                    return report.Length > 0 ? report.ToString() : "nenhuma nação";
+                    return report.Length > 0 ? report.ToString() : "no nations";
                 }
-                case "agora":
+                case "now":
                 {
                     WorldCapture capture = CaptureFor(module);
                     if (capture == null)
                     {
-                        return "erro: sem partida ou sem foto do turno (use 'ia foto')";
+                        return "error: no game or no turn snapshot (use 'ai snapshot')";
                     }
                     int only = rest.Length > 0 && int.TryParse(rest.TrimStart('E', 'e'), out int value) ? value : -1;
                     int count = module.Schedule(capture, force: true, only: only);
-                    return $"ok: {count} nação(ões) pensando";
+                    return $"ok: {count} nation(s) thinking";
                 }
-                case "carta":
-                case "carta!":
+                case "letter":
+                case "letter!":
                 {
                     string[] letterParts = rest.Split(new[] { ' ' }, 2, StringSplitOptions.RemoveEmptyEntries);
                     if (letterParts.Length < 2 || !int.TryParse(letterParts[0].TrimStart('E', 'e'), out int to))
                     {
-                        return "uso: ia carta <n> <texto>  (ia carta! entrega no mesmo turno, para testes)";
+                        return "usage: ai letter <n> <text>  (ai letter! delivers on the same turn, for tests)";
                     }
-                    return module.SendPlayerLetter(to, "privada", null, letterParts[1], null, 0, immediate: command == "carta!");
+                    // "privada" is the stored letter type.
+                    return module.SendPlayerLetter(to, "privada", null, letterParts[1], null, 0, immediate: command == "letter!");
                 }
                 case "on":
                 case "off":
                     AiConfig.Enabled.Value = command == "on";
                     module.MarkDirty();
-                    return $"ok: IA {(AiConfig.Enabled.Value ? "ligada" : "desligada")}";
+                    return $"ok: AI {(AiConfig.Enabled.Value ? "on" : "off")}";
                 case "viewer":
                     module.OpenViewer();
                     return $"ok: {module.Viewer?.Url}";
                 case "reset":
                     module.ResetWorld();
-                    return "ok: memória da IA desta partida apagada";
-                case "correio":
+                    return "ok: this game's AI memory erased";
+                case "mail":
                     return UI.MailScreen.DevCommand(rest);
-                case "grupo":
+                case "group":
                 {
-                    // "ia grupo criar <nome> E1 E2 [...]" | "ia grupo msg GRP# <texto>" | "ia grupo ver": the player's group conversations.
+                    // "ai group create <name> E1 E2 [...]" | "ai group msg GRP# <text>" | "ai group show": the player's group conversations.
                     string[] bits = (rest ?? string.Empty).Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
-                    if (AiModule.World == null || bits.Length == 0 || bits[0] == "ver")
+                    if (AiModule.World == null || bits.Length == 0 || bits[0] == "show")
                     {
-                        return AiModule.World == null ? "erro: sem partida" : string.Join("\n", AiModule.World.Groups.Select(g => $"{g.Handle} '{g.Name}' (E{g.Creator}, T{g.CreatedTurn}): {string.Join(", ", g.Members.Select(m => "E" + m))} · {AiModule.World.Letters.Count(l => l.IsGroup && l.GroupId == g.Id)} mensagem(ns)")) + "\n(" + AiModule.World.Groups.Count + " grupo(s))";
+                        return AiModule.World == null ? "error: no game" : string.Join("\n", AiModule.World.Groups.Select(g => $"{g.Handle} '{g.Name}' (E{g.Creator}, T{g.CreatedTurn}): {string.Join(", ", g.Members.Select(m => "E" + m))} · {AiModule.World.Letters.Count(l => l.IsGroup && l.GroupId == g.Id)} message(s)")) + "\n(" + AiModule.World.Groups.Count + " group(s))";
                     }
-                    if (bits[0] == "criar" && bits.Length >= 4)
+                    if (bits[0] == "create" && bits.Length >= 4)
                     {
                         var members = bits.Skip(2).Select(b => int.TryParse(b.TrimStart('E', 'e'), out int e) ? e : -1).Where(e => e >= 0).ToList();
+                        // The opening text is shown to the nations as the group's first message.
                         return module.CreatePlayerGroup(bits[1].Replace("_", " "), members, "(grupo criado pelo teste)");
                     }
                     if (bits[0] == "msg" && bits.Length >= 3)
                     {
                         ChatGroup target = AiModule.World.GroupBy(bits[1]);
-                        return target == null ? "erro: grupo não existe" : module.SendPlayerGroupLetter(target.Id, null, string.Join(" ", bits.Skip(2)));
+                        return target == null ? "error: group does not exist" : module.SendPlayerGroupLetter(target.Id, null, string.Join(" ", bits.Skip(2)));
                     }
-                    return "uso: ia grupo ver | criar <nome_com_underscores> E1 E2 [...] | msg GRP# <texto>";
+                    return "usage: ai group show | create <name_with_underscores> E1 E2 [...] | msg GRP# <text>";
                 }
-                case "bloco":
+                case "bloc":
                     return Blocs.BlocCommands.Run(module, rest);
-                case "aliancas":
+                case "alliances":
                     return UI.AlliancesScreen.DevCommand(rest);
-                case "mencoes":
+                case "mentions":
                 {
                     // Mention detector (Mentions): without text, the public statements that mention the player; with text,
                     // tests that text as if it were a public statement from another nation.
                     WorldCapture capture = CaptureFor(module);
                     if (capture == null || AiModule.World == null || module.PlayerIndex < 0)
                     {
-                        return "erro: sem partida";
+                        return "error: no game";
                     }
                     if (!string.IsNullOrWhiteSpace(rest))
                     {
                         var probe = new Letter { Id = -1 - (rest.GetHashCode() & 0x3FFFFFFF), From = module.PlayerIndex == 1 ? 2 : 1, To = Letter.Everyone, Text = rest };
-                        return Mentions.Cites(probe, capture, AiModule.World, module.PlayerIndex) ? "cita você" : "não cita você";
+                        return Mentions.Cites(probe, capture, AiModule.World, module.PlayerIndex) ? "mentions you" : "does not mention you";
                     }
                     var cited = module.PlayerInbox().Where(l => l.IsPublic && Mentions.Cites(l, capture, AiModule.World, module.PlayerIndex)).ToList();
                     string names = AiModule.World.CultureNames.TryGetValue(module.PlayerIndex, out System.Collections.Generic.List<string> all) ? string.Join(", ", all) : "?";
-                    return $"povos conhecidos do jogador: {names}\n{cited.Count} comunicado(s) citam você" + string.Concat(cited.Select(l => $"\n  T{l.DeliverTurn} E{l.From}: {l.Subject} — {l.Text}"));
+                    return $"player's known peoples: {names}\n{cited.Count} statement(s) mention you" + string.Concat(cited.Select(l => $"\n  T{l.DeliverTurn} E{l.From}: {l.Subject} — {l.Text}"));
                 }
-                case "espionagem":
+                case "espionage":
                 {
                     // Spies, weights, each empire's chance at each end and the recent interceptions.
                     WorldCapture capture = CaptureFor(module);
                     if (AiModule.World == null || capture == null)
                     {
-                        return "erro: sem partida ou sem foto do turno (use 'ia foto')";
+                        return "error: no game or no turn snapshot (use 'ai snapshot')";
                     }
                     string[] words = rest.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
-                    if (words.Length > 0 && words[0] == "aba")
+                    if (words.Length > 0 && words[0] == "tab")
                     {
                         return UI.InterceptedLettersTab.DevOpen(words.Length > 1 ? words[1] : null);
                     }
-                    if (words.Length > 0 && words[0] == "limpar")
+                    if (words.Length > 0 && words[0] == "clear")
                     {
                         int removed = Espionage.TestSpies.Count;
                         Espionage.TestSpies.Clear();
-                        return $"ok: {removed} espião(ões) simulado(s) removido(s)";
+                        return $"ok: {removed} simulated spy(ies) removed";
                     }
-                    if (words.Length > 0 && words[0] == "simular")
+                    if (words.Length > 0 && words[0] == "simulate")
                     {
                         if (words.Length < 3 || !int.TryParse(words[1].TrimStart('E', 'e'), out int owner) || !int.TryParse(words[2].TrimStart('T', 't'), out int territory))
                         {
-                            return "uso: ia espionagem simular E# T# [vigiar] [fixar]";
+                            return "usage: ai espionage simulate E# T# [watch] [keep]";
                         }
-                        return Espionage.Simulate(AiModule.World, capture, owner, territory, words.Contains("vigiar"), words.Contains("fixar"));
+                        return Espionage.Simulate(AiModule.World, capture, owner, territory, words.Contains("watch"), words.Contains("keep"));
                     }
-                    string report = rest == "unidades" ? AgentUnits() : Espionage.Report(AiModule.World, capture);
-                    File.WriteAllText(Path.Combine(outDir, "espionagem.txt"), report, Encoding.UTF8);
+                    string report = rest == "units" ? AgentUnits() : Espionage.Report(AiModule.World, capture);
+                    File.WriteAllText(Path.Combine(outDir, "espionage.txt"), report, Encoding.UTF8);
                     return report;
                 }
-                case "exercitos":
-                    return int.TryParse(rest.TrimStart('E', 'e'), out int listEmpire) ? module.DevListArmies(listEmpire) : "uso: ia exercitos E#";
-                case "exercito":
+                case "armies":
+                    return int.TryParse(rest.TrimStart('E', 'e'), out int listEmpire) ? module.DevListArmies(listEmpire) : "usage: ai armies E#";
+                case "army":
                 {
-                    // "ia exercito E# A# mover|atacar|defender|parar [T#|C#|A#] [turnos]"
+                    // "ai army E# A# move|attack|defend|stop [T#|C#|A#] [turns]"
                     string[] items = rest.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
                     if (items.Length < 3 || !int.TryParse(items[0].TrimStart('E', 'e'), out int orderEmpire))
                     {
-                        return "uso: ia exercito E# A# mover|atacar|defender|parar [T#|C#|A#] [turnos]";
+                        return "usage: ai army E# A# move|attack|defend|stop [T#|C#|A#] [turns]";
                     }
-                    string goal = items[2].ToLowerInvariant();
+                    string goal = StoredArmyGoal(items[2].ToLowerInvariant());
                     string target = items.Length > 3 && goal != "parar" ? items[3].ToUpperInvariant() : null;
                     int turns = items.Length > 4 && int.TryParse(items[4], out int t) ? t : 0;
                     return module.DevArmyOrder(orderEmpire, items[1].ToUpperInvariant(), goal, target, turns);
                 }
-                case "congresso":
+                case "congress":
                 {
-                    // Congress diagnostics: "ia congresso" uses the turn snapshot; "ia congresso agora" takes a new snapshot
+                    // Congress diagnostics: "ai congress" uses the turn snapshot; "ai congress now" takes a new snapshot
                     // on the main thread (without the numbers only the game thread computes).
                     if (Amplitude.Mercury.Sandbox.Sandbox.InternationalAncillary == null)
                     {
-                        return "erro: sem partida";
+                        return "error: no game";
                     }
-                    WorldCapture capture = rest == "agora" ? TurnCapture.CaptureFromMainThread() : CaptureFor(module);
+                    WorldCapture capture = rest == "now" ? TurnCapture.CaptureFromMainThread() : CaptureFor(module);
                     string report = CongressFlow.Describe(capture);
-                    File.WriteAllText(Path.Combine(outDir, "congresso.txt"), report, Encoding.UTF8);
+                    File.WriteAllText(Path.Combine(outDir, "congress.txt"), report, Encoding.UTF8);
                     return report;
                 }
-                case "interceptar":
+                case "intercept":
                 {
-                    // "ia interceptar <carta> E#": forces the interception (tests), as if that empire's spy had
+                    // "ai intercept <letter> E#": forces the interception (tests), as if that empire's spy had
                     // caught the letter at the destination. Only a private letter the recipient has not read yet.
                     string[] items = rest.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
                     if (items.Length < 2 || !int.TryParse(items[0], out int id) || !int.TryParse(items[1].TrimStart('E', 'e'), out int spyOwner))
                     {
-                        return "uso: ia interceptar <id da carta> E#";
+                        return "usage: ai intercept <letter id> E#";
                     }
                     Letter letter = module.LetterById(id);
                     if (letter == null)
                     {
-                        return $"erro: carta {id} não existe";
+                        return $"error: letter {id} does not exist";
                     }
                     if (letter.IsPublic || letter.Type != "privada")
                     {
-                        return "erro: só cartas privadas são interceptadas";
+                        return "error: only private letters can be intercepted";
                     }
                     if (spyOwner == letter.From || spyOwner == letter.To)
                     {
-                        return "erro: quem intercepta não pode ser nenhuma das pontas";
+                        return "error: the interceptor cannot be the sender or the recipient";
                     }
                     if (letter.ReadBy.Contains(letter.To))
                     {
-                        return "erro: o destinatário já leu essa carta";
+                        return "error: the recipient already read that letter";
                     }
                     CapturedSpy spy = TurnCapture.Latest?.Spies.FirstOrDefault(s => s.Owner == spyOwner && s.TerritoryOwner == letter.To)
                         ?? TurnCapture.Latest?.Spies.FirstOrDefault(s => s.Owner == spyOwner);
                     var via = new InterceptRisk { Empire = spyOwner, SpyKey = spy?.Key, SpyName = spy?.Name, Territory = spy?.Territory ?? -1 };
+                    // "destino" is the stored interception end (Letter.InterceptedVia).
                     Espionage.MarkIntercepted(letter, spyOwner, module.CurrentTurn, via, "destino");
                     module.MarkDirty();
-                    return $"ok: carta {id} (E{letter.From} → E{letter.To}) interceptada por E{spyOwner}{(spy != null ? $" ({spy.Name} em T{spy.Territory})" : " (sem espião na foto)")}";
+                    return $"ok: letter {id} (E{letter.From} → E{letter.To}) intercepted by E{spyOwner}{(spy != null ? $" ({spy.Name} in T{spy.Territory})" : " (no spy in the snapshot)")}";
                 }
-                case "conselho":
+                case "council":
                     return CouncilCommand(module, rest);
-                case "provedor":
-                case "provedores":
+                case "provider":
+                case "providers":
                     return Llm.Providers.ProviderCommands.Execute(rest);
-                case "acao":
+                case "action":
                 {
-                    // "ia acao E7 {"acao":"oferecer_rendicao","nacao":"E1"}": test action through the same path as the decisions.
+                    // "ai action E7 {"acao":"oferecer_rendicao","nacao":"E1"}": test action through the same path as the decisions.
                     string[] pieces = rest.Split(new[] { ' ' }, 2, StringSplitOptions.RemoveEmptyEntries);
                     return pieces.Length == 2 && int.TryParse(pieces[0].TrimStart('E', 'e'), out int actor)
                         ? module.DevAction(actor, pieces[1])
-                        : "uso: ia acao E# {json da ação}";
+                        : "usage: ai action E# {action json}";
                 }
-                case "teste":
+                case "test":
                 {
                     // Test scenarios from the bug review (docs\diplomacia-ia.md §7).
                     string[] testArgs = (rest ?? string.Empty).Split(new[] { ' ' }, 3, StringSplitOptions.RemoveEmptyEntries);
@@ -297,90 +311,112 @@ namespace CurrencyMod.Diplomacy
                     int nation = testArgs.Length > 1 && int.TryParse(testArgs[1].TrimStart('E', 'e'), out int n) ? n : -1;
                     switch (what)
                     {
-                        case "carta-de" when nation >= 0:
+                        case "letter-from" when nation >= 0:
                             return module.DevLetterFrom(nation, testArgs.Length > 2 ? testArgs[2] : null);
                         case "parser" when nation >= 0:
                             return module.DevParserTest(nation);
-                        case "congresso":
+                        case "congress":
                             return CongressFlow.SelfTestFirstSession();
-                        case "conselho-json":
-                            return AiModule.World != null ? Council.PlayerCouncil.SelfTestMalformed(AiModule.World, module.PlayerIndex) : "erro: sem partida";
+                        case "council-json":
+                            return AiModule.World != null ? Council.PlayerCouncil.SelfTestMalformed(AiModule.World, module.PlayerIndex) : "error: no game";
                         default:
-                            return "uso: ia teste carta-de E# [texto] | parser E# | congresso | conselho-json";
+                            return "usage: ai test letter-from E# [text] | parser E# | congress | council-json";
                     }
                 }
-                case "cartas":
+                case "letters":
                 {
-                    // "ia cartas E7": opens diplomacy with the nation directly on the Letters tab (same as the "In diplomacy" button).
+                    // "ai letters E7": opens diplomacy with the nation directly on the Letters tab (same as the "In diplomacy" button).
                     if (!int.TryParse((rest ?? string.Empty).Trim().TrimStart('E', 'e'), out int empire))
                     {
-                        return "uso: ia cartas E#";
+                        return "usage: ai letters E#";
                     }
                     UI.CorrespondenceTab.OpenFor(empire);
-                    return $"ok: diplomacia com E{empire}, aba Cartas";
+                    return $"ok: diplomacy with E{empire}, Letters tab";
                 }
                 default:
-                    return "erro: comando desconhecido (status, acoes, foto, dossie, prompt, agora, carta, carta!, on, off, viewer, reset, correio, cartas, espionagem, interceptar, exercitos, exercito, congresso, conselho)";
+                    return "error: unknown command (status, reasoning, actions, action, snapshot, dossier, prompt, now, letter, letter!, letters, on, off, viewer, reset, mail, group, bloc, alliances, mentions, espionage, intercept, armies, army, congress, council, provider, providers, test)";
             }
         }
 
         /// <summary>
-        /// "ia conselho [ver|abrir|fechar|secao n|falar &lt;texto&gt;|demitir &lt;pasta&gt;|reunir|convocar]": the player's council (reunir/convocar = audience, or again after a failure).
-        /// "ver" (default) shows the turn's meeting as text.
+        /// Maps the English goal word of "ai army" to the stored goal value (the same one the AI nations write in the
+        /// action JSON). Unknown words pass through unchanged.
+        /// </summary>
+        private static string StoredArmyGoal(string goal)
+        {
+            switch (goal)
+            {
+                case "move":
+                    return "mover";
+                case "attack":
+                    return "atacar";
+                case "defend":
+                    return "defender";
+                case "stop":
+                    return "parar";
+                default:
+                    return goal;
+            }
+        }
+
+        /// <summary>
+        /// "ai council [show|open|close|section n|speak &lt;text&gt;|fire &lt;portfolio&gt;|appoint &lt;portfolio&gt; &lt;id|1|2|3&gt;|faith T#|
+        /// veteran &lt;portfolio&gt; &lt;turns&gt;|candidates|convene]": the player's council (convene = audience, or again after a failure).
+        /// "show" (default) shows the turn's meeting as text.
         /// </summary>
         private static string CouncilCommand(AiModule module, string rest)
         {
             string[] words = (rest ?? string.Empty).Split(new[] { ' ' }, 2, StringSplitOptions.RemoveEmptyEntries);
-            string sub = words.Length > 0 ? words[0].ToLowerInvariant() : "ver";
+            string sub = words.Length > 0 ? words[0].ToLowerInvariant() : "show";
             string arg = words.Length > 1 ? words[1].Trim() : string.Empty;
             AiWorld world = AiModule.World;
             switch (sub)
             {
-                case "falar":
+                case "speak":
                     return Council.PlayerCouncil.Speak(arg);
-                case "demitir":
+                case "fire":
                     return Council.PlayerCouncil.Fire(arg);
-                case "nomear":
+                case "appoint":
                 {
-                    // "ia conselho nomear <pasta> <id|1|2|3>": appoints one of the candidates (by pool id or by position).
+                    // "ai council appoint <portfolio> <id|1|2|3>": appoints one of the candidates (by pool id or by position).
                     string[] bits = (arg ?? string.Empty).Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
                     if (bits.Length < 2 || world == null)
                     {
-                        return "uso: ia conselho nomear <pasta> <id|1|2|3>";
+                        return "usage: ai council appoint <portfolio> <id|1|2|3>";
                     }
-                    string pasta = bits[0].ToLowerInvariant();
+                    string portfolio = bits[0].ToLowerInvariant();
                     string pick = bits[1];
                     AiNation self = world.Ensure(module.PlayerIndex);
                     Council.CouncilEngine.Ensure(world, self, TurnCapture.Latest, module.CurrentTurn);
-                    if (int.TryParse(pick, out int position) && self.CouncilCandidates.TryGetValue(pasta, out var list) && position >= 1 && position <= list.Count)
+                    if (int.TryParse(pick, out int position) && self.CouncilCandidates.TryGetValue(portfolio, out var list) && position >= 1 && position <= list.Count)
                     {
                         pick = list[position - 1];
                     }
-                    return Council.PlayerCouncil.Appoint(pasta, pick);
+                    return Council.PlayerCouncil.Appoint(portfolio, pick);
                 }
-                case "fe":
-                    // "ia conselho fe T#": the territory's belief strength without and with the Faith veteran bonus.
+                case "faith":
+                    // "ai council faith T#": the territory's belief strength without and with the Faith veteran bonus.
                     return int.TryParse((arg ?? string.Empty).Trim().TrimStart('T', 't'), out int faithTerritory)
                         ? Council.VeteranEffects.MeasureFaith(faithTerritory)
-                        : "uso: ia conselho fe T#";
-                case "veterano":
+                        : "usage: ai council faith T#";
+                case "veteran":
                 {
-                    // "ia conselho veterano <pasta> <turnos>": bonus test; sets the minister as N turns in office.
+                    // "ai council veteran <portfolio> <turns>": bonus test; sets the minister as N turns in office.
                     string[] bits = (arg ?? string.Empty).Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
                     Council.Minister vet = world?.Ensure(module.PlayerIndex).Council.FirstOrDefault(m => bits.Length > 0 && m.Portfolio == bits[0].ToLowerInvariant());
                     if (vet == null || bits.Length < 2 || !int.TryParse(bits[1], out int years))
                     {
-                        return "uso: ia conselho veterano <pasta com ministro> <turnos no cargo>";
+                        return "usage: ai council veteran <portfolio with a minister> <turns in office>";
                     }
                     vet.Since = module.CurrentTurn - years;
                     Council.VeteranEffects.Publish(world, module.CurrentTurn);
-                    return $"ok: {vet.Name} no cargo desde T{vet.Since}: veterano +{Council.CouncilEngine.VeteranBonus(vet, module.CurrentTurn)}%";
+                    return $"ok: {vet.Name} in office since T{vet.Since}: veteran +{Council.CouncilEngine.VeteranBonus(vet, module.CurrentTurn)}%";
                 }
-                case "candidatos":
+                case "candidates":
                 {
                     if (world == null)
                     {
-                        return "erro: sem partida";
+                        return "error: no game";
                     }
                     AiNation self = world.Ensure(module.PlayerIndex);
                     Council.CouncilEngine.Ensure(world, self, TurnCapture.Latest, module.CurrentTurn);
@@ -389,21 +425,20 @@ namespace CurrencyMod.Diplomacy
                     {
                         lines.AppendLine(pair.Key + ": " + string.Join(" · ", pair.Value.Select(id => id + " " + (Council.CouncilBank.ById(id)?.Name ?? "?"))));
                     }
-                    lines.Append("no cargo: " + string.Join(", ", self.Council.Select(m => $"{m.Portfolio} {m.Name} (desde T{m.Since}, veterano +{Council.CouncilEngine.VeteranBonus(m, module.CurrentTurn)}%)")));
+                    lines.Append("in office: " + string.Join(", ", self.Council.Select(m => $"{m.Portfolio} {m.Name} (since T{m.Since}, veteran +{Council.CouncilEngine.VeteranBonus(m, module.CurrentTurn)}%)")));
                     return lines.ToString();
                 }
-                case "reunir":
-                case "convocar":
+                case "convene":
                     return Council.PlayerCouncil.Convene();
-                case "abrir":
-                case "fechar":
-                case "secao":
+                case "open":
+                case "close":
+                case "section":
                     return UI.CouncilScreen.DevCommand(sub + " " + arg);
                 default:
                 {
                     if (world == null)
                     {
-                        return "erro: sem partida";
+                        return "error: no game";
                     }
                     Council.CouncilMeeting meeting = Council.PlayerCouncil.Meeting(world, module.CurrentTurn) ?? world.PlayerCouncil.LastOrDefault();
                     var text = new StringBuilder();
@@ -418,10 +453,10 @@ namespace CurrencyMod.Diplomacy
                         }
                         foreach (Council.CouncilExchange exchange in meeting.Exchanges)
                         {
-                            text.AppendLine($"[você] {exchange.PlayerText} ({exchange.Status}{(exchange.Error != null ? ": " + exchange.Error : string.Empty)})");
+                            text.AppendLine($"[you] {exchange.PlayerText} ({exchange.Status}{(exchange.Error != null ? ": " + exchange.Error : string.Empty)})");
                             foreach (Council.CouncilSpeech reply in exchange.Replies)
                             {
-                                text.AppendLine($"  [{reply.Portfolio}] {SpeakerName(nation, reply.Portfolio, era)}: {reply.Text}" + (reply.AffectionChange != 0 ? $" (apreço {reply.AffectionChange:+0;-0})" : string.Empty));
+                                text.AppendLine($"  [{reply.Portfolio}] {SpeakerName(nation, reply.Portfolio, era)}: {reply.Text}" + (reply.AffectionChange != 0 ? $" (affection {reply.AffectionChange:+0;-0})" : string.Empty));
                             }
                         }
                         foreach (string note in meeting.Notes)
@@ -464,7 +499,7 @@ namespace CurrencyMod.Diplomacy
                             tags.Add(((Amplitude.Mercury.Data.Simulation.UnitTagAsAbility)i).ToString());
                         }
                     }
-                    text.AppendLine($"{name} · era visual {unit.VisualAffinityEraIndex} · classe {unit.UnitClassName} · marcas {string.Join("/", tags)}");
+                    text.AppendLine($"{name} · visual era {unit.VisualAffinityEraIndex} · class {unit.UnitClassName} · tags {string.Join("/", tags)}");
                 }
             }
             text.AppendLine();
@@ -491,7 +526,7 @@ namespace CurrencyMod.Diplomacy
                     }
                     int tile = army.WorldPosition.IsWorldPositionValid() ? army.WorldPosition.ToTileIndex() : -1;
                     int territory = tile >= 0 ? Amplitude.Mercury.Sandbox.Sandbox.World.TileInfo.Data[tile].TerritoryIndex : -1;
-                    text.AppendLine($"E{e} furtivo em T{territory}: furtividade {(float)army.StealthValue.Value:0.#}/{(float)army.StealthMax.Value:0.#} · agente {army.HasUnitTag(Amplitude.Mercury.Data.Simulation.UnitTagAsAbility.Agent)} · {string.Join(", ", names)}");
+                    text.AppendLine($"E{e} stealthy in T{territory}: stealth {(float)army.StealthValue.Value:0.#}/{(float)army.StealthMax.Value:0.#} · agent {army.HasUnitTag(Amplitude.Mercury.Data.Simulation.UnitTagAsAbility.Agent)} · {string.Join(", ", names)}");
                 }
             }
             return text.ToString().TrimEnd();
@@ -513,16 +548,16 @@ namespace CurrencyMod.Diplomacy
             AiWorld world = AiModule.World;
             WorldCapture capture = TurnCapture.Latest;
             var builder = new StringBuilder();
-            builder.AppendLine($"situação: {module.StatusText} · turno {module.CurrentTurn} · jogador E{module.PlayerIndex} · estado do jogo {GameAccess.SandboxStateName() ?? "?"} · {Llm.Providers.ProviderRouter.Describe()}");
-            builder.AppendLine($"raciocínio {AiConfig.Reasoning.Value} · pensando agora: {module.InFlightCount}");
-            builder.AppendLine($"visualizador: {(module.Viewer != null && module.Viewer.IsRunning ? module.Viewer.Url : "parado")}");
+            builder.AppendLine($"state: {module.StatusText} · turn {module.CurrentTurn} · player E{module.PlayerIndex} · game state {GameAccess.SandboxStateName() ?? "?"} · {Llm.Providers.ProviderRouter.Describe()}");
+            builder.AppendLine($"reasoning {AiConfig.Reasoning.Value} · thinking now: {module.InFlightCount}");
+            builder.AppendLine($"viewer: {(module.Viewer != null && module.Viewer.IsRunning ? module.Viewer.Url : "stopped")}");
             builder.AppendLine(capture != null
-                ? $"foto: turno {capture.Turn} ({(capture.FromMainThread ? "thread principal" : "começo do turno")}, {capture.CapturedAtUtc:HH:mm:ss} UTC)"
-                : "foto: nenhuma ainda");
+                ? $"snapshot: turn {capture.Turn} ({(capture.FromMainThread ? "main thread" : "start of turn")}, {capture.CapturedAtUtc:HH:mm:ss} UTC)"
+                : "snapshot: none yet");
             if (world != null)
             {
-                builder.AppendLine($"gasto: US$ {world.TotalCostUsd:0.0000} em {world.TotalCalls} chamadas · entrada {world.TotalPromptTokens} (cache {world.TotalCacheHitTokens}) · saída {world.TotalCompletionTokens} (raciocínio {world.TotalReasoningTokens})");
-                builder.AppendLine($"cartas: {world.Letters.Count}");
+                builder.AppendLine($"spending: US$ {world.TotalCostUsd:0.0000} in {world.TotalCalls} calls · input {world.TotalPromptTokens} (cache {world.TotalCacheHitTokens}) · output {world.TotalCompletionTokens} (reasoning {world.TotalReasoningTokens})");
+                builder.AppendLine($"letters: {world.Letters.Count}");
                 builder.AppendLine(NativeAiLocks.Describe());
                 builder.AppendLine(ArmyOrders.Describe());
                 builder.AppendLine(NativeAiBias.Describe());
@@ -530,7 +565,7 @@ namespace CurrencyMod.Diplomacy
                 foreach (AiNation nation in world.Nations)
                 {
                     AiModule.Runtime.Details.TryGetValue(nation.EmpireIndex, out NationDetail detail);
-                    builder.AppendLine($"  E{nation.EmpireIndex} {DossierBuilder.Name(capture, nation.EmpireIndex)} · última decisão T{nation.LastDecisionTurn} · {detail?.State ?? "-"}{(detail?.LastError != null ? " · " + detail.LastError : "")}");
+                    builder.AppendLine($"  E{nation.EmpireIndex} {DossierBuilder.Name(capture, nation.EmpireIndex)} · last decision T{nation.LastDecisionTurn} · {detail?.State ?? "-"}{(detail?.LastError != null ? " · " + detail.LastError : "")}");
                 }
             }
             return builder.ToString();

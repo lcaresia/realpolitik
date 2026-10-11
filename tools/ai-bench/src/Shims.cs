@@ -1,12 +1,12 @@
 using System;
 using System.IO;
 
-// O mínimo do BepInEx e do Plugin para compilar Credentials.cs e ApiKey.cs do mod fora do jogo.
+// The bare minimum of BepInEx and Plugin needed to compile the mod's Credentials.cs and ApiKey.cs outside the game.
 namespace BepInEx
 {
     internal static class Paths
     {
-        internal static string ConfigPath => Path.Combine(IaBench.Bench.GameDir, "BepInEx", "config");
+        internal static string ConfigPath => Path.Combine(AiBench.Bench.GameDir, "BepInEx", "config");
     }
 }
 
@@ -20,6 +20,6 @@ namespace CurrencyMod
     internal sealed class ShimLog
     {
         public void LogInfo(object message) => Console.Error.WriteLine("[mod] " + message);
-        public void LogWarning(object message) => Console.Error.WriteLine("[mod aviso] " + message);
+        public void LogWarning(object message) => Console.Error.WriteLine("[mod warning] " + message);
     }
 }

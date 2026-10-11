@@ -26,5 +26,5 @@ relatar bloqueio.
 ## Se um dia valer comprar o certificado
 
 - Certum ou SSL.com, pessoa física: US$ 130–230 por ano, com validação de cerca de 2 semanas.
-- Depois: `tools\gerar-release.ps1 -Versao X -Certificado C:\caminho\cert.pfx`, com a senha em
-  `$env:REALPOLITIK_PFX_SENHA`. Precisa do `signtool.exe` (Windows SDK).
+- Depois: `tools\make-release.ps1 -Version X -Certificate C:\caminho\cert.pfx`, com a senha em
+  `$env:REALPOLITIK_PFX_PASSWORD`. Precisa do `signtool.exe` (Windows SDK).

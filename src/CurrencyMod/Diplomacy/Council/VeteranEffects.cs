@@ -211,7 +211,7 @@ namespace CurrencyMod.Diplomacy.Council
 
         internal static bool FaithBypass;
 
-        /// <summary>Test ("ia conselho fe T#"): the territory's belief strength without and with the Faith veteran bonus.</summary>
+        /// <summary>Test ("ai council faith T#"): the territory's belief strength without and with the Faith veteran bonus.</summary>
         internal static string MeasureFaith(int territory)
         {
             ReligionManager manager = Sandbox.ReligionManager;
@@ -235,10 +235,10 @@ namespace CurrencyMod.Diplomacy.Council
             {
                 if (without[i] != with[i] || without[i] > 0)
                 {
-                    parts.Add($"religião {i}: {(float)without[i]:0.##} → {(float)with[i]:0.##}");
+                    parts.Add($"religion {i}: {(float)without[i]:0.##} → {(float)with[i]:0.##}");
                 }
             }
-            return $"T{territory} (dono E{owner}, bônus Fé +{(owner >= 0 && owner < Sandbox.NumberOfMajorEmpires ? Get(owner, Area.Faith) : 0)}%): " + (parts.Count > 0 ? string.Join("; ", parts) : "sem crença");
+            return $"T{territory} (owner E{owner}, Faith bonus +{(owner >= 0 && owner < Sandbox.NumberOfMajorEmpires ? Get(owner, Area.Faith) : 0)}%): " + (parts.Count > 0 ? string.Join("; ", parts) : "no belief");
         }
 
         /// <summary>

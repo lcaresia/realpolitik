@@ -4,16 +4,16 @@ using System.IO;
 using System.Linq;
 using Newtonsoft.Json.Linq;
 
-namespace IaBench
+namespace AiBench
 {
     /// <summary>
-    /// Simulação sem custo, sobre o corpus inteiro: quanto do prompt cairia no cache do DeepSeek (prefixo igual ao do
-    /// pedido anterior da mesma nação, ou ao de outra nação no mesmo turno) e o tamanho estimado da entrada.
+    /// Zero-cost simulation over the whole corpus: how much of the prompt would hit the DeepSeek cache (same prefix as the
+    /// same nation's previous request, or as another nation's in the same turn) and the estimated input size.
     /// </summary>
     internal static class Simulate
     {
         internal const double CharsPerToken = 2.87;
-        /// <summary>O DeepSeek guarda o prefixo em blocos; o que sobra no fim do bloco não conta.</summary>
+        /// <summary>DeepSeek caches the prefix in blocks; what is left at the end of a block does not count.</summary>
         private const int CacheUnitTokens = 64;
 
         internal sealed class Sample
@@ -31,7 +31,7 @@ namespace IaBench
             foreach (string path in Directory.GetFiles(corpus, "T*_E*.json"))
             {
                 string name = Path.GetFileName(path);
-                if (name.Contains("conselho"))
+                if (name.Contains("conselho")) // council logs (file names written by the mod)
                 {
                     continue;
                 }
@@ -48,7 +48,7 @@ namespace IaBench
         internal static int Run(string corpus, string variantSpec)
         {
             List<Sample> samples = Load(corpus);
-            Console.WriteLine($"{samples.Count} decisões");
+            Console.WriteLine($"{samples.Count} decisions");
             Stability(samples);
             foreach (string variant in variantSpec.Split(','))
             {
@@ -57,7 +57,7 @@ namespace IaBench
             return 0;
         }
 
-        /// <summary>Em quantos pares (mesma nação, turno seguinte) cada seção ficou idêntica.</summary>
+        /// <summary>In how many pairs (same nation, next turn) each section stayed identical.</summary>
         private static void Stability(List<Sample> samples)
         {
             var same = new Dictionary<string, int>();
@@ -85,7 +85,7 @@ namespace IaBench
                     }
                 }
             }
-            Console.WriteLine("seção · igual ao turno anterior · tamanho médio");
+            Console.WriteLine("section · same as previous turn · average size");
             foreach (var pair in total.OrderByDescending(p => size[p.Key]))
             {
                 same.TryGetValue(pair.Key, out int c);
@@ -96,7 +96,7 @@ namespace IaBench
         private static readonly Dictionary<string, double> ShareCache = new Dictionary<string, double>();
         private static List<Sample> corpusSamples;
 
-        /// <summary>Fração da entrada que cairia no cache no jogo, simulada no corpus inteiro (memorizada por variante).</summary>
+        /// <summary>Share of the input that would hit the cache in game, simulated on the whole corpus (memoized per variant).</summary>
         internal static double CacheShare(string variant)
         {
             if (!ShareCache.TryGetValue(variant, out double share))
@@ -118,8 +118,8 @@ namespace IaBench
             double inputTokens = 0, cachedTokens = 0;
             foreach (var p in prompts)
             {
-                // O melhor prefixo disponível: o pedido anterior da mesma nação ou qualquer pedido anterior deste turno
-                // (as nações pensam em paralelo, mas na prática o cache já tem o turno de quem começou antes).
+                // The best prefix available: the same nation's previous request or any earlier request of this turn
+                // (nations think in parallel, but in practice the cache already holds the turn of whoever started first).
                 int best = 0;
                 foreach (var q in prompts.Where(q => (q.s.Empire == p.s.Empire && q.s.Turn == p.s.Turn - 1)
                     || (q.s.Turn == p.s.Turn && q.s.Empire < p.s.Empire)))
@@ -136,7 +136,7 @@ namespace IaBench
             double costPeak = (miss * 0.30 + hitAvg * 0.006) / 1_000_000;
             if (!quiet)
             {
-                Console.WriteLine($"{variant,-24} entrada ~{inputTokens / n,6:0} tokens · cache {100 * cachedTokens / inputTokens,4:0}% · sem cache ~{miss,6:0} · custo da entrada no pico US$ {costPeak:0.00000}/decisão");
+                Console.WriteLine($"{variant,-24} input ~{inputTokens / n,6:0} tokens · cache {100 * cachedTokens / inputTokens,4:0}% · uncached ~{miss,6:0} · input cost at peak US$ {costPeak:0.00000}/decision");
             }
             return cachedTokens / inputTokens;
         }

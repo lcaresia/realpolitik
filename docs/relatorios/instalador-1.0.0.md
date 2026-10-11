@@ -7,7 +7,7 @@
 | `Realpolitik_Setup_1.0.0.exe` | 3,7 MB | `09da4a955be0930f17ab47d47dd3c2f90312e8dbbc16f34436831fa07363720d` |
 | `Realpolitik_1.0.0_manual.zip` | 1,3 MB | `149b57453b3ad2e65b9b2cd8cc6c06066f53e90665cc9f21eb44251f32b3f178` |
 
-- Gerados por `tools\gerar-release.ps1 -Versao 1.0.0` em `dist\1.0.0\`, junto com `MANIFEST.txt` (45 arquivos, cada um
+- Gerados por `tools\make-release.ps1 -Version 1.0.0` em `dist\1.0.0\`, junto com `MANIFEST.txt` (45 arquivos, cada um
   com tamanho e sha256) e `SHA256SUMS.txt`.
 - Não têm assinatura de código (decisão: caminho gratuito; ver `docs\envio-microsoft.md`).
 - Provas de cada teste (logs do Inno, árvores de arquivos com hash e prints): `dist\testes\1.0.0\<teste>\`, fora do Git.
@@ -29,7 +29,7 @@
 | T10 | Idiomas (`/LANG=pt` e `/LANG=en`) | **OK** | Boas-vindas, termos, pasta, opções e "Pronto para instalar" traduzidos, com a arte do selo. Prints `pt-*.png` e `en-*.png`. |
 | T11 | Zip manual extraído numa pasta limpa simulada | **OK** 11/11 | Mesmos arquivos e hashes do T1 (tirando o desinstalador e a marca). |
 | T12 | Instalação silenciosa (`/VERYSILENT /SUPPRESSMSGBOXES /LOG=`) | **OK** | Usada em todos os testes acima. |
-| T13 | Trava de segredos (`.env` falso + `sk_live_TESTE` plantados) | **OK** | `gerar-release.ps1 -TestarTrava` saiu com código 1 e **não gerou o Setup**. |
+| T13 | Trava de segredos (`.env` falso + `sk_live_TESTE` plantados) | **OK** | `make-release.ps1 -TestSecretGuard` saiu com código 1 e **não gerou o Setup**. |
 | T14 | Smart App Control | **Não testado** | O SAC está desligado neste PC, e ligar é decisão de segurança do dono. Pendente: ver se o SAC barra o `winhttp.dll` (sem assinatura) do BepInEx. |
 | T15 | Licença | **OK** (no código; não repetido no pacote) | Testada contra o Worker de verdade com um pedido de teste: ativar, chave inventada, limite de 3, servidor fora do ar com 14 dias, liberar e reembolso (`docs\diplomacia-ia.md` §16.5). O pacote leva o mesmo código. |
 
@@ -48,7 +48,7 @@ o DeepSeek está conectado e os 597 arquivos de log da IA voltaram.
 
 ## Proteção do código (adicionada depois dos testes acima)
 
-- **Ofuscação.** O `CurrencyMod.dll` é ofuscado pelo Obfuscar 2.2.50 dentro do `gerar-release.ps1`, com as regras em
+- **Ofuscação.** O `CurrencyMod.dll` é ofuscado pelo Obfuscar 2.2.50 dentro do `make-release.ps1`, com as regras em
   `installer\obfuscar.xml`.
   - Renomeia 507 tipos internos e criptografa todos os textos: os prompts, as mensagens e os endereços da loja.
   - Mantém os nomes que o carregador, o Harmony, a Unity, os saves em JSON e a DPAPI precisam.

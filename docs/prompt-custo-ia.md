@@ -122,7 +122,7 @@ dossiê em versão atual × versão otimizada, ou modelo A × B. Para cada uma, 
 - Um conjunto fixo de **cenários difíceis** tirados dos logs: guerra, rendição, Congresso, carta do jogador, traição,
   pedágio/bloqueio e conselho.
 
-A bancada vira uma ferramenta permanente (`_Modding\tools\ia-bench\` ou parecido), para que toda mudança futura de
+A bancada vira uma ferramenta permanente (`_Modding\tools\ai-bench\` ou parecido), para que toda mudança futura de
 prompt ou modelo seja medida antes de ir para o jogo. Fica de fora do pacote de venda.
 
 ## Fases (pare e converse nos pontos marcados)
@@ -144,7 +144,7 @@ prompt ou modelo seja medida antes de ir para o jogo. Fica de fora do pacote de 
 6. **Validação dentro do jogo com 16 impérios** (Teste16, via kit de dev: `passturns.ps1`).
    - Pelo menos 10 turnos antes e 10 depois, com o custo por turno medido no F10.
    - Prints das cartas e do conselho para o lucas comparar.
-   - Siga a regra de deploy: só implantar com `pensando agora: 0`, no mesmo comando.
+   - Siga a regra de deploy: só implantar com `thinking now: 0`, no mesmo comando.
 7. **Entrega:**
    - atualize `docs\diplomacia-ia.md`: custos novos, opções novas, como usar a bancada;
    - atualize o rótulo de estimativa de custo da tela de provedores;
@@ -164,7 +164,7 @@ prompt ou modelo seja medida antes de ir para o jogo. Fica de fora do pacote de 
   (`deepseek.key`, `BepInEx\config\credenciais\`).
 - **Jogo:**
   - testes sempre com 16 impérios;
-  - nunca `ia reset`;
+  - nunca `ai reset`;
   - não rode ao mesmo tempo que outra sessão que esteja mexendo no jogo;
   - não implante durante "pensando".
 - Nada sai deste PC sem permissão (contas novas, uploads, compras).
