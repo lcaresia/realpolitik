@@ -398,9 +398,9 @@ namespace CurrencyMod
     }
 
     /// <summary>
-    /// The Merchant era star ("Earn N money") adds the empire's MoneyNet at every turn start when it is positive. The
-    /// money the mod pays at the end of turn (balance interest, route transit, bloc upkeep refund) never goes through
-    /// MoneyNet, so it did not count. This scores the same income the top bar shows (DisplayedMoneyNet) instead.
+    /// The Merchant era star ("Earn N money") natively adds the empire's MoneyNet at every turn start when it is positive.
+    /// Lucas's rule (2026-10-11): it measures the treasury instead, the highest balance reached in the era (spending
+    /// does not take progress back). Evaluated at each turn start, like the native one.
     /// </summary>
     [HarmonyPatch]
     internal static class MerchantStarIncomePatch
@@ -423,8 +423,7 @@ namespace CurrencyMod
                 {
                     return;
                 }
-                __result = Amplitude.Mercury.Data.Simulation.DeedScoringMethod.Apply(deedEvaluator.DeedScoringMethod, currentScore,
-                    NativeEffects.DisplayedMoneyNet(majorEmpire));
+                __result = FixedPoint.Max(currentScore, majorEmpire.MoneyStock.Value);
             }
             catch (Exception ex)
             {

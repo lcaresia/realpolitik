@@ -650,3 +650,33 @@ Uma IA enganada pode repassar o texto em carta para outras IAs (propagação).
 - **Integrações:** DossierBuilder (`AppendLetter`), Prompts (`WorldRules`), DecisionParser, Espionage (cartas interceptadas),
   PlayerCouncil (falas ao conselho), BlocCongress (textos de pauta).
 - **Tamanho:** cerca e detector são pequenos; o banco de testes é médio e roda fora do jogo.
+
+### 26. Nome do líder ao lado do nome do povo, em toda tela do mod
+
+Na tela Alianças ("Fundar um bloco"), os cartões mostram só "Os Micênicos", "Os Olmecas"… O Lucas quer o representante
+(o líder) junto, em todo lugar onde aparece o nome do reino.
+
+- **Já existe o formato:** `MailScreen.NationAndLeader(capture, empire, inline)` gera "Os Assírios · Miyamoto Musashi"
+  (com artigo minúsculo no meio da frase via `inline`). O Correio já usa em parte.
+- **Onde ainda aparece só o povo (`.Culture`):** MailScreen (6), InterceptedLettersTab (4), NativeBankWindow (3),
+  CouncilScreen (3, as simpatias), AlliancesScreen (3), CorrespondenceTab (2). Também os textos montados com
+  `GameText.InlineUi(...Culture)`, por exemplo "Criado por …" nos grupos.
+- **Proposta:** trocar por `NationAndLeader` em títulos e listas. Em chips e gráficos com pouco espaço, onde o nome
+  longo quebraria o layout, usar o líder na dica. Mover `NationAndLeader` para `GameText`, que é o lugar natural,
+  para não depender do MailScreen.
+- **Ligações:** o item 20 (brasões na tela de cívicas) pede o mesmo formato, e o item 22 (painel de recursos da outra
+  nação) também. Fazer junto.
+- **Cuidado:** jogador humano aparece como "Governante Supremo lcaresia": manter o formato. Nos cartões, conferir
+  `FitTitle` para o nome longo não passar por baixo dos botões.
+- **Tamanho:** pequeno, mas espalhado (cerca de 20 pontos). Um passe de varredura com `grep '\.Culture'` nas telas.
+
+### 27. Tela Alianças: mostrar até que turno vai o mandato do presidente
+
+No cartão do membro, o chip "Presidente" não diz quando o mandato acaba.
+- **Proposta:** chip "Presidente até o T95". A dica explica: "mandato de 20 turnos; a eleição abre no T95, 1 voto por
+  membro". Faltando 3 turnos ou menos, o chip fica dourado ou com destaque e diz "eleição em N turno(s)".
+- **Dado já existe:** `Bloc.TermEnds` (TermStart + TermTurns). O cabeçalho do bloco (AlliancesScreen ~l.502) mostra
+  "Presidente: X" e pode ganhar o mesmo "até o T95".
+- **Ligações:** o dossiê das IAs também deveria dizer o fim do mandato, para elas fazerem campanha ou votarem cedo.
+  Conferir se o BlocDossier já diz.
+- **Tamanho:** muito pequeno.
