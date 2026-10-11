@@ -101,6 +101,8 @@ namespace CurrencyMod.Diplomacy.UI
         private readonly List<LetterRow> letterRows = new List<LetterRow>();
         private readonly List<NationRow> nationRows = new List<NationRow>();
         private Transform emptyCard;
+        /// <summary>What the empty card's button does (null = no button).</summary>
+        private Action emptyAction;
 
         // Compose.
         private Transform recipientCard;
@@ -389,6 +391,7 @@ namespace CurrencyMod.Diplomacy.UI
                 Plugin.Log.LogError($"Mail: failed to build the compose panel: {ex}");
             }
             emptyCard = listTable.InstantiateChild(cardSample, "EmptyCard").transform;
+            emptyCard.Find("Table/Top/LiberateButton").GetComponent<UIButton>().LeftClick += b => emptyAction?.Invoke();
             SelectSection(pendingSection >= 0 ? (Section)pendingSection : Section.New);
             pendingSection = -1;
         }
@@ -1323,7 +1326,7 @@ namespace CurrencyMod.Diplomacy.UI
             }
         }
 
-        private void ShowEmpty(string title, string chip, string tipTitle, string tipText)
+        private void ShowEmpty(string title, string chip, string tipTitle, string tipText, string button = null, Action action = null)
         {
             if (emptyCard == null)
             {
@@ -1334,7 +1337,14 @@ namespace CurrencyMod.Diplomacy.UI
             B.SetChip(top, "StatsTable/PopCount", chip);
             B.HideChild(top, "StatsTable/Fortification");
             B.HideChild(top, "StatsTable/ExtensionsCount");
-            B.HideChild(top, "LiberateButton");
+            emptyAction = action;
+            Transform actionButton = top.Find("LiberateButton");
+            B.SetVisible(actionButton, button != null);
+            if (button != null)
+            {
+                B.SetButtonText(actionButton.GetComponent<UIButton>(), button);
+                B.Tip(actionButton, string.Empty, button, tipText);
+            }
             B.HideOutputs(top);
             if (tipTitle != null)
             {
@@ -1552,8 +1562,13 @@ namespace CurrencyMod.Diplomacy.UI
             if (groups.Count == 0)
             {
                 SetGroupRowCount(0);
-                ShowEmpty(L.T("Você ainda não está em nenhum grupo"), L.T("Criar um grupo"), L.T("Sem grupos"),
-                    L.T("À direita, troque o tipo para \"Mensagem de grupo\" e escolha \"Novo grupo\". Marque os membros na seção Nações (botão \"+ Grupo\"), dê um nome no assunto e escreva a primeira mensagem."));
+                ShowEmpty(L.T("Você ainda não está em nenhum grupo"), L.T("Sem grupos"), L.T("Sem grupos"),
+                    L.T("Abre a seção Nações com o painel de escrever em \"Mensagem de grupo\". Marque os membros com \"+ Grupo\", dê um nome no assunto e escreva a primeira mensagem."),
+                    L.T("Criar um grupo"), () =>
+                    {
+                        ComposeToGroup(-1);
+                        SelectSection(Section.Nations);
+                    });
                 return;
             }
             SetGroupRowCount(groups.Count);

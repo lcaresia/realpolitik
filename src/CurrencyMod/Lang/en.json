@@ -1764,7 +1764,7 @@
   "{0}/{1} votaram": "{0}/{1} voted",
   "{0}: reserva": "{0}: backup",
   "{0}º lugar em fama.": "#{0} in fame.",
-  "À direita, troque o tipo para \"Mensagem de grupo\" e escolha \"Novo grupo\". Marque os membros na seção Nações (botão \"+ Grupo\"), dê um nome no assunto e escreva a primeira mensagem.": "On the right, switch the type to \"Group message\" and choose \"New group\". Pick the members in the Nations section (\"+ Group\" button), name it in the subject and write the first message.",
+  "Abre a seção Nações com o painel de escrever em \"Mensagem de grupo\". Marque os membros com \"+ Grupo\", dê um nome no assunto e escreva a primeira mensagem.": "Opens the Nations section with the compose panel set to \"Group message\". Tick the members with \"+ Group\", name it in the subject and write the first message.",
   "É pouco para o tamanho do reino.": "That is little for a realm of our size.",
   "Índice de preços": "Price index",
   "Índice de preços: {0}  ·  PIB estimado: {1}  ·  Estabilidade: {2}%": "Price index: {0}  ·  Estimated GDP: {1}  ·  Stability: {2}%",
