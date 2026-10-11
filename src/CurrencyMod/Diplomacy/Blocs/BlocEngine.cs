@@ -37,17 +37,6 @@ namespace CurrencyMod.Diplomacy.Blocs
             return bloc != null && bloc.Formed && bloc.Has(b);
         }
 
-        /// <summary>Common tariff of the post owner's bloc against the passing nation: "pedagio", "bloqueio" or null.</summary>
-        internal static string TariffAgainst(AiWorld world, int postOwner, int trader)
-        {
-            Bloc bloc = Of(world, postOwner);
-            if (bloc == null || !bloc.Formed || bloc.Has(trader))
-            {
-                return null;
-            }
-            return bloc.Tariffs.FirstOrDefault(t => t.Target == trader)?.Mode;
-        }
-
         /// <summary>Open invites for the nation.</summary>
         internal static IEnumerable<Bloc> InvitesFor(AiWorld world, int empire) => world?.Blocs.Where(b => b.InviteFor(empire) != null) ?? Enumerable.Empty<Bloc>();
 

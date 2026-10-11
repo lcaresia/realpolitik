@@ -1006,11 +1006,9 @@ namespace CurrencyMod.NativeUI
         private void FillPolicy(GameSnapshot.Data game, EmpireCurrency mine, int localIndex)
         {
             double stock = (float)game.EmpireInfo[localIndex].MoneyStock;
-            double realRate = stock >= 0
-                ? mine.InterestRate - mine.InflationRate
-                : mine.InterestRate + EconomyConfig.DebtSpread.Value - mine.InflationRate;
-            realRate = Math.Max(-EconomyConfig.MaxRealRatePerTurn.Value, Math.Min(EconomyConfig.MaxRealRatePerTurn.Value, realRate));
-            double inflationPush = -(mine.InterestRate - EconomyConfig.NeutralInterest.Value) * EconomyConfig.InterestInflationEffect.Value;
+            // Recomputed from the current rate (not the end-of-turn value) so the slider shows its effect right away.
+            double realRate = EconomySimulation.RealRate(stock, mine.InterestRate, mine.InflationRate);
+            double inflationPush = EconomySimulation.InterestInflationPush(mine.InterestRate);
 
             Transform top = policyCard.Find("Table/Top");
             SetLabel(top, "TitleGroup/Title", L.F("Juros: {0}/turno", Format.Percent(mine.InterestRate)));

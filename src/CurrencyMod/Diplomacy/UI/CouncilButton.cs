@@ -134,7 +134,7 @@ namespace CurrencyMod.Diplomacy.UI
         {
             AiModule module = AiModule.Instance;
             CouncilMeeting meeting = PlayerCouncil.Meeting(AiModule.World, module?.CurrentTurn ?? -1);
-            string mark = meeting != null && meeting.Status == "pronta" && !meeting.Seen ? "!" : null;
+            string mark = PlayerCouncil.HasNews(AiModule.World, module?.CurrentTurn ?? -1) ? "!" : null;
             if (mark == shownBadge)
             {
                 return;

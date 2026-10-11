@@ -587,11 +587,9 @@ namespace CurrencyMod
             // Preview of the effect, with the same numbers as the simulation.
             double stock = (float)game.EmpireInfo[localIndex].MoneyStock;
             double net = (float)game.EmpireInfo[localIndex].MoneyNet;
-            double realRate = stock >= 0
-                ? mine.InterestRate - mine.InflationRate
-                : mine.InterestRate + EconomyConfig.DebtSpread.Value - mine.InflationRate;
-            realRate = Math.Max(-EconomyConfig.MaxRealRatePerTurn.Value, Math.Min(EconomyConfig.MaxRealRatePerTurn.Value, realRate));
-            double inflationPush = -(mine.InterestRate - EconomyConfig.NeutralInterest.Value) * EconomyConfig.InterestInflationEffect.Value;
+            // Recomputed from the current rate (not the end-of-turn value) so the slider shows its effect right away.
+            double realRate = EconomySimulation.RealRate(stock, mine.InterestRate, mine.InflationRate);
+            double inflationPush = EconomySimulation.InterestInflationPush(mine.InterestRate);
             double creditTarget = EconomySimulation.CreditTarget(mine.InterestRate, mine.InflationRate);
 
             GUILayout.Label(L.T("EFEITO ESPERADO NO PRÓXIMO TURNO"), Theme.SectionHeader);

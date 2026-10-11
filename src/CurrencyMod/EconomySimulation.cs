@@ -514,7 +514,7 @@ namespace CurrencyMod
 
             double stability = (0.6 - currency.Stability) * EconomyConfig.StabilityInflation.Value;
             // Interest acts directly on demand: stronger than its effect on supply (otherwise raising interest would raise inflation).
-            double interest = -(currency.InterestRate - EconomyConfig.NeutralInterest.Value) * EconomyConfig.InterestInflationEffect.Value;
+            double interest = InterestInflationPush(currency.InterestRate);
 
             currency.InflationFromDebt = debt;
             currency.InflationFromHoarding = hoarding;
@@ -534,6 +534,20 @@ namespace CurrencyMod
         /// paid from savings) still earns on it; with income alone as the base, a negative income collapsed the cap to the
         /// 20-per-turn floor and a 2,600 balance yielded almost nothing (real save, 2026-10-11).
         /// </summary>
+        /// <summary>Real rate per turn on the balance: interest − inflation (plus the spread on debt), within the cap.</summary>
+        internal static double RealRate(double stock, double interestRate, double inflationRate)
+        {
+            double maxRate = EconomyConfig.MaxRealRatePerTurn.Value;
+            double rate = stock >= 0 ? interestRate - inflationRate : interestRate + EconomyConfig.DebtSpread.Value - inflationRate;
+            return Clamp(rate, -maxRate, maxRate);
+        }
+
+        /// <summary>Direct push of the policy rate on inflation (negative above the neutral rate).</summary>
+        internal static double InterestInflationPush(double interestRate)
+        {
+            return -(interestRate - EconomyConfig.NeutralInterest.Value) * EconomyConfig.InterestInflationEffect.Value;
+        }
+
         /// <summary>Balance that yields almost fully: N turns of the larger of income (min 20) and a share of GDP.</summary>
         internal static double SavingsCapacity(double smoothedIncome, double gdp)
         {
@@ -543,13 +557,8 @@ namespace CurrencyMod
 
         internal static double InterestFlow(double stock, double interestRate, double inflationRate, double smoothedIncome, double gdp = 0)
         {
-            double maxRate = EconomyConfig.MaxRealRatePerTurn.Value;
-            if (stock < 0)
-            {
-                return stock * Clamp(interestRate + EconomyConfig.DebtSpread.Value - inflationRate, -maxRate, maxRate);
-            }
-            double realRate = Clamp(interestRate - inflationRate, -maxRate, maxRate);
-            if (realRate <= 0)
+            double realRate = RealRate(stock, interestRate, inflationRate);
+            if (stock < 0 || realRate <= 0)
             {
                 return stock * realRate;
             }
