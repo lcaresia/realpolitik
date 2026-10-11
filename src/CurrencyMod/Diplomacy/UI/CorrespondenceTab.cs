@@ -877,8 +877,8 @@ namespace CurrencyMod.Diplomacy.UI
             }
             else
             {
-                // Strips the dev-channel prefix (both spellings while AiModule moves from "erro:" to "error:").
-                SetFeedback(result.Replace("error: ", string.Empty).Replace("erro: ", string.Empty), true);
+                // Strips the result prefix.
+                SetFeedback(result.Replace("error: ", string.Empty), true);
             }
         }
 

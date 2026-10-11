@@ -604,7 +604,7 @@ namespace CurrencyMod.Diplomacy.UI
             }
             else
             {
-                SetFeedback(result.Replace("erro: ", string.Empty), true);
+                SetFeedback(result.Replace("error: ", string.Empty), true);
             }
         }
 
@@ -646,7 +646,7 @@ namespace CurrencyMod.Diplomacy.UI
             }
             else
             {
-                SetFeedback(result.Replace("erro: ", string.Empty), true);
+                SetFeedback(result.Replace("error: ", string.Empty), true);
             }
         }
 
@@ -1577,7 +1577,7 @@ namespace CurrencyMod.Diplomacy.UI
                 B.SetButtonText(row.WriteButton, L.T("Escrever"));
                 SetSecondButton(row.BlockButton, row.WriteButton, L.T("Sair"));
                 FitTitle(top, row.WriteButton.GetComponent<UITransform>().Width + row.BlockButton.GetComponent<UITransform>().Width + 28f);
-                string members = string.Join(", ", group.Members.Select(m => m == me ? L.T("você") : NationAndLeader(capture, m)));
+                string members = string.Join(", ", group.Members.Select(m => m == me ? L.T("você") : NationAndLeader(capture, m, inline: true)));
                 B.Tip(top, "StatsTable/PopCount", L.T("Membros"), Escape(members));
                 B.Tip(row.WriteButton.transform, string.Empty, L.T("Escrever ao grupo"), L.T("Endereça o painel de escrever a este grupo: todos os membros leem."));
                 B.Tip(row.BlockButton.transform, string.Empty, L.T("Sair do grupo"), L.T("Você deixa de receber as mensagens. Grupo com menos de 2 membros acaba."));
@@ -1640,7 +1640,7 @@ namespace CurrencyMod.Diplomacy.UI
                 B.SetChip(top, "StatsTable/Fortification", L.T("Marque em Nações"));
                 B.Tip(top, "StatsTable/Fortification", L.T("Membros"), newGroupMembers.Count == 0
                     ? L.T("Na seção Nações, use \"+ Grupo\" em cada nação que vai participar. O nome do grupo vai no assunto.")
-                    : Escape(string.Join(", ", newGroupMembers.Select(m => NationAndLeader(capture, m)))));
+                    : Escape(string.Join(", ", newGroupMembers.Select(m => NationAndLeader(capture, m, inline: true)))));
             }
             else
             {
@@ -1648,7 +1648,7 @@ namespace CurrencyMod.Diplomacy.UI
                 B.SetChip(top, "StatsTable/PopCount", L.F("Chega no turno {0}", arrives));
                 B.SetVisible(top.Find("StatsTable/Fortification"), true);
                 B.SetChip(top, "StatsTable/Fortification", L.F("{0} membros", group.Members.Count));
-                B.Tip(top, "StatsTable/Fortification", L.T("Membros"), Escape(string.Join(", ", group.Members.Select(m => m == me ? L.T("você") : NationAndLeader(capture, m)))));
+                B.Tip(top, "StatsTable/Fortification", L.T("Membros"), Escape(string.Join(", ", group.Members.Select(m => m == me ? L.T("você") : NationAndLeader(capture, m, inline: true)))));
             }
             B.HideChild(top, "StatsTable/ExtensionsCount");
             B.SetVisible(recipientButton.transform, true);

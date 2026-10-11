@@ -812,7 +812,7 @@ namespace CurrencyMod.Diplomacy.UI
             {
                 Row row = rows[index++];
                 Transform top = Top(row);
-                Title(row, L.F("Enviado a {0}", Esc(MailScreen.NationAndLeader(view.Capture, invite.Empire))));
+                Title(row, L.F("Convite para {0}", Esc(MailScreen.NationAndLeader(view.Capture, invite.Empire, inline: true))));
                 Chip(top, 0, L.F("Turno {0}", invite.Turn), L.T("Enviado"), string.Empty);
                 Chip(top, 1, L.F("Vence no turno {0}", invite.Turn + Bloc.InviteTurns), L.T("Prazo"), string.Empty);
                 Chip(top, 2, L.T("Aguardando resposta"), L.T("Situação"), string.Empty);

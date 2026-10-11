@@ -332,7 +332,7 @@ namespace CurrencyMod.Diplomacy.UI
             {
                 // Council dismissed: the button summons an audience (the written speech stays in the field for later).
                 string convened = PlayerCouncil.Convene();
-                SetFeedback(convened.Replace("ok: ", string.Empty).Replace("erro: ", string.Empty), convened.StartsWith("erro"));
+                SetFeedback(convened.Replace("ok: ", string.Empty).Replace("error: ", string.Empty), convened.StartsWith("error"));
                 return;
             }
             string result = PlayerCouncil.Speak(field.Text);
@@ -343,7 +343,7 @@ namespace CurrencyMod.Diplomacy.UI
             }
             else
             {
-                SetFeedback(result.Replace("erro: ", string.Empty), true);
+                SetFeedback(result.Replace("error: ", string.Empty), true);
             }
         }
 
@@ -1124,7 +1124,7 @@ namespace CurrencyMod.Diplomacy.UI
             if (row.Candidate != null)
             {
                 string result = PlayerCouncil.Appoint(row.Portfolio, row.Candidate);
-                SetFeedback(result.Replace("ok: ", string.Empty).Replace("erro: ", string.Empty), result.StartsWith("erro"));
+                SetFeedback(result.Replace("ok: ", string.Empty).Replace("error: ", string.Empty), result.StartsWith("error"));
                 expandedSeat = null;
                 nextRefresh = 0;
                 return;
@@ -1165,7 +1165,7 @@ namespace CurrencyMod.Diplomacy.UI
                 SetFeedback(L.F("Demissão de {0}; no lugar entra {1}", oldName, newcomer?.Name ?? L.T("ninguém")), false);
                 return;
             }
-            SetFeedback(result.Replace("ok: ", string.Empty).Replace("erro: ", string.Empty), !result.StartsWith("ok"));
+            SetFeedback(result.Replace("ok: ", string.Empty).Replace("error: ", string.Empty), !result.StartsWith("ok"));
         }
 
         // ---------------- Development and removal ----------------

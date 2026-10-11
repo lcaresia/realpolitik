@@ -204,16 +204,16 @@ namespace CurrencyMod.Diplomacy.Council
             AiWorld world = AiModule.World;
             if (module == null || world == null || module.PlayerIndex < 0 || module.CurrentTurn < 0)
             {
-                return "erro: " + L.T("sem partida");
+                return "error: " + L.T("sem partida");
             }
             if (!AiConfig.PlayerCouncil.Value || !AiConfig.Councils.Value)
             {
-                return "erro: " + L.T("o conselho do jogador está desligado no .cfg");
+                return "error: " + L.T("o conselho do jogador está desligado no .cfg");
             }
             CouncilMeeting meeting = Meeting(world, module.CurrentTurn);
             if (meeting != null)
             {
-                return meeting.Status == "erro" ? Retry() : "erro: " + L.T("o conselho já está reunido neste turno");
+                return meeting.Status == "erro" ? Retry() : "error: " + L.T("o conselho já está reunido neste turno");
             }
             Open(world, module.CurrentTurn, requested: true);
             retryAt = 0;
@@ -289,29 +289,29 @@ namespace CurrencyMod.Diplomacy.Council
             WorldCapture capture = TurnCapture.Latest;
             if (module == null || world == null || capture == null || module.PlayerIndex < 0)
             {
-                return "erro: " + L.T("sem partida");
+                return "error: " + L.T("sem partida");
             }
             CouncilMeeting meeting = Meeting(world, module.CurrentTurn);
             text = (text ?? string.Empty).Replace("<", "‹").Replace(">", "›").Trim();
             if (meeting == null)
             {
-                return "erro: " + L.T("o conselho não está reunido; convoque uma audiência");
+                return "error: " + L.T("o conselho não está reunido; convoque uma audiência");
             }
             if (meeting.Status != "pronta")
             {
-                return "erro: " + L.T("o conselho ainda não se reuniu neste turno");
+                return "error: " + L.T("o conselho ainda não se reuniu neste turno");
             }
             if (text.Length == 0)
             {
-                return "erro: " + L.T("diga alguma coisa ao conselho");
+                return "error: " + L.T("diga alguma coisa ao conselho");
             }
             if (inFlight || meeting.Exchanges.Any(e => e.Status == "pensando"))
             {
-                return "erro: " + L.T("o conselho ainda está respondendo");
+                return "error: " + L.T("o conselho ainda está respondendo");
             }
             if (meeting.Exchanges.Count >= MaxExchangesPerTurn)
             {
-                return "erro: " + L.F("o conselho já ouviu {0} falas suas neste turno; continue no próximo", MaxExchangesPerTurn);
+                return "error: " + L.F("o conselho já ouviu {0} falas suas neste turno; continue no próximo", MaxExchangesPerTurn);
             }
             string[] words = text.Split(new[] { ' ', '\n', '\t' }, StringSplitOptions.RemoveEmptyEntries);
             if (words.Length > MaxPlayerWords)
@@ -332,12 +332,12 @@ namespace CurrencyMod.Diplomacy.Council
             WorldCapture capture = TurnCapture.Latest;
             if (module == null || world == null || capture == null || module.PlayerIndex < 0)
             {
-                return "erro: " + L.T("sem partida");
+                return "error: " + L.T("sem partida");
             }
             portfolio = (portfolio ?? string.Empty).Trim().ToLowerInvariant();
             if (!CouncilBank.Portfolios.Contains(portfolio))
             {
-                return "erro: " + L.F("pasta desconhecida ({0})", string.Join(", ", CouncilBank.Portfolios));
+                return "error: " + L.F("pasta desconhecida ({0})", string.Join(", ", CouncilBank.Portfolios));
             }
             AiNation nation = world.Ensure(module.PlayerIndex);
             Minister former = nation.Council.FirstOrDefault(m => m.Portfolio == portfolio);
@@ -346,7 +346,7 @@ namespace CurrencyMod.Diplomacy.Council
             string result = CouncilEngine.Fire(world, nation, capture, portfolio, module.CurrentTurn);
             if (result == null)
             {
-                return "erro: " + L.T("ninguém nessa pasta");
+                return "error: " + L.T("ninguém nessa pasta");
             }
             // Only the Hand is replaced on the spot; the other portfolios stay vacant until the player appoints someone.
             Minister newcomer = portfolio == "mao" ? nation.Council.FirstOrDefault(m => m.Portfolio == portfolio) : null;
@@ -375,20 +375,20 @@ namespace CurrencyMod.Diplomacy.Council
             WorldCapture capture = TurnCapture.Latest;
             if (module == null || world == null || capture == null || module.PlayerIndex < 0)
             {
-                return "erro: " + L.T("sem partida");
+                return "error: " + L.T("sem partida");
             }
             portfolio = (portfolio ?? string.Empty).Trim().ToLowerInvariant();
             CapturedEmpire me = capture.Empire(module.PlayerIndex);
             int cost = CouncilEngine.AppointCost(me?.EraIndex ?? 0);
             if ((me?.Influence ?? 0) < cost)
             {
-                return "erro: " + L.F("influência insuficiente: nomear custa {0}", cost);
+                return "error: " + L.F("influência insuficiente: nomear custa {0}", cost);
             }
             AiNation nation = world.Ensure(module.PlayerIndex);
             Minister minister = CouncilEngine.Appoint(world, nation, capture, portfolio, personalityId, module.CurrentTurn, out string problem);
             if (minister == null)
             {
-                return "erro: " + CouncilBank.ErrorUi(problem);
+                return "error: " + CouncilBank.ErrorUi(problem);
             }
             ChargeInfluence(module.PlayerIndex, cost);
             int era = me?.EraIndex ?? 0;
@@ -420,7 +420,7 @@ namespace CurrencyMod.Diplomacy.Council
             CouncilMeeting meeting = Meeting(AiModule.World, module?.CurrentTurn ?? -1);
             if (meeting == null)
             {
-                return "erro: " + L.T("sem reunião neste turno");
+                return "error: " + L.T("sem reunião neste turno");
             }
             if (meeting.Status == "erro")
             {

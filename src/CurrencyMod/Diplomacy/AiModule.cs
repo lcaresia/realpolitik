@@ -1031,39 +1031,39 @@ namespace CurrencyMod.Diplomacy
             return letter;
         }
 
-        /// <summary>The player creates a group with the chosen nations and sends the first message. "ok: …" or "erro: …".</summary>
+        /// <summary>The player creates a group with the chosen nations and sends the first message. "ok: …" or "error: …".</summary>
         internal string CreatePlayerGroup(string name, List<int> others, string firstMessage)
         {
             WorldCapture capture = TurnCapture.Latest;
             if (World == null || playerIndex < 0 || capture == null)
             {
-                return "erro: " + L.T("sem partida");
+                return "error: " + L.T("sem partida");
             }
             List<int> known = others.Where(o => capture.AiEmpires().Contains(o) && (capture.Empire(playerIndex)?.RelationWith(o)?.Knows ?? false)).Distinct().ToList();
             if (known.Count + 1 < ChatGroup.MinMembers)
             {
-                return "erro: " + L.F("marque pelo menos {0} nações na seção Nações (botão \"+ Grupo\")", ChatGroup.MinMembers - 1);
+                return "error: " + L.F("marque pelo menos {0} nações na seção Nações (botão \"+ Grupo\")", ChatGroup.MinMembers - 1);
             }
             ChatGroup group = CreateGroup(playerIndex, name, known, currentTurn, out string problem);
             if (group == null)
             {
-                return "erro: " + problem;
+                return "error: " + problem;
             }
             return SendPlayerGroupLetter(group.Id, name, firstMessage);
         }
 
-        /// <summary>Player message to one of their groups, by the era's delivery rule. "ok: … turno N" or "erro: …".</summary>
+        /// <summary>Player message to one of their groups, by the era's delivery rule. "ok: … turno N" or "error: …".</summary>
         internal string SendPlayerGroupLetter(int groupId, string subject, string text)
         {
             ChatGroup group = World?.Groups.FirstOrDefault(g => g.Id == groupId);
             if (group == null || !group.Members.Contains(playerIndex))
             {
-                return "erro: " + L.T("você não está nesse grupo");
+                return "error: " + L.T("você não está nesse grupo");
             }
             text = CleanPlayerText(text);
             if (text.Length == 0)
             {
-                return "erro: " + L.T("carta vazia");
+                return "error: " + L.T("carta vazia");
             }
             int max = AiConfig.PlayerLetterLimit;
             if (text.Length > max)
@@ -2001,10 +2001,10 @@ namespace CurrencyMod.Diplomacy
 
         internal string SendPlayerLetter(int to, string type, string subject, string text, string demand, int deadline, bool immediate = false, int inReplyTo = -1)
         {
-            // The texts after "erro: " are shown to the player (notice in the Letters tab and the Mail).
+            // The texts after "error: " are shown to the player (notice in the Letters tab and the Mail).
             if (World == null || playerIndex < 0 || currentTurn < 0)
             {
-                return "erro: " + L.T("sem partida");
+                return "error: " + L.T("sem partida");
             }
             type = (type ?? "privada").ToLowerInvariant();
             if (type == "publica")
@@ -2014,16 +2014,16 @@ namespace CurrencyMod.Diplomacy
             WorldCapture capture = TurnCapture.Latest;
             if (capture == null || capture.Guid != World.GameGuid)
             {
-                return "erro: " + L.T("ainda sem foto do turno; tente de novo em alguns segundos");
+                return "error: " + L.T("ainda sem foto do turno; tente de novo em alguns segundos");
             }
             if (to != Letter.Everyone && !capture.AiEmpires().Contains(to))
             {
-                return "erro: " + L.F("E{0} não é uma nação do computador viva", to);
+                return "error: " + L.F("E{0} não é uma nação do computador viva", to);
             }
             text = CleanPlayerText(text);
             if (string.IsNullOrWhiteSpace(text))
             {
-                return "erro: " + L.T("carta vazia");
+                return "error: " + L.T("carta vazia");
             }
             int max = AiConfig.PlayerLetterLimit;
             if (text.Length > max)
