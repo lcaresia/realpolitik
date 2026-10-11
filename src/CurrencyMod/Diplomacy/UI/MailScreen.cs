@@ -1424,11 +1424,12 @@ namespace CurrencyMod.Diplomacy.UI
             B.SetChip(typeTop, "StatsTable/PopCount", type == "ultimato" ? L.T("Exigência com prazo") : type == "publica" ? L.T("Todos leem") : type == "grupo" ? L.T("Os membros leem") : L.T("Só ele lê"));
             B.HideChild(typeTop, "StatsTable/Fortification");
             B.HideChild(typeTop, "StatsTable/ExtensionsCount");
+            B.SetVisible(typeButton.transform, true); // the sample's button is born hidden
             B.SetButtonText(typeButton, L.T("Trocar"));
             FitTitle(typeTop, typeButton.GetComponent<UITransform>().Width + 20f);
             B.HideOutputs(typeTop);
             B.Tip(typeTop, "StatsTable/PopCount", L.T(TypeNames[composeType]), TypeHelp(type));
-            B.Tip(typeButton.transform, string.Empty, L.T("Trocar tipo"), L.T("Carta privada → Ultimato → Declaração pública."));
+            B.Tip(typeButton.transform, string.Empty, L.T("Trocar tipo"), L.T("Carta privada → Ultimato → Declaração pública → Mensagem de grupo."));
 
             // In reply to.
             B.SetVisible(replyCard, replying != null);
