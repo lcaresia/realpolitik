@@ -1424,7 +1424,7 @@ namespace CurrencyMod.Diplomacy.UI
             B.SetChip(typeTop, "StatsTable/PopCount", type == "ultimato" ? L.T("Exigência com prazo") : type == "publica" ? L.T("Todos leem") : type == "grupo" ? L.T("Os membros leem") : L.T("Só ele lê"));
             B.HideChild(typeTop, "StatsTable/Fortification");
             B.HideChild(typeTop, "StatsTable/ExtensionsCount");
-            B.SetVisible(typeButton.transform, true); // the sample's button is born hidden
+            B.SetVisible(typeButton.transform, true); // the sample's button can come hidden: every compose button is shown explicitly
             B.SetButtonText(typeButton, L.T("Trocar"));
             FitTitle(typeTop, typeButton.GetComponent<UITransform>().Width + 20f);
             B.HideOutputs(typeTop);
@@ -1440,6 +1440,7 @@ namespace CurrencyMod.Diplomacy.UI
                 B.SetChip(replyTop, "StatsTable/PopCount", L.F("Carta do turno {0}", replying.SentTurn));
                 B.HideChild(replyTop, "StatsTable/Fortification");
                 B.HideChild(replyTop, "StatsTable/ExtensionsCount");
+                B.SetVisible(replyButton.transform, true);
                 B.SetButtonText(replyButton, L.T("Soltar"));
                 FitTitle(replyTop, replyButton.GetComponent<UITransform>().Width + 20f);
                 B.HideOutputs(replyTop);
@@ -1465,6 +1466,7 @@ namespace CurrencyMod.Diplomacy.UI
             B.SetChip(sendTop, "StatsTable/PopCount", words > max ? $"<c={Red}>{wordCount}</c>" : wordCount);
             B.HideChild(sendTop, "StatsTable/Fortification");
             B.HideChild(sendTop, "StatsTable/ExtensionsCount");
+            B.SetVisible(sendButton.transform, true);
             B.SetButtonText(sendButton, L.T("Enviar"));
             FitTitle(sendTop, sendButton.GetComponent<UITransform>().Width + 20f);
             B.HideOutputs(sendTop);
