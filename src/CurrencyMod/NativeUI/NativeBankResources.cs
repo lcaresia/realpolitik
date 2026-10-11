@@ -1,8 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using CurrencyMod.Diplomacia;
-using CurrencyMod.Diplomacia.Capture;
+using CurrencyMod.Diplomacy;
+using CurrencyMod.Diplomacy.Capture;
 using UnityEngine;
 
 namespace CurrencyMod.NativeUI
@@ -128,13 +128,13 @@ namespace CurrencyMod.NativeUI
             if (sellers.Count > 0)
             {
                 help = L.F("Você compra esse recurso por rota comercial de: {0}.", string.Join(", ", sellers.Select(ShortEmpireName)));
-                return sellers.Count == 1 ? L.F("Comprado {0}", Diplomacia.GameText.OfUi(ShortEmpireName(sellers[0]))) : L.F("Comprado de {0} impérios", sellers.Count);
+                return sellers.Count == 1 ? L.F("Comprado {0}", Diplomacy.GameText.OfUi(ShortEmpireName(sellers[0]))) : L.F("Comprado de {0} impérios", sellers.Count);
             }
             help = buyers.Count > 0
                 ? L.F("Vem das suas jazidas, e você vende esse recurso por rota comercial para: {0}.", string.Join(", ", buyers.Select(ShortEmpireName)))
                 : L.T("Vem das jazidas do seu território.");
             return buyers.Count > 0
-                ? (buyers.Count == 1 ? L.F("Seu · vendido para {0}", Diplomacia.GameText.InlineUi(ShortEmpireName(buyers[0]))) : L.F("Seu · vendido para {0} impérios", buyers.Count))
+                ? (buyers.Count == 1 ? L.F("Seu · vendido para {0}", Diplomacy.GameText.InlineUi(ShortEmpireName(buyers[0]))) : L.F("Seu · vendido para {0} impérios", buyers.Count))
                 : L.T("Jazida própria");
         }
 

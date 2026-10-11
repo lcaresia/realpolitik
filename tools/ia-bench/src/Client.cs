@@ -4,7 +4,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Net;
 using System.Text;
-using CurrencyMod.Diplomacia.Llm.Providers;
+using CurrencyMod.Diplomacy.Llm.Providers;
 using Newtonsoft.Json.Linq;
 
 namespace IaBench

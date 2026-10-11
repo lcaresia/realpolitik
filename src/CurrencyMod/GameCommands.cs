@@ -292,9 +292,9 @@ namespace CurrencyMod
                     string mode = rest.ToLowerInvariant();
                     if (mode == "on" || mode == "off")
                     {
-                        Diplomacia.IaConfig.ExpansionInOldSaves.Value = mode == "on";
+                        Diplomacy.AiConfig.ExpansionInOldSaves.Value = mode == "on";
                     }
-                    return Diplomacia.ExpansionSavePatch.Describe() + (mode == "on" ? " (vale no próximo carregamento de save)" : string.Empty);
+                    return Diplomacy.ExpansionSavePatch.Describe() + (mode == "on" ? " (vale no próximo carregamento de save)" : string.Empty);
                 }
                 case "alerta":
                     // Visual test of the Central Bank badge: "jogo alerta <text>" lights it up, "jogo alerta off" returns to diagnostics.
@@ -327,7 +327,7 @@ namespace CurrencyMod
             string[] parts = (args ?? string.Empty).Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
             string kind = parts.Length > 0 ? parts[0].ToLowerInvariant() : "industria";
             int cityIndex = parts.Length > 1 && int.TryParse(parts[1], out int parsed) ? parsed : 0;
-            if (!Diplomacia.GameAccess.TryGetSession(out _, out _, out int player))
+            if (!Diplomacy.GameAccess.TryGetSession(out _, out _, out int player))
             {
                 return "erro: sem partida";
             }
@@ -422,19 +422,19 @@ namespace CurrencyMod
             switch (words[0].ToLowerInvariant())
             {
                 case "liberar":
-                    return words.Length > 1 && TryEmpire(words[1], out int unlocker) ? Diplomacia.CongressFlow.ForceUnlock(unlocker) : "uso: jogo congresso liberar E#";
+                    return words.Length > 1 && TryEmpire(words[1], out int unlocker) ? Diplomacy.CongressFlow.ForceUnlock(unlocker) : "uso: jogo congresso liberar E#";
                 case "encerrar":
-                    return Diplomacia.CongressFlow.ForceEnd(words.Length > 1 ? words[1] : null);
+                    return Diplomacy.CongressFlow.ForceEnd(words.Length > 1 ? words[1] : null);
                 case "consulado":
-                    return words.Length > 1 && TryEmpire(words[1], out int builder) ? Diplomacia.CongressFlow.CreateConsulate(builder) : "uso: jogo congresso consulado E#";
+                    return words.Length > 1 && TryEmpire(words[1], out int builder) ? Diplomacy.CongressFlow.CreateConsulate(builder) : "uso: jogo congresso consulado E#";
                 case "alavancagem":
                     return words.Length > 3 && TryEmpire(words[1], out int gainer) && TryEmpire(words[2], out int other) && int.TryParse(words[3], out int delta)
-                        ? Diplomacia.CongressFlow.AddLeverage(gainer, other, delta) : "uso: jogo congresso alavancagem E# E# n";
+                        ? Diplomacy.CongressFlow.AddLeverage(gainer, other, delta) : "uso: jogo congresso alavancagem E# E# n";
                 case "lei":
-                    return words.Length > 2 && TryEmpire(words[1], out int receiver) ? Diplomacia.CongressFlow.UnlockLaw(receiver, words[2]) : "uso: jogo congresso lei E# NomeDoCivico";
+                    return words.Length > 2 && TryEmpire(words[1], out int receiver) ? Diplomacy.CongressFlow.UnlockLaw(receiver, words[2]) : "uso: jogo congresso lei E# NomeDoCivico";
                 case "propor":
                 {
-                    string civic = Diplomacia.CongressFlow.CivicForCode(words.Length > 1 ? words[1] : null);
+                    string civic = Diplomacy.CongressFlow.CivicForCode(words.Length > 1 ? words[1] : null);
                     if (civic == null)
                     {
                         return "uso: jogo congresso propor V# (código de lei internacional)";
@@ -442,7 +442,7 @@ namespace CurrencyMod
                     InternationalFailureFlags flags = congress.GetStartCivicVoteFailureFlags(local, new Amplitude.StaticString(civic));
                     if (flags != InternationalFailureFlags.None)
                     {
-                        return "o Congresso não aceitaria: " + Diplomacia.CongressFlow.Explain(flags);
+                        return "o Congresso não aceitaria: " + Diplomacy.CongressFlow.Explain(flags);
                     }
                     SandboxManager.PostOrder(new OrderStartCivicVote { CivicName = new Amplitude.StaticString(civic) }, local);
                     return $"ok: o jogador propôs {civic}";
@@ -458,7 +458,7 @@ namespace CurrencyMod
                     {
                         order = new OrderInternationalAction { InternationalAction = Amplitude.Mercury.Data.Simulation.InternationalAction.VoteForCivicChoiceIndex, CivicChoiceIndex = words[2].Equals("B", StringComparison.OrdinalIgnoreCase) ? 1 : 0 };
                     }
-                    else if (Diplomacia.CongressFlow.TryCrisisCode(words[1], null, out int pool) && pool < congress.CrisisVoteInfos.Capacity && TryEmpire(words[2], out int side))
+                    else if (Diplomacy.CongressFlow.TryCrisisCode(words[1], null, out int pool) && pool < congress.CrisisVoteInfos.Capacity && TryEmpire(words[2], out int side))
                     {
                         ref var crisis = ref congress.CrisisVoteInfos.GetReferenceAt(pool);
                         var action = side == crisis.DeclaratorEmpireIndex ? Amplitude.Mercury.Data.Simulation.InternationalAction.SideWithCrisisDeclarator
@@ -476,7 +476,7 @@ namespace CurrencyMod
                     InternationalFailureFlags flags = congress.GetInternationalActionFailureFlags(local, order);
                     if (flags != InternationalFailureFlags.None)
                     {
-                        return "o Congresso não aceitaria: " + Diplomacia.CongressFlow.Explain(flags);
+                        return "o Congresso não aceitaria: " + Diplomacy.CongressFlow.Explain(flags);
                     }
                     SandboxManager.PostOrder(order, local);
                     return $"ok: voto do jogador enviado ({order.InternationalAction})";
@@ -489,7 +489,7 @@ namespace CurrencyMod
                     }
                     bool law = words[1].Equals("lei", StringComparison.OrdinalIgnoreCase);
                     int pool = -1;
-                    if (!law && !Diplomacia.CongressFlow.TryCrisisCode(words[1], null, out pool))
+                    if (!law && !Diplomacy.CongressFlow.TryCrisisCode(words[1], null, out pool))
                     {
                         return "votação inválida";
                     }
@@ -503,7 +503,7 @@ namespace CurrencyMod
                     InternationalFailureFlags flags = congress.GetInternationalActionFailureFlags(local, order);
                     if (flags != InternationalFailureFlags.None)
                     {
-                        return "o Congresso não aceitaria: " + Diplomacia.CongressFlow.Explain(flags);
+                        return "o Congresso não aceitaria: " + Diplomacy.CongressFlow.Explain(flags);
                     }
                     SandboxManager.PostOrder(order, local);
                     return $"ok: {count} suborno(s) do jogador contra E{target}";
@@ -519,7 +519,7 @@ namespace CurrencyMod
                     DiplomaticActionFailureFlags flags = Sandbox.MajorEmpires[local].DepartmentOfForeignAffairs.GetDiplomaticActionFailureFlags(winner, action);
                     if (flags != DiplomaticActionFailureFlags.None)
                     {
-                        return "o jogo não permite: " + Diplomacia.ActionExecutor.Explain(flags);
+                        return "o jogo não permite: " + Diplomacy.ActionExecutor.Explain(flags);
                     }
                     SandboxManager.PostOrder(new OrderDiplomaticAction { OtherEmpireIndex = winner, DiplomaticAction = action }, local);
                     return $"ok: {action} enviado a E{winner}";
@@ -570,7 +570,7 @@ namespace CurrencyMod
             var flags = dofa.GetDiplomaticActionFailureFlags(other, steps[0]);
             if (flags != Amplitude.Mercury.Interop.DiplomaticActionFailureFlags.None)
             {
-                return $"erro: {steps[0]} recusada pelo jogo: {Diplomacia.ActionExecutor.Explain(flags)}";
+                return $"erro: {steps[0]} recusada pelo jogo: {Diplomacy.ActionExecutor.Explain(flags)}";
             }
             foreach (var step in steps)
             {
@@ -756,7 +756,7 @@ namespace CurrencyMod
                 text.AppendLine($"feito: {what} (o efeito nas janelas aparece no próximo quadro; rode 'jogo interacao estado')");
             }
             text.AppendLine($"cursor: {cursors?.CurrentCursor?.GetType().Name ?? "?"} · barra: {banner?.State.ToString() ?? "?"}");
-            text.AppendLine($"Banco Central: {(NativeUI.NativeBankWindow.IsOpen ? "aberto" : "fechado")} · posto comercial: {(NativeUI.TradePostWindow.Instance?.Shown == true ? "aberto" : "fechado")} · correio: {(Diplomacia.UI.MailScreen.IsOpen ? "aberto" : "fechado")} · aba Cartas: {(Diplomacia.UI.CorrespondenceTab.Active ? "ativa" : "não")}");
+            text.AppendLine($"Banco Central: {(NativeUI.NativeBankWindow.IsOpen ? "aberto" : "fechado")} · posto comercial: {(NativeUI.TradePostWindow.Instance?.Shown == true ? "aberto" : "fechado")} · correio: {(Diplomacy.UI.MailScreen.IsOpen ? "aberto" : "fechado")} · aba Cartas: {(Diplomacy.UI.CorrespondenceTab.Active ? "ativa" : "não")}");
             var diplomacy = Amplitude.Mercury.UI.Helpers.WindowsUtils.GetWindow<Amplitude.Mercury.UI.DiplomaticScreen>();
             if (diplomacy != null && diplomacy.Shown)
             {
@@ -820,8 +820,8 @@ namespace CurrencyMod
             var text = new StringBuilder();
             var runtime = Services.GetService<Amplitude.Framework.Runtime.IRuntimeService>();
             text.AppendLine("runtime: " + (runtime?.Runtime?.FiniteStateMachine?.CurrentState?.GetType().Name ?? "?"));
-            text.AppendLine("sandbox: " + (Diplomacia.GameAccess.SandboxStateName() ?? "(sem partida)"));
-            if (Diplomacia.GameAccess.TryGetSession(out string guid, out int turn, out int player))
+            text.AppendLine("sandbox: " + (Diplomacy.GameAccess.SandboxStateName() ?? "(sem partida)"));
+            if (Diplomacy.GameAccess.TryGetSession(out string guid, out int turn, out int player))
             {
                 LocalEmpireInfo local = Snapshots.GameSnapshot.PresentationData.LocalEmpireInfo;
                 text.AppendLine($"partida: {guid} · turno {turn} · jogador E{player} · pode passar o turno: {(local.CanEndTurn ? "sim" : "não")}");
@@ -906,7 +906,7 @@ namespace CurrencyMod
             {
                 return "uso: jogo salvar <título>";
             }
-            if (!Diplomacia.GameAccess.TryGetSession(out _, out _, out _))
+            if (!Diplomacy.GameAccess.TryGetSession(out _, out _, out _))
             {
                 return "erro: nenhuma partida carregada";
             }
@@ -1005,7 +1005,7 @@ namespace CurrencyMod
             DiplomaticActionFailureFlags flags = Sandbox.MajorEmpires[sandbox.LocalEmpireIndex].DepartmentOfForeignAffairs.GetDiplomaticActionFailureFlags(other, action);
             if (flags != DiplomaticActionFailureFlags.None)
             {
-                return "o jogo não permite: " + Diplomacia.ActionExecutor.Explain(flags);
+                return "o jogo não permite: " + Diplomacy.ActionExecutor.Explain(flags);
             }
             SandboxManager.PostOrder(new OrderDiplomaticAction { OtherEmpireIndex = other, DiplomaticAction = action });
             return $"proposta enviada a E{other}: {action}";
@@ -1123,7 +1123,7 @@ namespace CurrencyMod
                 return "erro: nenhuma partida carregada";
             }
             int only = TryEmpire(args?.Trim(), out int filter) ? filter : -1;
-            Diplomacia.IaWorld world = Diplomacia.IaModule.World;
+            Diplomacy.AiWorld world = Diplomacy.AiModule.World;
             var text = new StringBuilder();
             for (int a = 0; a < Sandbox.NumberOfMajorEmpires; a++)
             {
@@ -1132,7 +1132,7 @@ namespace CurrencyMod
                 {
                     continue;
                 }
-                Diplomacia.IaNation nation = world?.Get(a);
+                Diplomacy.AiNation nation = world?.Get(a);
                 var items = new System.Collections.Generic.List<string>();
                 for (int b = 0; b < Sandbox.NumberOfMajorEmpires; b++)
                 {
@@ -1146,7 +1146,7 @@ namespace CurrencyMod
                         continue;
                     }
                     Amplitude.Mercury.Simulation.DiplomaticAmbassy ambassy = relation.GetEmpireEmbassy(a);
-                    string posture = nation != null && nation.Postures.TryGetValue(b, out Diplomacia.Stance stance) ? stance.Value : "-";
+                    string posture = nation != null && nation.Postures.TryGetValue(b, out Diplomacy.Stance stance) ? stance.Value : "-";
                     items.Add($"E{b} {ambassy.CurrentAIBehaviourState} (simpatia {ambassy.AIRapportScore:0.00}, postura {posture})");
                 }
                 string focus = nation?.Focus?.Value ?? "-";
@@ -1166,7 +1166,7 @@ namespace CurrencyMod
             {
                 return "uso: jogo espectador on|off";
             }
-            if (!Diplomacia.GameAccess.TryGetSession(out _, out int turn, out int player))
+            if (!Diplomacy.GameAccess.TryGetSession(out _, out int turn, out int player))
             {
                 return "erro: nenhuma partida carregada";
             }
@@ -1185,14 +1185,14 @@ namespace CurrencyMod
         /// </summary>
         private static string EconomyAudit()
         {
-            Diplomacia.Capture.WorldCapture capture = Diplomacia.Capture.TurnCapture.CaptureFromMainThread();
+            Diplomacy.Capture.WorldCapture capture = Diplomacy.Capture.TurnCapture.CaptureFromMainThread();
             CurrencyWorld world = CurrencyManager.Current;
             if (capture == null || world == null)
             {
                 return "erro: sem partida ou sem estado monetário";
             }
             var rows = new System.Collections.Generic.List<EconomyRow>();
-            foreach (Diplomacia.Capture.CapturedEmpire empire in capture.Empires)
+            foreach (Diplomacy.Capture.CapturedEmpire empire in capture.Empires)
             {
                 if (empire == null || !empire.Alive)
                 {
@@ -1234,7 +1234,7 @@ namespace CurrencyMod
             bool Bad(double v) => double.IsNaN(v) || double.IsInfinity(v);
             foreach (EconomyRow row in rows)
             {
-                Diplomacia.Capture.CapturedEmpire e = row.Empire;
+                Diplomacy.Capture.CapturedEmpire e = row.Empire;
                 EmpireCurrency c = row.Currency;
                 double[] values = { e.Money, e.MoneyNet, e.Science, e.Influence, row.Industry, c?.ExchangeValue ?? 0, c?.InflationRate ?? 0, c?.InterestRate ?? 0, c?.PriceIndex ?? 0, c?.LastInterestFlow ?? 0 };
                 if (values.Any(Bad)) Flag(row, "valor inválido (NaN ou infinito)");
@@ -1277,7 +1277,7 @@ namespace CurrencyMod
             var csv = new StringBuilder("empire;culture;era;money;moneyNet;industry;science;influence;influenceNet;military;fame;territories;population;stability;exchange;inflation;interest;priceIndex;gdp;strength;interestFlow;incomeEffect;creditFactor;pressure;pressureInflation;stabilityPenalty;unemploymentPenalty;forcedInterest;exchangeMin60;exchangeMax60;inflationMax60;interestMax60;debtInflation;ruleRate;hoardingInflation\n");
             foreach (EconomyRow row in rows.OrderByDescending(r => r.Currency?.Strength ?? 0))
             {
-                Diplomacia.Capture.CapturedEmpire e = row.Empire;
+                Diplomacy.Capture.CapturedEmpire e = row.Empire;
                 EmpireCurrency c = row.Currency ?? new EmpireCurrency();
                 string culture = (e.Culture ?? "?").Length > 20 ? e.Culture.Substring(0, 20) : (e.Culture ?? "?");
                 text.AppendLine($"E{e.Index,-2} {culture,-20} {e.EraIndex,3} {e.Money,8:0} {e.MoneyNet,7:0} {row.Industry,5:0} {e.Science,6:0} {e.Influence,6:0} {e.MilitaryStrength,6:0} {e.Stability,5:0}% | {c.ExchangeValue,6:0.00} {c.InflationRate * 100,5:0.00} {c.InterestRate * 100,6:0.00} {c.PriceIndex,6:0.00} {c.Gdp,6:0} {c.LastInterestFlow,7:0} {c.CreditFactor,7:0.00} {c.Pressure * 100,6:0}% {c.CoverageInflation * 100,7:0.00} {c.LastStabilityPenalty,6:0.0} {c.LastUnemploymentPenalty,6:0.0} | {c.InflationRateFromDebt * 100,6:0.00} {EconomySimulation.TaylorRate(c.InflationRate, c.Pressure, c.InflationRateFromDebt) * 100,6:0.00} {c.InflationFromHoarding * 100,6:0.00}{(c.ForcedInterest ? " (juros fixos)" : string.Empty)}");
@@ -1347,7 +1347,7 @@ namespace CurrencyMod
 
         private sealed class EconomyRow
         {
-            public Diplomacia.Capture.CapturedEmpire Empire;
+            public Diplomacy.Capture.CapturedEmpire Empire;
             public EmpireCurrency Currency;
             public double Industry;
         }
@@ -1397,7 +1397,7 @@ namespace CurrencyMod
             {
                 return "tamanho desconhecido (use Tiny, Small, Normal, Large ou Huge)";
             }
-            if (Diplomacia.GameAccess.TryGetSession(out _, out _, out _))
+            if (Diplomacy.GameAccess.TryGetSession(out _, out _, out _))
             {
                 return "erro: saia para o menu principal antes";
             }
@@ -1488,7 +1488,7 @@ namespace CurrencyMod
             int me = SandboxManager.Sandbox.LocalEmpireIndex;
             Amplitude.Mercury.Simulation.BaseDiplomaticState state = Sandbox.DiplomaticAncillary.GetRelationFor(me, other).DiplomaticState;
             var action = Amplitude.Mercury.Data.Simulation.DiplomaticGrievanceAction.CreateDemand;
-            if (Diplomacia.DecisionParser.IsAll(parts[1]))
+            if (Diplomacy.DecisionParser.IsAll(parts[1]))
             {
                 int usable = state.CheckPrerequisitesFor(action, me);
                 if (usable <= 0)
@@ -1508,7 +1508,7 @@ namespace CurrencyMod
                 DiplomaticGrievanceActionFailureFlags flags = state.CheckPrerequisitesFor(action, me, pool);
                 if (flags != DiplomaticGrievanceActionFailureFlags.None)
                 {
-                    sent.Add($"G{pool}: {Diplomacia.Capture.TurnCapture.GrievanceBlock(flags)}");
+                    sent.Add($"G{pool}: {Diplomacy.Capture.TurnCapture.GrievanceBlock(flags)}");
                     continue;
                 }
                 SandboxManager.PostOrder(new OrderExecuteGrievanceAction { GrievanceAction = action, OtherEmpireIndex = other, GrievanceIndex = pool });
@@ -1537,7 +1537,7 @@ namespace CurrencyMod
             DiplomaticActionFailureFlags flags = Sandbox.MajorEmpires[SandboxManager.Sandbox.LocalEmpireIndex].DepartmentOfForeignAffairs.GetDiplomaticActionFailureFlags(other, action);
             if (flags != DiplomaticActionFailureFlags.None)
             {
-                return "o jogo não permite: " + Diplomacia.ActionExecutor.Explain(flags);
+                return "o jogo não permite: " + Diplomacy.ActionExecutor.Explain(flags);
             }
             SandboxManager.PostOrder(new OrderDiplomaticAction { OtherEmpireIndex = other, DiplomaticAction = action });
             return $"enviado a E{other}: {action}";
@@ -1545,13 +1545,13 @@ namespace CurrencyMod
 
         private static string EndTurn()
         {
-            if (!Diplomacia.GameAccess.TryGetSession(out _, out int turn, out _))
+            if (!Diplomacy.GameAccess.TryGetSession(out _, out int turn, out _))
             {
                 return "erro: nenhuma partida carregada";
             }
-            if (!Diplomacia.GameAccess.IsTurnMain())
+            if (!Diplomacy.GameAccess.IsTurnMain())
             {
-                return $"erro: o jogo não está no turno principal ({Diplomacia.GameAccess.SandboxStateName()})";
+                return $"erro: o jogo não está no turno principal ({Diplomacy.GameAccess.SandboxStateName()})";
             }
             if (!Snapshots.GameSnapshot.PresentationData.LocalEmpireInfo.CanEndTurn)
             {

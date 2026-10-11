@@ -123,11 +123,11 @@ namespace CurrencyMod
             }
             // Blocs (item 16): between members trade passes freely; against outsiders the bloc's common tariff applies,
             // if it is harsher than the post's own rule.
-            if (Diplomacia.Blocs.BlocIndex.SameBloc(owner, target))
+            if (Diplomacy.Blocs.BlocIndex.SameBloc(owner, target))
             {
                 return TradeMode.Free;
             }
-            TradeMode tariff = Diplomacia.Blocs.BlocIndex.Tariff(owner, target);
+            TradeMode tariff = Diplomacy.Blocs.BlocIndex.Tariff(owner, target);
             Dictionary<long, int> current = cache;
             if (stale || current == null)
             {

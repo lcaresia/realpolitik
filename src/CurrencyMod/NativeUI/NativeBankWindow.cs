@@ -72,7 +72,7 @@ namespace CurrencyMod.NativeUI
                 StripGameScripts(cities);
                 RemoveUnusedParts(cities.transform, keepSorters: SortNames.Length);
 
-                Diplomacia.UI.MailScreen.StripSettings(clone.transform);
+                Diplomacy.UI.MailScreen.StripSettings(clone.transform);
                 window = clone.AddComponent<NativeBankWindow>();
                 window.showAnimator = showAnimator;
                 window.hideAnimator = hideAnimator;
@@ -258,7 +258,7 @@ namespace CurrencyMod.NativeUI
             NativeUIKit.Place(container, 38f, 170f, ListWidth, ListHeight);
             Transform list = Instantiate(citiesList.gameObject, container).transform;
             list.name = "Rates";
-            Diplomacia.UI.MailScreen.PrepareList(list, ListWidth, ListHeight, out UITransform table, out Transform sample);
+            Diplomacy.UI.MailScreen.PrepareList(list, ListWidth, ListHeight, out UITransform table, out Transform sample);
             listTable = table;
             cardSample = sample;
 
@@ -292,7 +292,7 @@ namespace CurrencyMod.NativeUI
             NativeUIKit.Place(sideContainer, -2f, 70f, SideListWidth + 8f, SideListHeight);
             Transform side = Instantiate(citiesList.gameObject, sideContainer).transform;
             side.name = "OverviewList";
-            Diplomacia.UI.MailScreen.PrepareList(side, SideListWidth + 8f, SideListHeight, out sideTable, out sideSample);
+            Diplomacy.UI.MailScreen.PrepareList(side, SideListWidth + 8f, SideListHeight, out sideTable, out sideSample);
             // The copy of the right list brought the sort bar along: remove it.
             Transform sideSorters = side.Find("SortersTable");
             if (sideSorters != null)

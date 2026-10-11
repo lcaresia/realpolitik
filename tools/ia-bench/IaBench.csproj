@@ -21,8 +21,8 @@
   <ItemGroup>
     <Compile Include="src\**\*.cs" />
     <!-- A credencial é lida pelo mesmo código do mod (DPAPI): a bancada nunca vê o arquivo nem mostra a chave. -->
-    <Compile Include="$(ModSrc)Diplomacia\Llm\Providers\Credentials.cs" Link="mod\Credentials.cs" />
-    <Compile Include="$(ModSrc)Diplomacia\Llm\ApiKey.cs" Link="mod\ApiKey.cs" />
+    <Compile Include="$(ModSrc)Diplomacy\Llm\Providers\Credentials.cs" Link="mod\Credentials.cs" />
+    <Compile Include="$(ModSrc)Diplomacy\Llm\ApiKey.cs" Link="mod\ApiKey.cs" />
   </ItemGroup>
 
 </Project>

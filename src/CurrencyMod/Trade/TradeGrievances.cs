@@ -160,7 +160,7 @@ namespace CurrencyMod
                 }
                 __result = LocalIsVictim(ref grievanceInfo)
                     ? L.F("{0} está bloqueando ou cobrando pedágio das nossas rotas comerciais que passam pelos postos comerciais deles.", ShortName(grievanceInfo.OtherEmpireIndex))
-                    : L.F("Estamos bloqueando ou cobrando pedágio das rotas comerciais {0} nos nossos postos comerciais.", Diplomacia.GameText.OfUi(ShortName(grievanceInfo.MyEmpireIndex)));
+                    : L.F("Estamos bloqueando ou cobrando pedágio das rotas comerciais {0} nos nossos postos comerciais.", Diplomacy.GameText.OfUi(ShortName(grievanceInfo.MyEmpireIndex)));
             }
         }
 

@@ -57,7 +57,7 @@ namespace CurrencyMod.NativeUI
             try
             {
                 // At game start the window service does not exist yet (see DiplomacyEconomyPanel).
-                if (WindowsUtils.WindowsService == null || !Diplomacia.GameAccess.TryGetSession(out _, out _, out _))
+                if (WindowsUtils.WindowsService == null || !Diplomacy.GameAccess.TryGetSession(out _, out _, out _))
                 {
                     return;
                 }

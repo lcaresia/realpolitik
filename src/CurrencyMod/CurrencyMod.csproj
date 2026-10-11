@@ -51,7 +51,7 @@
     <Reference Include="Amplitude.Mercury.Data"><HintPath>$(ManagedDir)Amplitude.Mercury.Data.dll</HintPath><Private>false</Private></Reference>
     <Reference Include="Amplitude.UI"><HintPath>$(ManagedDir)Amplitude.UI.dll</HintPath><Private>false</Private></Reference>
     <Reference Include="Assembly-CSharp"><HintPath>$(ManagedDir)Assembly-CSharp.dll</HintPath><Private>false</Private></Reference>
-    <!-- IA nativa: travas das grandes decisões quando a IA de linguagem responde pela nação (Diplomacia\NativeAiLocks.cs). -->
+    <!-- IA nativa: travas das grandes decisões quando a IA de linguagem responde pela nação (Diplomacy\NativeAiLocks.cs). -->
     <Reference Include="Amplitude.AI"><HintPath>$(ManagedDir)Amplitude.AI.dll</HintPath><Private>false</Private></Reference>
     <Reference Include="Amplitude.Mercury.AI.Brain"><HintPath>$(ManagedDir)Amplitude.Mercury.AI.Brain.dll</HintPath><Private>false</Private></Reference>
     <!-- Base das definições de dados do jogo (FactionDefinition etc.): só para compilar Databases.GetDatabase<T>(). -->
@@ -61,7 +61,7 @@
 
   <ItemGroup>
     <!-- Página do visualizador de debug da IA (F10), servida pelo próprio mod em http://localhost:porta/ -->
-    <EmbeddedResource Include="Diplomacia\Viewer\viewer.html" LogicalName="viewer.html" />
+    <EmbeddedResource Include="Diplomacy\Viewer\viewer.html" LogicalName="viewer.html" />
     <!-- Traduções da interface (L.cs): {"texto em português": "tradução"}. -->
     <EmbeddedResource Include="Lang\*.json" LogicalName="lang.%(Filename).json" />
     <!-- Retratos dos ministros (tools\retratos): 256 px, um por cargo × época × gênero. -->

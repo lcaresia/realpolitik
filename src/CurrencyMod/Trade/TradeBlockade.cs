@@ -556,7 +556,7 @@ namespace CurrencyMod
                         world.LastTradeTurn = sandbox.Turn;
                         DropLostTerritoryRules(world);
                         CollectTolls(world);
-                        Diplomacia.Blocs.BlocTrade.RefundUpkeep();
+                        Diplomacy.Blocs.BlocTrade.RefundUpkeep();
                         if (EconomyConfig.EnableAiTradePolicy.Value)
                         {
                             TradeAi.Review(world, sandbox.Turn);

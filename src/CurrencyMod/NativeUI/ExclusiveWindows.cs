@@ -40,17 +40,17 @@ namespace CurrencyMod.NativeUI
                 {
                     TradePostWindow.SetOpen(-1);
                 }
-                if (opening != Diplomacia.UI.CouncilScreen.Instance)
+                if (opening != Diplomacy.UI.CouncilScreen.Instance)
                 {
-                    Diplomacia.UI.CouncilScreen.SetOpen(false);
+                    Diplomacy.UI.CouncilScreen.SetOpen(false);
                 }
-                if (opening != Diplomacia.UI.AlliancesScreen.Instance)
+                if (opening != Diplomacy.UI.AlliancesScreen.Instance)
                 {
-                    Diplomacia.UI.AlliancesScreen.SetOpen(false);
+                    Diplomacy.UI.AlliancesScreen.SetOpen(false);
                 }
-                if (opening != Diplomacia.UI.MailScreen.Instance)
+                if (opening != Diplomacy.UI.MailScreen.Instance)
                 {
-                    Diplomacia.UI.MailScreen.SetOpen(false);
+                    Diplomacy.UI.MailScreen.SetOpen(false);
                     // A side window does not show while a fullscreen is open (its group hides everything).
                     WindowsManager.Instance?.GetWindowsGroup<InGameFullscreenGroup>()?.HideAllFullscreens();
                 }

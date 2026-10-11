@@ -42,7 +42,7 @@ namespace CurrencyMod
             CoinButtonY = config.Bind("Interface", "BotaoMoedaY", 110f,
                 "Posição vertical do botão de moeda (em pixels de uma tela 1080p).");
             EconomyConfig.Bind(config);
-            Diplomacia.IaConfig.Bind(config);
+            Diplomacy.AiConfig.Bind(config);
             EconomyConfig.RemoveObsoleteKeys(config);
         }
     }
@@ -81,7 +81,7 @@ namespace CurrencyMod
             TradePolicy.PathsDirty = true;
 
             // The native AI locks start already holding the previous generation's table (see NativeAiLocks.Carry).
-            Diplomacia.NativeAiLocks.RestoreCarried();
+            Diplomacy.NativeAiLocks.RestoreCarried();
             harmony = new Harmony(HarmonyId);
             ApplyPatches(log);
             host.AddComponent<CentralBankWindow>();
@@ -90,13 +90,13 @@ namespace CurrencyMod
             host.AddComponent<NativeUI.DiplomacyEconomyPanel>();
             host.AddComponent<NativeUI.DiplomacyTradePolicyPanel>();
             host.AddComponent<RouteLabels>();
-            host.AddComponent<Diplomacia.IaModule>();
-            host.AddComponent<Diplomacia.UI.MailButton>();
-            host.AddComponent<Diplomacia.UI.CouncilButton>();
-            host.AddComponent<Diplomacia.UI.AlliancesButton>();
-            host.AddComponent<Diplomacia.UI.CorrespondenceTab>();
-            host.AddComponent<Diplomacia.UI.InterceptedLettersTab>();
-            host.AddComponent<Diplomacia.UI.ProvidersButtons>();
+            host.AddComponent<Diplomacy.AiModule>();
+            host.AddComponent<Diplomacy.UI.MailButton>();
+            host.AddComponent<Diplomacy.UI.CouncilButton>();
+            host.AddComponent<Diplomacy.UI.AlliancesButton>();
+            host.AddComponent<Diplomacy.UI.CorrespondenceTab>();
+            host.AddComponent<Diplomacy.UI.InterceptedLettersTab>();
+            host.AddComponent<Diplomacy.UI.ProvidersButtons>();
 
             log.LogInfo($"{Plugin.PluginName} {Plugin.PluginVersion} loaded. Press {Plugin.ToggleWindowKey.Value} in a game to open the Central Bank.");
         }
@@ -152,8 +152,8 @@ namespace CurrencyMod
             // because Unity's Destroy only happens at the end of the frame and the new generation starts in this frame.
             // Each step separately: an exception halfway (an original that Harmony does not restore, for example) would
             // make the loader lose the state, and the new generation would create an economy from scratch for the open game.
-            TryStep("language AI", Diplomacia.IaModule.Shutdown);
-            TryStep("native AI locks", Diplomacia.NativeAiLocks.Carry);
+            TryStep("language AI", Diplomacy.AiModule.Shutdown);
+            TryStep("native AI locks", Diplomacy.NativeAiLocks.Carry);
             TryStep("patches", () => harmony?.UnpatchSelf());
             harmony = null;
             TryStep("components", () =>

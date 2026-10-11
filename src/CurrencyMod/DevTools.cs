@@ -24,7 +24,7 @@ namespace CurrencyMod
     ///   windows                    lists windows (UIWindow) and whether they are visible
     ///   styles [filter]            lists UI style names
     ///   bank open|close|tab &lt;n&gt;   controls the Central Bank
-    ///   ia &lt;command&gt;              AI diplomacy (see Diplomacia\IaCommands.cs)
+    ///   ia &lt;command&gt;              AI diplomacy (see Diplomacia\AiCommands.cs)
     ///   jogo &lt;command&gt;            load/save game and end the turn (see GameCommands.cs)
     /// </summary>
     internal class DevTools : MonoBehaviour
@@ -149,7 +149,7 @@ namespace CurrencyMod
                         Write(line, DumpTexture(args));
                         return;
                     case "ia":
-                        Write(line, Diplomacia.IaCommands.Execute(args, OutDir));
+                        Write(line, Diplomacy.AiCommands.Execute(args, OutDir));
                         return;
                     case "jogo":
                         Write(line, GameCommands.Execute(args));

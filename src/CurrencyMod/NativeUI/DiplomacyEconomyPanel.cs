@@ -51,7 +51,7 @@ namespace CurrencyMod.NativeUI
             {
                 // At the start of the game the windows service does not exist yet: the lookup would throw and the panel
                 // would switch itself off until the next reload.
-                if (WindowsUtils.WindowsService == null || !Diplomacia.GameAccess.TryGetSession(out _, out _, out _))
+                if (WindowsUtils.WindowsService == null || !Diplomacy.GameAccess.TryGetSession(out _, out _, out _))
                 {
                     return;
                 }
