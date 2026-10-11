@@ -209,6 +209,38 @@ namespace CurrencyMod.Diplomacia.Council
 
         // ---------------- Fé ----------------
 
+        internal static bool FaithBypass;
+
+        /// <summary>Teste ("ia conselho fe T#"): força de crença do território sem e com o bônus do veterano da Fé.</summary>
+        internal static string MeasureFaith(int territory)
+        {
+            ReligionManager manager = Sandbox.ReligionManager;
+            var method = AccessTools.Method(typeof(ReligionManager), "ComputeTerritoryBeliefStrengths");
+            int count = manager.BeliefCount;
+            var without = new FixedPoint[count];
+            var with = new FixedPoint[count];
+            FaithBypass = true;
+            try
+            {
+                method.Invoke(manager, new object[] { territory, without, 0 });
+            }
+            finally
+            {
+                FaithBypass = false;
+            }
+            method.Invoke(manager, new object[] { territory, with, 0 });
+            int owner = Sandbox.World.TerritoryInfo.Data[territory].EmpireIndex;
+            var parts = new List<string>();
+            for (int i = 0; i < count; i++)
+            {
+                if (without[i] != with[i] || without[i] > 0)
+                {
+                    parts.Add($"religião {i}: {(float)without[i]:0.##} → {(float)with[i]:0.##}");
+                }
+            }
+            return $"T{territory} (dono E{owner}, bônus Fé +{(owner >= 0 && owner < Sandbox.NumberOfMajorEmpires ? Get(owner, Area.Faith) : 0)}%): " + (parts.Count > 0 ? string.Join("; ", parts) : "sem crença");
+        }
+
         /// <summary>
         /// A fé no jogo não é estoque: cada território soma a "força de crença" de cada religião, e a maior se espalha.
         /// O veterano da Fé aumenta em % a força da religião do império nos territórios dele.
@@ -220,6 +252,10 @@ namespace CurrencyMod.Diplomacia.Council
             {
                 try
                 {
+                    if (FaithBypass)
+                    {
+                        return;
+                    }
                     int empireIndex = Sandbox.World.TerritoryInfo.Data[territoryIndex].EmpireIndex;
                     if (empireIndex < 0 || empireIndex >= Sandbox.NumberOfMajorEmpires)
                     {

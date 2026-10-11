@@ -182,6 +182,13 @@ namespace CurrencyMod
                 case "rotas":
                 {
                     string what = (rest ?? string.Empty).Trim();
+                    if (what == "rotulos")
+                    {
+                        // "jogo rotas rotulos": os rótulos de valor da última apresentação (tile e texto), para mirar a câmera.
+                        var labels = RouteVisuals.Labels;
+                        return labels == null || labels.Count == 0 ? "nenhum rótulo (abra a visão de comércio)"
+                            : string.Join("\n", labels.Select(l => $"tile {l.Tile}: {l.Text}{(l.Paid ? " (pago)" : string.Empty)}"));
+                    }
                     if (what.StartsWith("cores"))
                     {
                         // "jogo rotas cores E5": pinta as rotas como se o jogador fosse o E5 (teste); "jogo rotas cores" volta ao normal.

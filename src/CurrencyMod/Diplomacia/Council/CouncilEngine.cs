@@ -116,6 +116,8 @@ namespace CurrencyMod.Diplomacia.Council
                     picks.Add(person.Id);
                 }
                 nation.CouncilCandidates[portfolio] = picks;
+                // Sorteio novo vai para o save já (senão um save/load ou a recarga do núcleo sorteia outros).
+                IaModule.Instance?.MarkDirty();
             }
             nation.Council.Sort((a, b) => Array.IndexOf(CouncilBank.Portfolios, a.Portfolio).CompareTo(Array.IndexOf(CouncilBank.Portfolios, b.Portfolio)));
         }

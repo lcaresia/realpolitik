@@ -358,6 +358,11 @@ namespace CurrencyMod.Diplomacia
                     }
                     return Council.PlayerCouncil.Appoint(pasta, pick);
                 }
+                case "fe":
+                    // "ia conselho fe T#": força de crença do território sem e com o bônus do veterano da Fé.
+                    return int.TryParse((arg ?? string.Empty).Trim().TrimStart('T', 't'), out int faithTerritory)
+                        ? Council.VeteranEffects.MeasureFaith(faithTerritory)
+                        : "uso: ia conselho fe T#";
                 case "veterano":
                 {
                     // "ia conselho veterano <pasta> <turnos>": teste do bônus; põe o ministro há N turnos no cargo.

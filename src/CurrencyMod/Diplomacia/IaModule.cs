@@ -1662,6 +1662,22 @@ namespace CurrencyMod.Diplomacia
             {
                 context.KnownEmpires["E" + i] = i;
             }
+            if (Blocs.BlocActions.Handles(name))
+            {
+                // Ações de bloco: pelo mesmo validador da decisão do turno e pelo mesmo aplicador.
+                var errors = new List<string>();
+                string decisionJson = new JObject { ["diario"] = "Teste.", ["acoes"] = new JArray { item } }.ToString(Formatting.None);
+                Decision decision = DecisionParser.Parse(decisionJson, context, errors, false);
+                ActionDraft parsed = decision?.Actions.FirstOrDefault(a => a.Name == name);
+                if (parsed == null)
+                {
+                    return "recusada pelo validador: " + string.Join(" | ", errors.Concat(decision?.Warnings ?? new List<string>()));
+                }
+                string status = Blocs.BlocActions.Apply(World, empire, name, parsed.Json, context, currentTurn);
+                World.Ensure(empire).Actions.Add(new ActionRecord { Id = 0, Turn = currentTurn, Name = name, Json = parsed.Json, Status = status + " (teste)" });
+                dirty = true;
+                return $"validada ({parsed.Summary}) · {status}";
+            }
             var action = new ActionDraft { Name = name, Json = item.ToString(Formatting.None), Summary = name + " (teste)" };
             ActionIntent intent = BuildIntent(new DecisionJob { Turn = currentTurn, EmpireIndex = empire, Context = context }, action, out string problem);
             if (intent == null)

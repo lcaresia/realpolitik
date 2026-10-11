@@ -423,7 +423,7 @@ Caminhos relativos a `src\CurrencyMod\Diplomacia\`.
 - `ia correio colar [arquivo em _Modding\dev]`
 - `jogo rotas cores E#|todas`: ver as cores como outro império, ou rótulo em toda rota.
 
-**Ainda não visto no jogo**:
+**Testado em 2026-10-11 (antes "ainda não visto")**: rótulo de pedágio pago na visão de comércio ("Tl 4/t" em dourado, comando `jogo rotas rotulos`); item 7: os Han, sem cavalos nem seda, recusaram oferecer o que não têm; item 5: o conselho disse não conhecer o "Tesouro dos Grãos Sagrados" (nada a cortar); tarifa comum de bloqueio desviou a rota E1↔E7 do território do bloco; Fé +10% medida (`ia conselho fe T#`: 3 → 3,3); IA escrevendo em grupo (Nascas no GRP1); 7 ações de bloco pelo validador da IA (`ia acao E# {json}`). Bug achado e corrigido: candidatos a ministro não marcavam o mundo como alterado (sorteio novo depois de recarga). Itens antigos desta lista:
 - rótulo de pedágio real (nenhuma rota cruza as terras do jogador no Teste16; o rótulo foi visto no modo de teste);
 - carta devolvida por oferecer recurso que a nação não tem (item 7);
 - frase cortada pelo filtro do conselho (item 5): nada inventado apareceu.
