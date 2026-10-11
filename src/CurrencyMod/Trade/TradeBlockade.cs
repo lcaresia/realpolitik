@@ -557,6 +557,7 @@ namespace CurrencyMod
                         DropLostTerritoryRules(world);
                         CollectTolls(world);
                         Diplomacy.Blocs.BlocTrade.RefundUpkeep();
+                        RouteTransit.PayOwners(world);
                         if (EconomyConfig.EnableAiTradePolicy.Value)
                         {
                             TradeAi.Review(world, sandbox.Turn);

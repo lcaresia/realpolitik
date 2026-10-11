@@ -309,6 +309,12 @@ namespace CurrencyMod.Diplomacy
         public Dictionary<string, List<string>> CouncilCandidates = new Dictionary<string, List<string>>();
         /// <summary>Era in which the candidates were drawn.</summary>
         public int CouncilCandidatesEra = -1;
+        /// <summary>
+        /// Cash floors set by the language AI on each decision (set_cash_floors): the native AI does not spend money in a
+        /// category if the treasury would end below that category's floor. Floors may be negative (planned debt).
+        /// Null = never set (the default floor applies).
+        /// </summary>
+        public CashFloors CashFloors;
         /// <summary>Personalities fired by this nation (they do not come back to it).</summary>
         public List<string> FiredPersonalities = new List<string>();
         /// <summary>Congress: what the governors do if the imposed law arrives (civic → "adotar" or "recusar"), from the

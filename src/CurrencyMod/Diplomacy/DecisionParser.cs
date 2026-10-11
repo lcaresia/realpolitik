@@ -865,6 +865,17 @@ namespace CurrencyMod.Diplomacy
                         summary = $"votar em {Str(item["candidato"])} para presidente do bloco";
                         break;
                     }
+                    case "set_cash_floors":
+                    {
+                        // Validation messages go back to the LLM, so they stay in the prompt's language.
+                        var missing = new[] { "army", "cities", "resources" }.Where(k => item[k] == null || (item[k].Type != JTokenType.Integer && item[k].Type != JTokenType.Float)).ToList();
+                        if (missing.Count > 0)
+                        {
+                            problem = "set_cash_floors precisa de números em " + string.Join(", ", missing.Select(k => "\"" + k + "\""));
+                        }
+                        summary = $"reservas: exército {Str(item["army"])}, cidades {Str(item["cities"])}, recursos {Str(item["resources"])}";
+                        break;
+                    }
                     case "sair_bloco":
                     {
                         if (context.BlocId < 0)

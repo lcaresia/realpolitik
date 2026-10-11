@@ -48,6 +48,8 @@ namespace CurrencyMod
         public const int Toll = 2;
         /// <summary>Gifts, demands, surrender and other transfers between empires.</summary>
         public const int Other = 3;
+        /// <summary>Route transit: a share of the buyer's route upkeep paid to the owners of the territories the route crosses.</summary>
+        public const int Transit = 4;
     }
 
     /// <summary>Active trade flows of one turn (only those with purchased resources; the history is sparse).</summary>

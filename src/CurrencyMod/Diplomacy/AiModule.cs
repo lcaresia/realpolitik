@@ -333,6 +333,7 @@ namespace CurrencyMod.Diplomacy
                     dirty = true;
                 }
                 Blocs.BlocIndex.Publish(World);
+                SpendingFloors.Publish(World);
                 Blocs.BlocCongress.Apply(World, capture, turn, e => capture?.Empires.FirstOrDefault(x => x != null && x.Index == e)?.Human ?? e == playerIndex);
             }
             catch (Exception ex)
@@ -852,6 +853,21 @@ namespace CurrencyMod.Diplomacy
                 else if (Blocs.BlocActions.Handles(action.Name))
                 {
                     status = Blocs.BlocActions.Apply(World, nation.EmpireIndex, action.Name, action.Json, job.Context, turn);
+                    dirty = true;
+                }
+                else if (action.Name == "set_cash_floors")
+                {
+                    JObject floorItem = JObject.Parse(action.Json);
+                    nation.CashFloors = new CashFloors
+                    {
+                        Army = (double)floorItem["army"],
+                        Cities = (double)floorItem["cities"],
+                        Resources = (double)floorItem["resources"],
+                        Turn = turn,
+                        Reason = (string)floorItem["reason"],
+                    };
+                    SpendingFloors.Publish(World);
+                    status = $"feito: reservas exército {nation.CashFloors.Army:0}, cidades {nation.CashFloors.Cities:0}, recursos {nation.CashFloors.Resources:0}";
                     dirty = true;
                 }
                 else if (action.Name == "politica_comercial")

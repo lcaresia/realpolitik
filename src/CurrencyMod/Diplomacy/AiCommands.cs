@@ -177,6 +177,33 @@ namespace CurrencyMod.Diplomacy
                 }
                 case "bloc":
                     return Blocs.BlocCommands.Run(module, rest);
+                case "floors":
+                {
+                    // "ai floors" lists every nation's cash floors and the native purchases they held back this turn;
+                    // "ai floors set E# <army> <cities> <resources>" sets them as if the language AI had decided.
+                    string[] bits = (rest ?? string.Empty).Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+                    if (AiModule.World == null)
+                    {
+                        return "error: no game";
+                    }
+                    if (bits.Length == 5 && bits[0] == "set" && int.TryParse(bits[1].TrimStart('E', 'e'), out int target)
+                        && double.TryParse(bits[2], out double army) && double.TryParse(bits[3], out double cities) && double.TryParse(bits[4], out double resources))
+                    {
+                        AiModule.World.Ensure(target).CashFloors = new CashFloors { Army = army, Cities = cities, Resources = resources, Turn = module.CurrentTurn, Reason = "(test)" };
+                        SpendingFloors.Publish(AiModule.World);
+                        module.MarkDirty();
+                        return $"ok: E{target} floors army {army}, cities {cities}, resources {resources}";
+                    }
+                    var lines = new StringBuilder();
+                    foreach (AiNation nation in AiModule.World.Nations.OrderBy(n => n.EmpireIndex))
+                    {
+                        int e = nation.EmpireIndex;
+                        string Part(SpendingCategory c) => $"{SpendingFloors.Floor(e, c):0} (held back {SpendingFloors.Blocked(e, c, module.CurrentTurn):0})";
+                        lines.AppendLine($"E{e}: army {Part(SpendingCategory.Army)} · cities {Part(SpendingCategory.Cities)} · resources {Part(SpendingCategory.Resources)}"
+                            + (nation.CashFloors != null ? $" · set on T{nation.CashFloors.Turn}" : " · default"));
+                    }
+                    return lines.ToString().TrimEnd();
+                }
                 case "alliances":
                     return UI.AlliancesScreen.DevCommand(rest);
                 case "mentions":

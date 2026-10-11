@@ -68,6 +68,7 @@ namespace CurrencyMod.Diplomacy
             var pending = new StringBuilder();
             var reminders = new StringBuilder();
             AppendSelf(self_, world, capture, me, build);
+            DossierEconomy.Append(self_, world, capture, me, turn);
             List<int> known = AppendKnownEmpires(empires, world, capture, me, build);
             DossierCongress.Append(congress, world, capture, me, build);
             AppendWorldNews(news, capture, me, known);

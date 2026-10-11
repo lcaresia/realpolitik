@@ -127,6 +127,7 @@ namespace CurrencyMod
             TollPerResource = config.Bind(blockade, "PedagioPorRecurso", 2.0, "Pedágio por turno, por recurso que a rota transporta, multiplicado pela era de quem cobra (na moeda de quem cobra).");
             // The route weighs paying the toll against detouring (extra upkeep per territory crossed).
             TollDetourCost = config.Bind(blockade, "PesoPedagioNasRotas", 1.0, "Como a rota pesa o pedágio contra desviar. 1 = compara o custo real (pedágio por turno x manutenção extra do desvio) e escolhe o mais barato; maior que 1 = foge mais do pedágio; 0 = ignora o pedágio e sempre passa e paga.");
+            RouteTransitShare = config.Bind(blockade, "RepasseDaManutencao", 1.0, "Fração da manutenção das rotas (paga por quem compra) que vai para os donos dos territórios por onde a rota passa, menos o comprador, em proporção aos territórios de cada um. 1 = tudo; 0 = some, como no jogo base.");
             EnableAiTradePolicy = config.Bind(blockade, "IA", true, "A IA também bloqueia e cobra pedágio de rivais.");
             AiReviewInterval = config.Bind(blockade, "IntervaloIA", 5, "De quantos em quantos turnos cada IA revê os bloqueios.");
             RouteColors = config.Bind(blockade, "CoresDasRotas", true, "Na visão de comércio, pinta as rotas pela situação com você (dourado = paga o seu pedágio, branco = passa livre pelas suas terras, laranja = rota sua que paga pedágio, azul = rota sua), engrossa as que levam mais recursos e mostra o valor do pedágio no meio das que passam pelas suas terras.");
@@ -135,6 +136,7 @@ namespace CurrencyMod
         // Trade blockade
         public static ConfigEntry<bool> EnableTradeBlockade;
         public static ConfigEntry<double> TollPerResource;
+        public static ConfigEntry<double> RouteTransitShare;
         public static ConfigEntry<double> TollDetourCost;
         public static ConfigEntry<bool> EnableAiTradePolicy;
         public static ConfigEntry<int> AiReviewInterval;

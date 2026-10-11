@@ -1,4 +1,4 @@
-[en] fé (ainda sem efeito no jogo)
-[es] fé (ainda sem efeito no jogo)
-[fr] fé (ainda sem efeito no jogo)
-[de] fé (ainda sem efeito no jogo)
+[en] O saldo rende juros reais (juros − inflação). Até cerca de {0:0} turnos de renda ({1} {2}) rende quase tudo; acima disso, cada vez menos. Os juros já entram na renda por turno da barra do topo.
+[es] O saldo rende juros reais (juros − inflação). Até cerca de {0:0} turnos de renda ({1} {2}) rende quase tudo; acima disso, cada vez menos. Os juros já entram na renda por turno da barra do topo.
+[fr] O saldo rende juros reais (juros − inflação). Até cerca de {0:0} turnos de renda ({1} {2}) rende quase tudo; acima disso, cada vez menos. Os juros já entram na renda por turno da barra do topo.
+[de] O saldo rende juros reais (juros − inflação). Até cerca de {0:0} turnos de renda ({1} {2}) rende quase tudo; acima disso, cada vez menos. Os juros já entram na renda por turno da barra do topo.

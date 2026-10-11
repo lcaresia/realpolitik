@@ -38,8 +38,8 @@ namespace CurrencyMod.NativeUI
         private sealed class PartnerTotals
         {
             public int Empire;
-            public readonly double[] Paid = new double[4];
-            public readonly double[] Gain = new double[4];
+            public readonly double[] Paid = new double[5];
+            public readonly double[] Gain = new double[5];
             public int BoughtGoods;
             public int SoldGoods;
             public double PaidTotal => Paid.Sum();
@@ -91,7 +91,7 @@ namespace CurrencyMod.NativeUI
                 }
                 foreach (MoneyFlow flow in point.Money)
                 {
-                    int kind = Mathf.Clamp(flow.Kind, 0, 3);
+                    int kind = Mathf.Clamp(flow.Kind, 0, MoneyKind.Transit);
                     if (flow.From == me && flow.To != me && flow.To >= 0)
                     {
                         Of(flow.To).Paid[kind] += flow.Paid;
@@ -215,6 +215,7 @@ namespace CurrencyMod.NativeUI
                 Add(L.T("Manutenção das rotas"), byKind[MoneyKind.Upkeep]);
             }
             Add(L.T("Pedágios"), byKind[MoneyKind.Toll]);
+            Add(L.T("Passagem das rotas"), byKind[MoneyKind.Transit]);
             Add(L.T("Presentes e outras transferências"), byKind[MoneyKind.Other]);
             return lines.Count > 0 ? string.Join("\n", lines) : L.T("Nada nesse período.");
         }
