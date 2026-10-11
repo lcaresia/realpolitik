@@ -34,6 +34,27 @@ namespace CurrencyMod.Diplomacia
         /// como "0", quando o apelido da Steam ainda não carregou.</summary>
         public Dictionary<int, string> LeaderNames = new Dictionary<int, string>();
         public Dictionary<int, string> FullNames = new Dictionary<int, string>();
+        /// <summary>Conversas em grupo (melhorias-jogando item 15): qualquer nação cria; mensagens são cartas do tipo "grupo".</summary>
+        public List<ChatGroup> Groups = new List<ChatGroup>();
+        public int NextGroupId = 1;
+        /// <summary>Blocos de nações (item 16), com pautas e presidente; regras em Blocs.BlocEngine.</summary>
+        public List<Blocs.Bloc> Blocs = new List<Blocs.Bloc>();
+        public int NextBlocId = 1;
+        public int NextMotionId = 1;
+        /// <summary>Turno em que cada nação saiu (ou foi expulsa) de um bloco: espera Bloc.LeaveCooldown para entrar em outro.</summary>
+        public Dictionary<int, int> BlocLeftTurn = new Dictionary<int, int>();
+        /// <summary>Último turno em que o passo dos blocos rodou (BlocEngine.Step roda uma vez por turno).</summary>
+        public int BlocTickTurn = -1;
+
+        /// <summary>Grupo pelo código "GRP#" ou pelo id.</summary>
+        public ChatGroup GroupBy(string handle)
+        {
+            string digits = (handle ?? string.Empty).Trim().ToUpperInvariant().Replace("GRP", string.Empty);
+            return int.TryParse(digits, out int id) ? Groups.FirstOrDefault(g => g.Id == id) : null;
+        }
+
+        /// <summary>Todos os nomes de povo que cada império já teve (muda a cada era): as cartas ainda citam os antigos.</summary>
+        public Dictionary<int, List<string>> CultureNames = new Dictionary<int, List<string>>();
         /// <summary>Onde cada espião (chave = GUID do exército) está e desde que turno: o jogo só guarda isso para
         /// infiltrações, e espião recém-chegado ainda não conhece o lugar (peso menor na interceptação).</summary>
         public Dictionary<string, SpyTrack> SpyTracks = new Dictionary<string, SpyTrack>();
@@ -131,6 +152,18 @@ namespace CurrencyMod.Diplomacia
                 {
                     continue;
                 }
+                if (!string.IsNullOrWhiteSpace(empire.Culture))
+                {
+                    if (!CultureNames.TryGetValue(empire.Index, out List<string> cultures))
+                    {
+                        cultures = new List<string>();
+                        CultureNames[empire.Index] = cultures;
+                    }
+                    if (!cultures.Contains(empire.Culture))
+                    {
+                        cultures.Add(empire.Culture);
+                    }
+                }
                 bool bad = string.IsNullOrWhiteSpace(empire.Leader) || empire.Leader.Trim().All(char.IsDigit);
                 if (!bad)
                 {
@@ -222,6 +255,18 @@ namespace CurrencyMod.Diplomacia
                 }
                 Version = 5;
             }
+            // Conselho novo (melhorias-jogando item 3): todo mundo volta a ter só a Mão ao carregar, de uma vez (antes, cada
+            // nação só era zerada quando o dossiê dela era montado, e os 12 veteranos antigos rendiam bônus até lá).
+            foreach (IaNation nation in Nations)
+            {
+                if (nation.CouncilModel < 1)
+                {
+                    nation.Council.RemoveAll(m => m.Portfolio != "mao");
+                    nation.CouncilCandidates = new Dictionary<string, List<string>>();
+                    nation.CouncilCandidatesEra = -1;
+                    nation.CouncilModel = 1;
+                }
+            }
         }
 
         public string ToJson() => JsonConvert.SerializeObject(this, Formatting.None);
@@ -252,9 +297,18 @@ namespace CurrencyMod.Diplomacia
         /// <summary>Patrocínio escolhido em cada povo independente (patrocinar): índice do povo → (dinheiro &lt;&lt; 8) | influência.
         /// A IA nativa não mexe nesses povos enquanto a IA de linguagem decide pela nação.</summary>
         public Dictionary<int, int> MinorPatronage = new Dictionary<int, int>();
-        /// <summary>Conselho de ministros (design §10): a Mão e as 11 pastas.</summary>
+        /// <summary>Conselho de ministros (design §10): a Mão e as pastas que a nação já nomeou.</summary>
         public List<Council.Minister> Council = new List<Council.Minister>();
         public int CouncilTurn = -1;
+        /// <summary>
+        /// Modelo do conselho: 0 = o antigo (12 cadeiras sempre cheias); 1 = começa só com a Mão e as pastas são nomeadas
+        /// entre candidatos (melhorias-jogando item 3). Ao carregar um save antigo, o conselho volta a ter só a Mão.
+        /// </summary>
+        public int CouncilModel;
+        /// <summary>Os 3 candidatos de cada pasta vaga (ids do banco). Mudam na era nova ou quando alguém é nomeado.</summary>
+        public Dictionary<string, List<string>> CouncilCandidates = new Dictionary<string, List<string>>();
+        /// <summary>Era em que os candidatos foram sorteados.</summary>
+        public int CouncilCandidatesEra = -1;
         /// <summary>Personalidades demitidas por esta nação (não voltam para ela).</summary>
         public List<string> FiredPersonalities = new List<string>();
         /// <summary>Congresso: o que os governadores fazem se a lei imposta chegar (cívico → "adotar" ou "recusar"), do
@@ -410,20 +464,49 @@ namespace CurrencyMod.Diplomacia
         /// <summary>Risco na origem, guardado quando a carta foi escrita (os espiões mudam de lugar depois).</summary>
         public List<InterceptRisk> OriginRisks;
 
+        /// <summary>Destino de mensagem de grupo (Members diz quem lê; GroupId diz qual conversa).</summary>
+        public const int Group = -2;
+
+        /// <summary>Conversa em grupo (tipo "grupo"): o id do grupo e os membros no momento do envio.</summary>
+        public int GroupId = -1;
+        public List<int> Members;
+
         [JsonIgnore]
         public bool IsPublic => To == Everyone;
+
+        [JsonIgnore]
+        public bool IsGroup => To == Group;
 
         [JsonIgnore]
         public bool Intercepted => InterceptedBy >= 0;
 
         /// <summary>
-        /// A carta chega a este império: é para ele (ou pública e de outro), já passou pelo sorteio e não foi
-        /// interceptada. O turno de entrega se confere à parte.
+        /// A carta chega a este império: é para ele (ou pública e de outro, ou do grupo dele e de outro membro), já passou
+        /// pelo sorteio e não foi interceptada. O turno de entrega se confere à parte.
         /// </summary>
-        public bool IsFor(int empireIndex) => InterceptionChecked && !Intercepted && (To == empireIndex || (To == Everyone && From != empireIndex));
+        public bool IsFor(int empireIndex) => InterceptionChecked && !Intercepted && From != empireIndex
+            && (To == empireIndex || To == Everyone || (To == Group && Members != null && Members.Contains(empireIndex)));
 
         /// <summary>Já chegou ao destino até este turno (conferida e não interceptada).</summary>
         public bool Arrived(int turn) => DeliverTurn <= turn && InterceptionChecked && !Intercepted;
+    }
+
+    /// <summary>Uma conversa em grupo: nome, quem criou e os membros atuais (quem sai deixa de receber).</summary>
+    internal sealed class ChatGroup
+    {
+        public const int MinMembers = 3;
+        public const int MaxMembers = 8;
+
+        public int Id;
+        public string Name;
+        public int Creator;
+        public int CreatedTurn;
+        public List<int> Members = new List<int>();
+        /// <summary>Grupo de um bloco (-1 = grupo comum): os membros seguem o bloco, e só se sai saindo do bloco.</summary>
+        public int BlocId = -1;
+
+        [JsonIgnore]
+        public string Handle => "GRP" + Id;
     }
 
     /// <summary>

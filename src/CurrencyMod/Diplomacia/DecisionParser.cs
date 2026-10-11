@@ -36,6 +36,8 @@ namespace CurrencyMod.Diplomacia
         public bool ExpectsReply;
         public string Demand;
         public int DeadlineTurns;
+        /// <summary>Mensagem de grupo (tipo "grupo"): o id da conversa.</summary>
+        public int GroupId = -1;
     }
 
     internal sealed class ActionDraft
@@ -77,6 +79,16 @@ namespace CurrencyMod.Diplomacia
         /// <summary>Palavras dos nomes reais do jogo (nações, líderes, povos, cidades, territórios, recursos), em
         /// minúsculas. Vazio = não conferir nomes.</summary>
         public HashSet<string> KnownWords = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        /// <summary>Palavras dos nomes de recurso: todos os do jogo e só os que a nação acessa (oferecer o que não tem volta).</summary>
+        public HashSet<string> AllResourceWords = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        public HashSet<string> OwnResourceWords = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        /// <summary>Grupos de conversa da nação: código "GRP#" → id.</summary>
+        public Dictionary<string, int> Groups = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+        /// <summary>Bloco da nação (-1 = nenhum ou ainda em formação), convites abertos ("BLC#"), pautas abertas ("P#") e eleição.</summary>
+        public int BlocId = -1;
+        public HashSet<string> BlocInvites = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        public HashSet<string> BlocMotions = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        public bool BlocElection;
         /// <summary>Sua última carta recente para cada destino (Letter.Everyone = declaração pública).</summary>
         public Dictionary<int, PreviousLetter> LastLetters = new Dictionary<int, PreviousLetter>();
         /// <summary>Nações com proposta de tratado / de acordo esperando a sua resposta.</summary>
@@ -157,13 +169,14 @@ namespace CurrencyMod.Diplomacia
         private static readonly HashSet<string> Agreements = new HashSet<string> { "economico", "informacao", "cultural", "militar", "alianca" };
         private static readonly HashSet<string> WarTypes = new HashSet<string> { "formal", "surpresa" };
         private static readonly HashSet<string> ArmyGoals = new HashSet<string> { "mover", "atacar", "defender", "parar" };
-        private static readonly HashSet<string> LetterTypes = new HashSet<string> { "privada", "publica", "ultimato" };
+        private static readonly HashSet<string> LetterTypes = new HashSet<string> { "privada", "publica", "ultimato", "grupo" };
         private static readonly HashSet<string> Answers = new HashSet<string> { "aceitar", "ignorar" };
         private static readonly HashSet<string> SurrenderAnswers = new HashSet<string> { "aceitar", "recusar" };
         private static readonly HashSet<string> DemandAnswers = new HashSet<string> { "aceitar", "recusar", "enrolar" };
         private static readonly HashSet<string> Investments = new HashSet<string> { "nenhum", "baixo", "medio", "alto" };
         private static readonly HashSet<string> VerdictAnswers = new HashSet<string> { "cumprir", "guerra" };
         private static readonly HashSet<string> TradeModes = new HashSet<string> { "livre", "pedagio", "bloqueio" };
+        private static readonly HashSet<string> TollChoices = new HashSet<string> { "pagar", "desviar", "automatico" };
         private const string NoCongress = "não há Congresso mundial nesta partida (ou ele ainda não se formou)";
 
         /// <summary>Tratados com povos independentes, na ordem do enum MinorTreaty do jogo.</summary>
@@ -268,11 +281,24 @@ namespace CurrencyMod.Diplomacia
                 string text = Str(item["texto"]);
                 if (!LetterTypes.Contains(type))
                 {
-                    Reject(decision, errors, lenient, $"Carta para '{to}': tipo '{type}' não existe (use privada, publica ou ultimato).");
+                    Reject(decision, errors, lenient, $"Carta para '{to}': tipo '{type}' não existe (use privada, publica, ultimato ou grupo).");
                     continue;
                 }
                 int recipient;
-                if (type == "publica" || to.Equals("todos", StringComparison.OrdinalIgnoreCase))
+                int groupId = -1;
+                if (type == "grupo" || to.StartsWith("GRP", StringComparison.OrdinalIgnoreCase))
+                {
+                    // Conversa em grupo: só nos grupos de que a nação é membro (seção SEUS GRUPOS). A chave de destino
+                    // fica negativa para a regra de 1 carta por destinatário valer por grupo.
+                    if (!context.Groups.TryGetValue(to.ToUpperInvariant(), out groupId))
+                    {
+                        Reject(decision, errors, lenient, $"Mensagem para '{to}': você não está nesse grupo. Use o código GRP# de SEUS GRUPOS (ou crie um com criar_grupo).");
+                        continue;
+                    }
+                    type = "grupo";
+                    recipient = -100 - groupId;
+                }
+                else                 if (type == "publica" || to.Equals("todos", StringComparison.OrdinalIgnoreCase))
                 {
                     if (!context.PublicDeclarationAllowed)
                     {
@@ -311,11 +337,15 @@ namespace CurrencyMod.Diplomacia
                 List<string> notInGame = Grounding.NotInGameWords(string.Join(" ", fields), context.KnownWords);
                 bool repeated = context.LastLetters.TryGetValue(recipient, out PreviousLetter previous)
                     && Grounding.Similarity(text, previous.Text) >= RepeatThreshold;
-                if (repeated || notInGame.Count > 0)
+                // Oferecer (ou dizer "meu") recurso que a nação não acessa: o Māui ofereceu cobre sem ter nenhum recurso.
+                List<string> notOwned = Grounding.OfferedNotOwned(string.Join(" ", fields), context.OwnResourceWords, context.AllResourceWords);
+                if (repeated || notInGame.Count > 0 || notOwned.Count > 0)
                 {
                     string why = repeated
                         ? $"repete quase igual a sua carta do turno {previous.Turn} para o mesmo destino. Traga algo novo (um fato, uma oferta, uma consequência) ou não escreva"
-                        : $"cita o que o jogo não tem: {string.Join(", ", notInGame)}. Mercadoria é só dinheiro, influência e os recursos de NOMES DO JOGO";
+                        : notInGame.Count > 0
+                        ? $"cita o que o jogo não tem: {string.Join(", ", notInGame)}. Mercadoria é só dinheiro, influência e os recursos de NOMES DO JOGO"
+                        : $"oferece recurso que você não tem: {string.Join(", ", notOwned)}. Só ofereça o que está na sua linha \"Recursos:\"; o recurso do outro você pode pedir";
                     if (lenient)
                     {
                         decision.Warnings.Add($"carta para '{to}' descartada: {why}");
@@ -372,8 +402,13 @@ namespace CurrencyMod.Diplomacia
                     Type = type,
                     Subject = Str(item["assunto"]),
                     Text = text.Trim(),
-                    ExpectsReply = Bool(item["pede_resposta"], type != "publica"),
+                    ExpectsReply = type != "grupo" && Bool(item["pede_resposta"], type != "publica"),
+                    GroupId = groupId,
                 };
+                if (type == "grupo")
+                {
+                    letter.To = Letter.Group;
+                }
                 if (type == "ultimato")
                 {
                     letter.Demand = Str(item["exigencia"]);
@@ -680,6 +715,10 @@ namespace CurrencyMod.Diplomacia
                         problem = Empire(item, context, out string tradeTarget) ?? OneOf(item, "modo", TradeModes);
                         summary = $"comércio com {tradeTarget}: {Str(item["modo"])} nos seus postos";
                         break;
+                    case "rota_pedagio":
+                        problem = Empire(item, context, out string tollOwner) ?? OneOf(item, "escolha", TollChoices);
+                        summary = $"suas rotas nos postos de {tollOwner}: {Str(item["escolha"])}";
+                        break;
                     case "bloquear_correspondencia":
                     case "desbloquear_correspondencia":
                         problem = Empire(item, context, out string mailTarget);
@@ -723,6 +762,131 @@ namespace CurrencyMod.Diplomacia
                             problem = $"\"pasta\" = '{portfolio}' inválida (use {string.Join(", ", Council.CouncilBank.Portfolios)})";
                         }
                         summary = $"demitir o ministro da pasta {portfolio}";
+                        break;
+                    }
+                    case "criar_grupo":
+                    {
+                        string groupName = Str(item["nome"])?.Trim();
+                        List<string> members = Handles(item["membros"]);
+                        string unknownMember = members.FirstOrDefault(m => !context.KnownEmpires.ContainsKey(m));
+                        if (string.IsNullOrWhiteSpace(groupName))
+                        {
+                            problem = "falta \"nome\" do grupo";
+                        }
+                        else if (unknownMember != null)
+                        {
+                            problem = $"membro '{unknownMember}' desconhecido (use códigos E# de nações que você conhece)";
+                        }
+                        else if (members.Distinct().Count() + 1 < ChatGroup.MinMembers || members.Distinct().Count() + 1 > ChatGroup.MaxMembers)
+                        {
+                            problem = $"um grupo tem de {ChatGroup.MinMembers} a {ChatGroup.MaxMembers} nações contando você (\"membros\" lista as outras)";
+                        }
+                        summary = $"criar o grupo '{groupName}' com {string.Join(", ", members)}";
+                        break;
+                    }
+                    case "sair_grupo":
+                    {
+                        string handle = Str(item["grupo"])?.Trim().ToUpperInvariant();
+                        if (handle == null || !context.Groups.ContainsKey(handle))
+                        {
+                            problem = $"grupo '{handle}' não é seu (use um GRP# de SEUS GRUPOS)";
+                        }
+                        summary = $"sair do grupo {handle}";
+                        break;
+                    }
+                    case "fundar_bloco":
+                    {
+                        List<string> guests = Handles(item["convidados"]);
+                        string unknownGuest = guests.FirstOrDefault(m => !context.KnownEmpires.ContainsKey(m));
+                        if (string.IsNullOrWhiteSpace(Str(item["nome"])))
+                        {
+                            problem = "falta \"nome\" do bloco";
+                        }
+                        else if (context.BlocId >= 0)
+                        {
+                            problem = "você já está num bloco (um por nação); saia dele antes (sair_bloco)";
+                        }
+                        else if (unknownGuest != null)
+                        {
+                            problem = $"convidado '{unknownGuest}' desconhecido (use códigos E# de nações que você conhece)";
+                        }
+                        else if (guests.Distinct().Count() + 1 < Blocs.Bloc.MinMembers)
+                        {
+                            problem = $"convide pelo menos {Blocs.Bloc.MinMembers - 1} nações (o bloco nasce com {Blocs.Bloc.MinMembers})";
+                        }
+                        summary = $"fundar o bloco '{Str(item["nome"])}' convidando {string.Join(", ", guests)}";
+                        break;
+                    }
+                    case "responder_bloco":
+                    {
+                        string handle = Str(item["bloco"])?.Trim().ToUpperInvariant();
+                        if (handle == null || !context.BlocInvites.Contains(handle))
+                        {
+                            problem = $"não há convite do bloco '{handle}' para você (veja CONVITES em BLOCOS)";
+                        }
+                        summary = $"{(item["aceitar"]?.Type == JTokenType.Boolean && (bool)item["aceitar"] ? "aceitar" : "recusar")} o convite do bloco {handle}";
+                        break;
+                    }
+                    case "pauta_bloco":
+                    {
+                        string kind = Str(item["tipo"])?.Trim().ToLowerInvariant();
+                        if (context.BlocId < 0)
+                        {
+                            problem = "você não está num bloco formado";
+                        }
+                        else if (kind == null || !Blocs.BlocMotion.Kinds.Contains(kind))
+                        {
+                            problem = "\"tipo\" é um de: " + string.Join(", ", Blocs.BlocMotion.Kinds);
+                        }
+                        else if (kind == "tarifa" || kind == "fim_tarifa" || kind == "admitir" || kind == "expulsar")
+                        {
+                            problem = Empire(item, context, out _);
+                        }
+                        summary = $"pauta do bloco: {kind} {Str(item["nacao"])} {Str(item["valor"])}".TrimEnd();
+                        break;
+                    }
+                    case "abrir_pauta":
+                    case "votar_pauta":
+                    {
+                        string handle = Str(item["pauta"])?.Trim().ToUpperInvariant();
+                        if (handle == null || !context.BlocMotions.Contains(handle))
+                        {
+                            problem = $"pauta '{handle}' não está aberta no seu bloco (use um P# de BLOCOS)";
+                        }
+                        summary = name == "abrir_pauta" ? $"pôr a pauta {handle} em votação" : $"votar {Str(item["voto"])} na pauta {handle}";
+                        break;
+                    }
+                    case "votar_presidente":
+                    {
+                        if (context.BlocId < 0 || !context.BlocElection)
+                        {
+                            problem = "não há eleição aberta no seu bloco";
+                        }
+                        summary = $"votar em {Str(item["candidato"])} para presidente do bloco";
+                        break;
+                    }
+                    case "sair_bloco":
+                    {
+                        if (context.BlocId < 0)
+                        {
+                            problem = "você não está em nenhum bloco";
+                        }
+                        summary = "sair do bloco";
+                        break;
+                    }
+                    case "nomear_ministro":
+                    {
+                        string seat = Str(item["pasta"])?.Trim().ToLowerInvariant();
+                        string candidate = Str(item["candidato"])?.Trim().ToLowerInvariant();
+                        if (seat == null || seat == "mao" || Array.IndexOf(Council.CouncilBank.Portfolios, seat) < 0)
+                        {
+                            problem = $"\"pasta\" = '{seat}' inválida (use uma das PASTAS VAGAS do seu conselho)";
+                        }
+                        else if (string.IsNullOrEmpty(candidate))
+                        {
+                            problem = "falta \"candidato\" (o código p### de um dos candidatos da pasta)";
+                        }
+                        summary = $"nomear {candidate} para a pasta {seat}";
                         break;
                     }
                     case "patrocinar":

@@ -376,6 +376,11 @@ namespace CurrencyMod
                 EmpireCurrency currency = world.Empires[i];
                 currency.ExchangeValue = Clamp(currency.ExchangeValue / exchangeGeoMean, EconomyConfig.ExchangeMin.Value, EconomyConfig.ExchangeMax.Value);
                 currency.PushHistory(turn);
+                if (IsHuman(i))
+                {
+                    // Aba Recursos do Banco Central: acessos a cada recurso estratégico e de luxo, por turno (só humanos: save leve).
+                    currency.History[currency.History.Count - 1].Resources = ResourceAccess(Sandbox.MajorEmpires[i]);
+                }
             }
             RecordTrade(world, turn);
         }
@@ -396,6 +401,37 @@ namespace CurrencyMod
                 return;
             }
             world.RecordMoney(sandbox.Turn, from, to, paid, gain, kind);
+        }
+
+        /// <summary>Acessos do império a cada recurso estratégico e de luxo (tipo → quantidade), só os que ele tem.</summary>
+        private static Dictionary<int, int> ResourceAccess(MajorEmpire empire)
+        {
+            var access = new Dictionary<int, int>();
+            try
+            {
+                Amplitude.Mercury.Data.Simulation.ResourceDefinition[] definitions = DepartmentOfResources.ResourceDefinitionByResourceType;
+                DepartmentOfResources resources = empire?.DepartmentOfResources;
+                if (definitions == null || resources == null)
+                {
+                    return access;
+                }
+                for (int t = 0; t < definitions.Length; t++)
+                {
+                    if (definitions[t] is Amplitude.Mercury.Data.Simulation.LuxuryResourceDefinition || definitions[t] is Amplitude.Mercury.Data.Simulation.StrategicResourceDefinition)
+                    {
+                        int count = (int)(float)resources.GetResourceAccess((Amplitude.Mercury.Data.Simulation.ResourceType)t);
+                        if (count > 0)
+                        {
+                            access[t] = count;
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Plugin.Log?.LogWarning($"Banco Central: recursos do turno: {ex.Message}");
+            }
+            return access;
         }
 
         private static bool IsHuman(int empireIndex)

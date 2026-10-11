@@ -89,9 +89,11 @@ namespace CurrencyMod
             host.AddComponent<NativeUI.NativeBankButton>();
             host.AddComponent<NativeUI.DiplomacyEconomyPanel>();
             host.AddComponent<NativeUI.DiplomacyTradePolicyPanel>();
+            host.AddComponent<RouteLabels>();
             host.AddComponent<Diplomacia.IaModule>();
             host.AddComponent<Diplomacia.UI.MailButton>();
             host.AddComponent<Diplomacia.UI.CouncilButton>();
+            host.AddComponent<Diplomacia.UI.AlliancesButton>();
             host.AddComponent<Diplomacia.UI.CorrespondenceTab>();
             host.AddComponent<Diplomacia.UI.InterceptedLettersTab>();
             host.AddComponent<Diplomacia.UI.ProvidersButtons>();

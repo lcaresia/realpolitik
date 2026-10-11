@@ -69,6 +69,8 @@ namespace CurrencyMod.Diplomacia.Council
             L.N("OpenAI (pelo Codex, com a sua conta do ChatGPT)"),
             L.N("json inválido: {0}"), L.N("falha ao montar o dossiê: {0}"), L.N("pasta do Codex: {0}"), L.N("resposta sem choices[0].message"),
             L.N("sem a foto do turno"), L.N("falta a fala da Mão (\"mao\")"), L.N("faltam as falas (\"falas\")"),
+            L.N("pasta inválida"), L.N("a pasta já tem ministro (demita antes)"), L.N("não é um dos candidatos desta pasta"), L.N("candidato não existe mais no banco"),
+            L.N("esse candidato já serve a outra nação"),
         };
 
         internal static readonly string[] FeminineTitleKeys =

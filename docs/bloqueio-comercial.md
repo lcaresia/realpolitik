@@ -106,3 +106,43 @@ Pedido do usuário: ao definir um preço novo, mostrar **na hora** quantas rotas
 | `PesoPedagioNasRotas` | 1 | 1 = compara pagar com desviar; maior = foge mais; 0 = sempre passa e paga. |
 | `IA` | true | A IA de regras também taxa e bloqueia. |
 | `IntervaloIA` | 5 | De quantos em quantos turnos a IA de regras revê. |
+| `CoresDasRotas` | true | Cores, espessura e valor das rotas na visão de comércio (§8). |
+
+## 7. Pagar ou desviar: a escolha de quem paga (`rota_pedagio`, 2026-10-10)
+
+Antes, a decisão de pagar o pedágio ou desviar era só da conta de custo do §2. Agora quem paga também pode escolher,
+para todos os postos de um dono:
+- **Modelo:** `CurrencyWorld.TollChoices` (`TollChoice { Payer, Owner, Choice, Turn }`, salvo no save) e
+  `TollChoiceKind { Auto, Pay, Detour }`. O índice `TradePolicy.GetTollChoice` é lido no cálculo de rotas, e
+  `SetTollChoice` muda o valor (com o lock) e marca `PathsDirty`.
+- **No caminho** (`TradeBlockade.TollPathCost`): se a escolha for `Pay`, o preço daquele pagador não pesa (a rota passa e
+  paga). Se for `Detour`, o passo custa `DetourCost = 1000`, que é finito: sem outro caminho, a rota passa e paga. `Auto`
+  segue a regra de sempre. A prévia (`TollPreview`) usa o mesmo cálculo e já mostra o efeito.
+- **IA de linguagem:** ação `rota_pedagio {"nacao":"E2","escolha":"pagar|desviar|automatico","motivo":"..."}`
+  (`Prompts.cs`, `DecisionParser`, `IaModule.ApplyTollChoice`). O dossiê mostra a escolha atual em cada linha "eles
+  cobram pedágio das suas rotas".
+- **Para o jogador:** o bloco "Seus Postos Comerciais" da diplomacia diz "eles escolheram pagar" ou "eles escolheram desviar".
+
+## 8. Cores, espessura e valor das rotas (`RouteVisuals`, `RouteLabels`, 2026-10-10)
+
+O jogo desenha todas as rotas iguais. Ele usa o `PresentationTradeRoadController` com três estilos (normal, interrompida
+e destruída) e desenha as linhas na GPU (`WorldSpaceLinesWithSteps`).
+- **Sandbox:** um pós-fixo em `TradePathSnapshot.ComputePathRendering` guarda, por linha, a situação em relação ao
+  jogador local, os recursos que passam, o pedágio por turno e o tile do meio. Os dados ficam num
+  `ConditionalWeakTable` por buffer `Data`. A ordem das linhas é a do jogo: só as relações externas não nulas, na ordem
+  do array.
+- **Apresentação:** um pós-fixo em `TradePathSnapshot_PresentationChanged` troca o estilo das linhas normais por estilos
+  do mod. Esses estilos são cópias do estilo normal do jogo com `UseCustomColor`, outra cor e outra largura, acrescentados
+  uma vez por controlador com `UpdateStyles`. São 4 situações × 3 larguras:
+  - **dourado:** paga o seu pedágio;
+  - **branco:** passa livre pelas suas terras;
+  - **laranja:** rota sua que paga pedágio;
+  - **azul:** rota sua.
+  As larguras são 1–2, 3–5 e 6+ recursos. As outras rotas e as interrompidas ou destruídas ficam como o jogo desenha.
+- **Rótulo:** "£ 12/t" em dourado (já paga) ou "£ 12/t?" em branco (pagaria no preço atual), no meio das rotas que passam
+  pelas suas terras, só na visão de comércio. É IMGUI (`RouteLabels`), posicionado com a câmera do controlador e
+  `PresentationWorldController.GetWorldPositionInUnityWorld`, a mesma conta dos pinos do jogo.
+- **Ainda não testado no jogo.** Falta conferir:
+  1. se a cor do estilo aparece (`UseCustomColor`);
+  2. se a largura maior fica boa;
+  3. se o rótulo combina com o visual. Se destoar, o passo seguinte é usar pinos nativos (`*PinsSubset`).

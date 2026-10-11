@@ -26,7 +26,7 @@ namespace CurrencyMod.NativeUI
 
         internal static NativeBankWindow Instance;
 
-        private enum Tab { Exchange, Trade, Policy, Cycle, Currency }
+        private enum Tab { Exchange, Trade, Policy, Cycle, Resources, Currency }
 
         // Peças da janela (preenchidas por Build).
         private UILabel headerLabel;
@@ -301,7 +301,7 @@ namespace CurrencyMod.NativeUI
             }
         }
 
-        private const int TabCount = 5;
+        private const int TabCount = 6;
 
         // ---------------- Ordenação do câmbio ----------------
 
@@ -424,8 +424,8 @@ namespace CurrencyMod.NativeUI
             yield return base.PostLoad();
             closeButton.LeftClick += CloseButton_LeftClick;
 
-            // Quatro seções na coluna da esquerda (botões da tela de configurações).
-            string[] tabNames = { L.T("Câmbio"), L.T("Comércio"), L.T("Política"), L.T("Ciclo"), L.T("Sua moeda") };
+            // Seis seções na coluna da esquerda (botões da tela de configurações).
+            string[] tabNames = { L.T("Câmbio"), L.T("Comércio"), L.T("Política"), L.T("Ciclo"), L.T("Recursos"), L.T("Sua moeda") };
             for (int i = 0; i < tabToggles.Count; i++)
             {
                 int index = i;
@@ -460,7 +460,8 @@ namespace CurrencyMod.NativeUI
             BindTooltip(tabToggles[1].transform, L.T("Comércio"), L.T("O dinheiro que você ganha e paga a cada império por turno: compras e vendas de recursos, manutenção das rotas, pedágios e presentes."));
             BindTooltip(tabToggles[2].transform, L.T("Política monetária"), L.T("Taxa de juros do seu banco central e o efeito dela no saldo, na produção e na inflação."));
             BindTooltip(tabToggles[3].transform, L.T("Ciclo econômico"), L.T("Como produção, inflação e juros se puxam no seu império: o diagnóstico do momento e o que fazer."));
-            BindTooltip(tabToggles[4].transform, L.T("Sua moeda"), L.T("Nome, plural e símbolo da moeda do seu império."));
+            BindTooltip(tabToggles[4].transform, L.T("Recursos"), L.T("Os recursos estratégicos e de luxo que o seu império acessa agora, de onde vem cada um, e como isso mudou turno a turno."));
+            if (tabToggles.Count > 5) BindTooltip(tabToggles[5].transform, L.T("Sua moeda"), L.T("Nome, plural e símbolo da moeda do seu império."));
             BindTooltip(closeButton.transform, L.T("Voltar ao jogo"), L.T("Fecha o Banco Central. O ESC e o botão do banco também fecham."));
             SetLabel(closeButton.transform, string.Empty, L.T("Voltar ao jogo"));
             headerLabel.Text = L.T("Banco Central");
@@ -1112,8 +1113,28 @@ namespace CurrencyMod.NativeUI
             SaveCurrency();
         }
 
+        /// <summary>
+        /// O doador (semente do mundo, nas opções) vem travado dentro da partida: o item e o campo clonados herdam
+        /// InteractiveSelf = false e o clique não dá foco ("campo só leitura"). Destrava os dois.
+        /// </summary>
+        private void EnsureCurrencyFieldsInteractive()
+        {
+            for (int i = 0; i < fieldItems.Length; i++)
+            {
+                foreach (Transform part in new[] { fieldItems[i], fields[i] != null ? fields[i].transform : null })
+                {
+                    UITransform ui = part != null ? part.GetComponent<UITransform>() : null;
+                    if (ui != null && !ui.InteractiveSelf)
+                    {
+                        ui.InteractiveSelf = true;
+                    }
+                }
+            }
+        }
+
         private void LoadCurrencyFields()
         {
+            EnsureCurrencyFieldsInteractive();
             WithMine(mine =>
             {
                 string[] values = { mine.Name, mine.PluralOrName, mine.Symbol };
@@ -1250,6 +1271,7 @@ namespace CurrencyMod.NativeUI
                 case Tab.Trade: return L.T("Dinheiro que entra e sai com cada império");
                 case Tab.Policy: return L.T("Política monetária");
                 case Tab.Cycle: return L.T("Ciclo econômico");
+                case Tab.Resources: return L.T("Recursos do seu império");
                 case Tab.Currency: return L.T("Sua moeda");
                 default: return L.T("Câmbio com os impérios que você conhece");
             }
@@ -1267,7 +1289,7 @@ namespace CurrencyMod.NativeUI
             {
                 tabToggles[i].State = i == (int)tab;
             }
-            if (tab != Tab.Exchange)
+            if (tab != Tab.Exchange && tab != Tab.Resources)
             {
                 SetRowCount(0);
             }
@@ -1367,6 +1389,9 @@ namespace CurrencyMod.NativeUI
                     case Tab.Cycle:
                         FillCycle(game, mine, localIndex);
                         break;
+                    case Tab.Resources:
+                        FillResources(mine, localIndex);
+                        break;
                     case Tab.Currency:
                         FillCurrency(mine);
                         break;
@@ -1449,7 +1474,7 @@ namespace CurrencyMod.NativeUI
         {
             bool exchange = currentTab == Tab.Exchange;
             bool trade = currentTab == Tab.Trade;
-            bool show = (exchange || trade || currentTab == Tab.Policy || currentTab == Tab.Cycle) && chartImage != null;
+            bool show = (exchange || trade || currentTab == Tab.Policy || currentTab == Tab.Cycle || currentTab == Tab.Resources) && chartImage != null;
             SetVisible(chartCard, show);
             if (!show)
             {
@@ -1459,6 +1484,11 @@ namespace CurrencyMod.NativeUI
             if (trade)
             {
                 FillTradeChart(world, mine, localIndex);
+                return;
+            }
+            if (currentTab == Tab.Resources)
+            {
+                FillResourcesChart(mine, localIndex);
                 return;
             }
             List<HistoryPoint> history = mine.History;
@@ -1641,16 +1671,24 @@ namespace CurrencyMod.NativeUI
             chartImage.Texture = new UITexture(chartGuid, UITextureFlags.AlphaStraight, UITextureColorFormat.Srgb, chartTexture);
         }
 
-        private void FillChartEmpty(Transform top)
+        private void FillChartEmpty(Transform top, string message = null)
         {
             ClearChartHover();
             SetLabel(top, "TitleGroup/Title", L.T("Histórico"));
-            SetVisible(top.Find("StatsTable"), false);
+            // A mensagem vai num chip do cartão: o rótulo do eixo X fica abaixo da área do gráfico, fora do cartão encolhido.
+            SetVisible(top.Find("StatsTable"), true);
+            SetVisible(top.Find(ChipPaths[0]), true);
+            SetChip(top, ChipPaths[0], message ?? L.T("O gráfico aparece depois de dois turnos."));
+            Tip(top, ChipPaths[0], L.T("Histórico"), message ?? L.T("O gráfico aparece depois de dois turnos."));
+            for (int c = 1; c < ChipPaths.Length; c++)
+            {
+                SetVisible(top.Find(ChipPaths[c]), false);
+            }
             foreach (UILabel l in chartYLabels)
             {
                 l.Text = string.Empty;
             }
-            chartXLabels[0].Text = L.T("O gráfico aparece depois de dois turnos.");
+            chartXLabels[0].Text = string.Empty;
             chartXLabels[1].Text = string.Empty;
             chartSignature = null;
             pendingChart = null;
@@ -2015,6 +2053,11 @@ namespace CurrencyMod.NativeUI
                 Tip(top, "StatsTable/ExtensionsCount", L.T("Juros deles"), L.T("Juros do banco central deles, por turno."));
                 string strengthChip = ExtraChip(top, 3);
                 string gdpChip = ExtraChip(top, 4);
+                // As linhas são as mesmas da aba Recursos, que esconde alguns chips.
+                foreach (string chip in new[] { "StatsTable/PopCount", "StatsTable/Fortification", "StatsTable/ExtensionsCount", strengthChip, gdpChip })
+                {
+                    SetVisible(top.Find(chip), true);
+                }
                 SetChip(top, strengthChip, L.F("Moeda {0}×", Format.Rate(other.ExchangeValue)));
                 SetChip(top, gdpChip, L.F("PIB {0}", Format.Money(other.Gdp)));
                 Tip(top, strengthChip, L.T("Força da moeda deles"), L.T("Valor da moeda deles comparado à média do mundo (1,00×)."));

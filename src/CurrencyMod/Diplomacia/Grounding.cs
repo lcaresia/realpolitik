@@ -252,6 +252,64 @@ namespace CurrencyMod.Diplomacia
             return Words(text).Where(w => NotInGame.Contains(w) && !known.Contains(w)).Distinct().ToList();
         }
 
+        /// <summary>Verbos de oferta e possessivos de quem escreve, nos 5 idiomas das cartas: "ofereço cobre", "meu cobre".</summary>
+        private static readonly HashSet<string> OfferWords = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        {
+            "ofereço", "ofereco", "oferto", "dou", "darei", "envio", "enviarei", "mando", "mandarei", "vendo", "venderei", "entrego",
+            "entregarei", "abro", "abrirei", "cedo", "cederei", "levo", "levarei", "meu", "minha", "meus", "minhas", "nosso", "nossa", "nossos", "nossas",
+            "offer", "give", "send", "sell", "deliver", "open", "my", "our",
+            "ofrezco", "doy", "daré", "envío", "mandaré", "venderé", "entrego", "abro", "mi", "mis", "nuestro", "nuestra", "nuestros", "nuestras",
+            "offre", "donne", "envoie", "vends", "livre", "ouvre", "mon", "ma", "mes", "notre", "nos",
+            "biete", "gebe", "schicke", "sende", "verkaufe", "liefere", "öffne", "mein", "meine", "meinen", "unser", "unsere",
+        };
+
+        /// <summary>Possessivos do outro: "teu cobre" é pedir, não oferecer.</summary>
+        private static readonly HashSet<string> TheirWords = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        {
+            "teu", "tua", "teus", "tuas", "vosso", "vossa", "vossos", "vossas", "seu", "sua", "seus", "suas",
+            "your", "their", "tu", "tus", "vuestro", "vuestra", "su", "sus", "ton", "ta", "tes", "votre", "vos", "leur", "leurs",
+            "dein", "deine", "deinen", "euer", "eure", "ihr", "ihre",
+        };
+
+        /// <summary>
+        /// Recursos que a carta oferece ou diz ter sem ter: palavra de recurso do mapa até 6 palavras depois de um verbo de
+        /// oferta ou de "meu/nosso", sem "teu/vosso" no meio, e que não está entre os recursos de quem escreve.
+        /// </summary>
+        internal static List<string> OfferedNotOwned(string text, HashSet<string> ownResources, HashSet<string> allResources)
+        {
+            var found = new List<string>();
+            if (string.IsNullOrWhiteSpace(text) || allResources == null || allResources.Count == 0)
+            {
+                return found;
+            }
+            List<string> words = Words(text).ToList();
+            for (int i = 0; i < words.Count; i++)
+            {
+                if (!OfferWords.Contains(words[i]))
+                {
+                    continue;
+                }
+                for (int j = i + 1; j < words.Count && j <= i + 6; j++)
+                {
+                    if (TheirWords.Contains(words[j]))
+                    {
+                        break;
+                    }
+                    if (allResources.Contains(words[j]) && (ownResources == null || !ownResources.Contains(words[j])))
+                    {
+                        found.Add(words[j]);
+                    }
+                }
+            }
+            return found.Distinct().ToList();
+        }
+
+        /// <summary>Palavras que identificam um recurso pelo nome ("Cobre" → "cobre"; nomes compostos: cada palavra de 4+ letras).
+        /// "Ouro" fica de fora: nas cartas quase sempre quer dizer dinheiro ("meu ouro e minha palavra são teus").</summary>
+        internal static IEnumerable<string> ResourceWords(string name) => Words(name).Where(w => w.Length >= 4 && !MoneyLikeWords.Contains(w));
+
+        private static readonly HashSet<string> MoneyLikeWords = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "ouro", "gold" };
+
         /// <summary>Semelhança entre duas cartas (0 a 1): palavras de 4+ letras em comum sobre o total.</summary>
         internal static double Similarity(string a, string b)
         {

@@ -34,6 +34,9 @@ namespace CurrencyMod
 
         private static string OutDir => Path.GetDirectoryName(ResultPath);
 
+        /// <summary>A pasta _Modding\dev (arquivos de entrada dos testes).</summary>
+        internal static string DevDir => Path.GetDirectoryName(OutDir);
+
         private void Awake()
         {
             instance = this;
@@ -112,6 +115,9 @@ namespace CurrencyMod
                     }
                     case "findtype":
                         Write(line, FindByType(args));
+                        return;
+                    case "responders":
+                        Write(line, RespondersAt(args));
                         return;
                     case "windows":
                         Write(line, ListWindows());
@@ -445,6 +451,43 @@ namespace CurrencyMod
             {
                 AppendTree(builder, transform.GetChild(i), depth + 1, visibleOnly);
             }
+        }
+
+        /// <summary>
+        /// "responders x y" (pixels, origem no canto superior esquerdo, como no screenshot): lista, na ordem em que o jogo
+        /// oferece o clique, os responders que contêm o ponto. Só leitura. Serve para achar quem rouba o clique de um campo.
+        /// </summary>
+        private static string RespondersAt(string args)
+        {
+            string[] parts = args.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+            if (parts.Length < 2 || !float.TryParse(parts[0], out float x) || !float.TryParse(parts[1], out float y))
+            {
+                return "uso: responders <x> <y>";
+            }
+            var manager = Amplitude.UI.Interactables.UIInteractivityManager.Instance;
+            if (manager == null)
+            {
+                return "sem UIInteractivityManager";
+            }
+            var builder = new StringBuilder();
+            builder.AppendLine($"foco atual: {manager.FocusedResponder}");
+            var screen = new Vector2(x, Screen.height - y);
+            for (int v = manager.perViewSortedResponders.Count - 1; v >= 0; v--)
+            {
+                var viewed = manager.perViewSortedResponders[v];
+                Vector2 point = viewed.View.ScreenPositionToStandardizedPosition(screen);
+                builder.AppendLine($"vista {viewed.View.name}: ponto {point}");
+                var data = viewed.SortedResponders.Data;
+                for (int i = 0; i < viewed.SortedResponders.Count; i++)
+                {
+                    if (data[i].Responder is Amplitude.UI.Interactables.UIResponder responder && responder.Contains(point))
+                    {
+                        string focusable = responder is Amplitude.UI.Interactables.UIControlResponder control ? (control.Control.Focusable ? " focável" : string.Empty) + $" bloqueia={control.Control.BlockedEvents}" : string.Empty;
+                        builder.AppendLine($"  #{i} camada={data[i].LayerIndex} sens={data[i].EventSensitivity} interativo={responder.IsInteractive}{focusable}  {responder}");
+                    }
+                }
+            }
+            return builder.ToString();
         }
 
         private static string Inspect(string args)

@@ -30,7 +30,9 @@ namespace CurrencyMod.Diplomacia
 
         internal static ConfigEntry<int> MaxLettersPerTurn;
         internal static ConfigEntry<int> LetterMaxWords;
-        internal static ConfigEntry<int> PlayerLetterMaxWords;
+        internal static ConfigEntry<int> PlayerLetterMaxChars;
+        /// <summary>Limite das cartas do jogador já com o teto do campo nativo (o rótulo some com pouco mais de 2050 caracteres).</summary>
+        internal static int PlayerLetterLimit => System.Math.Max(200, System.Math.Min(2000, PlayerLetterMaxChars?.Value ?? 2000));
         internal static ConfigEntry<int> DiaryMaxWords;
         internal static ConfigEntry<int> PublicDeclarationInterval;
         internal static ConfigEntry<string> DeliveryDelayByEra;
@@ -39,6 +41,7 @@ namespace CurrencyMod.Diplomacia
         internal static ConfigEntry<bool> PlayerCouncil;
         internal static ConfigEntry<bool> PlayerCouncilAutoOpen;
         internal static ConfigEntry<int> PlayerCouncilSpeakers;
+        internal static ConfigEntry<int> PlayerCouncilInterval;
         internal static ConfigEntry<bool> Interception;
         internal static ConfigEntry<float> InterceptionMaxChance;
         internal static ConfigEntry<float> InterceptionCurve;
@@ -116,8 +119,8 @@ namespace CurrencyMod.Diplomacia
                 "Cartas que cada nação pode enviar por turno (somando todos os destinatários).");
             LetterMaxWords = config.Bind(S, "PalavrasPorCarta", 150,
                 "Tamanho máximo de uma carta escrita pela IA, em palavras. O prompt pede cartas de 30 até ~2/3 disso; acima de 1,25× a resposta é devolvida para encurtar.");
-            PlayerLetterMaxWords = config.Bind(S, "PalavrasCartaJogador", 600,
-                "Tamanho máximo das cartas do jogador, em palavras.");
+            PlayerLetterMaxChars = config.Bind(S, "CaracteresCartaJogador", 2000,
+                "Tamanho máximo das cartas do jogador, em caracteres (contando espaços e quebras de linha). No máximo 2000: o campo de texto do jogo para de mostrar o texto com pouco mais de 2050 caracteres.");
             DiaryMaxWords = config.Bind(S, "PalavrasDiario", 60,
                 "Tamanho máximo da entrada do diário secreto por turno.");
             PublicDeclarationInterval = config.Bind(S, "TurnosEntreDeclaracoes", 5,
@@ -128,11 +131,13 @@ namespace CurrencyMod.Diplomacia
             Councils = config.Bind(S, "Conselhos", true,
                 "Cada nação da IA tem um conselho de ministros (a Mão e 11 pastas) que opina no dossiê por regras, sem chamada extra à API. O líder pode demitir.");
             PlayerCouncil = config.Bind(S, "ConselhoDoJogador", true,
-                "O seu conselho de ministros se reúne a cada turno (1 chamada à API) e opina com base no seu dossiê; você responde na tela do conselho e eles reagem (1 chamada por resposta). Você pode demitir.");
+                "O seu conselho de ministros se reúne sozinho a cada ConselhoIntervaloTurnos turnos, ou quando você convoca uma audiência na tela do conselho (1 chamada à API por reunião), e opina com base no seu dossiê; você responde e eles reagem (1 chamada por resposta). Você pode demitir.");
             PlayerCouncilAutoOpen = config.Bind(S, "ConselhoAbreSozinho", true,
                 "A tela do conselho abre sozinha quando a reunião do turno fica pronta, se você estiver com o mapa livre (sem tropa, cidade ou menu aberto). Desligado: só o selo no botão avisa.");
             PlayerCouncilSpeakers = config.Bind(S, "ConselhoFalasPorTurno", 6,
                 "Quantos ministros falam na reunião do turno, além da Mão (os de pasta mais urgente).");
+            PlayerCouncilInterval = config.Bind(S, "ConselhoIntervaloTurnos", 7,
+                "De quantos em quantos turnos o seu conselho se reúne sozinho. Entre uma reunião e outra, ele só se reúne se você convocar uma audiência (botão na tela do conselho); a audiência recomeça a contagem. Emergências não convocam o conselho.");
             Interception = config.Bind(S, "Interceptacao", true,
                 "Espiões (agentes furtivos do jogo) no território de quem escreve ou de quem recebe podem interceptar cartas privadas. A carta interceptada nunca chega; quem interceptou lê inteira. Ultimatos e declarações públicas não são interceptados.");
             InterceptionMaxChance = config.Bind(S, "InterceptacaoChanceMax", 0.5f,

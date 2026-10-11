@@ -131,6 +131,22 @@ namespace CurrencyMod.Diplomacia
                 ? $"Foco do império: {FocusName(focus.Value)} (desde o turno {focus.Turn}). Seus governadores seguem até você mudar."
                 : "Foco do império: nenhum definido (seus governadores seguem o próprio julgamento).");
             text.AppendLine(ResourceLine(me));
+            foreach (GameGlossary.ResourceEntry entry in GameGlossary.Resources())
+            {
+                if (entry == null || !(entry.Luxury || entry.Strategic))
+                {
+                    continue;
+                }
+                bool owned = entry.Type < me.ResourceAccess.Length && me.ResourceAccess[entry.Type] > 0;
+                foreach (string word in Grounding.ResourceWords(entry.Name))
+                {
+                    build.Context.AllResourceWords.Add(word);
+                    if (owned)
+                    {
+                        build.Context.OwnResourceWords.Add(word);
+                    }
+                }
+            }
             // Só vizinhos já contatados (névoa de guerra): a fronteira pode encostar antes do primeiro contato.
             List<int> neighbors = me.Neighbors.Where(n => KnowsEmpire(me, n)).ToList();
             if (neighbors.Count > 0)
@@ -165,6 +181,7 @@ namespace CurrencyMod.Diplomacia
                 if (!city.IsCity) tags.Add("posto avançado");
                 if (city.Captured) tags.Add($"tomada de {Name(capture, city.OriginalOwner)}");
                 if (city.Besieged) tags.Add("SITIADA");
+                if (city.IsCity) tags.Add(city.HasHarbour ? "tem porto" : "sem porto");
                 string tagText = tags.Count > 0 ? $" ({string.Join(", ", tags)})" : string.Empty;
                 string details = city.IsCity
                     ? $"pop. {city.Population}, ordem pública {N(city.PublicOrder)}, {city.Territories.Count} território(s)"
@@ -181,6 +198,10 @@ namespace CurrencyMod.Diplomacia
             if (cities.Count == 0)
             {
                 text.AppendLine("- nenhuma");
+            }
+            else if (!cities.Any(c => c.HasHarbour))
+            {
+                text.AppendLine("- Nenhuma cidade sua tem porto: não fale de porto, frota ou rota pelo mar.");
             }
 
             text.AppendLine();
@@ -328,7 +349,11 @@ namespace CurrencyMod.Diplomacia
             var talking = new HashSet<int>();
             foreach (Letter letter in world.Letters.Where(l => l.SentTurn >= turn - RecentLetterTurns || (l.Type == "ultimato" && l.SentTurn >= turn - 20)))
             {
-                if (letter.From == self && !letter.IsPublic)
+                if (letter.From == self && letter.IsGroup)
+                {
+                    talking.UnionWith(letter.Members.Where(m => m != self));
+                }
+                else if (letter.From == self && !letter.IsPublic)
                 {
                     talking.Add(letter.To);
                 }
@@ -1028,6 +1053,8 @@ namespace CurrencyMod.Diplomacia
 
         private static void AppendLetters(StringBuilder text, StringBuilder correspondence, IaWorld world, WorldCapture capture, IaNation nation, int self, int turn, List<int> known, DossierBuild build)
         {
+            AppendGroups(correspondence, world, capture, self, turn, build);
+            Blocs.BlocDossier.Append(correspondence, world, self, turn, build.Context, e => Name(capture, e));
             var incoming = world.Letters
                 .Where(l => l.IsFor(self) && l.DeliverTurn <= turn && !l.ReadBy.Contains(self) && !l.RejectedBy.Contains(self))
                 .OrderBy(l => l.DeliverTurn).ThenBy(l => l.Id)
@@ -1114,8 +1141,8 @@ namespace CurrencyMod.Diplomacia
         private static void AppendLetterLine(StringBuilder text, Letter letter, int self)
         {
             string from = letter.From == self ? "você" : $"E{letter.From}";
-            string to = letter.IsPublic ? "todos" : letter.To == self ? "você" : $"E{letter.To}";
-            string type = letter.Type == "ultimato" ? "ULTIMATO" : letter.IsPublic ? "pública" : "privada";
+            string to = letter.IsPublic ? "todos" : letter.IsGroup ? $"grupo GRP{letter.GroupId}" : letter.To == self ? "você" : $"E{letter.To}";
+            string type = letter.Type == "ultimato" ? "ULTIMATO" : letter.IsPublic ? "pública" : letter.IsGroup ? "grupo" : "privada";
             string subject = string.IsNullOrWhiteSpace(letter.Subject) ? Shorten(letter.Text, 8) : letter.Subject;
             text.Append($"- T{letter.SentTurn} {from} → {to} ({type}): {subject}");
             if (!string.IsNullOrWhiteSpace(letter.Demand))
@@ -1180,7 +1207,7 @@ namespace CurrencyMod.Diplomacia
         private static void AppendLetter(StringBuilder text, WorldCapture capture, Letter letter, int self, int turn, bool full)
         {
             string from = letter.From == self ? "você" : $"{Name(capture, letter.From)} (E{letter.From})";
-            string to = letter.IsPublic ? "todos" : letter.To == self ? "você" : $"{Name(capture, letter.To)} (E{letter.To})";
+            string to = letter.IsPublic ? "todos" : letter.IsGroup ? GroupLabel(world: null, letter) : letter.To == self ? "você" : $"{Name(capture, letter.To)} (E{letter.To})";
             string reply = letter.From != self && full ? (letter.ExpectsReply ? " · pede resposta" : " · não pede resposta") : string.Empty;
             // Escrita e chegada separadas: com o atraso do mensageiro, "turno 92" sozinho fazia a IA gastar o
             // raciocínio tentando descobrir se já tinha respondido (teste do turno 95).
@@ -1204,12 +1231,54 @@ namespace CurrencyMod.Diplomacia
             }
         }
 
+        /// <summary>"o grupo GRP3 (E1, E4, você)" com os membros da mensagem.</summary>
+        private static string GroupLabel(IaWorld world, Letter letter)
+        {
+            string members = letter.Members != null ? string.Join(", ", letter.Members.Select(m => "E" + m)) : "?";
+            return $"o grupo GRP{letter.GroupId} ({members})";
+        }
+
+        /// <summary>
+        /// Conversas em grupo da nação (melhorias-jogando item 15): cada grupo com os membros e as últimas mensagens em
+        /// resumo. As novas chegam inteiras em CARTAS QUE CHEGARAM. Preenche os códigos GRP# que a nação pode usar.
+        /// </summary>
+        private const int GroupMessagesShown = 4;
+
+        private static void AppendGroups(StringBuilder text, IaWorld world, WorldCapture capture, int self, int turn, DossierBuild build)
+        {
+            List<ChatGroup> mine = world.Groups.Where(g => g.Members.Contains(self)).ToList();
+            foreach (ChatGroup group in mine)
+            {
+                build.Context.Groups[group.Handle] = group.Id;
+            }
+            if (mine.Count == 0)
+            {
+                return;
+            }
+            text.AppendLine("== SEUS GRUPOS (conversas com várias nações; mande mensagem com \"tipo\": \"grupo\", \"para\": \"GRP#\") ==");
+            foreach (ChatGroup group in mine)
+            {
+                string members = string.Join(", ", group.Members.Select(m => m == self ? "você" : $"{Name(capture, m)} (E{m})"));
+                text.AppendLine($"- {group.Handle} \"{group.Name}\" · criado por {(group.Creator == self ? "você" : "E" + group.Creator)} no turno {group.CreatedTurn} · membros: {members}");
+                var messages = world.Letters
+                    .Where(l => l.IsGroup && l.GroupId == group.Id && (l.From == self || (l.IsFor(self) && l.DeliverTurn <= turn)))
+                    .OrderByDescending(l => l.Id).Take(GroupMessagesShown).OrderBy(l => l.Id);
+                foreach (Letter message in messages)
+                {
+                    string who = message.From == self ? "você" : $"E{message.From}";
+                    text.AppendLine($"  T{message.SentTurn} {who}: {Shorten(message.Text, 40)}");
+                }
+            }
+            text.AppendLine();
+        }
+
         private static string TypeName(string type)
         {
             switch (type)
             {
                 case "publica": return "Declaração pública";
                 case "ultimato": return "ULTIMATO";
+                case "grupo": return "Mensagem de grupo";
                 default: return "Carta privada";
             }
         }
@@ -1451,9 +1520,17 @@ namespace CurrencyMod.Diplomacia
                 }
                 else if (rule.Owner == other && rule.Target == me.Index)
                 {
-                    posts.Add(rule.Block
-                        ? $"eles bloqueiam as suas rotas em {rule.Posts} posto(s) deles"
-                        : $"eles cobram pedágio das suas rotas em {rule.Posts} posto(s) deles, {Price(rule, capture.Empire(other))}");
+                    if (rule.Block)
+                    {
+                        posts.Add($"eles bloqueiam as suas rotas em {rule.Posts} posto(s) deles");
+                        continue;
+                    }
+                    // Quem paga escolhe (rota_pedagio): pagar sempre, desviar sempre ou deixar a rota comparar custos.
+                    TollChoiceKind choice = TradePolicy.GetTollChoice(me.Index, other);
+                    string chosen = choice == TollChoiceKind.Pay ? "você escolheu PAGAR (suas rotas passam e pagam)"
+                        : choice == TollChoiceKind.Detour ? "você escolheu DESVIAR (suas rotas fogem dos postos deles quando há outro caminho)"
+                        : "automático: cada rota compara o pedágio com a volta (rota_pedagio muda isso)";
+                    posts.Add($"eles cobram pedágio das suas rotas em {rule.Posts} posto(s) deles, {Price(rule, capture.Empire(other))} — {chosen}");
                 }
             }
             if (posts.Count > 0)

@@ -115,6 +115,7 @@ namespace CurrencyMod.Diplomacia.UI
         private void Update()
         {
             NativeUIKit.EnsureTextChange(bodyField, bodyChanged ?? (bodyChanged = (f, t) => { if (feedbackIsError) { feedback = null; } nextRefresh = 0; }));
+            NativeUIKit.FixLayoutAfterPaste(bodyField);
             if (Time.unscaledTime < nextCheck)
             {
                 return;
@@ -460,7 +461,7 @@ namespace CurrencyMod.Diplomacia.UI
                 subjectField = subjectItem.GetComponent<UITextField>();
                 demandItem = CloneField(fieldDonor, "DemandField", 34f, false, 200, L.T("O que você exige (ultimato)"));
                 demandField = demandItem.GetComponent<UITextField>();
-                bodyItem = CloneField(fieldDonor, "BodyField", 300f, true, 4000, L.T("Escreva sua carta…"));
+                bodyItem = CloneField(fieldDonor, "BodyField", 300f, true, IaConfig.PlayerLetterLimit, L.T("Escreva sua carta…"));
                 bodyField = bodyItem.GetComponent<UITextField>();
                 // TextChange é ligado em Update (EnsureTextChange), depois que o campo carrega.
             }
@@ -524,7 +525,7 @@ namespace CurrencyMod.Diplomacia.UI
                 field.OnMultilineChanged(false, true);
             }
             NativeUIKit.Tip(item, name == "BodyField" ? L.T("Texto da carta") : name == "SubjectField" ? L.T("Assunto") : L.T("Exigência"),
-                name == "BodyField" ? L.F("Enter quebra a linha. Até {0} palavras.", IaConfig.PlayerLetterMaxWords.Value)
+                name == "BodyField" ? L.F("Enter quebra a linha. Até {0} caracteres.", IaConfig.PlayerLetterLimit)
                 : name == "SubjectField" ? L.T("Uma linha que resume a carta. Opcional.")
                 : L.T("O que você exige no ultimato. O prazo fica no controle abaixo."));
             return item;
@@ -668,21 +669,22 @@ namespace CurrencyMod.Diplomacia.UI
                 .Where(l => l.From == me || l.Arrived(turn))
                 .Where(l => (l.From == me && l.To == other) || (l.From == other && (l.To == me || l.IsPublic)))
                 .Where(l => !(l.From == other && l.RejectedBy.Contains(me)))
-                .OrderBy(l => l.From == me ? l.SentTurn : l.DeliverTurn).ThenBy(l => l.Id)
+                // Mais recentes em cima, como no Correio.
+                .OrderByDescending(l => l.From == me ? l.SentTurn : l.DeliverTurn).ThenByDescending(l => l.Id)
+                .Take(MaxShown)
                 .ToList();
-            if (letters.Count > MaxShown)
-            {
-                letters = letters.Skip(letters.Count - MaxShown).ToList();
-            }
             FillConversation(module, capture, letters, me, other, turn);
-            bool scrollToEnd = other != shownEmpire || (letters.Count > 0 && letters[letters.Count - 1].Id != shownLastId);
+            bool scrollToTop = other != shownEmpire || (letters.Count > 0 && letters[0].Id != shownLastId);
             shownEmpire = other;
-            shownLastId = letters.Count > 0 ? letters[letters.Count - 1].Id : -1;
-            if (scrollToEnd)
+            shownLastId = letters.Count > 0 ? letters[0].Id : -1;
+            if (scrollToTop)
             {
-                listTable.GetComponentInParent<UIScrollView>()?.ResetVertically(toEnd: true);
+                listTable.GetComponentInParent<UIScrollView>()?.ResetVertically(toEnd: false);
             }
-            module.MarkReadByPlayer(letters.Where(l => l.From == other));
+            if (NativeUIKit.IsReallyVisible(listTable))
+            {
+                module.MarkReadByPlayer(letters.Where(l => l.From == other));
+            }
             FillCompose(module, capture, them, me, other, turn);
         }
 
@@ -817,12 +819,12 @@ namespace CurrencyMod.Diplomacia.UI
             }
 
             Transform sendTop = sendCard.Find("Table/Top");
-            int words = bodyField != null ? DecisionParser.Words(bodyField.Text) : 0;
-            int max = IaConfig.PlayerLetterMaxWords.Value;
+            int words = bodyField != null ? IaModule.PlayerTextLength(bodyField.Text) : 0;
+            int max = IaConfig.PlayerLetterLimit;
             string title = !canWrite ? L.T("Esta nação não recebe cartas") : feedback ?? (words == 0 ? L.T("Escreva a carta acima") : L.T("Pronta para enviar"));
             B.SetLabel(sendTop, "TitleGroup/Title", feedback != null && feedbackIsError ? $"<c={Red}>{title}</c>" : title);
-            B.SetChip(sendTop, "StatsTable/PopCount", words > max ? $"<c={Red}>" + L.F("{0}/{1} palavras", words, max) + "</c>" : L.F("{0}/{1} palavras", words, max));
-            B.Tip(sendTop, "StatsTable/PopCount", L.T("Tamanho"), L.F("Palavras da carta. O máximo é {0}.", max));
+            B.SetChip(sendTop, "StatsTable/PopCount", words > max ? $"<c={Red}>" + L.F("{0}/{1} caracteres", words, max) + "</c>" : L.F("{0}/{1} caracteres", words, max));
+            B.Tip(sendTop, "StatsTable/PopCount", L.T("Tamanho"), L.F("Caracteres da carta, contando espaços e quebras de linha. O máximo é {0}.", max));
             B.HideChild(sendTop, "StatsTable/Fortification");
             B.HideChild(sendTop, "StatsTable/ExtensionsCount");
             B.SetVisible(sendButton.transform, canWrite);

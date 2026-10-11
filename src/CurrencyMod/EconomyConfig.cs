@@ -126,6 +126,7 @@ namespace CurrencyMod
             TollDetourCost = config.Bind(bloqueio, "PesoPedagioNasRotas", 1.0, "Como a rota pesa o pedágio contra desviar. 1 = compara o custo real (pedágio por turno x manutenção extra do desvio) e escolhe o mais barato; maior que 1 = foge mais do pedágio; 0 = ignora o pedágio e sempre passa e paga.");
             EnableAiTradePolicy = config.Bind(bloqueio, "IA", true, "A IA também bloqueia e cobra pedágio de rivais.");
             AiReviewInterval = config.Bind(bloqueio, "IntervaloIA", 5, "De quantos em quantos turnos cada IA revê os bloqueios.");
+            RouteColors = config.Bind(bloqueio, "CoresDasRotas", true, "Na visão de comércio, pinta as rotas pela situação com você (dourado = paga o seu pedágio, branco = passa livre pelas suas terras, laranja = rota sua que paga pedágio, azul = rota sua), engrossa as que levam mais recursos e mostra o valor do pedágio no meio das que passam pelas suas terras.");
         }
 
         // Bloqueio comercial
@@ -134,6 +135,7 @@ namespace CurrencyMod
         public static ConfigEntry<double> TollDetourCost;
         public static ConfigEntry<bool> EnableAiTradePolicy;
         public static ConfigEntry<int> AiReviewInterval;
+        public static ConfigEntry<bool> RouteColors;
 
         /// <summary>
         /// Chaves de versões antigas que não fazem mais nada. O BepInEx guarda para sempre no .cfg as entradas que ninguém

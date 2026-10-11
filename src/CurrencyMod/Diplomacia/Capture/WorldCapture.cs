@@ -137,6 +137,8 @@ namespace CurrencyMod.Diplomacia.Capture
         public List<int> Territories = new List<int>();
         public bool Besieged;
         public bool Captured;
+        /// <summary>Tem distrito de porto: só então a nação pode falar de "abrir o porto", frota de comércio etc.</summary>
+        public bool HasHarbour;
         public int OriginalOwner = -1;
     }
 

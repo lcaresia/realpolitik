@@ -211,6 +211,9 @@ namespace CurrencyMod
         /// por turno é convertido em "territórios equivalentes" pela manutenção por território desta rota.
         /// Se pagar sai mais barato que a volta, a rota passa e paga; senão, desvia.
         /// </summary>
+        /// <summary>Custo de passo de quem escolheu desviar: muito acima de qualquer volta, mas finito.</summary>
+        private const float DetourCost = 1000f;
+
         private static float TollPathCost(int territory, MajorEmpire owner, int left, int right)
         {
             ExternalTradeRelation relation = currentRelation;
@@ -232,6 +235,15 @@ namespace CurrencyMod
             {
                 if (IsMajor(payer) && TradePolicy.GetMode(territory, payer, owner.Index) == TradeMode.Toll)
                 {
+                    // Escolha de quem paga (rota_pedagio da IA de linguagem): pagar = passa sem pesar o preço; desviar =
+                    // foge daqui se houver outro caminho (custo alto, não infinito: sem volta, passa e paga).
+                    switch (TradePolicy.GetTollChoice(payer, owner.Index))
+                    {
+                        case TollChoiceKind.Pay:
+                            continue;
+                        case TollChoiceKind.Detour:
+                            return DetourCost;
+                    }
                     toll += TradePolicy.GetPrice(territory, payer, owner.Index, era) * goods;
                 }
             }
@@ -514,7 +526,7 @@ namespace CurrencyMod
             return false;
         }
 
-        private static int ResourcesBought(ExternalTradeExchange exchange)
+        internal static int ResourcesBought(ExternalTradeExchange exchange)
         {
             return exchange == null ? 0 : (int)exchange.NumberOfDifferentResourceTraded.Value;
         }
@@ -543,6 +555,7 @@ namespace CurrencyMod
                         world.LastTradeTurn = sandbox.Turn;
                         DropLostTerritoryRules(world);
                         CollectTolls(world);
+                        Diplomacia.Blocs.BlocTrade.RefundUpkeep();
                         if (EconomyConfig.EnableAiTradePolicy.Value)
                         {
                             TradeAi.Review(world, sandbox.Turn);

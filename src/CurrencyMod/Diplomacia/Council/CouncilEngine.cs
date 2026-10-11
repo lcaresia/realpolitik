@@ -51,39 +51,140 @@ namespace CurrencyMod.Diplomacia.Council
 
         // ---------------- Formação ----------------
 
-        /// <summary>Completa o conselho (12 cadeiras), com gente do banco que ainda não serve a nenhuma nação.</summary>
+        // Modelo de 2026-10-10 (melhorias-jogando item 3): o conselho começa só com a Mão; cada pasta vaga tem 3 candidatos
+        // (os mesmos até a era mudar ou alguém ser nomeado) e nomear custa influência, uma vez. Demitir abre a vaga.
+
+        /// <summary>Candidatos por pasta vaga.</summary>
+        internal const int CandidatesPerSeat = 3;
+
+        /// <summary>Influência para nomear um ministro na era (0 = Neolítica): 25, 50 na Antiga… 175 na Contemporânea.</summary>
+        internal static int AppointCost(int era) => 25 * (Math.Max(0, era) + 1);
+
+        /// <summary>Bônus de veterano, em %, na área da pasta: +1% a cada 5 turnos no cargo, até +10%. A Mão não tem.</summary>
+        internal static int VeteranBonus(Minister minister, int turn) =>
+            minister == null || minister.Portfolio == "mao" ? 0 : Math.Max(0, Math.Min(10, (turn - minister.Since) / 5));
+
+        /// <summary>
+        /// A Mão sempre presente e os candidatos de cada pasta vaga em dia. Save antigo (12 cadeiras): o conselho volta a ter
+        /// só a Mão, uma vez.
+        /// </summary>
         internal static void Ensure(IaWorld world, IaNation nation, WorldCapture capture, int turn)
         {
+            if (nation.CouncilModel < 1)
+            {
+                nation.Council.RemoveAll(m => m.Portfolio != "mao");
+                nation.CouncilCandidates = new Dictionary<string, List<string>>();
+                nation.CouncilCandidatesEra = -1;
+                nation.CouncilModel = 1;
+            }
+            nation.CouncilCandidates = nation.CouncilCandidates ?? new Dictionary<string, List<string>>();
+            if (!nation.Council.Any(m => m.Portfolio == "mao"))
+            {
+                Personality hand = Pick(world, nation, "mao", turn, 0, new HashSet<string>());
+                if (hand != null)
+                {
+                    nation.Council.Add(Make(world, nation, capture, hand, "mao", turn));
+                }
+            }
+            int era = capture?.Empire(nation.EmpireIndex)?.EraIndex ?? 0;
+            if (era != nation.CouncilCandidatesEra)
+            {
+                nation.CouncilCandidates.Clear();
+                nation.CouncilCandidatesEra = era;
+            }
+            var taken = new HashSet<string>(nation.CouncilCandidates.Values.SelectMany(v => v));
             foreach (string portfolio in CouncilBank.Portfolios)
             {
-                if (nation.Council.Any(m => m.Portfolio == portfolio))
+                if (portfolio == "mao" || nation.Council.Any(m => m.Portfolio == portfolio))
+                {
+                    nation.CouncilCandidates.Remove(portfolio);
+                    continue;
+                }
+                if (nation.CouncilCandidates.TryGetValue(portfolio, out List<string> current) && current.Count > 0)
                 {
                     continue;
                 }
-                Minister minister = Hire(world, nation, capture, portfolio, turn, attempt: 0);
-                if (minister != null)
+                var picks = new List<string>();
+                for (int attempt = 0; picks.Count < CandidatesPerSeat && attempt < CandidatesPerSeat * 4; attempt++)
                 {
-                    nation.Council.Add(minister);
+                    Personality person = Pick(world, nation, portfolio, era, attempt, taken);
+                    if (person == null)
+                    {
+                        break;
+                    }
+                    taken.Add(person.Id);
+                    picks.Add(person.Id);
                 }
+                nation.CouncilCandidates[portfolio] = picks;
             }
             nation.Council.Sort((a, b) => Array.IndexOf(CouncilBank.Portfolios, a.Portfolio).CompareTo(Array.IndexOf(CouncilBank.Portfolios, b.Portfolio)));
         }
 
-        private static Minister Hire(IaWorld world, IaNation nation, WorldCapture capture, string portfolio, int turn, int attempt)
+        /// <summary>
+        /// Nomeia um dos candidatos da pasta (o custo em influência é cobrado por quem chama). Devolve null e o motivo em
+        /// <paramref name="problem"/> quando não dá.
+        /// </summary>
+        internal static Minister Appoint(IaWorld world, IaNation nation, WorldCapture capture, string portfolio, string personalityId, int turn, out string problem)
+        {
+            problem = null;
+            Ensure(world, nation, capture, turn);
+            if (portfolio == "mao" || !CouncilBank.Portfolios.Contains(portfolio))
+            {
+                problem = "pasta inválida";
+                return null;
+            }
+            if (nation.Council.Any(m => m.Portfolio == portfolio))
+            {
+                problem = "a pasta já tem ministro (demita antes)";
+                return null;
+            }
+            if (!nation.CouncilCandidates.TryGetValue(portfolio, out List<string> candidates) || !candidates.Contains(personalityId))
+            {
+                problem = "não é um dos candidatos desta pasta";
+                return null;
+            }
+            Personality person = CouncilBank.ById(personalityId);
+            if (person == null)
+            {
+                problem = "candidato não existe mais no banco";
+                return null;
+            }
+            // O banco é pequeno: a mesma pessoa pode ser candidata em duas nações. Quem já serve a outra sai da lista.
+            if (world.Nations.Any(n => n != nation && n.Council.Any(m => m.PersonalityId == personalityId)))
+            {
+                candidates.Remove(personalityId);
+                problem = "esse candidato já serve a outra nação";
+                return null;
+            }
+            Minister minister = Make(world, nation, capture, person, portfolio, turn);
+            nation.Council.Add(minister);
+            nation.CouncilCandidates.Remove(portfolio);
+            nation.Council.Sort((a, b) => Array.IndexOf(CouncilBank.Portfolios, a.Portfolio).CompareTo(Array.IndexOf(CouncilBank.Portfolios, b.Portfolio)));
+            return minister;
+        }
+
+        /// <summary>Alguém do banco que não serve a nenhuma nação, não foi demitido por esta e não está em <paramref name="taken"/>.</summary>
+        private static Personality Pick(IaWorld world, IaNation nation, string portfolio, int salt, int attempt, HashSet<string> taken)
         {
             var used = new HashSet<string>(world.Nations.SelectMany(n => n.Council).Select(m => m.PersonalityId));
             used.UnionWith(nation.FiredPersonalities);
+            used.UnionWith(taken);
             List<Personality> free = CouncilBank.All().Where(p => !used.Contains(p.Id)).ToList();
             if (free.Count == 0)
             {
-                free = CouncilBank.All().Where(p => !nation.Council.Any(m => m.PersonalityId == p.Id)).ToList();
+                free = CouncilBank.All().Where(p => !nation.Council.Any(m => m.PersonalityId == p.Id) && !taken.Contains(p.Id)).ToList();
             }
             if (free.Count == 0)
             {
                 return null;
             }
-            uint seed = Hash($"{world.GameGuid}|{nation.EmpireIndex}|{portfolio}|{turn}|{attempt}");
-            Personality person = free[(int)(seed % (uint)free.Count)];
+            uint seed = Hash($"{world.GameGuid}|{nation.EmpireIndex}|{portfolio}|{salt}|{attempt}|{nation.FiredPersonalities.Count}");
+            return free[(int)(seed % (uint)free.Count)];
+        }
+
+        private static Minister Make(IaWorld world, IaNation nation, WorldCapture capture, Personality person, string portfolio, int turn)
+        {
+            uint seed = Hash($"{world.GameGuid}|{nation.EmpireIndex}|{portfolio}|{person.Id}|{turn}");
             var minister = new Minister
             {
                 Portfolio = portfolio,
@@ -111,7 +212,10 @@ namespace CurrencyMod.Diplomacia.Council
             return minister;
         }
 
-        /// <summary>Demite e põe outra pessoa do banco no lugar. Devolve a descrição, ou null se a pasta não existe.</summary>
+        /// <summary>
+        /// Demite: a pasta fica vaga, com candidatos novos (a Mão não sai: é trocada na hora por outra pessoa do banco).
+        /// Devolve a descrição, ou null se a pasta não tem ministro.
+        /// </summary>
         internal static string Fire(IaWorld world, IaNation nation, WorldCapture capture, string portfolio, int turn)
         {
             Minister old = nation.Council.FirstOrDefault(m => m.Portfolio == portfolio);
@@ -121,20 +225,19 @@ namespace CurrencyMod.Diplomacia.Council
             }
             nation.Council.Remove(old);
             nation.FiredPersonalities.Add(old.PersonalityId);
-            Minister replacement = Hire(world, nation, capture, portfolio, turn, attempt: nation.FiredPersonalities.Count);
-            if (replacement != null)
-            {
-                nation.Council.Add(replacement);
-                Ensure(world, nation, capture, turn);
-            }
+            nation.CouncilCandidates?.Remove(portfolio);
+            Ensure(world, nation, capture, turn);
+            Minister newHand = portfolio == "mao" ? nation.Council.FirstOrDefault(m => m.Portfolio == "mao") : null;
             // O resto do conselho sente o golpe: quem é leal teme, quem é ambicioso vê espaço.
-            foreach (Minister other in nation.Council.Where(m => m != replacement))
+            foreach (Minister other in nation.Council.Where(m => m != newHand))
             {
                 if (other.Has("ambicioso")) other.Ambition = Math.Min(100, other.Ambition + 5);
                 else other.Loyalty = Math.Max(0, other.Loyalty - 3);
             }
             int era = capture?.Empire(nation.EmpireIndex)?.EraIndex ?? 0;
-            return $"{Title(old, era)} {old.Name} demitido; no lugar entra {replacement?.Name ?? "ninguém"}";
+            return newHand != null
+                ? $"{Title(old, era)} {old.Name} demitido; no lugar entra {newHand.Name}"
+                : $"{Title(old, era)} {old.Name} demitido; a pasta fica vaga até você nomear alguém";
         }
 
         // ---------------- Turno ----------------
@@ -707,8 +810,28 @@ namespace CurrencyMod.Diplomacia.Council
                 string affection = m.Affection != 0 ? $" · sua afeição {(m.Affection > 0 ? "+" : string.Empty)}{m.Affection}" : string.Empty;
                 text.AppendLine($"- {Title(m, era)} {m.Name} ({string.Join(", ", m.Traits)} · credibilidade {m.Credibility}{affection}): {m.Opinion}");
             }
-            text.AppendLine("Ministros com credibilidade baixa e sem a sua afeição pesam menos. Seguir um conselho aumenta a sua afeição por quem o deu. Para trocar alguém: demitir_ministro com a pasta "
-                + "(" + string.Join(", ", CouncilBank.Portfolios.Where(p => p != "mao").Concat(new[] { "mao" })) + ").");
+            text.AppendLine("Ministros com credibilidade baixa e sem a sua afeição pesam menos. Seguir um conselho aumenta a sua afeição por quem o deu. Demitir (demitir_ministro com a pasta) deixa a pasta vaga e zera o bônus de veterano dela.");
+            // Veteranos: o tempo no cargo rende na área da pasta (até +10%).
+            List<string> veterans = nation.Council.Where(m => VeteranBonus(m, nation.CouncilTurn) > 0)
+                .Select(m => $"{Title(m, era)} {m.Name} +{VeteranBonus(m, nation.CouncilTurn)}%").ToList();
+            if (veterans.Count > 0)
+            {
+                text.AppendLine("Bônus de veterano (rende na área da pasta enquanto ele fica no cargo, +1% a cada 5 turnos até +10%): " + string.Join(", ", veterans) + ".");
+            }
+            // Pastas vagas e os candidatos: nomear_ministro com a pasta e o código do candidato (custa influência).
+            if (nation.CouncilCandidates != null && nation.CouncilCandidates.Count > 0)
+            {
+                text.AppendLine($"PASTAS VAGAS (nomear_ministro custa {AppointCost(era)} de influência; vaga não opina nem rende bônus):");
+                foreach (KeyValuePair<string, List<string>> seat in nation.CouncilCandidates.OrderBy(s => Array.IndexOf(CouncilBank.Portfolios, s.Key)))
+                {
+                    var people = seat.Value.Select(CouncilBank.ById).Where(p => p != null)
+                        .Select(p => $"{p.Id} {p.Name} ({string.Join(", ", p.Traits)})").ToList();
+                    if (people.Count > 0)
+                    {
+                        text.AppendLine($"- {seat.Key}: " + string.Join(" · ", people));
+                    }
+                }
+            }
             return text.ToString();
         }
 

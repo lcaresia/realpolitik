@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System.Collections.Generic;
+using System.Linq;
 using Amplitude.UI;
 using Amplitude.UI.Renderers;
 using Amplitude.UI.Interactables;
@@ -111,6 +112,44 @@ namespace CurrencyMod.NativeUI
             field.TextChange += handler;
             hookedFields[field] = responder;
         }
+
+        private static readonly Dictionary<UITextField, int> fieldLengths = new Dictionary<UITextField, int>();
+        private static readonly Dictionary<UITextField, int> fieldRelayouts = new Dictionary<UITextField, int>();
+
+        /// <summary>
+        /// Colar um texto grande deixava o campo "vazio": o UITextField posiciona o texto pela posição do cursor
+        /// (GetCharPosition) logo depois de trocar o texto do rótulo, antes de o rótulo refazer as linhas. Com a posição
+        /// velha, o texto é empurrado para fora da máscara. Chame a cada quadro: quando o texto mudou mais de um
+        /// caractere de uma vez (colar), reposiciona com o rótulo já montado.
+        /// </summary>
+        public static void FixLayoutAfterPaste(UITextField field)
+        {
+            if (field == null)
+            {
+                return;
+            }
+            int length = field.Text?.Length ?? 0;
+            if (fieldLengths.TryGetValue(field, out int previous) && Mathf.Abs(length - previous) > 1)
+            {
+                fieldRelayouts[field] = 3; // alguns quadros: o rótulo pode levar um para refazer as linhas
+            }
+            fieldLengths[field] = length;
+            if (fieldRelayouts.TryGetValue(field, out int left) && left > 0)
+            {
+                fieldRelayouts[field] = left - 1;
+                if (field.IsEditing && field.label != null)
+                {
+                    // Com o rótulo já montado, o cálculo do jogo traz o cursor (e o texto em volta) de volta para a máscara.
+                    field.MoveCaretToCharIndex(field.caretIndex, force: true);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Visível na tela de verdade: a janela pode continuar Shown com o grupo das telas escondido (virada de turno,
+        /// cursor de diplomacia), e aí nada do que ela mostra foi visto.
+        /// </summary>
+        public static bool IsReallyVisible(UITransform ui) => ui != null && ui.gameObject.activeInHierarchy && ui.VisibleGlobally;
 
         public static void DestroyChildren(Transform parent)
         {

@@ -441,6 +441,16 @@ namespace CurrencyMod.NativeUI
             {
                 state += " · " + L.F("pagaram {0} {1}", symbol, Format.Money(paid));
             }
+            // A escolha deles diante dos seus pedágios (rota_pedagio da IA de linguagem).
+            TollChoiceKind theirChoice = TradePolicy.GetTollChoice(other, me);
+            if (theirChoice == TollChoiceKind.Pay)
+            {
+                state += " · <c=8FD18A>" + L.T("eles escolheram pagar") + "</c>";
+            }
+            else if (theirChoice == TollChoiceKind.Detour)
+            {
+                state += " · <c=F2A65A>" + L.T("eles escolheram desviar") + "</c>";
+            }
             NativeUIKit.SetText(footer, state);
             NativeUIKit.Tip(footer, L.T("Situação nos seus postos"),
                 L.T("Como esse império está tratado nos seus postos hoje. \"Misto\" quando você ajustou postos diferentes pela janela do Posto Comercial (visão Comercializar). \"Preço próprio\": um posto em que você pôs outro preço só para ele; os botões - e + daqui trocam o preço de todos os postos de uma vez."));

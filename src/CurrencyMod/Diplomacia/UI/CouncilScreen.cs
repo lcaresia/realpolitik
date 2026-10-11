@@ -100,6 +100,9 @@ namespace CurrencyMod.Diplomacia.UI
             public Transform Body;
             public UIButton Button;
             public string Portfolio;
+            /// <summary>Cartão de pasta vaga (o botão abre os candidatos) ou de candidato (o botão nomeia).</summary>
+            public string Vacant;
+            public string Candidate;
         }
 
         // ---------------- Criação ----------------
@@ -325,6 +328,13 @@ namespace CurrencyMod.Diplomacia.UI
             {
                 return;
             }
+            if (PlayerCouncil.Meeting(IaModule.World, IaModule.Instance?.CurrentTurn ?? -1) == null)
+            {
+                // Conselho dispensado: o botão convoca a audiência (a fala escrita fica no campo para depois).
+                string convened = PlayerCouncil.Convene();
+                SetFeedback(convened.Replace("ok: ", string.Empty).Replace("erro: ", string.Empty), convened.StartsWith("erro"));
+                return;
+            }
             string result = PlayerCouncil.Speak(field.Text);
             if (result.StartsWith("ok"))
             {
@@ -357,11 +367,38 @@ namespace CurrencyMod.Diplomacia.UI
             B.HideChild(top, "StatsTable/ExtensionsCount");
             MailScreen.FitTitle(top, 12f);
             B.HideOutputs(top);
-            B.Tip(top, "StatsTable/PopCount", L.T("Reunião do turno"), L.T("Você responde à reunião deste turno. No próximo turno o conselho se reúne de novo."));
+            B.Tip(top, "StatsTable/PopCount", L.T("Reunião do turno"), L.T("Você responde à reunião deste turno. Depois o conselho só volta a se reunir sozinho no intervalo, ou quando você convocar uma audiência."));
             B.Tip(top, "StatsTable/Fortification", L.T("Suas falas"), L.T("Até 8 por turno. Os ministros respondem com o que sabem do reino e mudam o apreço por você conforme o que ouvem."));
 
-            bool ready = meeting != null && meeting.Status == "pronta";
-            bool listening = PlayerCouncil.Thinking && ready || (meeting?.Exchanges.Any(e => e.Status == "pensando") ?? false);
+            if (meeting == null)
+            {
+                // Conselho dispensado neste turno: o cartão de envio vira o pedido de audiência.
+                int next = Math.Max(turn, PlayerCouncil.NextAutoTurn(IaModule.World));
+                B.SetLabel(top, "TitleGroup/Title", L.T("O conselho está dispensado"));
+                B.SetChip(top, "StatsTable/Fortification", L.F("Sozinho no turno {0}", next));
+                B.Tip(top, "StatsTable/Fortification", L.T("Próxima reunião"), L.F("O conselho se reúne sozinho a cada {0} turnos. Uma audiência agora recomeça a contagem.", Math.Max(1, IaConfig.PlayerCouncilInterval.Value)));
+                Transform idleTop = sendCard.Find("Table/Top");
+                string idleTitle = feedback ?? L.T("Peça uma audiência");
+                B.SetLabel(idleTop, "TitleGroup/Title", feedback != null && feedbackIsError ? $"<c={Red}>{idleTitle}</c>" : idleTitle);
+                B.SetChip(idleTop, "StatsTable/PopCount", L.T("1 chamada à API"));
+                B.HideChild(idleTop, "StatsTable/Fortification");
+                B.HideChild(idleTop, "StatsTable/ExtensionsCount");
+                B.SetVisible(sendButton.transform, true);
+                B.SetButtonText(sendButton, L.T("Convocar"));
+                MailScreen.FitTitle(idleTop, sendButton.GetComponent<UITransform>().Width + 20f);
+                B.HideOutputs(idleTop);
+                B.Tip(idleTop, "StatsTable/PopCount", L.T("Custo"), L.T("A audiência é uma reunião completa do conselho: uma chamada à API."));
+                B.Tip(sendButton.transform, string.Empty, L.T("Convocar"), L.T("Reúne o conselho agora. Depois que a reunião sair, você pode falar com os ministros."));
+                B.SetVisible(stateCard, false);
+                foreach (Transform item in new[] { speakCard, fieldItem, sendCard, stateCard })
+                {
+                    item?.SetAsLastSibling();
+                }
+                return;
+            }
+
+            bool ready = meeting.Status == "pronta";
+            bool listening = PlayerCouncil.Thinking && ready || meeting.Exchanges.Any(e => e.Status == "pensando");
             Transform sendTop = sendCard.Find("Table/Top");
             int words = field != null ? DecisionParser.Words(field.Text) : 0;
             string title = feedback ?? (listening ? L.T("O conselho está ouvindo…") : !ready ? L.T("Aguarde a reunião") : words == 0 ? L.T("Escreva acima") : L.T("Pronto para falar"));
@@ -472,6 +509,7 @@ namespace CurrencyMod.Diplomacia.UI
         private void Update()
         {
             NativeUIKit.EnsureTextChange(field, fieldChanged ?? (fieldChanged = (f, t) => { if (feedbackIsError) { feedback = null; } nextRefresh = 0; }));
+            NativeUIKit.FixLayoutAfterPaste(field);
             if (wasShown && !Shown)
             {
                 NativeUIKit.ReleaseTextFocus(); // o jogo escondeu a tela sem passar por SetOpen
@@ -549,6 +587,8 @@ namespace CurrencyMod.Diplomacia.UI
             CapturedEmpire empire = capture.Empire(me);
             int era = empire?.EraIndex ?? 0;
             CouncilMeeting meeting = PlayerCouncil.Meeting(world, turn);
+            // Sem reunião neste turno, a seção mostra a última (o conselho se reúne a cada N turnos ou por audiência).
+            CouncilMeeting shown = meeting ?? PlayerCouncil.LastMeeting(world);
             if (meeting != null && meeting.Status == "pronta" && currentSection == Section.Meeting && !meeting.Seen)
             {
                 meeting.Seen = true;
@@ -564,7 +604,7 @@ namespace CurrencyMod.Diplomacia.UI
                     FillHistory(world, nation, capture, era, turn);
                     break;
                 default:
-                    FillMeeting(meeting, nation, capture, era, turn);
+                    FillMeeting(shown, nation, capture, era, turn);
                     break;
             }
             FillSide(meeting, turn);
@@ -589,7 +629,15 @@ namespace CurrencyMod.Diplomacia.UI
 
         private void FillMeeting(CouncilMeeting meeting, IaNation nation, WorldCapture capture, int era, int turn)
         {
-            if (meeting == null || meeting.Status != "pronta")
+            if (meeting == null)
+            {
+                sectionTitleLabel.Text = L.T("Reunião do conselho");
+                SetRowCount(1);
+                FillNotice(rows[0], L.T("O conselho ainda não se reuniu"), L.F("Sozinho no turno {0}", Math.Max(turn, PlayerCouncil.NextAutoTurn(IaModule.World))),
+                    L.T("O conselho se reúne sozinho de tempos em tempos. Se quiser ouvi-lo antes, convoque uma audiência à direita."));
+                return;
+            }
+            if (meeting.Status != "pronta")
             {
                 sectionTitleLabel.Text = L.F("Reunião do turno {0}", turn);
                 SetRowCount(1);
@@ -600,10 +648,19 @@ namespace CurrencyMod.Diplomacia.UI
                 FillNotice(rows[0], meeting == null || meeting.Status == "pensando" ? L.T("O conselho está se reunindo…") : L.T("A reunião falhou"), chip, text);
                 return;
             }
-            int count = meeting.Speeches.Count + meeting.Exchanges.Sum(e => 1 + e.Replies.Count + (e.Status == "pronta" ? 0 : 1)) + (meeting.Notes.Count > 0 ? 1 : 0);
-            sectionTitleLabel.Text = L.F("Reunião do turno {0} · {1} ministro(s) falaram", meeting.Turn, meeting.Speeches.Count - 1);
+            // Primeira linha: o resumo (o conselho de cada ministro numa linha, montado da própria resposta, sem chamada extra).
+            List<CouncilSpeech> advised = meeting.Speeches.Where(s => s.Portfolio != "mao" && !string.IsNullOrWhiteSpace(s.Advice ?? s.Text)).ToList();
+            int summary = advised.Count > 0 ? 1 : 0;
+            int count = summary + meeting.Speeches.Count + meeting.Exchanges.Sum(e => 1 + e.Replies.Count + (e.Status == "pronta" ? 0 : 1)) + (meeting.Notes.Count > 0 ? 1 : 0);
+            sectionTitleLabel.Text = meeting.Turn == turn
+                ? L.F("Reunião do turno {0} · {1} ministro(s) falaram", meeting.Turn, meeting.Speeches.Count - 1)
+                : L.F("Última reunião: turno {0} · a próxima é no turno {1}, ou quando você convocar", meeting.Turn, PlayerCouncil.NextAutoTurn(IaModule.World));
             SetRowCount(count);
             int index = 0;
+            if (summary > 0)
+            {
+                FillSummary(rows[index++], advised, nation, era);
+            }
             foreach (CouncilSpeech speech in meeting.Speeches)
             {
                 FillSpeech(rows[index++], speech, nation, capture, era, reply: false);
@@ -612,7 +669,7 @@ namespace CurrencyMod.Diplomacia.UI
             if (shownExchanges != null && exchangesKey != shownExchanges && meeting.Exchanges.Count > 0)
             {
                 // Fala nova ou resposta nova: a sua última fala sobe para o topo da lista (com as reações logo abaixo).
-                int last = meeting.Speeches.Count + meeting.Exchanges.Take(meeting.Exchanges.Count - 1).Sum(e => 1 + e.Replies.Count + (e.Status == "pronta" ? 0 : 1));
+                int last = summary + meeting.Speeches.Count + meeting.Exchanges.Take(meeting.Exchanges.Count - 1).Sum(e => 1 + e.Replies.Count + (e.Status == "pronta" ? 0 : 1));
                 scrollTarget = rows[last].Card;
                 scrollAt = Time.unscaledTime + 0.3f;
             }
@@ -642,6 +699,9 @@ namespace CurrencyMod.Diplomacia.UI
             row.Portfolio = null;
             Minister minister = nation.Council.FirstOrDefault(m => m.Portfolio == speech.Portfolio);
             Transform top = row.Card.Find("Table/Top");
+            B.HideChild(top, "StatsTable/Chip3");
+            row.Vacant = null;
+            row.Candidate = null;
             string name = minister != null ? $"{CouncilBank.TitleUi(minister.Portfolio, era, minister.Gender)} {minister.Name}" : CouncilBank.PortfolioNames.TryGetValue(speech.Portfolio, out string portfolioName) ? L.T(portfolioName) : speech.Portfolio;
             B.SetLabel(top, "TitleGroup/Title", MailScreen.Escape(name));
             B.SetChip(top, "StatsTable/PopCount", PortfolioName(speech.Portfolio));
@@ -665,7 +725,9 @@ namespace CurrencyMod.Diplomacia.UI
             }
             B.SetVisible(row.Button.transform, false);
             MailScreen.FitTitle(top, 12f);
-            B.HideOutputs(top);
+            Texture2D speakerPortrait = minister != null ? Portraits.Get(minister.Portfolio, era, minister.Gender) : null;
+            SetPortrait(row, speakerPortrait);
+            if (speakerPortrait != null) B.HideOutputs(top, PortraitCardHeight); else B.HideOutputs(top);
             B.Tip(top, "StatsTable/PopCount", PortfolioName(speech.Portfolio), minister != null ? MailScreen.Escape(TraitsUi(minister)) + (string.IsNullOrWhiteSpace(minister.Voice) ? string.Empty : "\n" + MailScreen.Escape(L.T(minister.Voice))) : string.Empty); // voz: do banco padrão, marcado com L.N
             string body = MailScreen.Escape(speech.Text);
             if (!string.IsNullOrWhiteSpace(speech.Advice))
@@ -679,21 +741,50 @@ namespace CurrencyMod.Diplomacia.UI
         {
             row.Portfolio = null;
             Transform top = row.Card.Find("Table/Top");
+            B.HideChild(top, "StatsTable/Chip3");
+            row.Vacant = null;
+            row.Candidate = null;
             B.SetLabel(top, "TitleGroup/Title", L.T("Você"));
             B.SetChip(top, "StatsTable/PopCount", L.F("Turno {0}", exchange.Turn));
             B.HideChild(top, "StatsTable/Fortification");
             B.HideChild(top, "StatsTable/ExtensionsCount");
             B.SetVisible(row.Button.transform, false);
             MailScreen.FitTitle(top, 12f);
+            SetPortrait(row, null);
             B.HideOutputs(top);
             B.Tip(top, "StatsTable/PopCount", L.T("Sua fala"), L.T("O que você disse ao conselho. As reações vêm logo abaixo."));
             MailScreen.SetBody(row.Body, $"<i>{MailScreen.Escape(exchange.PlayerText)}</i>");
+        }
+
+        /// <summary>Resumo da reunião: uma linha por ministro, com a pasta e o conselho dele.</summary>
+        private void FillSummary(Row row, List<CouncilSpeech> advised, IaNation nation, int era)
+        {
+            var lines = new List<string>();
+            foreach (CouncilSpeech speech in advised)
+            {
+                Minister minister = nation.Council.FirstOrDefault(m => m.Portfolio == speech.Portfolio);
+                string who = minister != null ? $"{PortfolioName(speech.Portfolio)} ({minister.Name})" : PortfolioName(speech.Portfolio);
+                string advice = !string.IsNullOrWhiteSpace(speech.Advice) ? speech.Advice : FirstSentence(speech.Text);
+                lines.Add($"• <c={Gold}>{MailScreen.Escape(who)}</c>: {MailScreen.Escape(advice)}");
+            }
+            FillNotice(row, L.T("Resumo do conselho"), L.F("{0} conselho(s)", advised.Count), string.Join("\n", lines));
+            B.Tip(row.Card.Find("Table/Top"), "StatsTable/PopCount", L.T("Resumo do conselho"), L.T("O conselho de cada ministro em uma linha. As falas completas vêm logo abaixo."));
+        }
+
+        private static string FirstSentence(string text)
+        {
+            text = (text ?? string.Empty).Trim();
+            int end = text.IndexOfAny(new[] { '.', '!', '?' });
+            return end > 0 && end < text.Length - 1 ? text.Substring(0, end + 1) : text;
         }
 
         private void FillNotice(Row row, string title, string chip, string text)
         {
             row.Portfolio = null;
             Transform top = row.Card.Find("Table/Top");
+            B.HideChild(top, "StatsTable/Chip3");
+            row.Vacant = null;
+            row.Candidate = null;
             B.SetLabel(top, "TitleGroup/Title", title);
             B.SetChip(top, "StatsTable/PopCount", chip ?? string.Empty);
             B.Tip(top, "StatsTable/PopCount", title, text ?? string.Empty);
@@ -701,6 +792,7 @@ namespace CurrencyMod.Diplomacia.UI
             B.HideChild(top, "StatsTable/ExtensionsCount");
             B.SetVisible(row.Button.transform, false);
             MailScreen.FitTitle(top, 12f);
+            SetPortrait(row, null);
             B.HideOutputs(top);
             MailScreen.SetBody(row.Body, text ?? string.Empty);
             B.SetVisible(row.Body, !string.IsNullOrEmpty(text));
@@ -708,24 +800,42 @@ namespace CurrencyMod.Diplomacia.UI
 
         private void FillMinisters(IaNation nation, WorldCapture capture, int era)
         {
-            List<Minister> council = nation.Council.ToList();
-            sectionTitleLabel.Text = L.F("Ministros · {0}", council.Count);
-            if (council.Count == 0)
+            IaModule module = IaModule.Instance;
+            int turn = module?.CurrentTurn ?? 0;
+            if (module != null)
             {
-                SetRowCount(1);
-                FillNotice(rows[0], L.T("O conselho ainda não se formou"), L.T("Espere a reunião"), L.T("Os ministros chegam com a primeira reunião do turno."));
-                return;
+                CouncilEngine.Ensure(IaModule.World, nation, capture, turn);
             }
-            SetRowCount(council.Count);
+            List<Minister> council = nation.Council.ToList();
+            List<string> vacant = CouncilBank.Portfolios.Where(p => p != "mao" && !council.Any(m => m.Portfolio == p)).ToList();
+            List<string> candidates = expandedSeat != null && nation.CouncilCandidates.TryGetValue(expandedSeat, out List<string> ids) ? ids : new List<string>();
+            int cost = CouncilEngine.AppointCost(era);
+            double influence = module != null ? capture.Empire(module.PlayerIndex)?.Influence ?? 0 : 0;
+            sectionTitleLabel.Text = L.F("Ministros · {0} no cargo · {1} pasta(s) vaga(s)", council.Count, vacant.Count);
+            SetRowCount(council.Count + vacant.Count + candidates.Count);
             if (confirmFire != null && Time.unscaledTime > confirmUntil)
             {
                 confirmFire = null;
+            }
+            int index = council.Count;
+            foreach (string seat in vacant)
+            {
+                FillVacant(rows[index++], seat, era, cost, seat == expandedSeat);
+                if (seat == expandedSeat)
+                {
+                    foreach (string id in candidates)
+                    {
+                        FillCandidate(rows[index++], seat, CouncilBank.ById(id), era, cost, influence);
+                    }
+                }
             }
             for (int i = 0; i < council.Count; i++)
             {
                 Minister minister = council[i];
                 Row row = rows[i];
                 row.Portfolio = minister.Portfolio;
+                row.Vacant = null;
+                row.Candidate = null;
                 Transform top = row.Card.Find("Table/Top");
                 B.SetLabel(top, "TitleGroup/Title", MailScreen.Escape($"{CouncilBank.TitleUi(minister.Portfolio, era, minister.Gender)} {minister.Name}"));
                 B.SetChip(top, "StatsTable/PopCount", PortfolioName(minister.Portfolio));
@@ -733,17 +843,28 @@ namespace CurrencyMod.Diplomacia.UI
                 B.SetChip(top, "StatsTable/Fortification", L.F("Credibilidade {0}", minister.Credibility));
                 B.SetVisible(top.Find("StatsTable/ExtensionsCount"), true);
                 B.SetChip(top, "StatsTable/ExtensionsCount", AffectionChip(minister.Affection));
+                // Veterano: o tempo no cargo rende na área da pasta (a Mão não tem).
+                int veteran = CouncilEngine.VeteranBonus(minister, turn);
+                string veteranChip = B.ExtraChip(top, 3);
+                B.SetVisible(top.Find(veteranChip), minister.Portfolio != "mao");
+                if (minister.Portfolio != "mao")
+                {
+                    B.SetChip(top, veteranChip, veteran > 0 ? $"<c={Gold}>" + L.F("Veterano +{0}%", veteran) + "</c>" : L.T("Novato"));
+                    B.Tip(top, veteranChip, L.T("Bônus de veterano"), L.F("Rende +1% a cada 5 turnos no cargo na área da pasta ({0}), até +10%. Demitir zera. Agora: +{1}%.", VeteranArea(minister.Portfolio), veteran));
+                }
                 bool confirming = confirmFire == minister.Portfolio;
                 B.SetVisible(row.Button.transform, true);
                 B.SetButtonText(row.Button, confirming ? L.T("Confirmar") : L.T("Demitir"));
                 MailScreen.FitTitle(top, row.Button.GetComponent<UITransform>().Width + 20f);
-                B.HideOutputs(top);
+                Texture2D ministerPortrait = Portraits.Get(minister.Portfolio, era, minister.Gender);
+                SetPortrait(row, ministerPortrait);
+                if (ministerPortrait != null) B.HideOutputs(top, PortraitCardHeight); else B.HideOutputs(top);
                 B.Tip(top, "StatsTable/PopCount", PortfolioName(minister.Portfolio), MailScreen.Escape(TraitsUi(minister)));
                 B.Tip(top, "StatsTable/Fortification", L.T("Credibilidade"), L.T("Sobe e desce com os números da pasta dele no jogo."));
                 B.Tip(top, "StatsTable/ExtensionsCount", L.T("Apreço por você"), L.F("{0:+0;-0}, de -100 a 100. Lealdade {1}, ambição {2}.", minister.Affection, minister.Loyalty, minister.Ambition));
                 B.Tip(row.Button.transform, string.Empty, confirming ? L.T("Confirmar a demissão") : L.T("Demitir"),
-                    confirming ? L.T("Clique de novo para demitir. Outra pessoa assume a pasta; o resto do conselho sente o golpe.")
-                    : L.T("Tira o ministro do cargo e põe outra pessoa no lugar. Pede confirmação."));
+                    confirming ? L.T("Clique de novo para demitir. A pasta fica vaga e o bônus de veterano zera; o resto do conselho sente o golpe.")
+                    : L.T("Tira o ministro do cargo; a pasta fica vaga até você nomear outro. Pede confirmação."));
                 var lines = new List<string>
                 {
                     L.F("Traços: {0}", MailScreen.Escape(TraitsUi(minister))),
@@ -845,7 +966,7 @@ namespace CurrencyMod.Diplomacia.UI
                 Transform top = card.Find("Table/Top");
                 UIButton button = top.Find("LiberateButton").GetComponent<UIButton>();
                 var row = new Row { Card = card, Body = MailScreen.AddBody(card), Button = button };
-                button.LeftClick += b => FireClicked(rows[index].Portfolio);
+                button.LeftClick += b => RowClicked(rows[index]);
                 rows.Add(row);
             }
             for (int i = 0; i < rows.Count; i++)
@@ -857,6 +978,164 @@ namespace CurrencyMod.Diplomacia.UI
                 }
             }
             B.SetVisible(cardSample, false);
+        }
+
+        /// <summary>Pasta vaga aberta na lista (mostra os 3 candidatos logo abaixo).</summary>
+        private string expandedSeat;
+
+        // ---------------- Retratos ----------------
+
+        private const float PortraitSize = 104f;
+        private const float PortraitMargin = 10f;
+        private static readonly Dictionary<Texture2D, Amplitude.Framework.Guid> portraitGuids = new Dictionary<Texture2D, Amplitude.Framework.Guid>();
+        /// <summary>Âncora esquerda original do título e dos chips de cada cartão (para tirar o retrato sem estragar o layout).</summary>
+        private readonly Dictionary<UITransform, UIBorderAnchor> originalLeft = new Dictionary<UITransform, UIBorderAnchor>();
+
+        /// <summary>
+        /// Retrato à esquerda do topo do cartão (ou nenhum, com null): o título e os chips andam para a direita e o topo cresce
+        /// para caber a imagem. A imagem é um clone do ícone do chip com material comum e a textura do retrato.
+        /// </summary>
+        private void SetPortrait(Row row, Texture2D texture)
+        {
+            Transform top = row.Card.Find("Table/Top");
+            Transform image = top.Find("Portrait");
+            bool show = texture != null;
+            if (image == null && show)
+            {
+                Transform picto = cardSample.Find("Table/Top/StatsTable/PopCount/Picto");
+                if (picto == null)
+                {
+                    return;
+                }
+                UITransform clone = top.GetComponent<UITransform>().InstantiateChild(picto, "Portrait");
+                image = clone.transform;
+                UIImage ui = image.GetComponent<UIImage>();
+                ui.Material = new UIMaterialId("Default"); // o ícone usa campo de distância; aqui é imagem comum
+                ui.Color = Color.white;
+                NativeUIKit.Place(image, PortraitMargin, PortraitMargin, PortraitSize, PortraitSize);
+            }
+            if (image != null)
+            {
+                B.SetVisible(image, show);
+                if (show)
+                {
+                    clonePortraitTexture(image.GetComponent<UIImage>(), texture);
+                }
+            }
+            foreach (string path in new[] { "TitleGroup", "StatsTable" })
+            {
+                UITransform part = top.Find(path)?.GetComponent<UITransform>();
+                if (part == null)
+                {
+                    continue;
+                }
+                if (!originalLeft.ContainsKey(part))
+                {
+                    originalLeft[part] = part.LeftAnchor;
+                }
+                part.LeftAnchor = show ? new UIBorderAnchor(true, 0f, PortraitMargin * 2 + PortraitSize + 6f, 0f) : originalLeft[part];
+            }
+        }
+
+        private static void clonePortraitTexture(UIImage image, Texture2D texture)
+        {
+            if (!portraitGuids.TryGetValue(texture, out Amplitude.Framework.Guid guid))
+            {
+                guid = UIRenderingManager.Instance.RegisterTexture(texture);
+                portraitGuids[texture] = guid;
+            }
+            image.Texture = new UITexture(guid, UITextureFlags.AlphaStraight, UITextureColorFormat.Srgb, texture);
+        }
+
+        /// <summary>Altura do topo de um cartão com retrato.</summary>
+        private const float PortraitCardHeight = PortraitSize + PortraitMargin * 2;
+
+        /// <summary>Onde o bônus de veterano de cada pasta rende (melhorias-jogando item 3).</summary>
+        internal static string VeteranArea(string portfolio)
+        {
+            switch (portfolio)
+            {
+                case "agricultura": return L.T("comida");
+                case "financas": return L.T("dinheiro");
+                case "guerra": return L.T("força de combate");
+                case "ciencia": return L.T("ciência");
+                case "obras": return L.T("indústria");
+                case "comercio": return L.T("dinheiro das rotas comerciais");
+                case "interior": return L.T("estabilidade");
+                case "fe": return L.T("força da sua religião nos seus territórios");
+                case "cultura":
+                case "chanceler": return L.T("influência");
+                case "espionagem": return L.T("chance de interceptar cartas");
+                default: return "—";
+            }
+        }
+
+        private void FillVacant(Row row, string seat, int era, int cost, bool open)
+        {
+            row.Portfolio = seat;
+            row.Vacant = seat;
+            row.Candidate = null;
+            Transform top = row.Card.Find("Table/Top");
+            B.SetLabel(top, "TitleGroup/Title", L.F("{0} · vaga", PortfolioName(seat)));
+            B.SetChip(top, "StatsTable/PopCount", L.F("Nomear custa {0} de influência", cost));
+            B.HideChild(top, "StatsTable/Fortification");
+            B.HideChild(top, "StatsTable/ExtensionsCount");
+            B.HideChild(top, "StatsTable/Chip3");
+            B.SetVisible(row.Button.transform, true);
+            B.SetButtonText(row.Button, open ? L.T("Fechar") : L.T("Escolher"));
+            MailScreen.FitTitle(top, row.Button.GetComponent<UITransform>().Width + 20f);
+            SetPortrait(row, null);
+            B.HideOutputs(top);
+            B.Tip(top, "StatsTable/PopCount", L.T("Pasta vaga"), L.T("Ninguém opina por esta pasta nem rende bônus de veterano. Os candidatos são os mesmos até a próxima era ou até você nomear alguém."));
+            B.Tip(row.Button.transform, string.Empty, L.T("Escolher"), L.T("Mostra os 3 candidatos desta pasta, logo abaixo."));
+            MailScreen.SetBody(row.Body, L.F("Bônus de quem ficar no cargo: {0}, +1% a cada 5 turnos, até +10%.", VeteranArea(seat)));
+        }
+
+        private void FillCandidate(Row row, string seat, Personality person, int era, int cost, double influence)
+        {
+            row.Portfolio = seat;
+            row.Vacant = null;
+            row.Candidate = person?.Id;
+            Transform top = row.Card.Find("Table/Top");
+            string title = person != null ? CouncilBank.TitleUi(seat, era, person.Gender) + " " + person.Name : "?";
+            B.SetLabel(top, "TitleGroup/Title", $"<c={Gold}>›</c> " + MailScreen.Escape(title));
+            B.SetChip(top, "StatsTable/PopCount", L.T("Candidato(a)"));
+            string traits = person != null ? string.Join(", ", person.Traits.Select(t => L.T(t))) : string.Empty;
+            B.SetVisible(top.Find("StatsTable/Fortification"), traits.Length > 0);
+            B.SetChip(top, "StatsTable/Fortification", MailScreen.Escape(traits));
+            B.HideChild(top, "StatsTable/ExtensionsCount");
+            B.HideChild(top, "StatsTable/Chip3");
+            bool affordable = influence >= cost;
+            B.SetVisible(row.Button.transform, person != null);
+            B.SetButtonText(row.Button, L.F("Nomear · {0}", cost));
+            MailScreen.FitTitle(top, row.Button.GetComponent<UITransform>().Width + 20f);
+            Texture2D candidatePortrait = person != null ? Portraits.Get(seat, era, person.Gender) : null;
+            SetPortrait(row, candidatePortrait);
+            if (candidatePortrait != null) B.HideOutputs(top, PortraitCardHeight); else B.HideOutputs(top);
+            B.Tip(top, "StatsTable/Fortification", L.T("Traços"), L.T("Os traços puxam o jeito de aconselhar: um prudente segura gastos, um ousado empurra para a frente."));
+            B.Tip(row.Button.transform, string.Empty, L.T("Nomear"), affordable
+                ? L.F("Nomeia para a pasta por {0} de influência. Os outros candidatos saem.", cost)
+                : L.F("Influência insuficiente: custa {0}, você tem {1}.", cost, Math.Floor(influence)));
+            MailScreen.SetBody(row.Body, person != null && !string.IsNullOrWhiteSpace(person.Voice) ? L.F("Voz: {0}", MailScreen.Escape(L.T(person.Voice))) : string.Empty);
+        }
+
+        private void RowClicked(Row row)
+        {
+            if (row.Candidate != null)
+            {
+                string result = PlayerCouncil.Appoint(row.Portfolio, row.Candidate);
+                SetFeedback(result.Replace("ok: ", string.Empty).Replace("erro: ", string.Empty), result.StartsWith("erro"));
+                expandedSeat = null;
+                nextRefresh = 0;
+                return;
+            }
+            if (row.Vacant != null)
+            {
+                expandedSeat = expandedSeat == row.Vacant ? null : row.Vacant;
+                nextRefresh = 0;
+                return;
+            }
+            FireClicked(row.Portfolio);
         }
 
         private void FireClicked(string portfolio)

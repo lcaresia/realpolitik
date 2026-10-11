@@ -150,7 +150,7 @@ namespace CurrencyMod.Diplomacia.UI
         private void RefreshTooltip(CouncilMeeting meeting)
         {
             tooltipTarget.Title = L.T("Conselho");
-            string state = meeting == null ? L.T("O conselho se reúne no começo de cada turno.")
+            string state = meeting == null ? L.F("O conselho está dispensado. Ele se reúne sozinho no turno {0}, ou quando você convocar uma audiência.", PlayerCouncil.NextAutoTurn(IaModule.World))
                 : meeting.Status == "pronta" ? (meeting.Seen ? L.T("A reunião deste turno já aconteceu.") : L.T("A reunião deste turno está pronta."))
                 : meeting.Status == "erro" ? L.T("A reunião deste turno falhou; abra para convocar de novo.")
                 : L.T("O conselho está se reunindo.");
@@ -185,7 +185,7 @@ namespace CurrencyMod.Diplomacia.UI
         {
             try
             {
-                if (!GameAccess.IsTurnMain() || CouncilScreen.IsOpen || MailScreen.IsOpen || NativeBankWindow.IsOpen || CentralBankWindow.IsOpen
+                if (!GameAccess.IsTurnMain() || CouncilScreen.IsOpen || AlliancesScreen.IsOpen || MailScreen.IsOpen || NativeBankWindow.IsOpen || CentralBankWindow.IsOpen
                     || TradePostWindow.Instance?.Shown == true)
                 {
                     return false;

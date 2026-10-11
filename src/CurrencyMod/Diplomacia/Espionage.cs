@@ -112,7 +112,8 @@ namespace CurrencyMod.Diplomacia
             int age = SpyAge(world, spy, capture.Turn);
             double time = age <= 0 ? 0.6 : age <= 2 ? 0.8 : 1.0;
 
-            double weight = local * mission * quality * coverage * time;
+            // Mestre dos Sussurros veterano: os espiões da nação pesam mais (melhorias-jogando item 3).
+            double weight = local * mission * quality * coverage * time * Council.VeteranEffects.Factor(spy.Owner, Council.VeteranEffects.Area.Spy);
             return weight > 0 ? new SpyWeight { Spy = spy, Weight = weight, Place = place, Mission = missionName } : null;
         }
 

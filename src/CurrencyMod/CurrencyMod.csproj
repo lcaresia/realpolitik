@@ -46,6 +46,7 @@
     <Reference Include="Amplitude"><HintPath>$(ManagedDir)Amplitude.dll</HintPath><Private>false</Private></Reference>
     <Reference Include="Amplitude.Framework"><HintPath>$(ManagedDir)Amplitude.Framework.dll</HintPath><Private>false</Private></Reference>
     <Reference Include="Amplitude.Graphics"><HintPath>$(ManagedDir)Amplitude.Graphics.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="Amplitude.Mercury.Terrain"><HintPath>$(ManagedDir)Amplitude.Mercury.Terrain.dll</HintPath><Private>false</Private></Reference>
     <Reference Include="Amplitude.Mercury.Firstpass"><HintPath>$(ManagedDir)Amplitude.Mercury.Firstpass.dll</HintPath><Private>false</Private></Reference>
     <Reference Include="Amplitude.Mercury.Data"><HintPath>$(ManagedDir)Amplitude.Mercury.Data.dll</HintPath><Private>false</Private></Reference>
     <Reference Include="Amplitude.UI"><HintPath>$(ManagedDir)Amplitude.UI.dll</HintPath><Private>false</Private></Reference>
@@ -63,6 +64,8 @@
     <EmbeddedResource Include="Diplomacia\Viewer\viewer.html" LogicalName="viewer.html" />
     <!-- Traduções da interface (L.cs): {"texto em português": "tradução"}. -->
     <EmbeddedResource Include="Lang\*.json" LogicalName="lang.%(Filename).json" />
+    <!-- Retratos dos ministros (tools\retratos): 256 px, um por cargo × época × gênero. -->
+    <EmbeddedResource Include="Retratos\*.jpg" LogicalName="retrato.%(Filename).jpg" />
   </ItemGroup>
 
   <!-- O núcleo fica fora de BepInEx\plugins: quem carrega (e recarrega a quente) é o CurrencyMod.Loader. -->

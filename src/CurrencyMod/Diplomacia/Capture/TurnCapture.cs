@@ -339,6 +339,17 @@ namespace CurrencyMod.Diplomacia.Capture
             {
                 city.Territories.AddRange(region.TerritoryIndices);
             }
+            try
+            {
+                for (int d = 0; d < settlement.Districts.Count && !city.HasHarbour; d++)
+                {
+                    District district = settlement.Districts[d];
+                    city.HasHarbour = district?.DistrictDefinition != null && district.DistrictDefinition.DistrictType == Amplitude.Mercury.Data.AI.DistrictType.Harbour;
+                }
+            }
+            catch (Exception)
+            {
+            }
             Empire original = settlement.OriginalEmpire.Entity;
             if (original != null)
             {

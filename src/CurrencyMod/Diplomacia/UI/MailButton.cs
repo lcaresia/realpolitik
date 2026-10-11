@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using Amplitude.Mercury.UI;
 using Amplitude.Mercury.UI.Helpers;
 using Amplitude.Mercury.UI.Tooltips;
@@ -123,26 +124,45 @@ namespace CurrencyMod.Diplomacia.UI
             Plugin.Log.LogInfo("Botão do Correio Diplomático criado na barra de controle.");
         }
 
+        private bool shownDown;
+
         private void RefreshBadge()
         {
             int count = IaModule.Instance?.PlayerUnreadCount() ?? 0;
-            if (count == shownCount)
+            // IA desconectada (fila inteira falhando): o selo vira um X vermelho até ela voltar.
+            bool down = Llm.Providers.ProviderRouter.AllDown;
+            if (count == shownCount && down == shownDown && !down)
             {
                 return;
             }
             shownCount = count;
+            shownDown = down;
             RefreshTooltip(count);
             if (badge == null)
             {
                 return;
             }
-            NativeUIKit.SetBadge(badge, count <= 0 ? null : count > 9 ? "9+" : count.ToString());
+            NativeUIKit.SetBadge(badge, down ? "X" : count <= 0 ? null : count > 9 ? "9+" : count.ToString());
         }
 
         private void RefreshTooltip(int unread)
         {
             tooltipTarget.Title = L.T("Correio Diplomático");
             string news = unread == 0 ? L.T("Nenhuma carta nova.") : unread == 1 ? L.T("1 carta nova.") : L.F("{0} cartas novas.", unread);
+            IaModule module = IaModule.Instance;
+            int cites = module == null ? 0 : module.PlayerInbox().Count(l => l.IsPublic && !l.ReadBy.Contains(module.PlayerIndex)
+                && Mentions.Cites(l, Capture.TurnCapture.Latest, IaModule.World, module.PlayerIndex));
+            if (cites > 0)
+            {
+                news += " " + (cites == 1 ? L.T("Um comunicado público cita você.") : L.F("{0} comunicados públicos citam você.", cites));
+            }
+            if (Llm.Providers.ProviderRouter.AllDown)
+            {
+                int minutes = Llm.Providers.ProviderRouter.MinutesToProbe;
+                news = "<c=E8685E>" + L.T("IA desconectada") + "</c> — " + L.F("nenhum provedor respondeu ({0}).", Llm.Providers.ProviderRouter.AllDownReason ?? "?") + " "
+                    + (minutes <= 0 ? L.T("Testando de novo agora.") : L.F("Nova tentativa em {0} min.", minutes)) + " "
+                    + L.T("Enquanto isso, a IA nativa do jogo joga pelas nações e as cartas ficam sem resposta.") + "\n" + news;
+            }
             tooltipTarget.Description = news + "\n" + L.T("Leia e responda as cartas das nações, escreva para elas ou recuse a correspondência de alguém.");
         }
 

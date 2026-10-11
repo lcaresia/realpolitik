@@ -12,6 +12,8 @@ namespace CurrencyMod
         public double ExchangeValue;
         public double InflationRate;
         public double InterestRate;
+        /// <summary>Acessos a recursos estratégicos e de luxo (tipo → quantidade), só do jogador humano; null em saves antigos.</summary>
+        public Dictionary<int, int> Resources;
     }
 
     /// <summary>Uma compra de recursos por rota comercial num turno: o comprador paga a manutenção ao vendedor (na moeda do comprador).</summary>
@@ -156,6 +158,8 @@ namespace CurrencyMod
         public List<TollRecord> LastTolls = new List<TollRecord>();
         /// <summary>Preço geral de pedágio de cada dono para cada império (o preço de cada posto fica na TradeRule).</summary>
         public List<TollPrice> TollPrices = new List<TollPrice>();
+        /// <summary>Pagar ou desviar dos pedágios de cada dono, escolhido por quem paga (IA de linguagem).</summary>
+        public List<TollChoice> TollChoices = new List<TollChoice>();
         public int LastTradeTurn = -1;
         /// <summary>Histórico do comércio entre impérios (últimos MaxTradeHistory turnos), gravado no fim de cada turno.</summary>
         public List<TradePoint> TradeHistory = new List<TradePoint>();
@@ -233,6 +237,7 @@ namespace CurrencyMod
                 world.TradeIncidents = world.TradeIncidents ?? new List<TradeIncident>();
                 world.LastTolls = world.LastTolls ?? new List<TollRecord>();
                 world.TollPrices = world.TollPrices ?? new List<TollPrice>();
+                world.TollChoices = world.TollChoices ?? new List<TollChoice>();
                 world.TradeHistory = world.TradeHistory ?? new List<TradePoint>();
                 // Saves gravados antes do livro de dinheiro tinham só os Flows: a manutenção deles vira movimento de dinheiro.
                 foreach (TradePoint point in world.TradeHistory)

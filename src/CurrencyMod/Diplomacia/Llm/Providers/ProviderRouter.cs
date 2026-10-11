@@ -29,6 +29,48 @@ namespace CurrencyMod.Diplomacia.Llm.Providers
         private static string lastUsed;
         private static bool allDownNotified;
 
+        // ---------------- IA desconectada (melhorias-jogando item 19) ----------------
+        // Quando a fila inteira falha, a IA fica "desconectada": nações e conselho param de chamar a API e só uma chamada de
+        // teste sai de tempos em tempos (2, 4, 8, até 10 min). A primeira resposta boa reconecta. O aviso na tela aparece
+        // uma vez por queda (e não de novo se a IA cair outra vez em menos de 15 min); o botão das cartas mostra um X vermelho.
+        private static volatile bool allDown;
+        private static DateTime allDownSinceUtc;
+        private static DateTime nextProbeUtc;
+        private static TimeSpan probeInterval = TimeSpan.FromMinutes(2);
+        private static DateTime lastDownPopupUtc = DateTime.MinValue;
+        private static string allDownReason;
+
+        /// <summary>Todos os provedores da fila falharam na última tentativa e nenhum respondeu desde então.</summary>
+        internal static bool AllDown => allDown;
+
+        internal static string AllDownReason => allDownReason;
+
+        internal static DateTime AllDownSinceUtc => allDownSinceUtc;
+
+        /// <summary>Minutos até a próxima chamada de teste (0 = pode testar agora).</summary>
+        internal static int MinutesToProbe => allDown ? Math.Max(0, (int)Math.Ceiling((nextProbeUtc - DateTime.UtcNow).TotalMinutes)) : 0;
+
+        /// <summary>
+        /// Pode chamar a API agora? Conectada: sempre. Desconectada: só uma chamada de teste quando o prazo vence (quem pega
+        /// a vez segura o próximo teste por 3 min, até a resposta chegar e remarcar).
+        /// </summary>
+        internal static bool MayCall()
+        {
+            if (!allDown)
+            {
+                return true;
+            }
+            lock (Gate)
+            {
+                if (DateTime.UtcNow < nextProbeUtc)
+                {
+                    return false;
+                }
+                nextProbeUtc = DateTime.UtcNow.AddMinutes(3);
+                return true;
+            }
+        }
+
         /// <summary>Avisos para a thread principal (Runtime.Event, aviso na tela).</summary>
         internal static readonly ConcurrentQueue<string> Notices = new ConcurrentQueue<string>();
 
@@ -219,6 +261,14 @@ namespace CurrencyMod.Diplomacia.Llm.Providers
             lock (Gate)
             {
                 allDownNotified = false;
+                if (allDown)
+                {
+                    allDown = false;
+                    probeInterval = TimeSpan.FromMinutes(2);
+                    lastUsed = provider.Id;
+                    Notices.Enqueue(L.F("IA reconectada: usando {0}.", provider.Name));
+                    return;
+                }
                 if (lastUsed == provider.Id)
                 {
                     return;
@@ -239,13 +289,26 @@ namespace CurrencyMod.Diplomacia.Llm.Providers
             lock (Gate)
             {
                 lastUsed = null;
-                if (allDownNotified)
+                allDownReason = string.Join("; ", failed);
+                if (allDown)
+                {
+                    // Teste que falhou: espera o dobro até o próximo (no máximo 10 min).
+                    probeInterval = TimeSpan.FromMinutes(Math.Min(10, probeInterval.TotalMinutes * 2));
+                    nextProbeUtc = DateTime.UtcNow + probeInterval;
+                    return;
+                }
+                allDown = true;
+                allDownSinceUtc = DateTime.UtcNow;
+                probeInterval = TimeSpan.FromMinutes(2);
+                nextProbeUtc = DateTime.UtcNow + probeInterval;
+                if (allDownNotified || DateTime.UtcNow - lastDownPopupUtc < TimeSpan.FromMinutes(15))
                 {
                     return;
                 }
                 allDownNotified = true;
-                Notices.Enqueue("!" + L.F("Nenhum provedor de IA respondeu ({0}). A IA nativa do jogo joga pelas nações até um deles voltar.",
-                    string.Join("; ", failed)));
+                lastDownPopupUtc = DateTime.UtcNow;
+                Notices.Enqueue("!" + L.F("A IA está desconectada: nenhum provedor respondeu ({0}). A IA nativa do jogo joga pelas nações; o mod testa de novo sozinho de tempos em tempos. O X vermelho no botão das cartas some quando ela voltar.",
+                    allDownReason));
             }
         }
 
@@ -275,6 +338,9 @@ namespace CurrencyMod.Diplomacia.Llm.Providers
                 }
                 lastUsed = null;
                 allDownNotified = false;
+                // Fila ou credenciais mudaram: tenta de novo na hora.
+                nextProbeUtc = DateTime.MinValue;
+                probeInterval = TimeSpan.FromMinutes(2);
             }
         }
     }

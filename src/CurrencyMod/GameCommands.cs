@@ -122,7 +122,7 @@ namespace CurrencyMod
                 case "estado":
                     return State();
                 case "saves":
-                    return ListSaves();
+                    return rest == "reler" ? RescanSaves() : ListSaves();
                 case "carregar":
                     return Load(rest);
                 case "salvar":
@@ -180,7 +180,18 @@ namespace CurrencyMod
                 case "congresso":
                     return Congress(rest);
                 case "rotas":
-                    return TradeBlockade.Describe((rest ?? string.Empty).Trim() == "detalhe");
+                {
+                    string what = (rest ?? string.Empty).Trim();
+                    if (what.StartsWith("cores"))
+                    {
+                        // "jogo rotas cores E5": pinta as rotas como se o jogador fosse o E5 (teste); "jogo rotas cores" volta ao normal.
+                        string arg = what.Substring(5).Trim().TrimStart('E', 'e');
+                        RouteVisuals.LabelAll = arg == "todas";
+                        RouteVisuals.ViewAs = int.TryParse(arg, out int viewAs) ? viewAs : -1;
+                        return RouteVisuals.ViewAs >= 0 ? $"cores das rotas vistas pelo E{RouteVisuals.ViewAs} (saia e entre na visão de comércio)" : "cores das rotas do jogador local";
+                    }
+                    return TradeBlockade.Describe(what == "detalhe");
+                }
                 case "civico":
                 {
                     // "jogo civico E# NomeDoCivico": a lei de um império agora (escolha ativa, situação, turno da última troca);
@@ -824,6 +835,21 @@ namespace CurrencyMod
         private static IGameSerializationService Serialization()
         {
             return Services.GetService<IGameSerializationService>() ?? throw new InvalidOperationException("serviço de saves ainda não está pronto");
+        }
+
+        /// <summary>
+        /// "jogo saves reler": relê a pasta de saves atual (a mesma troca de diretório que o botão de nuvem da tela de saves faz),
+        /// para o jogo enxergar um save copiado com o jogo aberto. Não muda a escolha local/nuvem do jogador.
+        /// </summary>
+        private static string RescanSaves()
+        {
+            var storage = Services.GetService<Amplitude.Framework.Storage.IStorageManagementService>() as Amplitude.Framework.Storage.LocalDrive.LocalDriveStorageManager;
+            if (storage == null)
+            {
+                return "erro: armazenamento de saves não é a pasta local";
+            }
+            storage.ChangeDirectory(Amplitude.Mercury.Application.GameSaveDirectory);
+            return "ok: pasta relida (" + Amplitude.Mercury.Application.GameSaveDirectory + "), " + Serialization().EnumerateGameSaveFiles().Count() + " saves";
         }
 
         private static string ListSaves()

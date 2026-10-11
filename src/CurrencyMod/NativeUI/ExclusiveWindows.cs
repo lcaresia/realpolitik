@@ -44,6 +44,10 @@ namespace CurrencyMod.NativeUI
                 {
                     Diplomacia.UI.CouncilScreen.SetOpen(false);
                 }
+                if (opening != Diplomacia.UI.AlliancesScreen.Instance)
+                {
+                    Diplomacia.UI.AlliancesScreen.SetOpen(false);
+                }
                 if (opening != Diplomacia.UI.MailScreen.Instance)
                 {
                     Diplomacia.UI.MailScreen.SetOpen(false);

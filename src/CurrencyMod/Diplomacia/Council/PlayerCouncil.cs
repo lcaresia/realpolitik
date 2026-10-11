@@ -51,6 +51,8 @@ namespace CurrencyMod.Diplomacia.Council
         public List<string> NotesUi = new List<string>();
         public bool Seen;
         public double CostUsd;
+        /// <summary>Audiência pedida pelo líder (senão, a reunião automática do intervalo).</summary>
+        public bool Requested;
     }
 
     /// <summary>
@@ -143,15 +145,20 @@ namespace CurrencyMod.Diplomacia.Council
             CouncilMeeting meeting = Meeting(world, turn);
             if (meeting == null)
             {
-                meeting = new CouncilMeeting { Turn = turn };
-                world.PlayerCouncil.Add(meeting);
-                while (world.PlayerCouncil.Count > MaxMeetingsKept)
+                // Reunião sozinha só a cada ConselhoIntervaloTurnos; entre uma e outra, só por audiência (Convene).
+                if (turn < NextAutoTurn(world))
                 {
-                    world.PlayerCouncil.RemoveAt(0);
+                    return;
                 }
-                IaModule.Instance?.MarkDirty();
+                meeting = Open(world, turn, requested: false);
             }
             if (inFlight || Time.unscaledTime < retryAt)
+            {
+                return;
+            }
+            bool pending = meeting.Status == "pensando" || (meeting.Status == "erro" && meeting.Attempts < 3) || meeting.Exchanges.Any(e => e.Status == "pensando");
+            // IA desconectada: a reunião espera (sem gastar tentativas) até a chamada de teste da fila.
+            if (pending && Llm.Providers.ProviderRouter.AllDown && !Llm.Providers.ProviderRouter.MayCall())
             {
                 return;
             }
@@ -166,6 +173,51 @@ namespace CurrencyMod.Diplomacia.Council
             {
                 DispatchExchange(world, capture, meeting, waiting, player);
             }
+        }
+
+        /// <summary>Última reunião (de qualquer turno), ou null se o conselho nunca se reuniu.</summary>
+        internal static CouncilMeeting LastMeeting(IaWorld world) => world?.PlayerCouncil.LastOrDefault();
+
+        /// <summary>Turno da próxima reunião automática: a última reunião (automática ou audiência) + o intervalo.</summary>
+        internal static int NextAutoTurn(IaWorld world)
+        {
+            CouncilMeeting last = LastMeeting(world);
+            return last == null ? 0 : last.Turn + Math.Max(1, IaConfig.PlayerCouncilInterval.Value);
+        }
+
+        private static CouncilMeeting Open(IaWorld world, int turn, bool requested)
+        {
+            var meeting = new CouncilMeeting { Turn = turn, Requested = requested };
+            world.PlayerCouncil.Add(meeting);
+            while (world.PlayerCouncil.Count > MaxMeetingsKept)
+            {
+                world.PlayerCouncil.RemoveAt(0);
+            }
+            IaModule.Instance?.MarkDirty();
+            return meeting;
+        }
+
+        /// <summary>O líder pede audiência: o conselho se reúne neste turno (1 chamada) e a contagem recomeça.</summary>
+        internal static string Convene()
+        {
+            IaModule module = IaModule.Instance;
+            IaWorld world = IaModule.World;
+            if (module == null || world == null || module.PlayerIndex < 0 || module.CurrentTurn < 0)
+            {
+                return "erro: " + L.T("sem partida");
+            }
+            if (!IaConfig.PlayerCouncil.Value || !IaConfig.Councils.Value)
+            {
+                return "erro: " + L.T("o conselho do jogador está desligado no .cfg");
+            }
+            CouncilMeeting meeting = Meeting(world, module.CurrentTurn);
+            if (meeting != null)
+            {
+                return meeting.Status == "erro" ? Retry() : "erro: " + L.T("o conselho já está reunido neste turno");
+            }
+            Open(world, module.CurrentTurn, requested: true);
+            retryAt = 0;
+            return "ok: " + L.T("o conselho foi convocado e já está se reunindo");
         }
 
         /// <summary>
@@ -241,7 +293,11 @@ namespace CurrencyMod.Diplomacia.Council
             }
             CouncilMeeting meeting = Meeting(world, module.CurrentTurn);
             text = (text ?? string.Empty).Replace("<", "‹").Replace(">", "›").Trim();
-            if (meeting == null || meeting.Status != "pronta")
+            if (meeting == null)
+            {
+                return "erro: " + L.T("o conselho não está reunido; convoque uma audiência");
+            }
+            if (meeting.Status != "pronta")
             {
                 return "erro: " + L.T("o conselho ainda não se reuniu neste turno");
             }
@@ -292,18 +348,69 @@ namespace CurrencyMod.Diplomacia.Council
             {
                 return "erro: " + L.T("ninguém nessa pasta");
             }
-            Minister newcomer = nation.Council.FirstOrDefault(m => m.Portfolio == portfolio);
+            // Só a Mão é trocada na hora; as outras pastas ficam vagas até o jogador nomear alguém.
+            Minister newcomer = portfolio == "mao" ? nation.Council.FirstOrDefault(m => m.Portfolio == portfolio) : null;
             int era = capture.Empire(module.PlayerIndex)?.EraIndex ?? 0;
             CouncilMeeting noted = Meeting(world, module.CurrentTurn);
             if (noted != null)
             {
                 noted.Notes.Add(result + (newcomer != null ? $" (ficha do novo: {Card(newcomer, era, capture)})" : string.Empty));
-                noted.NotesUi.Add(L.F("Demissão de {0}; no lugar entra {1}", formerUi, newcomer?.Name ?? L.T("ninguém"))
-                    + (newcomer != null ? " (" + L.F("ficha do novo: {0}", CardUi(newcomer, era)) + ")" : string.Empty));
+                noted.NotesUi.Add(newcomer != null
+                    ? L.F("Demissão de {0}; no lugar entra {1}", formerUi, newcomer.Name) + " (" + L.F("ficha do novo: {0}", CardUi(newcomer, era)) + ")"
+                    : L.F("Demissão de {0}; a pasta fica vaga", formerUi));
             }
             IaModule.Runtime.Event("Conselho do jogador: " + result + ".");
             module.MarkDirty();
             return "ok: " + result;
+        }
+
+        /// <summary>
+        /// O jogador nomeia um dos 3 candidatos de uma pasta vaga (tela do conselho ou "ia conselho nomear pasta id"). Custa
+        /// influência (CouncilEngine.AppointCost), descontada pela ordem do próprio jogo.
+        /// </summary>
+        internal static string Appoint(string portfolio, string personalityId)
+        {
+            IaModule module = IaModule.Instance;
+            IaWorld world = IaModule.World;
+            WorldCapture capture = TurnCapture.Latest;
+            if (module == null || world == null || capture == null || module.PlayerIndex < 0)
+            {
+                return "erro: " + L.T("sem partida");
+            }
+            portfolio = (portfolio ?? string.Empty).Trim().ToLowerInvariant();
+            CapturedEmpire me = capture.Empire(module.PlayerIndex);
+            int cost = CouncilEngine.AppointCost(me?.EraIndex ?? 0);
+            if ((me?.Influence ?? 0) < cost)
+            {
+                return "erro: " + L.F("influência insuficiente: nomear custa {0}", cost);
+            }
+            IaNation nation = world.Ensure(module.PlayerIndex);
+            Minister minister = CouncilEngine.Appoint(world, nation, capture, portfolio, personalityId, module.CurrentTurn, out string problem);
+            if (minister == null)
+            {
+                return "erro: " + CouncilBank.ErrorUi(problem);
+            }
+            ChargeInfluence(module.PlayerIndex, cost);
+            int era = me?.EraIndex ?? 0;
+            string who = CouncilBank.TitleUi(minister.Portfolio, era, minister.Gender) + " " + minister.Name;
+            CouncilMeeting noted = Meeting(world, module.CurrentTurn);
+            if (noted != null)
+            {
+                noted.Notes.Add($"o líder nomeou {CouncilEngine.Title(minister, era)} {minister.Name} (ficha: {Card(minister, era, capture)})");
+                noted.NotesUi.Add(L.F("Nomeação: {0}", who) + " (" + CardUi(minister, era) + ")");
+            }
+            IaModule.Runtime.Event($"Conselho do jogador: nomeado {minister.Name} ({minister.Portfolio}) por {cost} de influência.");
+            module.MarkDirty();
+            return "ok: " + L.F("{0} nomeado(a) por {1} de influência", who, cost);
+        }
+
+        /// <summary>Desconta influência pela ordem do jogo (a mesma da tela de trapaças, com valor negativo).</summary>
+        internal static void ChargeInfluence(int empire, int amount)
+        {
+            if (amount > 0)
+            {
+                Amplitude.Mercury.Sandbox.SandboxManager.PostOrder(new Amplitude.Mercury.Interop.OrderGainInfluence { Gain = -amount }, empire);
+            }
         }
 
         /// <summary>Convoca de novo a reunião que falhou.</summary>
@@ -538,26 +645,32 @@ namespace CurrencyMod.Diplomacia.Council
                 Plugin.Log?.LogWarning($"[IA] Conselho do jogador, turno {meeting.Turn}: {meeting.Error}");
                 return;
             }
+            // Frases com mecanismo que o jogo não tem saem (refazer a reunião custaria outra chamada).
+            var dropped = new List<string>();
             var speeches = new List<CouncilSpeech>
             {
-                new CouncilSpeech { Portfolio = "mao", Text = WithoutIntro(Clean((string)result.Json["mao"]), nation, "mao") },
+                new CouncilSpeech { Portfolio = "mao", Text = WithoutIntro(Ground(Clean((string)result.Json["mao"]), dropped), nation, "mao") },
             };
             var seen = new HashSet<string> { "mao" };
             int max = Math.Max(1, IaConfig.PlayerCouncilSpeakers.Value);
             foreach (JObject item in (result.Json["falas"] as JArray ?? new JArray()).OfType<JObject>())
             {
                 string portfolio = Portfolio(Text(item["pasta"]));
-                string text = Clean(Text(item["texto"]));
+                string text = Ground(Clean(Text(item["texto"])), dropped);
                 if (portfolio == null || seen.Contains(portfolio) || string.IsNullOrEmpty(text) || !nation.Council.Any(m => m.Portfolio == portfolio))
                 {
                     continue;
                 }
                 seen.Add(portfolio);
-                speeches.Add(new CouncilSpeech { Portfolio = portfolio, Text = WithoutIntro(text, nation, portfolio), Advice = Clean(Text(item["conselho"])) });
+                speeches.Add(new CouncilSpeech { Portfolio = portfolio, Text = WithoutIntro(text, nation, portfolio), Advice = Ground(Clean(Text(item["conselho"])), dropped) });
                 if (speeches.Count > max)
                 {
                     break;
                 }
+            }
+            if (dropped.Count > 0)
+            {
+                Plugin.Log?.LogInfo($"[IA] Conselho do jogador, turno {meeting.Turn}: {dropped.Count} frase(s) com mecanismo inventado removida(s): {string.Join(" | ", dropped)}");
             }
             meeting.Speeches = speeches;
             meeting.Raw = result.Raw;
@@ -581,7 +694,7 @@ namespace CurrencyMod.Diplomacia.Council
             foreach (JObject item in (result.Json["falas"] as JArray ?? new JArray()).OfType<JObject>())
             {
                 string portfolio = Portfolio(Text(item["pasta"]));
-                string text = Clean(Text(item["texto"]));
+                string text = Ground(Clean(Text(item["texto"])), new List<string>());
                 if (portfolio == null || string.IsNullOrEmpty(text) || !nation.Council.Any(m => m.Portfolio == portfolio))
                 {
                     continue;
@@ -700,6 +813,45 @@ namespace CurrencyMod.Diplomacia.Council
             return rest.Length > 0 ? char.ToUpperInvariant(rest[0]) + rest.Substring(1) : text;
         }
 
+        /// <summary>
+        /// Mecanismos que o conselho já inventou (turno 32: "só com reciprocidade plena de escribas e costumes"). Somam-se
+        /// às mercadorias e mecanismos do Grounding.NotInGame, que valem para as cartas das nações.
+        /// </summary>
+        private static readonly HashSet<string> CouncilInvented = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        {
+            "reciprocidade", "escribas", "alfândega", "alfândegas", "alfandega", "aduana", "aduanas", "embaixada", "embaixadas",
+            "refém", "reféns", "tribunal", "tribunais", "casamento", "dote",
+            "reciprocity", "scribes", "customs", "embassy", "embassies", "hostage", "hostages", "tribunal", "marriage", "dowry",
+            "reciprocidad", "escribas", "embajada", "embajadas", "rehén", "rehenes",
+            "réciprocité", "scribes", "douane", "douanes", "ambassade", "ambassades", "otage", "otages", "mariage", "dot",
+            "gegenseitigkeit", "schreiber", "zoll", "zölle", "botschaft", "botschaften", "geisel", "geiseln", "heirat", "mitgift",
+        };
+
+        /// <summary>Vocabulário real do dossiê da última reunião (nomes do jogo, recursos do mapa): "Seda" no mapa vale.</summary>
+        private static HashSet<string> knownWords = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+        /// <summary>Tira as frases que citam mecanismo inventado. Devolve o texto sem elas (vazio se não sobrar nada).</summary>
+        internal static string Ground(string text, List<string> dropped)
+        {
+            if (string.IsNullOrWhiteSpace(text))
+            {
+                return text;
+            }
+            var kept = new List<string>();
+            foreach (string sentence in System.Text.RegularExpressions.Regex.Split(text, @"(?<=[.!?…])\s+"))
+            {
+                List<string> bad = Grounding.Words(sentence).Where(w => CouncilInvented.Contains(w) && !knownWords.Contains(w)).ToList();
+                bad.AddRange(Grounding.NotInGameWords(sentence, knownWords));
+                if (bad.Count > 0)
+                {
+                    dropped.Add($"\"{sentence.Trim()}\" ({string.Join(", ", bad.Distinct())})");
+                    continue;
+                }
+                kept.Add(sentence);
+            }
+            return string.Join(" ", kept).Trim();
+        }
+
         private static string Clean(string text)
         {
             text = (text ?? string.Empty).Replace("<", "‹").Replace(">", "›").Trim();
@@ -734,6 +886,7 @@ namespace CurrencyMod.Diplomacia.Council
                 return false;
             }
             IaNation nation = world.Ensure(player);
+            knownWords = build.Context?.KnownWords ?? new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             system = SystemPrompt(me);
             user = CleanDossier(build.Text) + "\n\n" + Roster(nation, capture, me) + "\n" + MeetingRequest(Math.Max(1, IaConfig.PlayerCouncilSpeakers.Value));
             promptTurn = turn;
@@ -762,8 +915,13 @@ namespace CurrencyMod.Diplomacia.Council
             text.AppendLine("- Só fatos do dossiê: números, nações, líderes, cidades, territórios, exércitos, cartas e exigências que aparecem lá. Nada inventado: sem enviados, boatos, recursos ou acontecimentos que não estão no dossiê. Se a pasta não tem nada a dizer, o ministro fica calado.");
             text.AppendLine("- \"Você\" no dossiê é o líder. O dossiê foi escrito para outro sistema: nomes de ferramentas (como responder_exigencias, ordem_exercito ou definir_foco) não existem para o conselho. Os ministros falam do que o líder faz na tela do jogo: aceitar ou recusar exigências, propor um acordo, declarar guerra ou propor paz, mover tropas, mudar a produção de uma cidade, escrever uma carta, patrocinar um povo independente.");
             text.AppendLine("- Cada conselho é uma ação concreta que o líder pode fazer agora ou nos próximos turnos.");
+            text.AppendLine("- Ação concreta é só o que o jogo tem: os acordos do jogo (econômico, informação, cultural, militar, aliança), paz, guerra, presente de dinheiro, influência, cidade ou território, "
+                + "aceitar ou recusar exigências e propostas, mover ou recolher exército, mudar a produção ou o foco, pedágio ou bloqueio nos postos comerciais, recurso pela rota comercial, carta. "
+                + "Acordo do jogo não tem cláusula: é proposto, aceito ou recusado, sem condição extra (nada de \"só com reciprocidade de…\").");
+            text.AppendLine("- Não invente pessoas, ofícios, lugares, mercadorias, cerimônias, regras nem mecanismos que o jogo não tem (escribas enviados, embaixadas, alfândegas, reciprocidade de costumes, troca de prisioneiros, reféns, tribunais, casamentos). "
+                + "O título de um ministro (Escriba-Mor, Mestre dos Ritos...) é só o cargo dele: não vira mecanismo do jogo.");
             text.AppendLine("- Os códigos de nação, cidade, exército e território (E3, C14, A7, T31) ajudam o líder a achar as coisas: use com o nome, como \"Ḫattuša (T106)\". "
-                + "Os códigos de queixa (G1, G2...) e de povo independente (M4) não aparecem na tela do jogo: descreva a queixa (\"a queixa pelo ataque sem provocação\") ou diga o nome do povo.");
+                + "Os códigos de queixa (G1, G2...), de povo independente (M4) e do Congresso (K6, V2, I3, e o E da nação no voto) não aparecem na tela do jogo: descreva a queixa (\"a queixa pelo ataque sem provocação\"), diga o nome do povo ou descreva a votação (\"vote a seu favor na disputa com os Nórdicos\").");
             text.AppendLine();
             text.AppendLine("Pense pouco: o que mudou, o que mais pesa, quem fala. Não releia nem resuma o dossiê no raciocínio; depois escreva o json.");
             return text.ToString();
@@ -828,6 +986,13 @@ namespace CurrencyMod.Diplomacia.Council
                 {
                     text.AppendLine("  Números da pasta: " + minister.Opinion + (minister.Advice != null ? " Tende a aconselhar: " + AdviceText(minister.Advice, capture) + "." : string.Empty));
                 }
+            }
+            // Pastas vagas: ninguém fala por elas; a Mão pode sugerir nomear alguém (o líder escolhe na tela do conselho).
+            List<string> vacant = CouncilBank.Portfolios.Where(p => p != "mao" && !nation.Council.Any(m => m.Portfolio == p)).ToList();
+            if (vacant.Count > 0)
+            {
+                text.AppendLine($"Pastas vagas (o líder nomeia na tela do conselho, por {CouncilEngine.AppointCost(era)} de influência): "
+                    + string.Join(", ", vacant.Select(p => CouncilBank.PortfolioNames.TryGetValue(p, out string name) ? name : p)) + ".");
             }
             return text.ToString();
         }

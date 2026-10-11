@@ -323,6 +323,22 @@ namespace CurrencyMod.Diplomacia
                 }
             }
             ProcessPlayerInbox();
+            // Bônus de veterano dos ministros: vale mesmo com a IA de linguagem desligada (o conselho é do mod).
+            Council.VeteranEffects.Publish(World, turn);
+            try
+            {
+                // Blocos (item 16): passo do turno e o retrato que o pedágio e a defesa mútua leem na thread da simulação.
+                if (Blocs.BlocEngine.Step(World, turn))
+                {
+                    dirty = true;
+                }
+                Blocs.BlocIndex.Publish(World);
+                Blocs.BlocCongress.Apply(World, capture, turn, e => capture?.Empires.FirstOrDefault(x => x != null && x.Index == e)?.Human ?? e == playerIndex);
+            }
+            catch (Exception ex)
+            {
+                Plugin.Log.LogWarning($"Blocos: {ex.Message}");
+            }
             UpdateLocks(turn);
             ResumeMissions(turn);
 
@@ -547,6 +563,12 @@ namespace CurrencyMod.Diplomacia
             {
                 return 0;
             }
+            // IA desconectada (fila inteira falhando): só uma chamada de teste de tempos em tempos, nada de rajada de erros.
+            bool probing = !force && Llm.Providers.ProviderRouter.AllDown;
+            if (probing && (inFlight.Count > 0 || !Llm.Providers.ProviderRouter.MayCall()))
+            {
+                return 0;
+            }
             int turn = capture.Turn;
             int limit = IaConfig.MaxNationsPerTurn.Value;
             int parallel = Math.Max(1, IaConfig.ParallelCalls.Value);
@@ -592,6 +614,10 @@ namespace CurrencyMod.Diplomacia
                 if (Dispatch(nation, capture))
                 {
                     dispatched++;
+                }
+                if (probing && dispatched > 0)
+                {
+                    break;
                 }
             }
             return dispatched;
@@ -771,15 +797,28 @@ namespace CurrencyMod.Diplomacia
                     ExpectsReply = draft.ExpectsReply,
                     SentTurn = turn,
                     DeliverTurn = turn + delay,
-                    InReplyTo = draft.Type == "publica" ? -1 : AnswerableLetter(World, job.EmpireIndex, draft.To, turn),
+                    InReplyTo = draft.Type == "publica" || draft.Type == "grupo" ? -1 : AnswerableLetter(World, job.EmpireIndex, draft.To, turn),
                 };
+                if (draft.Type == "grupo")
+                {
+                    // Conversa em grupo: todos os membros de agora leem (quem entrar depois não vê o passado).
+                    ChatGroup group = World.Groups.FirstOrDefault(g => g.Id == draft.GroupId);
+                    if (group == null || !group.Members.Contains(job.EmpireIndex))
+                    {
+                        continue;
+                    }
+                    letter.To = Letter.Group;
+                    letter.GroupId = group.Id;
+                    letter.Members = new List<int>(group.Members);
+                    letter.ExpectsReply = false;
+                }
                 Espionage.StampOrigin(letter, TurnCapture.Latest, World);
                 World.Letters.Add(letter);
                 if (letter.IsPublic)
                 {
                     nation.LastPublicDeclarationTurn = turn;
                 }
-                Runtime.Event($"Carta {letter.Type} de {job.NationName} para {(letter.IsPublic ? "todos" : "E" + letter.To)} (chega no turno {letter.DeliverTurn}).");
+                Runtime.Event($"Carta {letter.Type} de {job.NationName} para {(letter.IsPublic ? "todos" : letter.IsGroup ? "o grupo GRP" + letter.GroupId : "E" + letter.To)} (chega no turno {letter.DeliverTurn}).");
             }
             foreach (ActionDraft action in decision.Actions)
             {
@@ -796,10 +835,33 @@ namespace CurrencyMod.Diplomacia
                     string fired = Council.CouncilEngine.Fire(World, nation, TurnCapture.Latest, portfolio, turn);
                     status = fired != null ? "feito: " + fired : "não aplicada: pasta sem ministro";
                 }
+                else if (action.Name == "nomear_ministro")
+                {
+                    status = ApplyAppoint(nation, action.Json, turn);
+                }
+                else if (action.Name == "criar_grupo")
+                {
+                    status = ApplyCreateGroup(nation, action.Json, turn, job.Context);
+                }
+                else if (action.Name == "sair_grupo")
+                {
+                    ChatGroup leaving = World.GroupBy((string)JObject.Parse(action.Json)["grupo"]);
+                    string why = leaving != null ? LeaveGroup(nation.EmpireIndex, leaving.Id) : "grupo não existe";
+                    status = why == null ? "feito: saiu do grupo" : "não aplicada: " + why;
+                }
+                else if (Blocs.BlocActions.Handles(action.Name))
+                {
+                    status = Blocs.BlocActions.Apply(World, nation.EmpireIndex, action.Name, action.Json, job.Context, turn);
+                    dirty = true;
+                }
                 else if (action.Name == "politica_comercial")
                 {
                     // Regra do mod (bloqueio comercial): aplica na hora em todos os postos da nação.
                     status = ApplyTradeStance(nation, action.Json, turn);
+                }
+                else if (action.Name == "rota_pedagio")
+                {
+                    status = ApplyTollChoice(nation, action.Json, turn);
                 }
                 else if (action.Name == "definir_postura" || action.Name == "definir_foco")
                 {
@@ -882,6 +944,200 @@ namespace CurrencyMod.Diplomacia
         /// todos os territórios dela. Fica guardado na nação: a IA nativa de comércio (TradeAi) segue a escolha, inclusive
         /// nos territórios novos.
         /// </summary>
+        // ---------------- Conversas em grupo (melhorias-jogando item 15) ----------------
+
+        /// <summary>Cria um grupo (quem cria entra junto). Devolve o grupo, ou null com o motivo.</summary>
+        internal ChatGroup CreateGroup(int creator, string name, IEnumerable<int> others, int turn, out string problem)
+        {
+            problem = null;
+            name = (name ?? string.Empty).Replace("<", "‹").Replace(">", "›").Trim();
+            if (name.Length > 40)
+            {
+                name = name.Substring(0, 40).TrimEnd();
+            }
+            List<int> members = new[] { creator }.Concat(others ?? Enumerable.Empty<int>()).Distinct().ToList();
+            if (name.Length == 0)
+            {
+                problem = "grupo sem nome";
+                return null;
+            }
+            if (members.Count < ChatGroup.MinMembers || members.Count > ChatGroup.MaxMembers)
+            {
+                problem = $"um grupo tem de {ChatGroup.MinMembers} a {ChatGroup.MaxMembers} nações";
+                return null;
+            }
+            var group = new ChatGroup { Id = World.NextGroupId++, Name = name, Creator = creator, CreatedTurn = turn, Members = members };
+            World.Groups.Add(group);
+            Runtime.Event($"Grupo {group.Handle} '{name}' criado por E{creator}: {string.Join(", ", members.Select(m => "E" + m))}.");
+            dirty = true;
+            return group;
+        }
+
+        /// <summary>Sai do grupo; grupo com menos de 2 membros acaba.</summary>
+        internal string LeaveGroup(int empire, int groupId)
+        {
+            ChatGroup group = World?.Groups.FirstOrDefault(g => g.Id == groupId);
+            if (group != null && group.BlocId >= 0 && group.Members.Contains(empire))
+            {
+                return "é o grupo do bloco: saia do bloco para sair dele";
+            }
+            if (group == null || !group.Members.Remove(empire))
+            {
+                return "não está nesse grupo";
+            }
+            if (group.Members.Count < 2)
+            {
+                World.Groups.Remove(group);
+            }
+            dirty = true;
+            return null;
+        }
+
+        /// <summary>Mensagem de grupo, com o mesmo tempo de entrega das cartas de quem escreve (sem interceptação, por ora).</summary>
+        internal Letter SendGroupMessage(int from, ChatGroup group, string subject, string text, int turn, int delay)
+        {
+            var letter = new Letter
+            {
+                Id = World.NextLetterId++,
+                From = from,
+                To = Letter.Group,
+                GroupId = group.Id,
+                Members = new List<int>(group.Members),
+                Type = "grupo",
+                Subject = subject,
+                Text = text,
+                SentTurn = turn,
+                DeliverTurn = turn + delay,
+                InterceptionChecked = true,
+            };
+            World.Letters.Add(letter);
+            dirty = true;
+            return letter;
+        }
+
+        /// <summary>O jogador cria um grupo com as nações escolhidas e manda a primeira mensagem. "ok: …" ou "erro: …".</summary>
+        internal string CreatePlayerGroup(string name, List<int> others, string firstMessage)
+        {
+            WorldCapture capture = TurnCapture.Latest;
+            if (World == null || playerIndex < 0 || capture == null)
+            {
+                return "erro: " + L.T("sem partida");
+            }
+            List<int> known = others.Where(o => capture.AiEmpires().Contains(o) && (capture.Empire(playerIndex)?.RelationWith(o)?.Knows ?? false)).Distinct().ToList();
+            if (known.Count + 1 < ChatGroup.MinMembers)
+            {
+                return "erro: " + L.F("marque pelo menos {0} nações na seção Nações (botão \"+ Grupo\")", ChatGroup.MinMembers - 1);
+            }
+            ChatGroup group = CreateGroup(playerIndex, name, known, currentTurn, out string problem);
+            if (group == null)
+            {
+                return "erro: " + problem;
+            }
+            return SendPlayerGroupLetter(group.Id, name, firstMessage);
+        }
+
+        /// <summary>Mensagem do jogador a um grupo dele, pela regra de entrega da era. "ok: … turno N" ou "erro: …".</summary>
+        internal string SendPlayerGroupLetter(int groupId, string subject, string text)
+        {
+            ChatGroup group = World?.Groups.FirstOrDefault(g => g.Id == groupId);
+            if (group == null || !group.Members.Contains(playerIndex))
+            {
+                return "erro: " + L.T("você não está nesse grupo");
+            }
+            text = CleanPlayerText(text);
+            if (text.Length == 0)
+            {
+                return "erro: " + L.T("carta vazia");
+            }
+            int max = IaConfig.PlayerLetterLimit;
+            if (text.Length > max)
+            {
+                text = text.Substring(0, max).TrimEnd() + " […]";
+            }
+            int delay = Delivery.TurnsFor(TurnCapture.Latest, playerIndex);
+            Letter letter = SendGroupMessage(playerIndex, group, string.IsNullOrWhiteSpace(subject) ? null : subject.Replace("<", "‹").Replace(">", "›"), text, currentTurn, delay);
+            Runtime.Event($"Mensagem do jogador ao grupo {group.Handle} (chega no turno {letter.DeliverTurn}).");
+            return "ok: " + L.F("mensagem ao grupo; chega no turno {0}", letter.DeliverTurn);
+        }
+
+        private string ApplyCreateGroup(IaNation nation, string json, int turn, ValidationContext context)
+        {
+            JObject item = JObject.Parse(json);
+            var others = new List<int>();
+            foreach (string handle in DecisionParser.Handles(item["membros"]))
+            {
+                if (context != null && context.KnownEmpires.TryGetValue(handle, out int empire))
+                {
+                    others.Add(empire);
+                }
+            }
+            ChatGroup group = CreateGroup(nation.EmpireIndex, (string)item["nome"], others, turn, out string problem);
+            if (group == null)
+            {
+                return "não aplicada: " + problem;
+            }
+            string first = ((string)item["mensagem"])?.Trim();
+            if (!string.IsNullOrEmpty(first))
+            {
+                SendGroupMessage(nation.EmpireIndex, group, group.Name, first, turn, Delivery.TurnsFor(TurnCapture.Latest, nation.EmpireIndex));
+            }
+            return $"feito: grupo {group.Handle} '{group.Name}' criado";
+        }
+
+        /// <summary>nomear_ministro: um dos candidatos da pasta vaga, pagando a influência pela ordem do jogo.</summary>
+        private string ApplyAppoint(IaNation nation, string json, int turn)
+        {
+            JObject item = JObject.Parse(json);
+            string seat = ((string)item["pasta"])?.Trim().ToLowerInvariant();
+            string candidate = ((string)item["candidato"])?.Trim().ToLowerInvariant();
+            WorldCapture capture = TurnCapture.Latest;
+            CapturedEmpire me = capture?.Empire(nation.EmpireIndex);
+            int cost = Council.CouncilEngine.AppointCost(me?.EraIndex ?? 0);
+            if ((me?.Influence ?? 0) < cost)
+            {
+                return $"não aplicada: influência insuficiente (custa {cost})";
+            }
+            Council.Minister minister = Council.CouncilEngine.Appoint(World, nation, capture, seat, candidate, turn, out string problem);
+            if (minister == null)
+            {
+                return "não aplicada: " + problem;
+            }
+            Council.PlayerCouncil.ChargeInfluence(nation.EmpireIndex, cost);
+            return $"feito: {minister.Name} nomeado para {seat} por {cost} de influência";
+        }
+
+        /// <summary>
+        /// rota_pedagio: nos postos em que a outra nação cobra pedágio desta, as rotas desta pagam sempre, desviam sempre ou
+        /// comparam o custo (automático). Vale na hora: as rotas são recalculadas na próxima ordem.
+        /// </summary>
+        private string ApplyTollChoice(IaNation nation, string json, int turn)
+        {
+            JObject item = JObject.Parse(json);
+            string handle = ((string)item["nacao"])?.Trim();
+            if (handle == null || !int.TryParse(handle.TrimStart('E', 'e'), out int owner))
+            {
+                return "não aplicada: nação inválida";
+            }
+            string wanted = ((string)item["escolha"])?.Trim().ToLowerInvariant();
+            TollChoiceKind choice = wanted == "pagar" ? TollChoiceKind.Pay : wanted == "desviar" ? TollChoiceKind.Detour : TollChoiceKind.Auto;
+            if (!EconomyConfig.EnableTradeBlockade.Value)
+            {
+                return "registrada (o bloqueio comercial está desligado no .cfg)";
+            }
+            CurrencyWorld currency = CurrencyManager.Current;
+            if (currency == null)
+            {
+                return "não aplicada: economia ainda não carregada";
+            }
+            bool changed;
+            lock (CurrencyManager.Lock)
+            {
+                changed = TradePolicy.SetTollChoice(currency, nation.EmpireIndex, owner, choice, turn);
+            }
+            string what = choice == TollChoiceKind.Pay ? "pagar" : choice == TollChoiceKind.Detour ? "desviar" : "automático";
+            return changed ? $"aplicada: suas rotas nos postos de E{owner} = {what}" : $"sem mudança: já estava {what}";
+        }
+
         private string ApplyTradeStance(IaNation nation, string json, int turn)
         {
             JObject item = JObject.Parse(json);
@@ -1379,10 +1635,10 @@ namespace CurrencyMod.Diplomacia
             {
                 return "erro: falta \"acao\"";
             }
-            if (name == "politica_comercial")
+            if (name == "politica_comercial" || name == "rota_pedagio")
             {
                 // Regra do mod, aplicada na hora (como na decisão do turno).
-                string applied = ApplyTradeStance(World.Ensure(empire), item.ToString(Formatting.None), currentTurn);
+                string applied = name == "rota_pedagio" ? ApplyTollChoice(World.Ensure(empire), item.ToString(Formatting.None), currentTurn) : ApplyTradeStance(World.Ensure(empire), item.ToString(Formatting.None), currentTurn);
                 World.Ensure(empire).Actions.Add(new ActionRecord { Id = 0, Turn = currentTurn, Name = name, Json = item.ToString(Formatting.None), Status = applied + " (teste)" });
                 dirty = true;
                 return "ok: " + applied;
@@ -1685,6 +1941,31 @@ namespace CurrencyMod.Diplomacia
 
         internal Letter LetterById(int id) => World?.Letters.FirstOrDefault(l => l.Id == id);
 
+        /// <summary>
+        /// Texto do jogador como vai para a carta: quebras de linha só com \n (o campo grava \r ao apertar Enter), tab vira
+        /// espaço, sem caracteres de controle nem invisíveis (largura zero, BOM), sem espaços no fim das linhas.
+        /// </summary>
+        internal static string CleanPlayerText(string text)
+        {
+            if (string.IsNullOrEmpty(text))
+            {
+                return string.Empty;
+            }
+            var clean = new System.Text.StringBuilder(text.Length);
+            string normalized = text.Replace("\r\n", "\n").Replace('\r', '\n').Replace('\t', ' ');
+            foreach (char c in normalized)
+            {
+                if (c == '\n' || !char.IsControl(c) && c != '​' && c != '‌' && c != '‍' && c != '⁠' && c != '﻿')
+                {
+                    clean.Append(c);
+                }
+            }
+            return string.Join("\n", clean.ToString().Split('\n').Select(line => line.TrimEnd())).Trim();
+        }
+
+        /// <summary>Tamanho da carta do jogador como é contado no limite (caracteres do texto limpo).</summary>
+        internal static int PlayerTextLength(string text) => CleanPlayerText(text).Length;
+
         internal string SendPlayerLetter(int to, string type, string subject, string text, string demand, int deadline, bool immediate = false, int inReplyTo = -1)
         {
             // Os textos depois de "erro: " aparecem para o jogador (aviso da aba Cartas e do Correio).
@@ -1706,15 +1987,15 @@ namespace CurrencyMod.Diplomacia
             {
                 return "erro: " + L.F("E{0} não é uma nação do computador viva", to);
             }
+            text = CleanPlayerText(text);
             if (string.IsNullOrWhiteSpace(text))
             {
                 return "erro: " + L.T("carta vazia");
             }
-            string[] words = text.Split(new[] { ' ', '\n', '\r', '\t' }, StringSplitOptions.RemoveEmptyEntries);
-            int max = IaConfig.PlayerLetterMaxWords.Value;
-            if (words.Length > max)
+            int max = IaConfig.PlayerLetterLimit;
+            if (text.Length > max)
             {
-                text = string.Join(" ", words.Take(max)) + " […]";
+                text = text.Substring(0, max).TrimEnd() + " […]";
             }
             var letter = new Letter
             {

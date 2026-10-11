@@ -79,6 +79,16 @@ namespace CurrencyMod.NativeUI
             });
         }
 
+        /// <summary>Alianças (blocos): três anéis entrelaçados em triângulo.</summary>
+        public static Texture2D Alliance()
+        {
+            return Render("CurrencyMod_Alliance", p =>
+            {
+                float Ring(Vector2 center) => Mathf.Abs(Circle(p, center, 0.20f)) - 0.05f;
+                return Min(Ring(new Vector2(0.33f, 0.38f)), Ring(new Vector2(0.67f, 0.38f)), Ring(new Vector2(0.50f, 0.67f)));
+            });
+        }
+
         /// <summary>Cotação: duas setas em sentidos opostos (troca de moeda).</summary>
         public static Texture2D Exchange()
         {

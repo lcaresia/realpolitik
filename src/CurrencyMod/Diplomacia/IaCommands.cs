@@ -24,6 +24,7 @@ namespace CurrencyMod.Diplomacia
     ///   ia espionagem             espiões, pesos, chance de interceptar em cada ponta e interceptações recentes
     ///   ia interceptar &lt;id&gt; E#   força a interceptação de uma carta privada (testes)
     ///   ia acoes [turnos]         ações das nações nos últimos turnos (padrão 3) e o que o jogo fez com elas
+    ///   ia mencoes [texto]        comunicados públicos que citam você; com texto, testa o detector nesse texto
     /// </summary>
     internal static class IaCommands
     {
@@ -141,6 +142,48 @@ namespace CurrencyMod.Diplomacia
                     return "ok: memória da IA desta partida apagada";
                 case "correio":
                     return UI.MailScreen.DevCommand(rest);
+                case "grupo":
+                {
+                    // "ia grupo criar <nome> E1 E2 [...]" | "ia grupo msg GRP# <texto>" | "ia grupo ver": conversas em grupo do jogador.
+                    string[] bits = (rest ?? string.Empty).Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+                    if (IaModule.World == null || bits.Length == 0 || bits[0] == "ver")
+                    {
+                        return IaModule.World == null ? "erro: sem partida" : string.Join("\n", IaModule.World.Groups.Select(g => $"{g.Handle} '{g.Name}' (E{g.Creator}, T{g.CreatedTurn}): {string.Join(", ", g.Members.Select(m => "E" + m))} · {IaModule.World.Letters.Count(l => l.IsGroup && l.GroupId == g.Id)} mensagem(ns)")) + "\n(" + IaModule.World.Groups.Count + " grupo(s))";
+                    }
+                    if (bits[0] == "criar" && bits.Length >= 4)
+                    {
+                        var members = bits.Skip(2).Select(b => int.TryParse(b.TrimStart('E', 'e'), out int e) ? e : -1).Where(e => e >= 0).ToList();
+                        return module.CreatePlayerGroup(bits[1].Replace("_", " "), members, "(grupo criado pelo teste)");
+                    }
+                    if (bits[0] == "msg" && bits.Length >= 3)
+                    {
+                        ChatGroup target = IaModule.World.GroupBy(bits[1]);
+                        return target == null ? "erro: grupo não existe" : module.SendPlayerGroupLetter(target.Id, null, string.Join(" ", bits.Skip(2)));
+                    }
+                    return "uso: ia grupo ver | criar <nome_com_underscores> E1 E2 [...] | msg GRP# <texto>";
+                }
+                case "bloco":
+                    return Blocs.BlocCommands.Run(module, rest);
+                case "aliancas":
+                    return UI.AlliancesScreen.DevCommand(rest);
+                case "mencoes":
+                {
+                    // Detector de menções (Mentions): sem texto, os comunicados públicos que citam o jogador; com texto, testa
+                    // esse texto como se fosse um comunicado público de outra nação.
+                    WorldCapture capture = CaptureFor(module);
+                    if (capture == null || IaModule.World == null || module.PlayerIndex < 0)
+                    {
+                        return "erro: sem partida";
+                    }
+                    if (!string.IsNullOrWhiteSpace(rest))
+                    {
+                        var probe = new Letter { Id = -1 - (rest.GetHashCode() & 0x3FFFFFFF), From = module.PlayerIndex == 1 ? 2 : 1, To = Letter.Everyone, Text = rest };
+                        return Mentions.Cites(probe, capture, IaModule.World, module.PlayerIndex) ? "cita você" : "não cita você";
+                    }
+                    var cited = module.PlayerInbox().Where(l => l.IsPublic && Mentions.Cites(l, capture, IaModule.World, module.PlayerIndex)).ToList();
+                    string names = IaModule.World.CultureNames.TryGetValue(module.PlayerIndex, out System.Collections.Generic.List<string> all) ? string.Join(", ", all) : "?";
+                    return $"povos conhecidos do jogador: {names}\n{cited.Count} comunicado(s) citam você" + string.Concat(cited.Select(l => $"\n  T{l.DeliverTurn} E{l.From}: {l.Subject} — {l.Text}"));
+                }
                 case "espionagem":
                 {
                     // Espiões, pesos, chance de cada império em cada ponta e as interceptações recentes.
@@ -282,7 +325,7 @@ namespace CurrencyMod.Diplomacia
         }
 
         /// <summary>
-        /// "ia conselho [ver|abrir|fechar|secao n|falar &lt;texto&gt;|demitir &lt;pasta&gt;|reunir]": o conselho do jogador.
+        /// "ia conselho [ver|abrir|fechar|secao n|falar &lt;texto&gt;|demitir &lt;pasta&gt;|reunir|convocar]": o conselho do jogador (reunir/convocar = audiência, ou de novo depois de uma falha).
         /// "ver" (padrão) mostra a reunião do turno em texto.
         /// </summary>
         private static string CouncilCommand(IaModule module, string rest)
@@ -297,8 +340,56 @@ namespace CurrencyMod.Diplomacia
                     return Council.PlayerCouncil.Speak(arg);
                 case "demitir":
                     return Council.PlayerCouncil.Fire(arg);
+                case "nomear":
+                {
+                    // "ia conselho nomear <pasta> <id|1|2|3>": nomeia um dos candidatos (pelo id do banco ou pela posição).
+                    string[] bits = (arg ?? string.Empty).Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+                    if (bits.Length < 2 || world == null)
+                    {
+                        return "uso: ia conselho nomear <pasta> <id|1|2|3>";
+                    }
+                    string pasta = bits[0].ToLowerInvariant();
+                    string pick = bits[1];
+                    IaNation self = world.Ensure(module.PlayerIndex);
+                    Council.CouncilEngine.Ensure(world, self, TurnCapture.Latest, module.CurrentTurn);
+                    if (int.TryParse(pick, out int position) && self.CouncilCandidates.TryGetValue(pasta, out var list) && position >= 1 && position <= list.Count)
+                    {
+                        pick = list[position - 1];
+                    }
+                    return Council.PlayerCouncil.Appoint(pasta, pick);
+                }
+                case "veterano":
+                {
+                    // "ia conselho veterano <pasta> <turnos>": teste do bônus; põe o ministro há N turnos no cargo.
+                    string[] bits = (arg ?? string.Empty).Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+                    Council.Minister vet = world?.Ensure(module.PlayerIndex).Council.FirstOrDefault(m => bits.Length > 0 && m.Portfolio == bits[0].ToLowerInvariant());
+                    if (vet == null || bits.Length < 2 || !int.TryParse(bits[1], out int years))
+                    {
+                        return "uso: ia conselho veterano <pasta com ministro> <turnos no cargo>";
+                    }
+                    vet.Since = module.CurrentTurn - years;
+                    Council.VeteranEffects.Publish(world, module.CurrentTurn);
+                    return $"ok: {vet.Name} no cargo desde T{vet.Since}: veterano +{Council.CouncilEngine.VeteranBonus(vet, module.CurrentTurn)}%";
+                }
+                case "candidatos":
+                {
+                    if (world == null)
+                    {
+                        return "erro: sem partida";
+                    }
+                    IaNation self = world.Ensure(module.PlayerIndex);
+                    Council.CouncilEngine.Ensure(world, self, TurnCapture.Latest, module.CurrentTurn);
+                    var lines = new StringBuilder();
+                    foreach (var pair in self.CouncilCandidates)
+                    {
+                        lines.AppendLine(pair.Key + ": " + string.Join(" · ", pair.Value.Select(id => id + " " + (Council.CouncilBank.ById(id)?.Name ?? "?"))));
+                    }
+                    lines.Append("no cargo: " + string.Join(", ", self.Council.Select(m => $"{m.Portfolio} {m.Name} (desde T{m.Since}, veterano +{Council.CouncilEngine.VeteranBonus(m, module.CurrentTurn)}%)")));
+                    return lines.ToString();
+                }
                 case "reunir":
-                    return Council.PlayerCouncil.Retry();
+                case "convocar":
+                    return Council.PlayerCouncil.Convene();
                 case "abrir":
                 case "fechar":
                 case "secao":

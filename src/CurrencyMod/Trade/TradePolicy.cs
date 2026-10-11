@@ -31,6 +31,18 @@ namespace CurrencyMod
         public double Price;
     }
 
+    /// <summary>O que as rotas de quem paga fazem nos postos taxados de um dono: escolha da IA de linguagem (rota_pedagio).</summary>
+    public enum TollChoiceKind { Auto = 0, Pay = 1, Detour = 2 }
+
+    /// <summary>Escolha de <see cref="Payer"/> para os pedágios de <see cref="Owner"/>, em todos os postos dele.</summary>
+    public class TollChoice
+    {
+        public int Payer;
+        public int Owner;
+        public TollChoiceKind Choice;
+        public int Turn;
+    }
+
     /// <summary>Par em que o bloqueio/pedágio já atingiu rotas da vítima: mantém a reclamação viva.</summary>
     public class TradeIncident
     {
@@ -109,6 +121,13 @@ namespace CurrencyMod
             {
                 return whatIf.Mode;
             }
+            // Blocos (item 16): entre membros o comércio passa livre; contra quem é de fora vale a tarifa comum do bloco,
+            // se for mais dura que a regra do próprio posto.
+            if (Diplomacia.Blocs.BlocIndex.SameBloc(owner, target))
+            {
+                return TradeMode.Free;
+            }
+            TradeMode tariff = Diplomacia.Blocs.BlocIndex.Tariff(owner, target);
             Dictionary<long, int> current = cache;
             if (stale || current == null)
             {
@@ -116,10 +135,11 @@ namespace CurrencyMod
             }
             if (current.Count == 0 || !current.TryGetValue(Key(territory, target), out int packed))
             {
-                return TradeMode.Free;
+                return tariff;
             }
             // A regra é do dono da época; se o território mudou de mãos, não vale mais.
-            return packed / 4 == owner ? (TradeMode)(packed % 4) : TradeMode.Free;
+            TradeMode rule = packed / 4 == owner ? (TradeMode)(packed % 4) : TradeMode.Free;
+            return rule >= tariff ? rule : tariff;
         }
 
         private static Dictionary<long, int> Rebuild()
@@ -127,6 +147,7 @@ namespace CurrencyMod
             var built = new Dictionary<long, int>();
             var prices = new Dictionary<long, double>();
             var general = new Dictionary<long, double>();
+            var choices = new Dictionary<long, TollChoiceKind>();
             // Ler e publicar dentro do lock, e baixar o "stale" antes de ler: uma regra mudada (com o lock) no meio
             // de um Rebuild fora do lock era apagada pela publicação do índice velho, que ficava valendo até a próxima
             // mudança.
@@ -151,9 +172,17 @@ namespace CurrencyMod
                             general[(long)price.Owner * 256 + price.Target] = price.Price;
                         }
                     }
+                    foreach (TollChoice choice in world.TollChoices ?? new List<TollChoice>())
+                    {
+                        if (choice.Choice != TollChoiceKind.Auto)
+                        {
+                            choices[(long)choice.Payer * 256 + choice.Owner] = choice.Choice;
+                        }
+                    }
                 }
                 priceCache = prices;
                 generalCache = general;
+                choiceCache = choices;
                 cache = built;
             }
             return built;
@@ -163,6 +192,36 @@ namespace CurrencyMod
 
         private static volatile Dictionary<long, double> priceCache = new Dictionary<long, double>();
         private static volatile Dictionary<long, double> generalCache = new Dictionary<long, double>();
+        private static volatile Dictionary<long, TollChoiceKind> choiceCache = new Dictionary<long, TollChoiceKind>();
+
+        /// <summary>O que as rotas de <paramref name="payer"/> fazem nos postos taxados de <paramref name="owner"/> (lido no cálculo de rotas).</summary>
+        public static TollChoiceKind GetTollChoice(int payer, int owner)
+        {
+            if (stale || cache == null)
+            {
+                Rebuild();
+            }
+            return choiceCache.TryGetValue((long)payer * 256 + owner, out TollChoiceKind choice) ? choice : TollChoiceKind.Auto;
+        }
+
+        /// <summary>Grava a escolha de quem paga (chamar com o lock). Devolve true se mudou.</summary>
+        public static bool SetTollChoice(CurrencyWorld world, int payer, int owner, TollChoiceKind choice, int turn)
+        {
+            world.TollChoices = world.TollChoices ?? new List<TollChoice>();
+            TollChoice current = world.TollChoices.Find(c => c.Payer == payer && c.Owner == owner);
+            if ((current?.Choice ?? TollChoiceKind.Auto) == choice)
+            {
+                return false;
+            }
+            world.TollChoices.RemoveAll(c => c.Payer == payer && c.Owner == owner);
+            if (choice != TollChoiceKind.Auto)
+            {
+                world.TollChoices.Add(new TollChoice { Payer = payer, Owner = owner, Choice = choice, Turn = turn });
+            }
+            stale = true;
+            PathsDirty = true;
+            return true;
+        }
 
         /// <summary>Pedágio padrão por recurso: o da configuração vezes a era de quem cobra.</summary>
         public static double DefaultPrice(int ownerEra) => Math.Round(EconomyConfig.TollPerResource.Value * Math.Max(1, ownerEra), 1);

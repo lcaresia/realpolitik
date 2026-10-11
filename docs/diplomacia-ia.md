@@ -296,12 +296,14 @@ Escreva uma linha em `_Modding\dev\cmd.txt` com o jogo aberto. O resultado sai e
 | `ia viewer` | Abre o visualizador. |
 | `ia reset` | Apaga a memória da IA desta partida (testes). |
 | `ia acoes [turnos]` | Ações das nações nos últimos turnos (padrão 3) e o que o jogo fez com cada uma. |
+| `ia mencoes [texto]` | Comunicados públicos que citam você (detector `Mentions`: nome do líder, povos de todas as eras, cidades, 1 erro de digitação) e os povos já conhecidos do jogador; com texto, testa o detector nele. |
+| `ia correio colar [arquivo]` | Cola o arquivo (em `_Modding\dev`, padrão `colar.txt`) no campo da carta pelo caminho do Ctrl+V (foco + `TryInsertString`), sem enviar. Mostra caracteres, edição e posição do rótulo. |
 | `ia correio …` | Controla a tela cheia do correio (§11.5). |
 | `ia cartas E#` | Abre a diplomacia com a nação já na aba Cartas. |
 | `ia espionagem …` / `ia interceptar …` | Espiões e interceptação de cartas (§13). |
 | `ia congresso [agora]` | O Congresso visto pela foto do turno (ou tirada agora): DLC, liberação, peso de cada nação, consulados, alavancagem, presidência, leis, votações com votos e subornos, crises, consenso, leis impostas e notícias. Grava `dev\out\congresso.txt`. |
 | `ia acao E# {json}` | Uma ação qualquer de uma nação da IA (o mesmo json das decisões), pelo mesmo caminho do executor, sem a validação do dossiê. Fica na memória da nação. |
-| `ia conselho [ver\|abrir\|fechar\|secao 0..2\|falar <texto>\|demitir <pasta>\|reunir]` | O seu conselho (§14): mostra a reunião do turno em texto, abre a tela, fala com os ministros, demite e convoca de novo depois de uma falha. |
+| `ia conselho [ver\|abrir\|fechar\|secao 0..2\|falar <texto>\|demitir <pasta>\|reunir\|convocar]` | O seu conselho (§14): mostra a última reunião em texto, abre a tela, fala com os ministros, demite e convoca uma audiência (ou de novo depois de uma falha). Sozinho, ele se reúne a cada `ConselhoIntervaloTurnos` (7) turnos. |
 | `ia teste carta-de E# [texto] \| parser E# \| congresso \| conselho-json` | Cenários da revisão de bugs: carta de uma nação para você (vale com nação eliminada); decisão com cartas erradas na 1ª e na última tentativa; a espera da 1ª sessão do Congresso numa sequência de presidentes; resposta do conselho fora do formato pelo `ApplyMeeting` de verdade. |
 | `ia exercitos E#` | Exércitos da nação com o código A (da foto do turno), em marcha ou não, e a missão de cada um (§12). |
 | `ia exercito E# A# mover\|atacar\|defender\|parar <T#\|C#\|A#\|-> [turnos]` | A mesma ordem que a IA de linguagem daria, registrada na memória da nação (o resultado aparece no `ia acoes`). |
@@ -311,8 +313,9 @@ Comandos do jogo (`GameCommands.cs`), para testar sem clicar:
 | Comando | O que faz |
 |---|---|
 | `jogo estado` | Estado do jogo, turno e se dá para passar o turno. |
-| `jogo saves` | Lista os saves. |
+| `jogo saves [reler]` | Lista os saves. `reler`: relê a pasta (Cloud ou local, a escolha do jogador) para o jogo enxergar um save copiado com ele aberto. Sem isso, `jogo carregar` diz "não encontrado". |
 | `jogo carregar [título]` | Carrega o save pelo título (sem título: o mais recente). Funciona no menu principal. |
+| `jogo rotas cores E#\|todas` | Teste das cores das rotas: pinta como se o jogador fosse o E# (rotas em névoa não aparecem); `todas` põe rótulo em toda rota colorida para conferir a posição; sem nada volta ao normal. Sair e entrar na visão de comércio para recalcular. |
 | `jogo salvar <título>` | Salva a partida. |
 | `jogo turno` | Passa o turno (mesma ordem do botão). Avisa se uma proposta espera o jogador: o jogo segura o fim do turno até ele responder. |
 | `jogo propostas` | Tratados e acordos pendentes entre o jogador e cada nação. |

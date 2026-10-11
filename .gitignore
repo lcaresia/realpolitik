@@ -65,3 +65,10 @@ docs/divulgacao/
 
 # Obfuscar (não usado desde que o mod virou código aberto; pasta antiga, se existir)
 installer/vendor/obfuscar/
+
+# Retratos: originais do Codex (~2 MB cada) e testes pessoais; o mod usa as versões de 256 px em src/CurrencyMod/Retratos
+media/retratos/originais/
+media/retratos/pessoais-teste/
+
+# Ferramentas locais
+.serena/
