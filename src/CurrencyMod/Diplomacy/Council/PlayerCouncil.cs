@@ -34,6 +34,13 @@ namespace CurrencyMod.Diplomacy.Council
         public List<CouncilSpeech> Replies = new List<CouncilSpeech>();
     }
 
+    /// <summary>A standing order of the leader: the council plans around it until the leader revokes it.</summary>
+    internal sealed class LeaderOrder
+    {
+        public int Turn;
+        public string Text;
+    }
+
     /// <summary>The player's council meeting in one turn.</summary>
     internal sealed class CouncilMeeting
     {
@@ -50,6 +57,8 @@ namespace CurrencyMod.Diplomacy.Council
         /// <summary>The same notes in the UI language (the ones above go to the AI in Portuguese).</summary>
         public List<string> NotesUi = new List<string>();
         public bool Seen;
+        /// <summary>Minister replies to the leader's answers that arrived while the meeting was not on screen.</summary>
+        public int UnseenReplies;
         public double CostUsd;
         /// <summary>Audience requested by the leader (otherwise, the automatic interval meeting).</summary>
         public bool Requested;
@@ -68,6 +77,7 @@ namespace CurrencyMod.Diplomacy.Council
     {
         private const int MaxMeetingsKept = 12;
         private const int MaxExchangesPerTurn = 8;
+        private const int MaxLeaderOrders = 6;
         internal const int MaxPlayerWords = 120;
         private const int MaxSpeechChars = 700;
 
@@ -124,6 +134,63 @@ namespace CurrencyMod.Diplomacy.Council
         {
             CouncilMeeting meeting = Meeting(world, turn);
             return meeting != null && meeting.Status == "pronta" && !meeting.Seen;
+        }
+
+        /// <summary>Turn in which the player opened the council and saw the urgent topics (the badge stops asking).</summary>
+        internal static int UrgentSeenTurn = -1;
+
+        /// <summary>
+        /// What the council would want to talk about right now even without a meeting (melhorias-jogando item 29), read
+        /// from the turn capture, no AI call: demands against the player, wars, a treasury about to run dry.
+        /// </summary>
+        internal static List<string> UrgentTopics(WorldCapture capture, int player)
+        {
+            var topics = new List<string>();
+            CapturedEmpire me = capture?.Empire(player);
+            if (me == null)
+            {
+                return topics;
+            }
+            foreach (CapturedRelation relation in me.Relations)
+            {
+                if (relation == null || relation.Other == player)
+                {
+                    continue;
+                }
+                string name = capture.Empire(relation.Other)?.FullName ?? "E" + relation.Other;
+                if (relation.TheirDemands.Count > 0 || relation.DemandsAgainstMe)
+                {
+                    topics.Add(L.F("Exigências de {0} esperam resposta.", name));
+                }
+                if (relation.AtWar && relation.TheirWarScore > relation.MyWarScore)
+                {
+                    topics.Add(L.F("A guerra com {0} está pendendo para o lado deles.", name));
+                }
+            }
+            if (me.Money < 0 || (me.MoneyNet < 0 && me.Money + me.MoneyNet * 3 < 0))
+            {
+                topics.Add(L.T("O tesouro está no vermelho ou acaba em poucos turnos."));
+            }
+            return topics;
+        }
+
+        /// <summary>
+        /// The council button badge: the number of new speeches of an unseen meeting, the number of unseen replies, or "!"
+        /// for urgent topics the player has not seen this turn. Null when there is nothing new.
+        /// </summary>
+        internal static string Badge(AiWorld world, WorldCapture capture, int player, int turn, out List<string> urgent)
+        {
+            urgent = UrgentTopics(capture, player);
+            CouncilMeeting meeting = Meeting(world, turn);
+            if (meeting != null && meeting.Status == "pronta" && !meeting.Seen)
+            {
+                return Math.Max(1, meeting.Speeches.Count).ToString();
+            }
+            if (meeting != null && meeting.UnseenReplies > 0)
+            {
+                return meeting.UnseenReplies.ToString();
+            }
+            return urgent.Count > 0 && UrgentSeenTurn != turn ? "!" : null;
         }
 
         // ---------------- Turn ----------------
@@ -198,7 +265,7 @@ namespace CurrencyMod.Diplomacy.Council
         }
 
         /// <summary>The leader requests an audience: the council meets this turn (1 call) and the count restarts.</summary>
-        internal static string Convene()
+        internal static string Convene(string speech = null)
         {
             AiModule module = AiModule.Instance;
             AiWorld world = AiModule.World;
@@ -215,8 +282,15 @@ namespace CurrencyMod.Diplomacy.Council
             {
                 return meeting.Status == "erro" ? Retry() : "error: " + L.T("o conselho já está reunido neste turno");
             }
-            Open(world, module.CurrentTurn, requested: true);
+            CouncilMeeting opened = Open(world, module.CurrentTurn, requested: true);
             retryAt = 0;
+            // Words written before convening are not lost: Tick sends them as soon as the meeting is ready.
+            string text = Sanitize(speech);
+            if (text.Length > 0)
+            {
+                opened.Exchanges.Add(new CouncilExchange { Turn = module.CurrentTurn, PlayerText = text });
+                return "ok: " + L.T("o conselho foi convocado e vai ouvir o que você escreveu");
+            }
             return "ok: " + L.T("o conselho foi convocado e já está se reunindo");
         }
 
@@ -292,7 +366,7 @@ namespace CurrencyMod.Diplomacy.Council
                 return "error: " + L.T("sem partida");
             }
             CouncilMeeting meeting = Meeting(world, module.CurrentTurn);
-            text = (text ?? string.Empty).Replace("<", "‹").Replace(">", "›").Trim();
+            text = Sanitize(text);
             if (meeting == null)
             {
                 return "error: " + L.T("o conselho não está reunido; convoque uma audiência");
@@ -312,11 +386,6 @@ namespace CurrencyMod.Diplomacy.Council
             if (meeting.Exchanges.Count >= MaxExchangesPerTurn)
             {
                 return "error: " + L.F("o conselho já ouviu {0} falas suas neste turno; continue no próximo", MaxExchangesPerTurn);
-            }
-            string[] words = text.Split(new[] { ' ', '\n', '\t' }, StringSplitOptions.RemoveEmptyEntries);
-            if (words.Length > MaxPlayerWords)
-            {
-                text = string.Join(" ", words.Take(MaxPlayerWords)) + "…";
             }
             meeting.Exchanges.Add(new CouncilExchange { Turn = module.CurrentTurn, PlayerText = text });
             DispatchExchange(world, capture, meeting, meeting.Exchanges.Count - 1, module.PlayerIndex);
@@ -436,6 +505,14 @@ namespace CurrencyMod.Diplomacy.Council
             retryAt = 0;
             module?.MarkDirty();
             return "ok: " + L.T("o conselho vai se reunir de novo");
+        }
+
+        /// <summary>The leader's words without markup, cut at MaxPlayerWords.</summary>
+        private static string Sanitize(string text)
+        {
+            text = (text ?? string.Empty).Replace("<", "‹").Replace(">", "›").Trim();
+            string[] words = text.Split(new[] { ' ', '\n', '\t' }, StringSplitOptions.RemoveEmptyEntries);
+            return words.Length > MaxPlayerWords ? string.Join(" ", words.Take(MaxPlayerWords)) + "…" : text;
         }
 
         // ---------------- Calls ----------------
@@ -632,6 +709,8 @@ namespace CurrencyMod.Diplomacy.Council
             else if (job.Exchange < meeting.Exchanges.Count)
             {
                 ApplyExchange(meeting.Exchanges[job.Exchange], nation, result);
+                RecordOrders(world, job.Turn, result.Json);
+                meeting.UnseenReplies += meeting.Exchanges[job.Exchange].Replies.Count;
             }
         }
 
@@ -732,6 +811,63 @@ namespace CurrencyMod.Diplomacy.Council
             exchange.Raw = result.Raw;
             exchange.Status = "pronta";
             exchange.Error = null;
+        }
+
+        /// <summary>Stores the order the leader just gave ("order") and drops the ones revoked ("revoke": [1, 2]).</summary>
+        private static void RecordOrders(AiWorld world, int turn, JObject json)
+        {
+            if (json == null || world == null)
+            {
+                return;
+            }
+            var revoked = new HashSet<int>();
+            if (json["revoke"] is JArray numbers)
+            {
+                foreach (JToken number in numbers)
+                {
+                    string code = number.ToString().TrimStart('O', 'o');
+                    if (int.TryParse(code, out int index))
+                    {
+                        revoked.Add(index - 1);
+                    }
+                }
+            }
+            for (int i = world.LeaderOrders.Count - 1; i >= 0; i--)
+            {
+                if (revoked.Contains(i))
+                {
+                    world.LeaderOrders.RemoveAt(i);
+                }
+            }
+            string order = Clean(Text(json["order"]));
+            if (!string.IsNullOrWhiteSpace(order) && !world.LeaderOrders.Any(o => o.Text == order))
+            {
+                world.LeaderOrders.Add(new LeaderOrder { Turn = turn, Text = order });
+                while (world.LeaderOrders.Count > MaxLeaderOrders)
+                {
+                    world.LeaderOrders.RemoveAt(0);
+                }
+            }
+            if (revoked.Count > 0 || !string.IsNullOrWhiteSpace(order))
+            {
+                Plugin.Log?.LogInfo($"[IA] Player council, turn {turn}: standing orders now {world.LeaderOrders.Count} (new: {order ?? "-"}, revoked: {revoked.Count}).");
+            }
+        }
+
+        /// <summary>The leader's standing orders for the prompt, numbered O1, O2… (null when there are none).</summary>
+        private static string OrdersText(AiWorld world)
+        {
+            if (world.LeaderOrders.Count == 0)
+            {
+                return null;
+            }
+            var text = new StringBuilder();
+            text.AppendLine("== ORDENS EM VIGOR DO LÍDER (decididas; o conselho trabalha para cumpri-las) ==");
+            for (int i = 0; i < world.LeaderOrders.Count; i++)
+            {
+                text.AppendLine($"- O{i + 1} (turno {world.LeaderOrders[i].Turn}): {world.LeaderOrders[i].Text}");
+            }
+            return text.ToString();
         }
 
         /// <summary>
@@ -889,7 +1025,8 @@ namespace CurrencyMod.Diplomacy.Council
             AiNation nation = world.Ensure(player);
             knownWords = build.Context?.KnownWords ?? new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             system = SystemPrompt(me);
-            user = CleanDossier(build.Text) + "\n\n" + Roster(nation, capture, me) + "\n" + MeetingRequest(Math.Max(1, AiConfig.PlayerCouncilSpeakers.Value));
+            string orders = OrdersText(world);
+            user = CleanDossier(build.Text) + "\n\n" + Roster(nation, capture, me) + "\n" + (orders != null ? orders + "\n" : string.Empty) + MeetingRequest(Math.Max(1, AiConfig.PlayerCouncilSpeakers.Value));
             promptTurn = turn;
             promptGuid = world.GameGuid;
             return true;
@@ -907,8 +1044,13 @@ namespace CurrencyMod.Diplomacy.Council
             text.AppendLine(AiConfig.WritingCode == "pt"
                 ? "- Cada ministro tem nome, pasta, traços e voz (fichas no fim do dossiê). Fale como ele falaria, no tom da era, em português do Brasil. Nada de jargão técnico (\"IA\", \"json\", \"token\")."
                 : $"- Cada ministro tem nome, pasta, traços e voz (fichas no fim do dossiê). Fale como ele falaria, no tom da era. Nada de jargão técnico (\"IA\", \"json\", \"token\").\n- IDIOMA: o rei fala {L.EnglishName(AiConfig.WritingCode)}. Escreva todas as falas e textos livres em {L.EnglishName(AiConfig.WritingCode)}, mesmo com o dossiê em português; nomes do jogo como estão no dossiê; chaves do json e códigos exatamente como especificados.");
-            text.AppendLine("- O apreço de cada um pelo líder vai de -100 a 100: baixo deixa a fala fria, seca ou ressentida; alto, calorosa e franca. A lealdade (0 a 100) mede o quanto ele aceita ser contrariado.");
-            text.AppendLine("- Ministros podem discordar entre si e do líder; a Mão media e resume. Ninguém trai, ameaça o líder ou vaza segredos.");
+            text.AppendLine("- O apreço de cada um pelo líder vai de -100 a 100: baixo deixa a fala fria, seca ou ressentida; alto, calorosa e franca. A lealdade (0 a 100) muda só o tom com que ele aceita ser contrariado, nunca se ele obedece.");
+            text.AppendLine("- O LÍDER TEM A ÚLTIMA PALAVRA. Os ministros aconselham; quem decide é ele. Podem discordar entre si e do líder quando ele pergunta ou pede opinião; a Mão media e resume. Ninguém trai, ameaça o líder ou vaza segredos.");
+            text.AppendLine("- ORDEM DO LÍDER: quando o líder manda ou pede um plano (\"pensem em como cercar os X e me tragam sugestões\", \"quero guerra com Y\", \"cortem o comércio com Z\"), a decisão já está tomada. "
+                + "Os ministros obedecem e trabalham a favor dela: cada um da pasta envolvida ENTREGA a sua parte do plano, com os passos concretos na tela do jogo (quais postos taxar ou bloquear, quais acordos cortar, quem chamar como aliado, que tropas mover), a ordem e o custo em dinheiro e em relações. "
+                + "Quem discorda pode, DEPOIS de entregar o plano, apontar o risco numa frase (\"cumpro, mas saiba que…\"), no tom da lealdade e do apreço. "
+                + "Ninguém recusa, adia, pede para repensar, troca a ordem por outra sugestão nem repete a objeção depois. Ambição alta pode tentar tirar vantagem pessoal do plano, sem sabotá-lo.");
+            text.AppendLine("- ORDENS EM VIGOR (lista no fim do dossiê, quando houver) continuam valendo nos turnos seguintes: nenhum conselho as contradiz. Os conselhos das reuniões seguintes ajudam a cumpri-las ou relatam o andamento; quem achava ruim já disse e não volta ao assunto.");
             text.AppendLine("- A tela já mostra o nome e o cargo de quem fala: não comece a fala se apresentando.");
             text.AppendLine("- As fichas trazem os números de cada pasta e a tendência de cada ministro: use como base, sem repetir a ficha.");
             text.AppendLine();
@@ -932,7 +1074,8 @@ namespace CurrencyMod.Diplomacy.Council
         {
             return "== A REUNIÃO DESTE TURNO ==\n"
                 + $"Escreva a reunião. A Mão abre em 2 a 4 frases: o que mais pesa hoje e o que vence logo. Depois falam até {speakers} ministros, os de pasta mais urgente hoje; "
-                + "quem não tem nada relevante fica calado. Cada fala tem 1 a 3 frases, até 60 palavras, na voz do ministro, e um conselho concreto em uma linha.\n"
+                + "quem não tem nada relevante fica calado. Cada fala tem 1 a 3 frases, até 60 palavras, na voz do ministro, e um conselho concreto em uma linha. "
+                + "Se há ordens em vigor do líder, nenhum conselho vai contra elas: os ministros relatam o andamento e o próximo passo para cumpri-las.\n"
                 + "Responda só com json, sem texto fora dele:\n"
                 + "{\"mao\": \"...\", \"falas\": [{\"pasta\": \"guerra\", \"texto\": \"...\", \"conselho\": \"...\"}]}\n"
                 + "Pastas: " + string.Join(", ", CouncilBank.Portfolios.Where(p => p != "mao")) + ".";
@@ -946,11 +1089,16 @@ namespace CurrencyMod.Diplomacy.Council
             {
                 text.AppendLine("Mudanças no conselho desde a reunião: " + string.Join(" ", notes));
             }
-            text.AppendLine("Reajam. Falam de 1 a 4 ministros: os que a resposta toca, os que discordam e quem o líder chamou pelo nome ou pela pasta. "
-                + "Cada um em 1 a 3 frases, até 60 palavras, na própria voz: podem concordar, insistir, pedir detalhe ou se ofender, sempre com os fatos do dossiê. "
+            text.AppendLine("Reajam. Falam de 1 a 4 ministros: os que a resposta toca e quem o líder chamou pelo nome ou pela pasta. "
+                + "Cada um em 1 a 3 frases, até 60 palavras, na própria voz: se ele só perguntou ou conversou, podem concordar, discordar, pedir detalhe ou se ofender, sempre com os fatos do dossiê. "
                 + "A Mão (pasta \"mao\") pode fechar: com o que o líder decidiu, se ele decidiu; se ele só perguntou, com as opções que ficaram na mesa. Ninguém decide pelo líder.");
+            text.AppendLine("Se a resposta é uma ORDEM ou um pedido de plano (o líder manda fazer ou pede sugestões de COMO fazer), a decisão é dele e ninguém a discute: "
+                + "cada ministro envolvido entrega primeiro a parte dele do plano, com passos concretos na tela do jogo, nomes e códigos do dossiê, ordem e custo (até 90 palavras nesse caso), "
+                + "e só no fim, se discordar, aponta o risco numa frase. Ninguém propõe fazer outra coisa no lugar. A Mão fecha com o plano em ordem: o que fazer neste turno e nos próximos.");
             text.AppendLine("Diga também como o apreço de cada um pelo líder mudou com essa resposta, de -8 a 8 (só quem mudou).");
-            text.Append("Responda só com json: {\"falas\": [{\"pasta\": \"guerra\", \"texto\": \"...\"}], \"apreco\": {\"guerra\": 2}}");
+            text.AppendLine("Se a resposta é uma ordem nova, resuma-a em \"order\" (uma linha, com os nomes, como \"Cercar economicamente e bloquear os Carais (E5)\"); senão, deixe \"order\" vazio. "
+                + "Se o líder cancelou ou mudou uma ordem em vigor, ponha o número dela em \"revoke\" (O2 → 2).");
+            text.Append("Responda só com json: {\"falas\": [{\"pasta\": \"guerra\", \"texto\": \"...\"}], \"apreco\": {\"guerra\": 2}, \"order\": \"\", \"revoke\": []}");
             return text.ToString();
         }
 

@@ -330,8 +330,12 @@ namespace CurrencyMod.Diplomacy.UI
             }
             if (PlayerCouncil.Meeting(AiModule.World, AiModule.Instance?.CurrentTurn ?? -1) == null)
             {
-                // Council dismissed: the button summons an audience (the written speech stays in the field for later).
-                string convened = PlayerCouncil.Convene();
+                // Council dismissed: the button summons an audience, and what is written goes with it (answered after the meeting).
+                string convened = PlayerCouncil.Convene(field.Text);
+                if (convened.StartsWith("ok"))
+                {
+                    field.ReplaceText(string.Empty);
+                }
                 SetFeedback(convened.Replace("ok: ", string.Empty).Replace("error: ", string.Empty), convened.StartsWith("error"));
                 return;
             }
@@ -589,11 +593,13 @@ namespace CurrencyMod.Diplomacy.UI
             CouncilMeeting meeting = PlayerCouncil.Meeting(world, turn);
             // With no meeting this turn, the section shows the last one (the council meets every N turns or by audience).
             CouncilMeeting shown = meeting ?? PlayerCouncil.LastMeeting(world);
-            if (meeting != null && meeting.Status == "pronta" && currentSection == Section.Meeting && !meeting.Seen)
+            if (meeting != null && meeting.Status == "pronta" && currentSection == Section.Meeting && (!meeting.Seen || meeting.UnseenReplies > 0))
             {
                 meeting.Seen = true;
+                meeting.UnseenReplies = 0;
                 module.MarkDirty();
             }
+            PlayerCouncil.UrgentSeenTurn = turn;
             descriptionLabel.Text = DescribeCouncil(nation, turn);
             switch (currentSection)
             {
@@ -657,25 +663,18 @@ namespace CurrencyMod.Diplomacy.UI
                 : L.F("Última reunião: turno {0} · a próxima é no turno {1}, ou quando você convocar", meeting.Turn, PlayerCouncil.NextAutoTurn(AiModule.World));
             SetRowCount(count);
             int index = 0;
-            if (summary > 0)
-            {
-                FillSummary(rows[index++], advised, nation, era);
-            }
-            foreach (CouncilSpeech speech in meeting.Speeches)
-            {
-                FillSpeech(rows[index++], speech, nation, capture, era, reply: false);
-            }
+            // Newest first (melhorias item 38): your latest speech and its replies at the top, then the earlier ones,
+            // and the turn's meeting at the end. Inside each exchange the order stays natural (you speak, they answer).
             string exchangesKey = $"{meeting.Turn}:{meeting.Exchanges.Count}:{meeting.Exchanges.Count(e => e.Status == "pronta")}";
             if (shownExchanges != null && exchangesKey != shownExchanges && meeting.Exchanges.Count > 0)
             {
-                // New speech or new reply: your last speech goes to the top of the list (with the reactions right below).
-                int last = summary + meeting.Speeches.Count + meeting.Exchanges.Take(meeting.Exchanges.Count - 1).Sum(e => 1 + e.Replies.Count + (e.Status == "pronta" ? 0 : 1));
-                scrollTarget = rows[last].Card;
+                scrollTarget = rows[0].Card; // the newest exchange is the first row
                 scrollAt = Time.unscaledTime + 0.3f;
             }
             shownExchanges = exchangesKey;
-            foreach (CouncilExchange exchange in meeting.Exchanges)
+            for (int e = meeting.Exchanges.Count - 1; e >= 0; e--)
             {
+                CouncilExchange exchange = meeting.Exchanges[e];
                 FillPlayer(rows[index++], exchange);
                 foreach (CouncilSpeech reply in exchange.Replies)
                 {
@@ -687,6 +686,14 @@ namespace CurrencyMod.Diplomacy.UI
                         exchange.Status == "erro" ? $"<c={Red}>" + L.T("Falhou") + "</c>" : L.T("Pensando"),
                         exchange.Status == "erro" ? L.F("A chamada falhou: {0}. Use \"Convocar de novo\", à direita.", MailScreen.Escape(exchange.Error != null ? CouncilBank.ErrorUi(exchange.Error) : "?")) : null);
                 }
+            }
+            if (summary > 0)
+            {
+                FillSummary(rows[index++], advised, nation, era);
+            }
+            foreach (CouncilSpeech speech in meeting.Speeches)
+            {
+                FillSpeech(rows[index++], speech, nation, capture, era, reply: false);
             }
             if (meeting.Notes.Count > 0)
             {

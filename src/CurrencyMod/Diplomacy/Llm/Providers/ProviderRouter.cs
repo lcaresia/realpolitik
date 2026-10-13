@@ -71,6 +71,31 @@ namespace CurrencyMod.Diplomacy.Llm.Providers
             }
         }
 
+        /// <summary>
+        /// New turn while disconnected: try right away instead of waiting up to 10 minutes for the next probe (the player
+        /// passed 3 turns with no AI after a short Codex hiccup, T171). Also rechecks the Codex login.
+        /// </summary>
+        internal static void ProbeNow()
+        {
+            CodexCli.RefreshLoginAsync(force: true);
+            if (!allDown)
+            {
+                return;
+            }
+            lock (Gate)
+            {
+                nextProbeUtc = DateTime.MinValue;
+                probeInterval = TimeSpan.FromMinutes(2);
+                foreach (ProviderHealth health in Health.Values)
+                {
+                    if (health.LastKind != ErrorKind.Auth)
+                    {
+                        health.OutUntilUtc = DateTime.MinValue;
+                    }
+                }
+            }
+        }
+
         /// <summary>Notices for the main thread (Runtime.Event, on-screen notice).</summary>
         internal static readonly ConcurrentQueue<string> Notices = new ConcurrentQueue<string>();
 

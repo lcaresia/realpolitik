@@ -36,6 +36,8 @@ namespace CurrencyMod
         public double Paid;
         public double Gain;
         public int Kind;
+        /// <summary>Resource type of a single-resource purchase (MoneyKind.Resources); -1 when unknown (old saves, bulk buys).</summary>
+        public int Resource = -1;
     }
 
     public static class MoneyKind
@@ -188,7 +190,7 @@ namespace CurrencyMod
             return point;
         }
 
-        public void RecordMoney(int turn, int from, int to, double paid, double gain, int kind)
+        public void RecordMoney(int turn, int from, int to, double paid, double gain, int kind, int resource = -1)
         {
             if (double.IsNaN(paid) || double.IsNaN(gain) || double.IsInfinity(paid) || double.IsInfinity(gain) || (paid <= 0 && gain <= 0))
             {
@@ -196,7 +198,7 @@ namespace CurrencyMod
             }
             // Two decimals are enough (the ledger goes into the save's JSON).
             TradePoint point = PointFor(turn);
-            point.Money.Add(new MoneyFlow { From = from, To = to, Paid = Math.Round(paid, 2), Gain = Math.Round(gain, 2), Kind = kind });
+            point.Money.Add(new MoneyFlow { From = from, To = to, Paid = Math.Round(paid, 2), Gain = Math.Round(gain, 2), Kind = kind, Resource = resource });
         }
 
         public EmpireCurrency Get(int empireIndex)

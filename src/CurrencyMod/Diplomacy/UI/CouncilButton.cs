@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using Amplitude.Mercury.UI;
 using Amplitude.Mercury.UI.Helpers;
@@ -7,6 +8,7 @@ using Amplitude.Mercury.UI.Windows;
 using Amplitude.UI;
 using Amplitude.UI.Interactables;
 using Amplitude.UI.Renderers;
+using CurrencyMod.Diplomacy.Capture;
 using CurrencyMod.Diplomacy.Council;
 using CurrencyMod.NativeUI;
 using HarmonyLib;
@@ -33,6 +35,7 @@ namespace CurrencyMod.Diplomacy.UI
         private readonly TitleAndDescription tooltipTarget = new TitleAndDescription();
         private Transform badge;
         private string shownBadge = "?";
+        private List<string> urgentTopics;
         private float nextAttempt;
         private float nextBadge;
 
@@ -133,13 +136,16 @@ namespace CurrencyMod.Diplomacy.UI
         private void RefreshBadge()
         {
             AiModule module = AiModule.Instance;
-            CouncilMeeting meeting = PlayerCouncil.Meeting(AiModule.World, module?.CurrentTurn ?? -1);
-            string mark = PlayerCouncil.HasNews(AiModule.World, module?.CurrentTurn ?? -1) ? "!" : null;
-            if (mark == shownBadge)
+            int turn = module?.CurrentTurn ?? -1;
+            CouncilMeeting meeting = PlayerCouncil.Meeting(AiModule.World, turn);
+            string mark = module == null ? null
+                : PlayerCouncil.Badge(AiModule.World, TurnCapture.Latest, module.PlayerIndex, turn, out urgentTopics);
+            string key = mark + "|" + meeting?.Status + "|" + meeting?.Seen + "|" + string.Join(";", urgentTopics ?? new List<string>());
+            if (key == shownBadge)
             {
                 return;
             }
-            shownBadge = mark;
+            shownBadge = key;
             RefreshTooltip(meeting);
             if (badge != null)
             {
@@ -154,6 +160,14 @@ namespace CurrencyMod.Diplomacy.UI
                 : meeting.Status == "pronta" ? (meeting.Seen ? L.T("A reunião deste turno já aconteceu.") : L.T("A reunião deste turno está pronta."))
                 : meeting.Status == "erro" ? L.T("A reunião deste turno falhou; abra para convocar de novo.")
                 : L.T("O conselho está se reunindo.");
+            if (meeting != null && meeting.UnseenReplies > 0)
+            {
+                state += "\n" + L.F("{0} resposta(s) dos ministros esperando você.", meeting.UnseenReplies);
+            }
+            if (urgentTopics != null && urgentTopics.Count > 0)
+            {
+                state += "\n" + L.T("O conselho quer falar com você:") + "\n· " + string.Join("\n· ", urgentTopics);
+            }
             tooltipTarget.Description = state + "\n" + L.T("Ouça a Mão e os ministros, responda a eles e demita quem não serve mais.");
         }
 

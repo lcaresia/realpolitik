@@ -718,7 +718,8 @@ namespace CurrencyMod.Diplomacy.UI
                 {
                     B.SetLabel(top, "TitleGroup/Title", L.T("Você"));
                     B.SetChip(top, "StatsTable/PopCount", L.F("Enviada no turno {0}", letter.SentTurn));
-                    B.SetChip(top, "StatsTable/Fortification", MailScreen.TypeChip(letter.Type));
+                    B.SetChip(top, "StatsTable/Fortification", MailScreen.TypeChip(letter));
+                    MailScreen.TypeTip(capture, top, letter);
                     B.SetVisible(top.Find("StatsTable/ExtensionsCount"), true);
                     B.SetChip(top, "StatsTable/ExtensionsCount", MailScreen.StatusChip(module, letter, turn, out string help));
                     B.Tip(top, "StatsTable/ExtensionsCount", L.T("Situação"), help);
@@ -731,7 +732,8 @@ namespace CurrencyMod.Diplomacy.UI
                     B.SetLabel(top, "TitleGroup/Title", letter.IsPublic ? L.F("{0} · a todos", sender) : sender);
                     B.SetChip(top, "StatsTable/PopCount", !letter.ReadBy.Contains(me) ? $"<c={Green}>" + L.T("Nova") + "</c> · " + L.F("turno {0}", letter.DeliverTurn) : L.F("Chegou no turno {0}", letter.DeliverTurn));
                     B.Tip(top, "StatsTable/PopCount", L.T("Chegada"), L.F("Escrita no turno {0}, chegou no turno {1}.", letter.SentTurn, letter.DeliverTurn));
-                    B.SetChip(top, "StatsTable/Fortification", MailScreen.TypeChip(letter.Type));
+                    B.SetChip(top, "StatsTable/Fortification", MailScreen.TypeChip(letter));
+                    MailScreen.TypeTip(capture, top, letter);
                     B.SetVisible(top.Find("StatsTable/ExtensionsCount"), !letter.IsPublic && letter.ExpectsReply);
                     if (!letter.IsPublic && letter.ExpectsReply)
                     {

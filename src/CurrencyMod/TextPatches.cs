@@ -108,7 +108,25 @@ namespace CurrencyMod
                         }
                         double interest = me != null ? NativeEffects.ProjectedInterest(me) : 0;
                         string interestPart = Math.Abs(interest) >= 0.05 ? "  ·  " + L.F("{0}/turno de juros", Format.SignedMoney(interest)) : string.Empty;
-                        label.Text = text + "\n" + line + interestPart;
+                        string transfers = string.Empty;
+                        if (me != null)
+                        {
+                            NativeEffects.LastTurnTransfers(me, Amplitude.Mercury.Sandbox.SandboxManager.Sandbox.Turn, out double received, out double given);
+                            var parts = new System.Collections.Generic.List<string>();
+                            if (received >= 0.5)
+                            {
+                                parts.Add(L.F("{0} recebidos em presentes e tributos", Format.SignedMoney(received)));
+                            }
+                            if (given >= 0.5)
+                            {
+                                parts.Add($"<c={NegativeColor}>" + L.F("{0} dados em presentes e tributos", Format.SignedMoney(-given)) + "</c>");
+                            }
+                            if (parts.Count > 0)
+                            {
+                                transfers = "\n" + L.T("Último turno (não se repete):") + " " + string.Join("  ·  ", parts);
+                            }
+                        }
+                        label.Text = text + "\n" + line + interestPart + transfers;
                     }
                 }
                 catch (Exception ex)

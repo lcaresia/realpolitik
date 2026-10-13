@@ -130,7 +130,27 @@ namespace CurrencyMod
             RouteTransitShare = config.Bind(blockade, "RepasseDaManutencao", 0.1, "Fração da manutenção das rotas (paga por quem compra) que vai para os donos dos territórios por onde a rota passa, menos o comprador, em proporção aos territórios de cada um. O resto some: é o custo de manter a rota. 0,1 = 10%; 0 = tudo some, como no jogo base.");
             EnableAiTradePolicy = config.Bind(blockade, "IA", true, "A IA também bloqueia e cobra pedágio de rivais.");
             AiReviewInterval = config.Bind(blockade, "IntervaloIA", 5, "De quantos em quantos turnos cada IA revê os bloqueios.");
-            RouteColors = config.Bind(blockade, "CoresDasRotas", true, "Na visão de comércio, pinta as rotas pela situação com você (dourado = paga o seu pedágio, branco = passa livre pelas suas terras, laranja = rota sua que paga pedágio, azul = rota sua), engrossa as que levam mais recursos e mostra o valor do pedágio no meio das que passam pelas suas terras.");
+            const string network = "TradeNetwork";
+            EnableTradeNetwork = config.Bind(network, "Enabled", true, "Cidades por onde passam muitas rotas viram entrepostos (buffs e alguns debuffs leves), rotas longas viram grandes rotas com nome, e as rotas levam fé, cultura e tecnologia de quem vende.");
+            HubLevelRoutes = config.Bind(network, "HubLevelRoutes", "2,4,7,11", "Rotas que precisam passar pela cidade para cada nível: Mercado, Entreposto, Grande entreposto, Metrópole comercial (grande rota conta 2).");
+            HubMoneyPerRoute = config.Bind(network, "HubMoneyPerRoute", 1.0, "Dinheiro por turno, por rota que passa pela cidade, multiplicado pela era do dono.");
+            HubGrowthPerLevel = config.Bind(network, "HubGrowthPerLevel", 0.05, "Crescimento extra da cidade por nível acima de Mercado (0,05 = +5% do crescimento por nível).");
+            HubInfluencePerLevel = config.Bind(network, "HubInfluencePerLevel", 1.0, "Influência por turno a partir do Grande entreposto: nível × era × este valor.");
+            HubSciencePercent = config.Bind(network, "HubSciencePercent", 0.15, "Ciência extra da Metrópole comercial, em fração da ciência da cidade (0,15 = +15%).");
+            HubCrimeMax = config.Bind(network, "HubCrimeMax", 6.0, "Metrópole comercial: pontos de estabilidade que o crime tira, no máximo, numa cidade instável (estabilidade 80 ou mais: nada).");
+            HubSpyMax = config.Bind(network, "HubSpyMax", 0.5, "A partir do Grande entreposto: parte do desgaste de espiões estrangeiros que a cidade instável deixa de aplicar (0,5 = espiões ficam até o dobro de turnos).");
+            HubMinorityMax = config.Bind(network, "HubMinorityMax", 4.0, "Metrópole comercial: pontos de estabilidade que as minorias estrangeiras tiram, no máximo, quando todos os territórios da cidade seguem outra fé ou cultura.");
+            HubDebtInflation = config.Bind(network, "HubDebtInflation", 0.1, "Só com dívida: a inflação da dívida cresce esta fração por nível de entreposto acima de Mercado (teto +50%). Sem dívida, nada.");
+            HubEpidemicChance = config.Bind(network, "HubEpidemicChance", 0.04, "Metrópole comercial: chance por turno de epidemia numa cidade instável e com fome (cidade estável e com comida: quase zero). Tira 1 de população.");
+            HubSupplyCrisis = config.Bind(network, "HubSupplyCrisis", 4.0, "Pontos de estabilidade perdidos por 5 turnos quando cortam uma rota de que a nação dependia (60% ou mais de um recurso).");
+            HubMaxStabilityLoss = config.Bind(network, "HubMaxStabilityLoss", 8.0, "Teto de pontos de estabilidade que todos os debuffs de comércio juntos tiram de uma cidade.");
+            GrandRouteTopShare = config.Bind(network, "GrandRouteTopShare", 0.10, "Parte das rotas, as mais longas, que viram grandes rotas (0,10 = as 10% maiores; pelo menos uma, se alguma tiver o tamanho mínimo).");
+            GrandRouteMinTerritories = config.Bind(network, "GrandRouteMinTerritories", 5, "Mínimo de territórios que uma rota precisa cruzar para poder ser grande rota.");
+            GrandRouteFame = config.Bind(network, "GrandRouteFame", 2.0, "Fama por turno, por grande rota, para as duas pontas (× era).");
+            CargoFaithPerGood = config.Bind(network, "CargoFaithPerGood", 1.5, "Força da fé de quem vende, por recurso, nos territórios do comprador por onde a rota passa (metade nas terras de terceiros).");
+            CargoCulturePerGood = config.Bind(network, "CargoCulturePerGood", 1.5, "Força cultural de quem vende, por recurso, nos territórios do comprador por onde a rota passa (metade nas terras de terceiros).");
+            CargoTechDiscount = config.Bind(network, "CargoTechDiscount", 0.1, "Desconto no custo de uma tecnologia que um parceiro comercial já tem (0,1 = 10%).");
+            RouteColors = config.Bind(blockade, "CoresDasRotas", true,"Na visão de comércio, pinta as rotas pela situação com você (dourado = paga o seu pedágio, branco = passa livre pelas suas terras, laranja = rota sua que paga pedágio, azul = rota sua), engrossa as que levam mais recursos e mostra o valor do pedágio no meio das que passam pelas suas terras.");
         }
 
         // Trade blockade
@@ -141,6 +161,27 @@ namespace CurrencyMod
         public static ConfigEntry<bool> EnableAiTradePolicy;
         public static ConfigEntry<int> AiReviewInterval;
         public static ConfigEntry<bool> RouteColors;
+
+        // Trade network (melhorias-jogando item 36)
+        public static ConfigEntry<bool> EnableTradeNetwork;
+        public static ConfigEntry<string> HubLevelRoutes;
+        public static ConfigEntry<double> HubMoneyPerRoute;
+        public static ConfigEntry<double> HubGrowthPerLevel;
+        public static ConfigEntry<double> HubInfluencePerLevel;
+        public static ConfigEntry<double> HubSciencePercent;
+        public static ConfigEntry<double> HubCrimeMax;
+        public static ConfigEntry<double> HubSpyMax;
+        public static ConfigEntry<double> HubMinorityMax;
+        public static ConfigEntry<double> HubDebtInflation;
+        public static ConfigEntry<double> HubEpidemicChance;
+        public static ConfigEntry<double> HubSupplyCrisis;
+        public static ConfigEntry<double> HubMaxStabilityLoss;
+        public static ConfigEntry<double> GrandRouteTopShare;
+        public static ConfigEntry<int> GrandRouteMinTerritories;
+        public static ConfigEntry<double> GrandRouteFame;
+        public static ConfigEntry<double> CargoFaithPerGood;
+        public static ConfigEntry<double> CargoCulturePerGood;
+        public static ConfigEntry<double> CargoTechDiscount;
 
         /// <summary>
         /// Keys from old versions that no longer do anything. BepInEx keeps entries nobody reads anymore in the .cfg

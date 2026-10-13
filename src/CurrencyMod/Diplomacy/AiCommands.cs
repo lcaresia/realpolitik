@@ -36,6 +36,7 @@ namespace CurrencyMod.Diplomacy
     ///   ai council ...            the player's council
     ///   ai provider ... / ai providers   LLM providers (see Llm\Providers\ProviderCommands.cs)
     ///   ai test letter-from E# [text]|parser E#|congress|council-json   bug-review scenarios
+    ///   ai names [E# new name]    fixed nation names (list; with E# and a name, renames that nation)
     /// </summary>
     internal static class AiCommands
     {
@@ -206,6 +207,33 @@ namespace CurrencyMod.Diplomacy
                 }
                 case "alliances":
                     return UI.AlliancesScreen.DevCommand(rest);
+                case "names":
+                {
+                    // Fixed nation names (NationNaming): list them, or rename one ("ai names E3 Kessaria").
+                    AiWorld world = AiModule.World;
+                    if (world == null)
+                    {
+                        return "error: no game";
+                    }
+                    string[] words = rest.Split(new[] { ' ' }, 2, StringSplitOptions.RemoveEmptyEntries);
+                    if (words.Length == 2 && int.TryParse(words[0].TrimStart('E', 'e'), out int renamed))
+                    {
+                        world.NationNames[renamed] = words[1].Trim();
+                        WorldCapture current = TurnCapture.Latest;
+                        CapturedEmpire empire = current?.Empire(renamed);
+                        if (empire != null)
+                        {
+                            NationNaming.Apply(world, empire);
+                        }
+                        return $"E{renamed} is now called {words[1].Trim()}";
+                    }
+                    if (words.Length > 0)
+                    {
+                        return "usage: ai names [E# new name]";
+                    }
+                    return string.Join("\n", world.NationNames.OrderBy(p => p.Key).Select(p =>
+                        $"E{p.Key}: {p.Value} (peoples: {(world.CultureNames.TryGetValue(p.Key, out System.Collections.Generic.List<string> all) ? string.Join(", ", all) : "?")})"));
+                }
                 case "injection":
                     // Prompt-injection detector (InjectionGuard): tests a text as if it were a received letter.
                     return (InjectionGuard.LooksLikeInjection(rest) ? "flagged" : "clean") + " · " + InjectionGuard.Inline(rest);

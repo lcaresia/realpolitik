@@ -39,8 +39,20 @@ namespace CurrencyMod.Diplomacy
         public int NextGroupId = 1;
         /// <summary>Nation blocs (item 16), with agenda items and a president; rules in Blocs.BlocEngine.</summary>
         public List<Blocs.Bloc> Blocs = new List<Blocs.Bloc>();
+        /// <summary>
+        /// The World Congress's free agenda (melhorias item 40): every nation of the Congress, the same free motions as a
+        /// bloc, only recorded (no effect applied by the mod). Null until the Congress exists. Not in Blocs.
+        /// </summary>
+        public Blocs.Bloc CongressForum;
         public int NextBlocId = 1;
         public int NextMotionId = 1;
+        /// <summary>Deals struck in letters (DealLedger): both sides see them; breaking a public one hurts the reputation.</summary>
+        public List<Deal> Deals = new List<Deal>();
+        public int NextDealId = 1;
+        /// <summary>Foreign-policy doctrine of each AI nation (NationDoctrines key), drawn once per game.</summary>
+        public Dictionary<int, string> Doctrines = new Dictionary<int, string>();
+        /// <summary>Next bloc resolution id (R#): a free motion that passed.</summary>
+        public int NextResolutionId = 1;
         /// <summary>Turn in which each nation left (or was expelled from) a bloc: waits Bloc.LeaveCooldown to join another.</summary>
         public Dictionary<int, int> BlocLeftTurn = new Dictionary<int, int>();
         /// <summary>Last turn in which the bloc step ran (BlocEngine.Step runs once per turn).</summary>
@@ -55,6 +67,11 @@ namespace CurrencyMod.Diplomacy
 
         /// <summary>All people names each empire has had (changes every era): letters still mention the old ones.</summary>
         public Dictionary<int, List<string>> CultureNames = new Dictionary<int, List<string>>();
+        /// <summary>Fixed name of each nation for the whole game (NationNaming).</summary>
+        public Dictionary<int, string> NationNames = new Dictionary<int, string>();
+        /// <summary>Agreements in force between pairs of nations and since when (TreatyLedger).</summary>
+        public List<TreatyRecord> Treaties = new List<TreatyRecord>();
+        public int TreatiesTurn = -1;
         /// <summary>Where each spy (key = army GUID) is and since which turn: the game only stores this for
         /// infiltrations, and a newly arrived spy does not know the place yet (lower weight in interception).</summary>
         public Dictionary<string, SpyTrack> SpyTracks = new Dictionary<string, SpyTrack>();
@@ -64,6 +81,8 @@ namespace CurrencyMod.Diplomacy
         public List<ArmyMission> ArmyMissions = new List<ArmyMission>();
         /// <summary>The player's council meetings (design §10.6), one per turn, with the player's answers.</summary>
         public List<Council.CouncilMeeting> PlayerCouncil = new List<Council.CouncilMeeting>();
+        /// <summary>Standing orders the leader gave the council; they hold until the leader revokes them.</summary>
+        public List<Council.LeaderOrder> LeaderOrders = new List<Council.LeaderOrder>();
         /// <summary>The player's relations on the previous turn (war, peace, agreements), to see whether the advice was followed.</summary>
         public Dictionary<int, string> PlayerRelationMemo = new Dictionary<int, string>();
         public int PlayerRelationMemoTurn = -1;
@@ -152,7 +171,8 @@ namespace CurrencyMod.Diplomacy
                 {
                     continue;
                 }
-                if (!string.IsNullOrWhiteSpace(empire.Culture))
+                // Only on the snapshot's first pass: afterwards Culture holds the fixed name (NationNaming.Apply).
+                if (empire.RealCulture == null && !string.IsNullOrWhiteSpace(empire.Culture))
                 {
                     if (!CultureNames.TryGetValue(empire.Index, out List<string> cultures))
                     {
@@ -181,7 +201,10 @@ namespace CurrencyMod.Diplomacy
                     empire.FullName = empire.FullName.Replace(" " + empire.Leader.Trim() + " ", " ");
                     empire.Leader = null;
                 }
+                NationNaming.Apply(this, empire);
             }
+            TreatyLedger.Update(this, capture);
+            NativeNames.Publish(this);
         }
 
         /// <summary>Upgrades states saved by earlier versions of the mod.</summary>
@@ -289,6 +312,10 @@ namespace CurrencyMod.Diplomacy
         public List<int> BlockedEmpires = new List<int>();
         /// <summary>Current posture toward each nation (definir_postura); holds until changed and guides the native AI (design §11.1).</summary>
         public Dictionary<int, Stance> Postures = new Dictionary<int, Stance>();
+        /// <summary>How this nation reads each other nation (assess_nation): the doctrine it believes they follow. Its own view, maybe wrong.</summary>
+        public Dictionary<int, NationPerception> Perceptions = new Dictionary<int, NationPerception>();
+        /// <summary>Long-term ambitions (set_ambition): what the nation wants to achieve; active ones drive its turns.</summary>
+        public List<NationAmbition> Ambitions = new List<NationAmbition>();
         /// <summary>The empire's current focus (definir_foco); holds until changed.</summary>
         public Stance Focus;
         /// <summary>Trade policy toward each nation (politica_comercial: livre, pedagio or bloqueio) at all posts; the
@@ -366,6 +393,92 @@ namespace CurrencyMod.Diplomacy
             return $"postura {posture} com E{other}";
         }
 
+        public const int MaxActiveAmbitions = 3;
+
+        /// <summary>Active ambitions, by slot.</summary>
+        public List<NationAmbition> ActiveAmbitions() => Ambitions.Where(a => a.Status == "active").OrderBy(a => a.Slot).ToList();
+
+        /// <summary>
+        /// set_ambition: creates or rewrites the ambition in a slot (1 to 3), or closes it ("done" or "dropped").
+        /// Returns the status line for the action log.
+        /// </summary>
+        public string SetAmbition(string json, int turn, int era)
+        {
+            Newtonsoft.Json.Linq.JObject item;
+            try
+            {
+                item = Newtonsoft.Json.Linq.JObject.Parse(json ?? "{}");
+            }
+            catch (Exception)
+            {
+                return "não aplicada: json inválido";
+            }
+            string Text(string key) => (item[key] as Newtonsoft.Json.Linq.JValue)?.Value?.ToString()?.Trim();
+            int slot = int.TryParse(Text("slot"), out int s) ? s : 0;
+            string status = (Text("status") ?? "active").ToLowerInvariant();
+            NationAmbition current = Ambitions.FirstOrDefault(a => a.Status == "active" && a.Slot == slot);
+            if (status == "done" || status == "dropped")
+            {
+                if (current == null)
+                {
+                    return $"não aplicada: não há ambição ativa no slot {slot}";
+                }
+                current.Status = status;
+                current.ClosedTurn = turn;
+                current.Outcome = Text("reason");
+                Trim();
+                return (status == "done" ? "cumprida: " : "abandonada: ") + current.Text;
+            }
+            string text = Text("ambition");
+            if (string.IsNullOrEmpty(text) && current == null)
+            {
+                return "não aplicada: falta \"ambition\"";
+            }
+            if (current == null)
+            {
+                current = new NationAmbition { Slot = slot, SetTurn = turn, Era = era };
+                Ambitions.Add(current);
+            }
+            if (!string.IsNullOrEmpty(text) && text != current.Text)
+            {
+                current.Text = text;
+                current.SetTurn = turn;
+                current.Era = era;
+            }
+            if (era > current.Era)
+            {
+                current.Era = era; // reviewed in the new era
+            }
+            current.Plan = Text("plan") ?? current.Plan;
+            int deadline = int.TryParse(Text("deadline"), out int d) ? Math.Max(1, Math.Min(30, d)) : 0;
+            if (deadline > 0)
+            {
+                current.DeadlineTurn = turn + deadline;
+            }
+            else if (current.DeadlineTurn <= 0)
+            {
+                current.DeadlineTurn = turn + 10;
+            }
+            if (item["declared"] != null)
+            {
+                string declared = Text("declared");
+                current.Declared = string.IsNullOrEmpty(declared) ? null : declared;
+            }
+            current.PlanTurn = turn;
+            Trim();
+            return $"registrada no slot {slot}: {current.Text} (plano até o turno {current.DeadlineTurn})";
+        }
+
+        /// <summary>Keeps the active ambitions and the 6 most recent closed ones.</summary>
+        private void Trim()
+        {
+            List<NationAmbition> closed = Ambitions.Where(a => a.Status != "active").OrderBy(a => a.ClosedTurn).ToList();
+            foreach (NationAmbition old in closed.Take(Math.Max(0, closed.Count - 6)))
+            {
+                Ambitions.Remove(old);
+            }
+        }
+
         public Feelings FeelingsFor(int other)
         {
             if (!Feelings.TryGetValue(other, out Feelings feelings))
@@ -384,6 +497,37 @@ namespace CurrencyMod.Diplomacy
         public List<string> Traits = new List<string>();
         public string Quirk;
         public string Seed;
+    }
+
+    /// <summary>One nation's reading of another (assess_nation).</summary>
+    internal sealed class NationPerception
+    {
+        /// <summary>NationDoctrines key.</summary>
+        public string Doctrine;
+        public string Note;
+        public int Turn;
+    }
+
+    /// <summary>A long-term ambition of a nation (set_ambition).</summary>
+    internal sealed class NationAmbition
+    {
+        /// <summary>1 to 3.</summary>
+        public int Slot;
+        public string Text;
+        /// <summary>The next concrete step.</summary>
+        public string Plan;
+        /// <summary>Turn by which the plan should have moved.</summary>
+        public int DeadlineTurn;
+        /// <summary>What the nation says about it in public (other nations see this; may differ from Text). Null = secret.</summary>
+        public string Declared;
+        public int SetTurn;
+        public int PlanTurn;
+        /// <summary>Era in which it was set or last reviewed.</summary>
+        public int Era;
+        /// <summary>active, done or dropped.</summary>
+        public string Status = "active";
+        public int ClosedTurn = -1;
+        public string Outcome;
     }
 
     internal sealed class Feelings

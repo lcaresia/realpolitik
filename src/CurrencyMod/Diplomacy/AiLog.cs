@@ -15,7 +15,7 @@ namespace CurrencyMod.Diplomacy
     {
         internal static string Root => Path.Combine(Paths.BepInExRootPath, "DiplomaciaIA", "logs");
 
-        private static string GameFolder(string gameGuid)
+        internal static string GameFolder(string gameGuid)
         {
             string id = string.IsNullOrEmpty(gameGuid) ? "sem-partida" : (gameGuid.Length > 8 ? gameGuid.Substring(0, 8) : gameGuid);
             return Path.Combine(Root, id);

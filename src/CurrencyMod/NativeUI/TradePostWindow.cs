@@ -551,9 +551,10 @@ namespace CurrencyMod.NativeUI
             bool ownPrice = TradePolicy.StoredPostPrice(world, me, territoryIndex, empire) > 0;
             bool generalPrice = TradePolicy.StoredGeneralPrice(world, me, empire) > 0;
 
+            // The current state stands out with a dot (melhorias item 52); the button says what it switches to.
             string modeText = mode == TradeMode.Toll
-                ? "<c=" + TollColor + ">" + L.F("Pedágio {0} {1}", symbol, Format.Money(price)) + "</c>"
-                : mode == TradeMode.Block ? "<c=" + BlockColor + ">" + L.T("Bloqueado") + "</c>" : L.T("Livre");
+                ? "<c=" + TollColor + ">● " + L.F("Pedágio {0} {1}", symbol, Format.Money(price)) + "</c>"
+                : mode == TradeMode.Block ? "<c=" + BlockColor + ">● " + L.T("Bloqueado") + "</c>" : "<c=8FD18A>● " + L.T("Livre") + "</c>";
             Transform top = row.Find("Table/Top");
             SetLabel(top, "TitleGroup/Title", ShortEmpireName(empire));
             SetChip(top, "StatsTable/PopCount", modeText);
@@ -595,7 +596,7 @@ namespace CurrencyMod.NativeUI
                 : L.T("Recursos que ele compra e vende nas rotas que passam por aqui. Mais recursos, pedágio maior."));
 
             UIButton button = top.Find("LiberateButton").GetComponent<UIButton>();
-            SetButtonText(button, mode == TradeMode.Free ? L.T("Taxar") : mode == TradeMode.Toll ? L.T("Bloquear") : L.T("Liberar"));
+            SetButtonText(button, "→ " + (mode == TradeMode.Free ? L.T("Taxar") : mode == TradeMode.Toll ? L.T("Bloquear") : L.T("Liberar")));
         }
 
         /// <summary>

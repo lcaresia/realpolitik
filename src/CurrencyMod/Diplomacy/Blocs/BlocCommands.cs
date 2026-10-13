@@ -11,7 +11,8 @@ namespace CurrencyMod.Diplomacy.Blocs
     internal static class BlocCommands
     {
         internal const string Usage = "usage: ai bloc show | found <name_with_underscores> E1 E2 [...] | accept BLC# | decline BLC# | leave"
-            + " | propose <kind> [E#] [arg] | open <motion#> | discard <motion#> | vote <motion#> yes|no | president E# | turn [+N]   (+ \"as E#\" at the end)";
+            + " | propose <title_with_underscores> <free text...> | open <motion#> | discard <motion#> | vote <motion#> yes|no | president E# | turn [+N]"
+            + " | accuse E# [R#] <evidence...> | expel E# <reason...> | congress | cpropose <title_with_underscores> <text...> | caccuse E# [R#] <evidence...>   (+ \"as E#\" at the end)";
 
         internal static string Run(AiModule module, string rest)
         {
@@ -22,7 +23,7 @@ namespace CurrencyMod.Diplomacy.Blocs
             }
             List<string> bits = (rest ?? string.Empty).Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries).ToList();
             int actor = module.PlayerIndex;
-            int asIndex = bits.FindIndex(b => b == "as");
+            int asIndex = bits.FindLastIndex(b => b == "as");
             if (asIndex >= 0 && asIndex + 1 < bits.Count)
             {
                 actor = Empire(bits[asIndex + 1]);
@@ -44,12 +45,42 @@ namespace CurrencyMod.Diplomacy.Blocs
                     return Done(module, problem, $"ok: E{actor} {(sub == "accept" ? "accepted" : "declined")}");
                 case "leave":
                     return Done(module, BlocEngine.Leave(world, actor, turn), $"ok: E{actor} left");
-                case "propose" when bits.Count >= 2:
+                case "propose" when bits.Count >= 3:
                 {
-                    int target = bits.Count >= 3 ? Empire(bits[2]) : -1;
-                    string arg = target >= 0 ? string.Join(" ", bits.Skip(3)) : string.Join(" ", bits.Skip(2));
-                    problem = BlocEngine.Propose(world, actor, bits[1], target, arg.Length > 0 ? arg.Replace('_', ' ') : null, "(teste)", turn, out BlocMotion motion);
-                    return Done(module, problem, motion != null ? $"ok: motion {motion.Id} ({motion.Kind}) {motion.Status}" : null);
+                    problem = BlocEngine.Propose(world, actor, bits[1].Replace('_', ' '), string.Join(" ", bits.Skip(2)), turn, out BlocMotion motion);
+                    return Done(module, problem, motion != null ? $"ok: motion {motion.Id} \"{motion.Title}\" {motion.Status}" : null);
+                }
+                case "congress":
+                    return world.CongressForum == null ? "(no Congress forum yet)" : Describe(world, turn, world.CongressForum);
+                case "cpropose" when bits.Count >= 3:
+                {
+                    problem = world.CongressForum == null ? "no Congress forum yet"
+                        : BlocEngine.Propose(world, actor, bits[1].Replace('_', ' '), string.Join(" ", bits.Skip(2)), turn, out BlocMotion congressMotion, forum: world.CongressForum);
+                    BlocMotion cmade = problem == null ? world.CongressForum.Motions.LastOrDefault(m => m.Author == actor) : null;
+                    return Done(module, problem, cmade != null ? $"ok: Congress motion {cmade.Id} \"{cmade.Title}\" {cmade.Status}" : null);
+                }
+                case "caccuse" when bits.Count >= 3:
+                {
+                    int accused = Empire(bits[1]);
+                    bool hasResolution = bits[2].StartsWith("R", StringComparison.OrdinalIgnoreCase) && int.TryParse(bits[2].Substring(1), out _);
+                    int resolution = hasResolution ? int.Parse(bits[2].Substring(1)) : -1;
+                    string evidence = string.Join(" ", bits.Skip(hasResolution ? 3 : 2));
+                    return Done(module, BlocEngine.Accuse(world, actor, accused, resolution, evidence, turn, congress: true), $"ok: E{actor} accused E{accused} at the Congress");
+                }
+                case "expel" when bits.Count >= 2:
+                {
+                    int target = Empire(bits[1]);
+                    string reason = bits.Count > 2 ? string.Join(" ", bits.Skip(2)) : "Expulsão de E" + target;
+                    problem = BlocEngine.Propose(world, actor, "Expulsão de E" + target, reason, turn, out BlocMotion expulsion, target);
+                    return Done(module, problem, expulsion != null ? $"ok: expulsion motion {expulsion.Id} {expulsion.Status}" : null);
+                }
+                case "accuse" when bits.Count >= 3:
+                {
+                    int accused = Empire(bits[1]);
+                    bool hasResolution = bits[2].StartsWith("R", StringComparison.OrdinalIgnoreCase) && int.TryParse(bits[2].Substring(1), out _);
+                    int resolution = hasResolution ? int.Parse(bits[2].Substring(1)) : -1;
+                    string evidence = string.Join(" ", bits.Skip(hasResolution ? 3 : 2));
+                    return Done(module, BlocEngine.Accuse(world, actor, accused, resolution, evidence, turn), $"ok: E{actor} accused E{accused}");
                 }
                 case "open" when bits.Count >= 2:
                 case "discard" when bits.Count >= 2:
@@ -64,6 +95,10 @@ namespace CurrencyMod.Diplomacy.Blocs
                     // Runs the turn step now, as if N turns had passed (for deadlines): "turn [+N]".
                     int ahead = bits.Count >= 2 && int.TryParse(bits[1].TrimStart('+'), out int n) ? n : 0;
                     BlocEngine.Tick(world, turn + ahead);
+                    if (world.CongressForum != null)
+                    {
+                        BlocEngine.TickMotions(world, world.CongressForum, turn + ahead);
+                    }
                     module.MarkDirty();
                     return Describe(world, turn + ahead);
             }
@@ -82,14 +117,14 @@ namespace CurrencyMod.Diplomacy.Blocs
 
         private static int Empire(string text) => int.TryParse((text ?? string.Empty).TrimStart('E', 'e'), out int e) ? e : -1;
 
-        internal static string Describe(AiWorld world, int turn)
+        internal static string Describe(AiWorld world, int turn, Bloc only = null)
         {
-            if (world.Blocs.Count == 0)
+            if (world.Blocs.Count == 0 && only == null)
             {
                 return "(no blocs)";
             }
             var lines = new List<string>();
-            foreach (Bloc b in world.Blocs)
+            foreach (Bloc b in only != null ? new List<Bloc> { only } : world.Blocs)
             {
                 lines.Add($"{b.Handle} '{b.Name}' {(b.Formed ? "formed T" + b.FormedTurn : "forming")} · members {string.Join(", ", b.Members.Select(m => "E" + m))}"
                     + $" · president E{b.President} (term until T{b.TermEnds}){(b.ElectionOpened >= 0 ? $" · ELECTION open T{b.ElectionOpened}: {string.Join(", ", b.ElectionVotes.Select(v => $"E{v.Key}→E{v.Value}"))}" : string.Empty)}"
@@ -100,9 +135,15 @@ namespace CurrencyMod.Diplomacy.Blocs
                 }
                 foreach (BlocMotion m in b.Motions.Where(m => m.Status == BlocMotion.Voting || m.Status == BlocMotion.Suggested || turn - m.ClosedTurn <= 3))
                 {
-                    lines.Add($"  motion {m.Id} {m.Kind}{(m.Target >= 0 ? " E" + m.Target : string.Empty)}{(m.Arg != null ? " " + m.Arg : string.Empty)} · {m.Status}"
+                    lines.Add($"  motion {m.Id} {m.Kind} \"{m.Title}\" · {m.Status}"
                         + $" · yes {m.Yes} no {m.No}{(m.Status == BlocMotion.Voting ? " · deadline T" + m.Deadline : string.Empty)} · by E{m.Author}");
                 }
+                foreach (BlocResolution r in b.Resolutions)
+                {
+                    lines.Add($"  {r.Handle} \"{r.Title}\" · {r.Status} · passed T{r.PassedTurn}, expires T{r.Expires} · by E{r.Author}");
+                }
+                lines.Add("  slots: " + string.Join(", ", b.Members.Select(m => $"E{m} {b.SlotsUsed(m)}/{Bloc.MotionSlots}")));
+                lines.AddRange(b.Accusations.Skip(Math.Max(0, b.Accusations.Count - 5)).Select(a => $"  accusation T{a.Turn}: E{a.Accuser} → E{a.Accused} {(a.Resolution >= 0 ? "R" + a.Resolution : "general")}: {a.Evidence}"));
                 if (b.Tariffs.Count > 0)
                 {
                     lines.Add("  common tariff: " + string.Join(", ", b.Tariffs.Select(t => $"{t.Mode} against E{t.Target} (since T{t.Since})")));

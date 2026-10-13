@@ -212,6 +212,9 @@ namespace CurrencyMod.Diplomacy
                 case "responder_congresso":
                     CongressFlow.AnswerVerdict(intent, empire);
                     return;
+                case "choose_civic":
+                    CivicFlow.Choose(intent, empire);
+                    return;
                 case "contribuir_consenso":
                     CongressFlow.Contribute(intent, empire);
                     return;

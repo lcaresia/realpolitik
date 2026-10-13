@@ -46,7 +46,7 @@ namespace CurrencyMod.Diplomacy
             return $"native AI locks: {(locked.Count > 0 ? string.Join(", ", locked) : "none")} · treaty initiatives held: {blockedTreaties}"
                 + $" · grievances held: {blockedGrievances} · demand answers held: {blockedDemands}"
                 + $"{(lastBlocked != null ? $" (last: {lastBlocked})" : string.Empty)} · war checks locked: {lockedWarChecks}"
-                + $" · surrenders held: {blockedSurrenders} · {DescribeMinors()} · {DescribeCongress()}";
+                + $" · surrenders held: {blockedSurrenders} · {DescribeMinors()} · {DescribeCongress()} · {DescribeCivics()}";
         }
 
         /// <summary>Called by the main thread (AiModule) every second.</summary>
@@ -574,6 +574,38 @@ namespace CurrencyMod.Diplomacy
                     return true;
                 }
                 System.Threading.Interlocked.Increment(ref BlockedConsulateActions);
+                return false;
+            }
+        }
+
+        private static volatile System.Collections.Generic.HashSet<int> civicFallback = new System.Collections.Generic.HashSet<int>();
+        private static int blockedCivics;
+
+        /// <summary>Published by the main thread (CivicFlow.TrackFallbacks): nations whose civics went back to the native AI.</summary>
+        internal static void SetCivicFallback(System.Collections.Generic.HashSet<int> fallback)
+        {
+            civicFallback = fallback ?? new System.Collections.Generic.HashSet<int>();
+        }
+
+        internal static string DescribeCivics() =>
+            $"civics: native choices held {blockedCivics}"
+            + (civicFallback.Count > 0 ? $" · handed back to the native AI for E{string.Join(", E", civicFallback)}" : string.Empty);
+
+        /// <summary>
+        /// The native AI does not enact civics (choose_civic) for a language-AI nation, unless one of its civics has waited
+        /// CivicFlow.FallbackTurns turns while affordable.
+        /// </summary>
+        [HarmonyPatch(typeof(Amplitude.Mercury.AI.Brain.Generators.Culture.ActivateOneCivic), "GetContexts")]
+        private static class CivicPatch
+        {
+            private static bool Prefix(Amplitude.Mercury.AI.Brain.Generators.Culture.ActivateOneCivic __instance)
+            {
+                MajorEmpireBrain brain = __instance.Brain;
+                if (brain == null || civicFallback.Contains(brain.EmpireIndex) || !BlocksCongress(brain))
+                {
+                    return true;
+                }
+                System.Threading.Interlocked.Increment(ref blockedCivics);
                 return false;
             }
         }

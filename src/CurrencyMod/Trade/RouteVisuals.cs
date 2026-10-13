@@ -38,15 +38,49 @@ namespace CurrencyMod
             /// <summary>Per-turn toll that applies to the player: charged (PaysMe) or that would be charged at the current price (FreeOnMe).</summary>
             public double Value;
             public int MidTile;
+            /// <summary>Grand route (TradeNetwork): drawn thick and golden, with its name.</summary>
+            public bool Grand;
         }
 
         private sealed class Lines
         {
             public Info[] Items = new Info[0];
+            /// <summary>Grand route names and trade hubs the local player can see (built on the sandbox thread).</summary>
+            public List<Label> Extra = new List<Label>();
         }
 
-        /// <summary>The data of each snapshot buffer (the game alternates two Data objects between sandbox and presentation).</summary>
-        private static readonly ConditionalWeakTable<TradePathSnapshot.Data, Lines> table = new ConditionalWeakTable<TradePathSnapshot.Data, Lines>();
+        /// <summary>
+        /// The data of each snapshot buffer (the game alternates two Data objects between sandbox and presentation).
+        /// A plain reference-keyed cache, not a ConditionalWeakTable: after a core hot reload Mono's weak tables of the
+        /// two generations got mixed (InvalidCastException on TryGetValue) and the game crashed right after.
+        /// </summary>
+        private static readonly object tableLock = new object();
+        private static readonly List<KeyValuePair<TradePathSnapshot.Data, Lines>> table = new List<KeyValuePair<TradePathSnapshot.Data, Lines>>();
+
+        private static Lines LinesFor(TradePathSnapshot.Data data, bool create)
+        {
+            lock (tableLock)
+            {
+                foreach (KeyValuePair<TradePathSnapshot.Data, Lines> pair in table)
+                {
+                    if (ReferenceEquals(pair.Key, data))
+                    {
+                        return pair.Value;
+                    }
+                }
+                if (!create)
+                {
+                    return null;
+                }
+                var lines = new Lines();
+                table.Add(new KeyValuePair<TradePathSnapshot.Data, Lines>(data, lines));
+                if (table.Count > 4)
+                {
+                    table.RemoveAt(0); // a new game or save: the old buffers are gone
+                }
+                return lines;
+            }
+        }
 
         /// <summary>A value label: the route's middle tile, text, and whether the route already pays (gold) or only would pay.</summary>
         internal sealed class Label
@@ -54,7 +88,16 @@ namespace CurrencyMod
             public int Tile;
             public string Text;
             public bool Paid;
+            public LabelKind Kind;
+            /// <summary>Second line under the text (grand route: what it is; hub: level and routes).</summary>
+            public string Subtitle;
+            /// <summary>Hover panel (hubs and grand routes): buffs, debuffs and why.</summary>
+            public string Detail;
+            /// <summary>Hub: its level. Grand route: the route's middle tile (to know whether the view shows it).</summary>
+            public int Level;
         }
+
+        internal enum LabelKind { Toll, Grand, Hub }
 
         /// <summary>Labels from the last presentation (read by RouteLabels on the main thread).</summary>
         internal static volatile List<Label> Labels = new List<Label>();
@@ -91,7 +134,7 @@ namespace CurrencyMod
 
         private static void Compute(TradePathSnapshot.Data data)
         {
-            Lines lines = table.GetValue(data, _ => new Lines());
+            Lines lines = LinesFor(data, create: true);
             int count = data.PathRenderingLines.Length;
             if (lines.Items.Length != count)
             {
@@ -99,6 +142,8 @@ namespace CurrencyMod
             }
             Array.Clear(lines.Items, 0, count);
             int local = ViewAs >= 0 ? ViewAs : SandboxManager.Sandbox?.LocalEmpireIndex ?? -1;
+            TradeNetwork.Snapshot network = TradeNetwork.Enabled ? TradeNetwork.Refresh() : new TradeNetwork.Snapshot();
+            lines.Extra = TradeNetworkLabels.Build(network, local);
             ExternalTradeRelation[] relations = Sandbox.TradeController.ExternalTradeRelations;
             int line = 0;
             for (int r = 0; r < relations.Length && line < count; r++)
@@ -109,6 +154,8 @@ namespace CurrencyMod
                     continue; // same order as ComputePathRendering: only existing relations become a line
                 }
                 lines.Items[line] = Describe(relation, local);
+                lines.Items[line].Grand = relation.TradeRoadStatus == TradeRoadStatus.Active
+                    && network.GrandPairs.Contains((relation.LeftEmpireIndex << 16) | relation.RightEmpireIndex);
                 line++;
             }
         }
@@ -194,8 +241,14 @@ namespace CurrencyMod
             new Color(0.45f, 0.72f, 0.95f),           // Mine: blue
         };
 
-        /// <summary>Index of the first mod style in the controller (the game's come first).</summary>
-        private static readonly ConditionalWeakTable<PresentationTradeRoadController, object> styled = new ConditionalWeakTable<PresentationTradeRoadController, object>();
+        /// <summary>The controller that already has the mod styles, and the index of the first one (the game's come first).</summary>
+        private static PresentationTradeRoadController styledController;
+        private static int styledFirst = -1;
+
+        /// <summary>The grand route style comes after all kind × width styles.</summary>
+        private static int GrandStyleOffset => (KindColors.Length - 1) * WidthTiers.Length;
+
+        internal static readonly Color GrandColor = new Color(1f, 0.8f, 0.25f);
 
         private static int Tier(int goods) => goods >= 6 ? 2 : goods >= 3 ? 1 : 0;
 
@@ -224,7 +277,8 @@ namespace CurrencyMod
         {
             TradePathSnapshot.Data data = Snapshots.TradePathSnapshot.PresentationData;
             WorldSpaceLinesWithSteps lines = controller.worldSpaceLinesWithSteps;
-            if (data == null || lines == null || !table.TryGetValue(data, out Lines computed))
+            Lines computed = data != null ? LinesFor(data, create: false) : null;
+            if (lines == null || computed == null)
             {
                 return;
             }
@@ -236,16 +290,33 @@ namespace CurrencyMod
             int defaultStyle = controller.tradeRoadStyleCriteriaToStyleIndex[TradeRoadSettings.TradeRoadStyle.StyleCriteria.Default];
             var labels = new List<Label>();
             string symbol = CurrencyManager.Current?.Get(SandboxManager.Sandbox?.LocalEmpireIndex ?? -1)?.Symbol ?? "$";
+            var grandVisible = new HashSet<int>();
             for (int i = 0; i < lines.LinesCount && i < computed.Items.Length; i++)
             {
                 Info info = computed.Items[i];
                 WorldSpaceLinesWithSteps.Line line = lines.Lines[i];
                 // Only touches lines in the normal style (interrupted and destroyed ones stay as the game shows them).
-                if (!info.External || info.Kind == Kind.Other || !line.IsVisible || line.StyleIndex != defaultStyle)
+                if (!info.External || !line.IsVisible || line.StyleIndex != defaultStyle)
                 {
                     continue;
                 }
-                lines.Lines[i].StyleIndex = firstModStyle + ((int)info.Kind - 1) * WidthTiers.Length + Tier(info.Goods);
+                if (info.Grand)
+                {
+                    // Grand routes stand out above everything: one style, thick and golden, whatever their situation with you.
+                    lines.Lines[i].StyleIndex = firstModStyle + GrandStyleOffset;
+                    if (info.MidTile >= 0)
+                    {
+                        grandVisible.Add(info.MidTile);
+                    }
+                }
+                if (info.Kind == Kind.Other)
+                {
+                    continue;
+                }
+                if (!info.Grand)
+                {
+                    lines.Lines[i].StyleIndex = firstModStyle + ((int)info.Kind - 1) * WidthTiers.Length + Tier(info.Goods);
+                }
                 if (LabelAll && info.MidTile >= 0)
                 {
                     labels.Add(new Label { Tile = info.MidTile, Text = info.Kind + " · " + info.Goods, Paid = info.Kind == Kind.PaysMe });
@@ -257,6 +328,14 @@ namespace CurrencyMod
                 }
             }
             lines.Apply();
+            // Grand route names (only routes the current view shows) and the hubs the player knows.
+            foreach (Label extra in computed.Extra)
+            {
+                if (extra.Kind != LabelKind.Grand || grandVisible.Contains(extra.Level))
+                {
+                    labels.Add(extra);
+                }
+            }
             Labels = labels;
         }
 
@@ -266,9 +345,9 @@ namespace CurrencyMod
         /// </summary>
         private static int EnsureStyles(PresentationTradeRoadController controller, WorldSpaceLinesWithSteps lines)
         {
-            if (styled.TryGetValue(controller, out object first) && first is int known)
+            if (ReferenceEquals(styledController, controller) && styledFirst >= 0)
             {
-                return known;
+                return styledFirst;
             }
             TradeRoadSettings.TradeRoadStyle[] gameStyles = controller.loadedTradeRoadSettings?.GetStyles();
             if (gameStyles == null || gameStyles.Length == 0)
@@ -296,8 +375,16 @@ namespace CurrencyMod
                     all.Add(style);
                 }
             }
+            WorldSpaceLineRenderer.Style grand = template;
+            grand.UseCustomColor = true;
+            grand.Color = GrandColor;
+            grand.UseCustomGlowColor = true;
+            grand.GlowColor = new Color(1f, 0.62f, 0.12f, 0.95f);
+            grand.Width = Mathf.Clamp(template.Width * 2.8f, 0.5f, 20f);
+            all.Add(grand);
             lines.UpdateStyles(all.ToArray());
-            styled.Add(controller, firstMod);
+            styledController = controller;
+            styledFirst = firstMod;
             Plugin.Log.LogInfo($"Route colors: {all.Count - firstMod} styles added (base width {template.Width:0.0}, game's own custom color {template.UseCustomColor}).");
             return firstMod;
         }

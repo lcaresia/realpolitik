@@ -47,20 +47,18 @@ namespace CurrencyMod.Diplomacy.UI
 
         internal static AlliancesScreen Instance;
 
-        internal enum Section { Bloc, Agenda, Invites, World, History }
+        internal enum Section { Bloc, Agenda, Invites, World, History, Congress }
 
-        private static readonly string[] SectionNames = { L.N("Meu bloco"), L.N("Pautas e eleição"), L.N("Convites"), L.N("Blocos do mundo"), L.N("Histórico") };
+        private static readonly string[] SectionNames = { L.N("Meu bloco"), L.N("Pautas e eleição"), L.N("Convites"), L.N("Blocos do mundo"), L.N("Histórico"), L.N("Congresso Mundial") };
         private static readonly string[] SectionHelp =
         {
             L.N("O seu bloco: membros, presidente, mandato e os benefícios que estão valendo, com os números."),
-            L.N("O que está em votação, as sugestões ao presidente e a eleição. Cada membro tem 1 voto."),
+            L.N("Resoluções em vigor com as acusações do livro do bloco, o que está em votação, as sugestões ao presidente e a eleição."),
             L.N("Convites para você entrar num bloco e os convites que o seu bloco mandou."),
-            L.N("Todos os blocos da partida, com os membros, a força somada e as tarifas."),
+            L.N("Todos os blocos da partida, com os membros, a força somada e as resoluções em vigor."),
             L.N("Tudo o que aconteceu no seu bloco, turno a turno."),
+            L.N("Pautas livres do Congresso Mundial: todas as nações propõem e votam. Aprovada, a resolução só fica registrada; cada nação cumpre ou não, e as outras julgam."),
         };
-
-        /// <summary>Agenda item types in the order of the Switch button.</summary>
-        private static readonly string[] MotionKinds = { "tarifa", "fim_tarifa", "admitir", "expulsar", "congresso", "renomear", "dissolver" };
 
         private UILabel titleLabel;
         private UILabel descriptionLabel;
@@ -87,9 +85,6 @@ namespace CurrencyMod.Diplomacy.UI
 
         // Right panel.
         private readonly HashSet<int> invitees = new HashSet<int>();
-        private int kindIndex;
-        private int target = -1;
-        private int valueIndex;
         private string feedback;
         private bool feedbackIsError;
         private float confirmLeaveUntil;
@@ -292,9 +287,9 @@ namespace CurrencyMod.Diplomacy.UI
             UITransform ui = fieldItem.GetComponent<UITransform>();
             ui.Width = sampleUi.Width;
             ui.X = sampleUi.X;
-            ui.Height = 90f;
+            ui.Height = 140f;
             field = fieldItem.GetComponent<UITextField>();
-            field.maximumChars = 200;
+            field.maximumChars = 2500;
             field.whiteList = string.Empty;
             field.BlackList = "<>{}";
             NativeUIKit.BlockGameShortcuts(field);
@@ -447,6 +442,9 @@ namespace CurrencyMod.Diplomacy.UI
                 case Section.History:
                     FillHistory(view);
                     break;
+                case Section.Congress:
+                    FillCongress(view);
+                    break;
                 default:
                     FillBloc(view);
                     break;
@@ -516,6 +514,7 @@ namespace CurrencyMod.Diplomacy.UI
                 lines.Add(L.F("Convites pendentes: {0}", string.Join(", ", bloc.Invites.Select(i => Who(view, i.Empire)))));
             }
             lines.Add(L.F("Fundado por {0} no turno {1}.", Who(view, bloc.Founder), bloc.CreatedTurn));
+            lines.Add(L.F("Suas pautas ativas: {0} de {1} (sugeridas, em votação ou resoluções suas em vigor).", bloc.SlotsUsed(view.Me), Bloc.MotionSlots));
             Body(row, string.Join("\n", lines));
         }
 
@@ -554,31 +553,41 @@ namespace CurrencyMod.Diplomacy.UI
                 ? L.F("Último: no turno {0}, {1} declarou guerra a {2}.", lastCall.Turn, Who(view, lastCall.Actor), Who(view, lastCall.Target))
                 : L.T("Guerra entre membros não expulsa ninguém, mas também não aciona a defesa."));
 
-            // Congress.
-            Row congress = rows[first + 2];
-            top = Top(congress);
-            Title(congress, L.T("Voz no Congresso"));
-            string line = on && bloc.CongressLine != null && BlocCongress.SessionKeyFor(bloc.CongressLine.Choice, view.Capture) == bloc.CongressLine.SessionKey
-                ? CongressChoiceUi(view, bloc.CongressLine.Choice) : null;
-            Chip(top, 0, state, L.T("Voz no Congresso"), L.T("Com a pauta \"Votar junto no Congresso\" aprovada, todos os membros controlados pela IA votam no mesmo lado; o peso de cada um soma. Você vota pela tela do Congresso."));
-            Chip(top, 1, on ? (line != null ? L.F("Posição: {0}", line) : L.T("Sem posição nesta votação")) : null, L.T("Posição"), L.T("A posição vale para a votação aberta quando a pauta foi aprovada."));
+            // Resolutions in force.
+            Row resolutions = rows[first + 2];
+            top = Top(resolutions);
+            Title(resolutions, L.T("Resoluções em vigor"));
+            List<BlocResolution> inForce = on ? bloc.InForce.ToList() : new List<BlocResolution>();
+            Chip(top, 0, state, L.T("Resoluções"), L.F("Pauta aprovada vira resolução por {0} turnos e obriga todos os membros, inclusive quem votou contra. Depois vence e precisa ser proposta de novo.", Bloc.ResolutionTurns));
+            Chip(top, 1, on ? L.F("{0} em vigor", inForce.Count) : null, L.T("Em vigor"), L.T("Veja o texto e as acusações na seção Pautas e eleição."));
             Chip(top, 2, null, null, null);
             Chip(top, 3, null, null, null);
-            SetButtons(congress, null, null, null, null);
-            Body(congress, L.T("Uma votação do Congresso aberta pode virar pauta do bloco (à direita: tipo \"Votar junto no Congresso\")."));
+            SetButtons(resolutions, null, null, null, null);
+            Body(resolutions, inForce.Count > 0
+                ? string.Join("\n", inForce.Select(r => L.F("{0} «{1}», até o turno {2}", r.Handle, Esc(r.Title), r.Expires)))
+                : L.T("Nenhuma resolução em vigor. Proponha uma pauta à direita: o texto é livre."));
 
-            // Common tariff.
-            Row tariff = rows[first + 3];
-            top = Top(tariff);
-            Title(tariff, L.T("Tarifa comum"));
-            Chip(top, 0, state, L.T("Tarifa comum"), L.T("Pedágio ou bloqueio contra uma nação de fora, em todos os postos de todos os membros. Vale o mais duro entre a tarifa e a regra do próprio posto."));
-            Chip(top, 1, on ? L.F("{0} tarifa(s)", bloc.Tariffs.Count) : null, L.T("Tarifas"), L.T("Tarifas comuns em vigor."));
+            // The bloc's book of accusations.
+            Row book = rows[first + 3];
+            top = Top(book);
+            Title(book, L.T("Livro do bloco"));
+            int againstMe = on ? bloc.AccusedCount(view.Me, view.Turn) : 0;
+            List<BlocAccusation> recent = on ? bloc.Accusations.Where(a => view.Turn - a.Turn <= 15).OrderByDescending(a => a.Turn).Take(4).ToList() : new List<BlocAccusation>();
+            Chip(top, 0, state, L.T("Livro do bloco"), L.T("Ninguém fiscaliza pelos membros: o mod não interpreta nem aplica as resoluções. Quem acha que outro membro descumpriu registra a acusação aqui, com a evidência que viu; todos leem e cada um decide se acredita."));
+            Chip(top, 1, on ? (againstMe > 0 ? $"<c={Red}>" + L.F("Contra você: {0}", againstMe) + "</c>" : L.T("Nada contra você")) : null, L.T("Contra você"), L.T("Acusações contra você nos últimos 30 turnos."));
             Chip(top, 2, null, null, null);
             Chip(top, 3, null, null, null);
-            SetButtons(tariff, null, null, null, null);
-            Body(tariff, on && bloc.Tariffs.Count > 0
-                ? string.Join("\n", bloc.Tariffs.Select(t => L.F("{0} contra {1}, desde o turno {2}", t.Mode == "bloqueio" ? L.T("Bloqueio") : L.T("Pedágio"), Who(view, t.Target), t.Since)))
-                : L.T("Nenhuma tarifa comum em vigor."));
+            SetButtons(book, null, null, null, null);
+            Body(book, recent.Count > 0
+                ? string.Join("\n", recent.Select(a => AccusationUi(view, bloc, a)))
+                : L.T("Nenhuma acusação. Para acusar um membro, escreva a evidência no campo à direita (comece com R1, R2… para citar a resolução) e use o botão Acusar no cartão dele."));
+        }
+
+        private string AccusationUi(View view, Bloc bloc, BlocAccusation accusation)
+        {
+            BlocResolution resolution = bloc.ResolutionBy(accusation.Resolution);
+            return L.F("Turno {0}: {1} acusa {2}{3}: {4}", accusation.Turn, Who(view, accusation.Accuser), Who(view, accusation.Accused),
+                resolution != null ? " (" + resolution.Handle + ")" : string.Empty, Esc(accusation.Evidence));
         }
 
         private void FillMember(View view, Row row, Bloc bloc, int member)
@@ -603,13 +612,15 @@ namespace CurrencyMod.Diplomacy.UI
             Chip(top, 1, empire != null ? L.F("Fama {0}", Math.Round(empire.Fame)) : null, L.T("Fama"), L.F("{0}º lugar em fama.", empire?.FameRank ?? 0));
             Chip(top, 2, empire != null ? L.F("Força {0}", Math.Round(empire.MilitaryStrength)) : null, L.T("Força militar"), L.F("{0} unidades.", empire?.UnitCount ?? 0));
             Chip(top, 3, empire != null ? (empire.EraName ?? L.F("Era {0}", empire.EraIndex + 1)) : null, L.T("Era"), L.F("{0} cidade(s), {1} território(s).", empire?.Cities.Count ?? 0, empire?.TerritoryCount ?? 0));
-            bool canExpel = member != view.Me && bloc.Formed;
-            bool president = bloc.President == view.Me;
-            SetButtons(row, canExpel ? (president ? L.T("Pôr expulsão em votação") : L.T("Sugerir expulsão")) : null,
-                () => Propose(view, "expulsar", member, null, null), null, null);
-            if (canExpel)
+            SetButtons(row, member != view.Me && bloc.Formed ? L.T("Acusar") : null, () => Accuse(view, member),
+                member != view.Me && bloc.Formed ? L.T("Expulsão") : null, () => ProposeExpulsion(view, member));
+            if (member != view.Me && bloc.Formed)
             {
-                B.Tip(row.Button.transform, string.Empty, L.T("Expulsão"), L.T("Expulsar exige 2/3 dos membros (quem é alvo não vota). Quem sai espera 10 turnos para entrar em outro bloco."));
+                B.Tip(row.Second.transform, string.Empty, L.T("Expulsão"), L.T("Propõe a expulsão deste membro (o motivo vai no campo à direita). Passa com 2/3 dos votos; com maioria mas sem 2/3, o presidente decide. Aprovada, ele sai do bloco."));
+            }
+            if (member != view.Me && bloc.Formed)
+            {
+                B.Tip(row.Button.transform, string.Empty, L.T("Acusar"), L.T("Registra no livro do bloco que este membro descumpriu. Escreva a evidência no campo à direita; comece com R1, R2… para citar a resolução. É só a sua palavra: os outros decidem se acreditam."));
             }
             CapturedRelation relation = view.Capture.Empire(view.Me)?.RelationWith(member);
             var lines = new List<string>();
@@ -620,6 +631,12 @@ namespace CurrencyMod.Diplomacy.UI
             if (empire != null)
             {
                 lines.Add(L.F("Dinheiro {0} · ciência {1} · população {2}", Math.Round(empire.Money), Math.Round(empire.Science), empire.Population));
+            }
+            lines.Add(L.F("Pautas ativas: {0} de {1}", bloc.SlotsUsed(member), Bloc.MotionSlots));
+            int accused = bloc.AccusedCount(member, view.Turn);
+            if (accused > 0)
+            {
+                lines.Add($"<c={Red}>" + L.F("Acusado {0} vez(es) no livro do bloco (30 turnos)", accused) + "</c>");
             }
             Body(row, string.Join("\n", lines));
         }
@@ -636,12 +653,13 @@ namespace CurrencyMod.Diplomacy.UI
                 Notice(rows[0], L.T("Sem pautas"), null, L.T("As pautas aparecem quando você está num bloco formado."));
                 return;
             }
-            var open = bloc.OpenMotions.ToList();
+            var open = bloc.Motions.Where(m => m.Status == BlocMotion.Tiebreak).Concat(bloc.OpenMotions).ToList();
             var suggestions = bloc.Suggestions.ToList();
             var closed = bloc.Motions.Where(m => m.ClosedTurn >= 0).OrderByDescending(m => m.ClosedTurn).ThenByDescending(m => m.Id).Take(6).ToList();
+            var resolutions = bloc.InForce.ToList();
             bool election = bloc.ElectionOpened >= 0;
-            int count = (election ? 1 + bloc.Members.Count : 0) + open.Count + suggestions.Count + closed.Count;
-            sectionTitleLabel.Text = L.F("Pautas · {0} em votação · {1} sugestão(ões)", open.Count, suggestions.Count);
+            int count = (election ? 1 + bloc.Members.Count : 0) + open.Count + suggestions.Count + resolutions.Count + closed.Count;
+            sectionTitleLabel.Text = L.F("Pautas · {0} resolução(ões) em vigor · {1} em votação · {2} sugestão(ões)", resolutions.Count, open.Count, suggestions.Count);
             if (count == 0)
             {
                 SetRowCount(rows, listTable, cardSample, 1);
@@ -664,6 +682,10 @@ namespace CurrencyMod.Diplomacy.UI
             {
                 FillMotion(view, rows[index++], bloc, motion);
             }
+            foreach (BlocResolution resolution in resolutions)
+            {
+                FillResolution(view, rows[index++], bloc, resolution);
+            }
             foreach (BlocMotion motion in suggestions)
             {
                 FillSuggestion(view, rows[index++], bloc, motion);
@@ -671,6 +693,124 @@ namespace CurrencyMod.Diplomacy.UI
             foreach (BlocMotion motion in closed)
             {
                 FillClosed(view, rows[index++], motion);
+            }
+        }
+
+        // ---- World Congress (melhorias item 40) ----
+
+        private void FillCongress(View view)
+        {
+            Bloc forum = view.World.CongressForum;
+            if (forum == null || !forum.Has(view.Me))
+            {
+                sectionTitleLabel.Text = L.T("Congresso Mundial");
+                SetRowCount(rows, listTable, cardSample, 1);
+                Notice(rows[0], L.T("Ainda não há Congresso"), null, L.T("As pautas livres do Congresso aparecem quando o Congresso Mundial existir na partida (expansão Together We Rule)."));
+                return;
+            }
+            var open = forum.Motions.Where(m => m.Status == BlocMotion.Tiebreak).Concat(forum.OpenMotions).ToList();
+            var suggestions = forum.Suggestions.ToList();
+            var closed = forum.Motions.Where(m => m.ClosedTurn >= 0).OrderByDescending(m => m.ClosedTurn).ThenByDescending(m => m.Id).Take(6).ToList();
+            var resolutions = forum.InForce.ToList();
+            int count = open.Count + suggestions.Count + resolutions.Count + closed.Count;
+            sectionTitleLabel.Text = L.F("Congresso · {0} resolução(ões) · {1} em votação · {2} sugestão(ões)", resolutions.Count, open.Count, suggestions.Count);
+            if (count == 0)
+            {
+                SetRowCount(rows, listTable, cardSample, 1);
+                Notice(rows[0], L.T("Nenhuma pauta no Congresso"), null, forum.President == view.Me
+                    ? L.T("Você preside o Congresso: proponha uma pauta à direita e ela vai direto à votação.")
+                    : L.T("Proponha uma pauta à direita: ela vira sugestão, e quem preside o Congresso decide se põe em votação."));
+                return;
+            }
+            SetRowCount(rows, listTable, cardSample, count);
+            int index = 0;
+            foreach (BlocMotion motion in open)
+            {
+                FillMotion(view, rows[index++], forum, motion);
+            }
+            foreach (BlocResolution resolution in resolutions)
+            {
+                FillResolution(view, rows[index++], forum, resolution);
+            }
+            foreach (BlocMotion motion in suggestions)
+            {
+                FillSuggestion(view, rows[index++], forum, motion);
+            }
+            foreach (BlocMotion motion in closed)
+            {
+                FillClosed(view, rows[index++], motion);
+            }
+        }
+
+        private void FillCongressForm(View view, List<Transform> order)
+        {
+            Bloc forum = view.World.CongressForum;
+            sideTitleLabel.Text = L.T("Propor ao Congresso");
+            if (forum == null || !forum.Has(view.Me))
+            {
+                SetRowCount(sideRows, sideTable, sideSample, 0);
+                B.SetVisible(fieldItem, false);
+                return;
+            }
+            bool president = forum.President == view.Me;
+            int used = forum.SlotsUsed(view.Me);
+            SetRowCount(sideRows, sideTable, sideSample, 2);
+
+            Row info = sideRows[0];
+            Transform top = Top(info);
+            Title(info, L.T("Pauta livre no Congresso"));
+            Chip(top, 0, president ? $"<c={Gold}>" + L.T("Vai direto à votação") + "</c>" : L.T("Vira sugestão"), L.T("Como funciona"),
+                president ? L.F("Você preside: a pauta entra em votação na hora, por {0} turnos.", Bloc.VoteTurns)
+                    : L.F("Quem preside decide se põe a sua sugestão em votação; sem decisão em {0} turnos, ela vence.", Bloc.SuggestionTurns));
+            Chip(top, 1, used >= Bloc.MotionSlots ? $"<c={Red}>" + L.F("Pautas: {0}/{1}", used, Bloc.MotionSlots) + "</c>" : L.F("Pautas: {0}/{1}", used, Bloc.MotionSlots),
+                L.T("Pautas ativas"), L.F("Cada nação tem até {0} pautas ativas no Congresso: sugeridas, em votação ou resoluções suas em vigor.", Bloc.MotionSlots));
+            Chip(top, 2, L.F("Preside: {0}", Short(view, forum.President)), L.T("Presidente"), L.T("Preside quem preside a sessão de leis do Congresso: põe sugestões em votação e desempata, sem votar."));
+            Chip(top, 3, null, null, null);
+            SetButtons(info, null, null, null, null);
+            Body(info, L.F("Escreva o que o mundo deve fazer (até {0} letras; a primeira frase vira o título). Aprovada, vale {1} turnos e só fica registrada: o mod não aplica nada. Para acusar alguém, comece o texto com o código da nação (e da resolução, se houver): \"E3 R2 manteve a rota aberta\".", Bloc.MotionTextMax, Bloc.ResolutionTurns));
+            order.Add(info.Card);
+
+            ShowField(L.T("Ex.: Proteção da Rota da Seda. Nenhuma nação cobra pedágio nas caravanas que passam por Hàojīng."),
+                L.T("Texto"), L.F("Até {0} letras. Cite nações pelo nome ou pelo código (E14).", Bloc.MotionTextMax), Bloc.MotionTextMax);
+            order.Add(fieldItem);
+
+            Row send = sideRows[1];
+            top = Top(send);
+            Title(send, FeedbackTitle(L.T("Pronta")));
+            Chip(top, 0, L.F("Votação de {0} turnos", Bloc.VoteTurns), L.T("Prazo"), L.T("Maioria simples; no empate decide quem preside."));
+            Chip(top, 1, null, null, null);
+            Chip(top, 2, null, null, null);
+            Chip(top, 3, null, null, null);
+            SetButtons(send, president ? L.T("Pôr em votação") : L.T("Sugerir"), () => ProposeToCongress(view, field?.Text), L.T("Acusar"), () => AccuseAtCongress(view));
+            Body(send, string.Empty);
+            B.SetVisible(send.Body, false);
+            order.Add(send.Card);
+        }
+
+        private void ProposeToCongress(View view, string text)
+        {
+            string problem = BlocEngine.Propose(view.World, view.Me, null, text, view.Turn, out BlocMotion motion, forum: view.World.CongressForum);
+            if (Act(problem, motion == null ? null : motion.Status == BlocMotion.Voting ? L.T("Pauta em votação.") : L.T("Sugestão enviada a quem preside.")))
+            {
+                field?.ReplaceText(string.Empty);
+            }
+        }
+
+        /// <summary>"E3 R2 evidence" in the field: an accusation in the Congress's book.</summary>
+        private void AccuseAtCongress(View view)
+        {
+            string text = (field?.Text ?? string.Empty).Trim();
+            System.Text.RegularExpressions.Match match = System.Text.RegularExpressions.Regex.Match(text, @"^[Ee](\d+)[\s:.,-]*(?:[Rr](\d+)[\s:.,-]*)?");
+            if (!match.Success)
+            {
+                Act(L.T("Comece com o código da nação acusada (ex.: E3 R2 manteve a rota aberta)."), null);
+                return;
+            }
+            int accused = int.Parse(match.Groups[1].Value);
+            int resolution = match.Groups[2].Success ? int.Parse(match.Groups[2].Value) : -1;
+            if (Act(BlocEngine.Accuse(view.World, view.Me, accused, resolution, text.Substring(match.Length), view.Turn, congress: true), L.T("Acusação registrada no livro do Congresso.")))
+            {
+                field?.ReplaceText(string.Empty);
             }
         }
 
@@ -704,22 +844,37 @@ namespace CurrencyMod.Diplomacy.UI
         {
             Transform top = Top(row);
             Title(row, MotionTitle(view, motion));
+            bool tiebreak = motion.Status == BlocMotion.Tiebreak;
+            bool president = bloc.President == view.Me;
             Chip(top, 0, L.F("Sim {0} · Não {1}", motion.Yes, motion.No), L.T("Placar"),
-                motion.Kind == "expulsar" ? L.T("Expulsar exige 2/3 dos membros que votam (o alvo não vota).") : L.T("Maioria simples dos votos; no empate vale o voto do presidente. Sem voto = abstenção."));
-            Chip(top, 1, L.F("Fecha no turno {0}", motion.Deadline), L.T("Prazo"), L.T("Fecha antes se todos votarem."));
+                motion.Expel >= 0 ? L.T("Expulsão: passa com 2/3 dos votos. Com maioria mas sem 2/3, ou no empate, o presidente decide.")
+                    : L.T("Maioria simples. O presidente não vota; no empate (ou sem votos), ele decide. Sem voto = abstenção."));
+            Chip(top, 1, tiebreak ? $"<c={Gold}>" + L.F("Desempate até o turno {0}", motion.TiebreakTurn + BlocMotion.TiebreakTurns) + "</c>" : L.F("Fecha no turno {0}", motion.Deadline),
+                L.T("Prazo"), tiebreak ? L.T("Sem decisão do presidente no prazo, a pauta é rejeitada.") : L.T("Fecha antes se todos votarem."));
             Chip(top, 2, L.F("Por {0}", Short(view, motion.Author)), L.T("Autor"), string.Empty);
             bool voted = motion.Votes.TryGetValue(view.Me, out bool yes);
-            bool target = motion.Kind == "expulsar" && motion.Target == view.Me;
-            Chip(top, 3, target ? $"<c={Red}>" + L.T("Você é o alvo") + "</c>" : voted ? L.F("Seu voto: {0}", yes ? L.T("sim") : L.T("não")) : $"<c={Gold}>" + L.T("Falta seu voto") + "</c>",
-                L.T("Seu voto"), L.T("Você pode mudar o voto até a pauta fechar."));
-            if (target)
+            bool target = motion.Expel == view.Me;
+            string mine = target ? $"<c={Red}>" + L.T("Você é o alvo") + "</c>"
+                : president ? (tiebreak ? $"<c={Gold}>" + L.T("Você desempata") + "</c>" : L.T("Você preside: não vota"))
+                : voted ? $"<c={(yes ? Green : Red)}>" + L.F("Seu voto: {0}", yes ? L.T("sim") : L.T("não")) + "</c>"
+                : tiebreak ? L.T("Aguarda o presidente") : $"<c={Gold}>" + L.T("Falta seu voto") + "</c>";
+            Chip(top, 3, mine, L.T("Seu voto"), president ? L.T("O presidente não vota: escolhe o que vai a votação e desempata.") : L.T("Você pode mudar o voto até a pauta fechar."));
+            if (president && tiebreak)
+            {
+                SetButtons(row, L.T("Aprovar"), () => Act(BlocEngine.Decide(view.World, view.Me, motion.Id, true, view.Turn), L.T("Pauta aprovada pelo seu desempate.")),
+                    L.T("Rejeitar"), () => Act(BlocEngine.Decide(view.World, view.Me, motion.Id, false, view.Turn), L.T("Pauta rejeitada pelo seu desempate.")));
+            }
+            else if (target || president || tiebreak)
             {
                 SetButtons(row, null, null, null, null);
             }
             else
             {
-                SetButtons(row, L.T("Sim"), () => Act(BlocEngine.Vote(view.World, view.Me, motion.Id, true, view.Turn), L.T("Voto registrado.")),
-                    L.T("Não"), () => Act(BlocEngine.Vote(view.World, view.Me, motion.Id, false, view.Turn), L.T("Voto registrado.")));
+                // The chosen side is marked (melhorias item 52): "✓ Sim" in green, the other one plain to change the vote.
+                string yesText = voted && yes ? "<c=" + Green + ">✓ " + L.T("Sim") + "</c>" : L.T("Sim");
+                string noText = voted && !yes ? "<c=" + Red + ">✓ " + L.T("Não") + "</c>" : L.T("Não");
+                SetButtons(row, yesText, () => { if (!(voted && yes)) Act(BlocEngine.Vote(view.World, view.Me, motion.Id, true, view.Turn), L.T("Voto registrado.")); },
+                    noText, () => { if (!(voted && !yes)) Act(BlocEngine.Vote(view.World, view.Me, motion.Id, false, view.Turn), L.T("Voto registrado.")); });
             }
             Body(row, MotionBody(view, motion));
         }
@@ -730,7 +885,7 @@ namespace CurrencyMod.Diplomacy.UI
             bool president = bloc.President == view.Me;
             Title(row, L.F("Sugestão: {0}", MotionTitle(view, motion)));
             Chip(top, 0, L.F("De {0}", Short(view, motion.Author)), L.T("Autor"), string.Empty);
-            Chip(top, 1, L.F("Turno {0}", motion.SuggestedTurn), L.T("Sugerida"), string.Empty);
+            Chip(top, 1, L.F("Vence no turno {0}", motion.SuggestedTurn + Bloc.SuggestionTurns), L.T("Prazo"), L.F("Sem decisão do presidente em {0} turnos, a sugestão vence.", Bloc.SuggestionTurns));
             Chip(top, 2, president ? $"<c={Gold}>" + L.T("Você decide") + "</c>" : L.T("Aguarda o presidente"), L.T("Sugestão"), L.T("Só o presidente põe sugestões em votação."));
             Chip(top, 3, null, null, null);
             if (president)
@@ -756,11 +911,43 @@ namespace CurrencyMod.Diplomacy.UI
             Chip(top, 2, L.F("Turno {0}", motion.ClosedTurn), L.T("Fechada"), string.Empty);
             Chip(top, 3, null, null, null);
             SetButtons(row, null, null, null, null);
-            Body(row, string.Empty);
+            Body(row, string.IsNullOrWhiteSpace(motion.Text) ? string.Empty : Esc(motion.Text));
+        }
+
+        /// <summary>A resolution in force: its text and the accusations about it in the bloc's book.</summary>
+        private void FillResolution(View view, Row row, Bloc bloc, BlocResolution resolution)
+        {
+            Transform top = Top(row);
+            Title(row, $"<c={Green}>{resolution.Handle}</c> " + Esc(resolution.Title));
+            Chip(top, 0, L.F("Até o turno {0}", resolution.Expires), L.T("Vigência"), L.F("Vale {0} turnos; depois vence e precisa ser proposta de novo.", Bloc.ResolutionTurns));
+            Chip(top, 1, L.F("Sim {0} · Não {1}", resolution.Yes, resolution.No), L.T("Placar"), L.F("Aprovada no turno {0}, proposta por {1}.", resolution.PassedTurn, Short(view, resolution.Author)));
+            List<BlocAccusation> accusations = bloc.Accusations.Where(a => a.Resolution == resolution.Id).OrderByDescending(a => a.Turn).ToList();
+            int mine = accusations.Count(a => a.Accused == view.Me);
+            Chip(top, 2, accusations.Count == 0 ? null : mine > 0 ? $"<c={Red}>" + L.F("{0} acusação(ões), {1} contra você", accusations.Count, mine) + "</c>" : L.F("{0} acusação(ões)", accusations.Count),
+                L.T("Livro do bloco"), L.T("Acusações registradas pelos membros sobre esta resolução. É a palavra de quem acusou, não um julgamento."));
+            Chip(top, 3, null, null, null);
+            SetButtons(row, null, null, null, null);
+            var lines = new List<string> { Esc(resolution.Text) };
+            // Who voted how (melhorias item 53).
+            List<int> voters = bloc.Members.Where(m => m != bloc.President).ToList();
+            Dictionary<int, bool> votes = bloc.VotesOf(resolution);
+            List<string> yes = votes.Where(v => v.Value).Select(v => Who(view, v.Key)).ToList();
+            List<string> no = votes.Where(v => !v.Value).Select(v => Who(view, v.Key)).ToList();
+            List<string> abstained = voters.Where(m => !votes.ContainsKey(m)).Select(m => Who(view, m)).ToList();
+            lines.Add($"<c={Green}>" + L.T("A favor:") + "</c> " + (yes.Count > 0 ? string.Join(", ", yes) : "—")
+                + $"  <c={Red}>" + L.T("Contra:") + "</c> " + (no.Count > 0 ? string.Join(", ", no) : "—")
+                + (abstained.Count > 0 ? "  " + L.T("Não votou:") + " " + string.Join(", ", abstained) : string.Empty)
+                + (resolution.ByPresident ? "  " + L.T("(desempate do presidente)") : string.Empty));
+            lines.AddRange(accusations.Take(5).Select(a => AccusationUi(view, bloc, a)));
+            Body(row, string.Join("\n", lines));
         }
 
         private string MotionTitle(View view, BlocMotion motion)
         {
+            if (motion.Kind == BlocMotion.FreeKind || motion.Kind == null)
+            {
+                return Esc(motion.Title ?? string.Empty);
+            }
             switch (motion.Kind)
             {
                 case "tarifa": return L.F("{0} contra {1}", motion.Arg == "bloqueio" ? L.T("Bloqueio comum") : L.T("Pedágio comum"), Short(view, motion.Target));
@@ -777,7 +964,11 @@ namespace CurrencyMod.Diplomacy.UI
         private string MotionBody(View view, BlocMotion motion)
         {
             var lines = new List<string>();
-            if (!string.IsNullOrWhiteSpace(motion.Reason))
+            if (!string.IsNullOrWhiteSpace(motion.Text))
+            {
+                lines.Add(Esc(motion.Text));
+            }
+            else if (!string.IsNullOrWhiteSpace(motion.Reason))
             {
                 lines.Add(L.F("Motivo: {0}", Esc(motion.Reason)));
             }
@@ -861,10 +1052,11 @@ namespace CurrencyMod.Diplomacy.UI
                 Chip(top, 3, L.F("Força somada {0}", Math.Round(strength)), L.T("Força somada"), L.T("Soma da força militar dos membros."));
                 SetButtons(row, null, null, null, null);
                 var lines = new List<string> { L.F("Membros: {0}", string.Join(", ", bloc.Members.Select(m => Who(view, m)))) };
-                foreach (BlocTariff tariff in bloc.Tariffs)
+                foreach (BlocResolution resolution in bloc.InForce)
                 {
-                    string text = L.F("{0} contra {1}", tariff.Mode == "bloqueio" ? L.T("Bloqueio comum") : L.T("Pedágio comum"), Who(view, tariff.Target));
-                    lines.Add(tariff.Target == view.Me ? $"<c={Red}>{text}</c>" : text);
+                    bool aboutMe = (resolution.Text ?? string.Empty).Contains("E" + view.Me) || (resolution.Title ?? string.Empty).Contains("E" + view.Me);
+                    string text = L.F("{0} «{1}»", resolution.Handle, Esc(resolution.Title));
+                    lines.Add(aboutMe && bloc != view.Mine ? $"<c={Red}>{text}</c>" : text);
                 }
                 Body(row, string.Join("\n", lines));
             }
@@ -921,6 +1113,11 @@ namespace CurrencyMod.Diplomacy.UI
                 case "aprovada": return $"<c={Green}>" + L.F("Aprovada: {0}.", KindUi(ev.Arg) + Target(view, ev)) + "</c>";
                 case "rejeitada": return $"<c={Red}>" + L.F("Rejeitada: {0}.", KindUi(ev.Arg) + Target(view, ev)) + "</c>";
                 case "renomeado": return L.F("O bloco mudou de nome (antes: {0}).", Esc(ev.Arg));
+                case "expirou": return L.F("A sugestão de {0} venceu sem decisão do presidente: {1}.", Who(view, ev.Actor), Esc(ev.Arg));
+                case "acusou": return $"<c={Red}>" + (ev.Arg != null ? L.F("{0} acusou {1} de descumprir: {2}.", Who(view, ev.Actor), Who(view, ev.Target), Esc(ev.Arg)) : L.F("{0} acusou {1} de descumprir o compromisso do bloco.", Who(view, ev.Actor), Who(view, ev.Target))) + "</c>";
+                case "revogada": return L.F("Resolução revogada: {0}.", Esc(ev.Arg));
+                case "resolucao_venceu": return L.F("Resolução venceu (10 turnos): {0}.", Esc(ev.Arg));
+                case "desempate": return $"<c={Gold}>" + L.F("Empate em «{0}»: a decisão é do presidente.", Esc(ev.Arg)) + "</c>";
                 case "defesa": return $"<c={Red}>" + L.F("{0} declarou guerra a {1}; os membros em paz com o agressor ganharam um motivo de guerra.", Who(view, ev.Actor), Who(view, ev.Target)) + "</c>";
             }
             return ev.Kind;
@@ -1005,7 +1202,11 @@ namespace CurrencyMod.Diplomacy.UI
         {
             Bloc bloc = view.Mine;
             var order = new List<Transform>();
-            if (bloc == null)
+            if (currentSection == Section.Congress)
+            {
+                FillCongressForm(view, order);
+            }
+            else if (bloc == null)
             {
                 FillFoundForm(view, order);
             }
@@ -1043,7 +1244,7 @@ namespace CurrencyMod.Diplomacy.UI
             Body(head, L.T("Dê um nome ao bloco no campo abaixo e marque os convidados."));
             order.Add(head.Card);
 
-            ShowField(L.T("Nome do bloco (ex.: Liga do Mar)"), L.T("Nome do bloco"), L.T("Até 40 letras. Os membros podem renomear depois, por pauta."));
+            ShowField(L.T("Nome do bloco (ex.: Liga do Mar)"), L.T("Nome do bloco"), L.T("Até 40 letras. Os membros podem renomear depois, por pauta."), 40);
             order.Add(fieldItem);
 
             Row send = sideRows[1];
@@ -1107,86 +1308,41 @@ namespace CurrencyMod.Diplomacy.UI
         private void FillProposeForm(View view, Bloc bloc, List<Transform> order)
         {
             bool president = bloc.President == view.Me;
-            string kind = MotionKinds[Mathf.Clamp(kindIndex, 0, MotionKinds.Length - 1)];
-            List<int> targets = Targets(view, bloc, kind);
-            if (targets.Count > 0 && !targets.Contains(target))
-            {
-                target = targets[0];
-            }
-            List<string> values = Values(view, kind);
-            string value = values.Count > 0 ? values[Mathf.Clamp(valueIndex, 0, values.Count - 1)] : null;
-            bool needsTarget = kind == "tarifa" || kind == "fim_tarifa" || kind == "admitir" || kind == "expulsar";
-            bool needsValue = kind == "tarifa" || kind == "congresso";
-
+            int used = bloc.SlotsUsed(view.Me);
             sideTitleLabel.Text = president ? L.T("Pôr em votação") : L.T("Sugerir ao presidente");
-            SetRowCount(sideRows, sideTable, sideSample, 5);
+            SetRowCount(sideRows, sideTable, sideSample, 3);
 
-            Row typeRow = sideRows[0];
-            Transform top = Top(typeRow);
-            Title(typeRow, KindName(kind));
+            Row info = sideRows[0];
+            Transform top = Top(info);
+            Title(info, L.T("Pauta livre"));
             Chip(top, 0, president ? $"<c={Gold}>" + L.T("Vai direto à votação") + "</c>" : L.T("Vira sugestão"), L.T("Como funciona"),
-                president ? L.T("Você é o presidente: a pauta entra em votação na hora, por 3 turnos.") : L.T("O presidente decide se põe a sua sugestão em votação."));
-            Chip(top, 1, null, null, null);
+                president ? L.F("Você é o presidente: a pauta entra em votação na hora, por {0} turnos.", Bloc.VoteTurns)
+                    : L.F("O presidente decide se põe a sua sugestão em votação; sem decisão em {0} turnos, ela vence.", Bloc.SuggestionTurns));
+            Chip(top, 1, used >= Bloc.MotionSlots ? $"<c={Red}>" + L.F("Pautas: {0}/{1}", used, Bloc.MotionSlots) + "</c>" : L.F("Pautas: {0}/{1}", used, Bloc.MotionSlots),
+                L.T("Pautas ativas"), L.F("Cada membro tem até {0} pautas ativas: sugeridas, em votação ou resoluções suas em vigor.", Bloc.MotionSlots));
             Chip(top, 2, null, null, null);
             Chip(top, 3, null, null, null);
-            SetButtons(typeRow, L.T("Trocar"), () => { kindIndex = (kindIndex + 1) % MotionKinds.Length; valueIndex = 0; feedback = null; nextRefresh = 0; }, null, null);
-            B.Tip(typeRow.Button.transform, string.Empty, L.T("Trocar o tipo"), L.T("Tarifa comum, tirar tarifa, convidar, expulsar, votar junto no Congresso, renomear ou desfazer."));
-            Body(typeRow, KindHelp(kind));
-            order.Add(typeRow.Card);
+            SetButtons(info, null, null, null, null);
+            Body(info, L.F("Escreva o que o bloco deve fazer, com as suas palavras (até {0} letras; a primeira frase vira o título). Aprovada, vale {1} turnos e obriga todos os membros. Ninguém fiscaliza: cada membro cumpre por conta própria e pode acusar quem não cumprir.", Bloc.MotionTextMax, Bloc.ResolutionTurns));
+            order.Add(info.Card);
 
-            Row targetRow = sideRows[1];
-            B.SetVisible(targetRow.Card, needsTarget);
-            if (needsTarget)
-            {
-                top = Top(targetRow);
-                Title(targetRow, targets.Count > 0 ? L.F("Nação: {0}", Esc(Short(view, target))) : L.T("Nenhuma nação possível"));
-                Chip(top, 0, targets.Count > 0 ? L.F("{0} opção(ões)", targets.Count) : null, L.T("Opções"), string.Empty);
-                Chip(top, 1, null, null, null);
-                Chip(top, 2, null, null, null);
-                Chip(top, 3, null, null, null);
-                SetButtons(targetRow, targets.Count > 1 ? L.T("Trocar") : null, () => { target = targets[(targets.IndexOf(target) + 1) % targets.Count]; feedback = null; nextRefresh = 0; }, null, null);
-                Body(targetRow, string.Empty);
-                B.SetVisible(targetRow.Body, false);
-                order.Add(targetRow.Card);
-            }
-
-            Row valueRow = sideRows[2];
-            B.SetVisible(valueRow.Card, needsValue);
-            if (needsValue)
-            {
-                top = Top(valueRow);
-                string valueUi = value == null ? L.T("Nenhuma votação aberta no Congresso")
-                    : kind == "tarifa" ? (value == "bloqueio" ? L.T("Bloqueio") : L.T("Pedágio")) : CongressChoiceUi(view, value);
-                Title(valueRow, Capitalize(valueUi));
-                Chip(top, 0, kind == "tarifa" ? L.T("Modo") : L.T("Posição"), kind == "tarifa" ? L.T("Modo") : L.T("Posição"),
-                    kind == "tarifa" ? L.T("Pedágio cobra a passagem; bloqueio fecha a passagem.") : L.T("Opção da lei em votação, ou o lado numa crise."));
-                Chip(top, 1, null, null, null);
-                Chip(top, 2, null, null, null);
-                Chip(top, 3, null, null, null);
-                SetButtons(valueRow, values.Count > 1 ? L.T("Trocar") : null, () => { valueIndex = (valueIndex + 1) % values.Count; feedback = null; nextRefresh = 0; }, null, null);
-                Body(valueRow, string.Empty);
-                B.SetVisible(valueRow.Body, false);
-                order.Add(valueRow.Card);
-            }
-
-            ShowField(kind == "renomear" ? L.T("Nome novo do bloco") : L.T("Motivo (opcional): os membros leem"),
-                kind == "renomear" ? L.T("Nome novo") : L.T("Motivo"), L.T("Até 200 letras."));
+            ShowField(L.T("Ex.: Bloqueio comum aos Axumitas. Todos os membros fecham seus postos para E14 até que retirem as exigências."),
+                L.T("Texto da pauta"), L.F("Até {0} letras. Cite nações pelo nome ou pelo código (E14).", Bloc.MotionTextMax), Bloc.MotionTextMax);
             order.Add(fieldItem);
 
-            Row send = sideRows[3];
+            Row send = sideRows[1];
             top = Top(send);
             Title(send, FeedbackTitle(L.T("Pronta")));
-            Chip(top, 0, L.F("Votação de {0} turnos", Bloc.VoteTurns), L.T("Prazo"), L.T("Maioria simples; expulsar exige 2/3."));
+            Chip(top, 0, L.F("Votação de {0} turnos", Bloc.VoteTurns), L.T("Prazo"), L.T("Maioria simples; no empate decide o presidente."));
             Chip(top, 1, null, null, null);
             Chip(top, 2, null, null, null);
             Chip(top, 3, null, null, null);
-            SetButtons(send, president ? L.T("Pôr em votação") : L.T("Sugerir"),
-                () => Propose(view, kind, needsTarget ? target : -1, kind == "renomear" ? field?.Text : value, kind == "renomear" ? null : field?.Text), null, null);
+            SetButtons(send, president ? L.T("Pôr em votação") : L.T("Sugerir"), () => Propose(view, field?.Text), null, null);
             Body(send, string.Empty);
             B.SetVisible(send.Body, false);
             order.Add(send.Card);
 
-            Row leave = sideRows[4];
+            Row leave = sideRows[2];
             top = Top(leave);
             Title(leave, L.T("Sair do bloco"));
             Chip(top, 0, L.F("Espera de {0} turnos", Bloc.LeaveCooldown), L.T("Saída"), L.T("Sair é livre, mas você espera 10 turnos para entrar em outro bloco. Com menos de 3 membros, o bloco se desfaz."));
@@ -1200,64 +1356,14 @@ namespace CurrencyMod.Diplomacy.UI
             order.Add(leave.Card);
         }
 
-        private static string KindHelp(string kind)
-        {
-            switch (kind)
-            {
-                case "tarifa": return L.T("Pedágio ou bloqueio contra uma nação de fora, em todos os postos dos membros.");
-                case "fim_tarifa": return L.T("Tira uma tarifa comum em vigor.");
-                case "admitir": return L.T("Aprovada, a nação recebe um convite para entrar.");
-                case "expulsar": return L.T("Exige 2/3 dos membros. O expulso espera 10 turnos para entrar em outro bloco.");
-                case "congresso": return L.T("Todos os membros da IA votam juntos na votação aberta do Congresso.");
-                case "renomear": return L.T("Escreva o nome novo no campo abaixo.");
-                case "dissolver": return L.T("Aprovada, o bloco acaba para todos.");
-            }
-            return string.Empty;
-        }
-
-        private List<int> Targets(View view, Bloc bloc, string kind)
-        {
-            switch (kind)
-            {
-                case "tarifa": return MailScreen.KnownNations(view.Capture).Where(e => !bloc.Has(e) && !bloc.Tariffs.Any(t => t.Target == e)).ToList();
-                case "fim_tarifa": return bloc.Tariffs.Select(t => t.Target).ToList();
-                case "admitir": return MailScreen.KnownNations(view.Capture).Where(e => !bloc.Has(e) && bloc.InviteFor(e) == null).ToList();
-                case "expulsar": return bloc.Members.Where(m => m != view.Me).ToList();
-            }
-            return new List<int>();
-        }
-
-        private static List<string> Values(View view, string kind)
-        {
-            if (kind == "tarifa")
-            {
-                return new List<string> { "pedagio", "bloqueio" };
-            }
-            if (kind != "congresso" || view.Capture.Congress == null)
-            {
-                return new List<string>();
-            }
-            var values = new List<string>();
-            if (view.Capture.Congress.LawVote?.Active == true)
-            {
-                values.Add("lei:A");
-                values.Add("lei:B");
-            }
-            foreach (CongressCrisis crisis in view.Capture.Congress.Crises.Where(c => c.Active))
-            {
-                values.Add($"K{crisis.Pool}:E{crisis.Declarator}");
-                values.Add($"K{crisis.Pool}:E{crisis.Target}");
-            }
-            return values;
-        }
-
-        private void ShowField(string instruction, string tipTitle, string tip)
+        private void ShowField(string instruction, string tipTitle, string tip, int maxChars)
         {
             if (fieldItem == null)
             {
                 return;
             }
             B.SetVisible(fieldItem, true);
+            field.maximumChars = maxChars;
             string text = "<c=F5EBE166><i>" + instruction + "</i></c>";
             if (field.InstructionText != text)
             {
@@ -1284,9 +1390,9 @@ namespace CurrencyMod.Diplomacy.UI
             }
         }
 
-        private void Propose(View view, string kind, int who, string value, string reason)
+        private void Propose(View view, string text)
         {
-            string problem = BlocEngine.Propose(view.World, view.Me, kind, who, value, reason, view.Turn, out BlocMotion motion);
+            string problem = BlocEngine.Propose(view.World, view.Me, null, text, view.Turn, out BlocMotion motion);
             if (Act(problem, motion == null ? null : motion.Status == BlocMotion.Voting ? L.T("Pauta em votação.") : L.T("Sugestão enviada ao presidente.")))
             {
                 field?.ReplaceText(string.Empty);
@@ -1294,6 +1400,35 @@ namespace CurrencyMod.Diplomacy.UI
                 {
                     SelectSection(Section.Agenda);
                 }
+            }
+        }
+
+        private void ProposeExpulsion(View view, int member)
+        {
+            string reason = (field?.Text ?? string.Empty).Trim();
+            string title = L.F("Expulsão de {0}", Short(view, member));
+            string problem = BlocEngine.Propose(view.World, view.Me, title, reason.Length > 0 ? reason : title, view.Turn, out BlocMotion motion, member);
+            if (Act(problem, motion == null ? null : motion.Status == BlocMotion.Voting ? L.T("Expulsão em votação.") : L.T("Expulsão sugerida ao presidente.")))
+            {
+                field?.ReplaceText(string.Empty);
+                SelectSection(Section.Agenda);
+            }
+        }
+
+        /// <summary>Accuses a member with the field's text as evidence ("R2 ..." cites resolution R2).</summary>
+        private void Accuse(View view, int member)
+        {
+            string text = (field?.Text ?? string.Empty).Trim();
+            int resolution = -1;
+            System.Text.RegularExpressions.Match match = System.Text.RegularExpressions.Regex.Match(text, @"^[Rr](\d+)[\s:.,-]*");
+            if (match.Success)
+            {
+                resolution = int.Parse(match.Groups[1].Value);
+                text = text.Substring(match.Length);
+            }
+            if (Act(BlocEngine.Accuse(view.World, view.Me, member, resolution, text, view.Turn), L.T("Acusação registrada no livro do bloco.")))
+            {
+                field?.ReplaceText(string.Empty);
             }
         }
 
@@ -1454,16 +1589,19 @@ namespace CurrencyMod.Diplomacy.UI
             }
             int me = module.PlayerIndex;
             Bloc bloc = BlocEngine.Of(world, me);
+            Bloc forum = world.CongressForum != null && world.CongressForum.Has(me) ? world.CongressForum : null;
             bool pending = BlocEngine.InvitesFor(world, me).Any()
-                || bloc != null && (bloc.OpenMotions.Any(m => !m.Votes.ContainsKey(me) && !(m.Kind == "expulsar" && m.Target == me))
+                || forum != null && (forum.President != me && forum.OpenMotions.Any(m => !m.Votes.ContainsKey(me))
+                    || forum.President == me && (forum.Suggestions.Any() || forum.Motions.Any(m => m.Status == BlocMotion.Tiebreak)))
+                || bloc != null && (bloc.President != me && bloc.OpenMotions.Any(m => !m.Votes.ContainsKey(me) && m.Expel != me)
                     || bloc.ElectionOpened >= 0 && !bloc.ElectionVotes.ContainsKey(me)
-                    || bloc.President == me && bloc.Suggestions.Any());
+                    || bloc.President == me && (bloc.Suggestions.Any() || bloc.Motions.Any(m => m.Status == BlocMotion.Tiebreak)));
             return pending ? "!" : null;
         }
 
         // ---------------- Development and removal ----------------
 
-        /// <summary>"ai alliances ..." commands: "open", "close", "section 0..4", "kind N", "target E#", "value N", "text ...", "invite E#", "send".</summary>
+        /// <summary>"ai alliances ..." commands: "open", "close", "section 0..4", "text ...", "invite E#", "send".</summary>
         internal static string DevCommand(string args)
         {
             string[] parts = (args ?? string.Empty).Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
@@ -1484,18 +1622,6 @@ namespace CurrencyMod.Diplomacy.UI
                     {
                         Instance.SelectSection((Section)Mathf.Clamp(section, 0, SectionNames.Length - 1));
                     }
-                    return "ok";
-                case "kind":
-                    Instance.kindIndex = parts.Length > 1 && int.TryParse(parts[1], out int kind) ? Mathf.Clamp(kind, 0, MotionKinds.Length - 1) : 0;
-                    Instance.nextRefresh = 0;
-                    return "ok: " + MotionKinds[Instance.kindIndex];
-                case "target":
-                    Instance.target = parts.Length > 1 && int.TryParse(parts[1].TrimStart('E', 'e'), out int who) ? who : -1;
-                    Instance.nextRefresh = 0;
-                    return "ok";
-                case "value":
-                    Instance.valueIndex = parts.Length > 1 && int.TryParse(parts[1], out int value) ? value : 0;
-                    Instance.nextRefresh = 0;
                     return "ok";
                 case "text":
                     Instance.field?.ReplaceText(string.Join(" ", parts.Skip(1)));
@@ -1519,7 +1645,7 @@ namespace CurrencyMod.Diplomacy.UI
                     }
                     else
                     {
-                        Instance.sideRows.ElementAtOrDefault(3)?.Primary?.Invoke();
+                        Instance.sideRows.ElementAtOrDefault(1)?.Primary?.Invoke();
                     }
                     return "ok: " + (Instance.feedback ?? "?");
                 default:

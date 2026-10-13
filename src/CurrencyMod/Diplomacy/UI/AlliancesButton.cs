@@ -144,7 +144,7 @@ namespace CurrencyMod.Diplomacy.UI
         {
             tooltipTarget.Title = L.T("Alianças");
             tooltipTarget.Description = (mark != null ? L.T("Há algo esperando por você: convite, voto ou eleição.") + "\n" : string.Empty)
-                + L.T("Blocos de nações: comércio livre entre membros, defesa mútua, voto conjunto no Congresso e tarifa comum.");
+                + L.T("Blocos de nações: comércio livre entre membros, defesa mútua e pautas livres que viram resoluções; quem descumpre pode ser acusado no livro do bloco.");
         }
 
         private void Toggle_Switch(IUIToggle source, bool state)

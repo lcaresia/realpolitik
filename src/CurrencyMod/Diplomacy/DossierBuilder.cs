@@ -88,6 +88,11 @@ namespace CurrencyMod.Diplomacy
             text.AppendLine();
             text.Append(self_).Append(council).Append(incoming).Append(pending).Append(reminders);
             text.AppendLine();
+            string reminder = Prompts.TemperamentReminder(nation?.Persona, capture.Empire(self)?.Human == true ? null : NationDoctrines.For(world, capture, self)?.Name);
+            if (reminder != null)
+            {
+                text.AppendLine(reminder);
+            }
             text.Append("Decida o seu turno e responda só com o json.");
             build.Text = text.ToString();
             return build;
@@ -101,7 +106,8 @@ namespace CurrencyMod.Diplomacy
                 Handle = "E" + me.Index,
                 EmpireName = me.FullName,
                 LeaderName = me.Leader,
-                CultureName = me.Culture,
+                CultureName = me.RealCulture ?? me.Culture,
+                NationName = me.NationName ?? me.Culture,
                 EraName = me.EraName,
             };
             facts.Traits.AddRange(Prompts.TraitsFromArchetypes(me.Archetypes, me.Biases));
@@ -120,7 +126,7 @@ namespace CurrencyMod.Diplomacy
         {
             text.AppendLine("== SUA NAÇÃO ==");
             string rank = me.FameRank > 0 ? $" ({me.FameRank}º lugar entre os impérios)" : string.Empty;
-            text.AppendLine($"Povo: {me.Culture} · {me.EraName} · {me.EraStars} estrelas de era · Fama: {N(me.Fame)}{rank}");
+            text.AppendLine($"País: {me.Culture} (nome fixo) · povo hoje: {me.RealCulture ?? me.Culture} · {me.EraName} · {me.EraStars} estrelas de era · Fama: {N(me.Fame)}{rank}");
             text.AppendLine($"Tesouro: {N(me.Money)} {Money(me)} ({Signed(me.MoneyNet)}/turno) · Influência: {N(me.Influence)} ({Signed(me.InfluenceNet)}/turno) · Ciência: {N(me.Science)}/turno · Estabilidade: {N(me.Stability)}%");
             if (me.CurrencyName != null)
             {
@@ -132,6 +138,11 @@ namespace CurrencyMod.Diplomacy
                 ? $"Foco do império: {FocusName(focus.Value)} (desde o turno {focus.Turn}). Seus governadores seguem até você mudar."
                 : "Foco do império: nenhum definido (seus governadores seguem o próprio julgamento).");
             text.AppendLine(ResourceLine(me));
+            AppendAmbitions(text, world.Get(me.Index), me, capture.Turn);
+            DealLedger.AppendSelf(text, world, capture, me.Index, capture.Turn, build.Context);
+            DossierBeliefs.AppendSelf(text, capture, me, build.Context);
+            DossierTrade.AppendSelf(text, capture, me, DossierTrade.Dependencies(capture));
+            DossierTrade.AppendNetwork(text, capture, me);
             foreach (GameGlossary.ResourceEntry entry in GameGlossary.Resources())
             {
                 if (entry == null || !(entry.Luxury || entry.Strategic))
@@ -381,15 +392,17 @@ namespace CurrencyMod.Diplomacy
 
                 var header = new List<string> { them.EraName };
                 if (them.FameRank > 0) header.Add($"{them.FameRank}º em fama");
+                if (!string.IsNullOrEmpty(them.RealCulture) && them.RealCulture != them.Culture) header.Add("povo hoje: " + them.RealCulture);
                 if (me.Neighbors.Contains(other)) header.Add("faz fronteira com você");
                 text.AppendLine($"{handle} {them.FullName} — {string.Join(" · ", header)}");
 
                 var line = new List<string> { "Relação: " + StateName(relation) };
                 var agreements = new List<string>();
-                if (relation.Trade) agreements.Add("comércio");
-                if (relation.OpenBorders) agreements.Add("fronteiras abertas");
-                if (relation.SharedMaps) agreements.Add("mapas compartilhados");
-                if (relation.NonAggression) agreements.Add("não agressão");
+                if (relation.Alliance) agreements.Add("aliança" + TreatyLedger.Since(world, me.Index, other, TreatyRecord.Alliance));
+                if (relation.Trade) agreements.Add("comércio" + TreatyLedger.Since(world, me.Index, other, TreatyRecord.Trade));
+                if (relation.OpenBorders) agreements.Add("fronteiras abertas" + TreatyLedger.Since(world, me.Index, other, TreatyRecord.OpenBorders));
+                if (relation.SharedMaps) agreements.Add("mapas compartilhados" + TreatyLedger.Since(world, me.Index, other, TreatyRecord.SharedMaps));
+                if (relation.NonAggression) agreements.Add("não agressão" + TreatyLedger.Since(world, me.Index, other, TreatyRecord.NonAggression));
                 if (agreements.Count > 0) line.Add("acordos: " + string.Join(", ", agreements));
                 line.Add($"apoio à guerra: seu {N(relation.MyMoral)}, deles {N(relation.TheirMoral)}");
                 if (relation.AtWar) line.Add($"placar de guerra: seu {N(relation.MyWarScore)}, deles {N(relation.TheirWarScore)}");
@@ -399,6 +412,33 @@ namespace CurrencyMod.Diplomacy
                 text.AppendLine(posture != null
                     ? $"   Sua postura com eles: {PostureName(posture.Value)} (desde o turno {posture.Turn})."
                     : "   Sua postura com eles: neutra (nenhuma definida).");
+                List<string> declared = world.Get(other)?.ActiveAmbitions().Where(a => a.Declared != null).Select(a => "«" + a.Declared + "»").ToList();
+                if (declared != null && declared.Count > 0)
+                {
+                    text.AppendLine("   Ambições que eles declaram em público: " + string.Join("; ", declared) + ".");
+                }
+                // Who they fight and who they stand with: the material for bargaining (the enemy of my enemy...).
+                CapturedEmpire theirs = capture.Empire(other);
+                if (theirs != null)
+                {
+                    List<string> wars = theirs.Relations.Where(r => r != null && r.AtWar && r.Other != me.Index).Select(r => $"{Name(capture, r.Other)} (E{r.Other})").ToList();
+                    List<string> allies = theirs.Relations.Where(r => r != null && r.Alliance && r.Other != me.Index).Select(r => $"{Name(capture, r.Other)} (E{r.Other})").ToList();
+                    if (wars.Count > 0 || allies.Count > 0)
+                    {
+                        text.AppendLine("   " + (wars.Count > 0 ? "Em guerra com: " + string.Join(", ", wars) + ". " : string.Empty) + (allies.Count > 0 ? "Aliança do jogo com: " + string.Join(", ", allies) + "." : string.Empty));
+                    }
+                }
+                NationPerception reading = null;
+                world.Get(me.Index)?.Perceptions.TryGetValue(other, out reading);
+                NationDoctrines.Doctrine read = NationDoctrines.ByKey(reading?.Doctrine);
+                text.AppendLine(read != null
+                    ? $"   Sua leitura deles (turno {reading.Turn}): {read.Name}" + (string.IsNullOrEmpty(reading.Note) ? "." : $" — {reading.Note}")
+                    : "   Sua leitura deles: ainda nenhuma (assess_nation, quando tiver uma impressão).");
+                string word = DealLedger.Reputation(world, other, capture.Turn);
+                if (word != null)
+                {
+                    text.AppendLine("   " + word);
+                }
 
                 // The detail is always built (it fills the validation context: grievances, proposals, armies in
                 // sight), but only goes into the dossier for relevant nations. On the bench: −8% per decision, same
@@ -407,8 +447,10 @@ namespace CurrencyMod.Diplomacy
                 AppendCrisis(detail, capture, me, relation, build);
                 AppendSurrender(detail, capture, me, relation, build);
                 AppendTrade(detail, capture, me, other);
+                DossierBeliefs.AppendOther(detail, capture, me, them);
+                DossierTrade.AppendOther(detail, capture, me, them, DossierTrade.Dependencies(capture));
                 AppendProposals(detail, relation, me.Index, build);
-                AppendWhatYouSee(detail, world, capture, me, other, build);
+                AppendWhatYouSee(detail, world, capture, me, other, relation, build);
 
                 var log = relation.Log.OrderBy(l => l.Turn).Skip(Math.Max(0, relation.Log.Count - 4)).ToList();
                 if (log.Count > 0)
@@ -554,15 +596,18 @@ namespace CurrencyMod.Diplomacy
             return (terms.Count > 0 ? string.Join(", ", terms) : "sem termos (como uma paz)") + $" — {pending.Cost} de {pending.Score} pontos";
         }
 
-        private static void AppendWhatYouSee(StringBuilder text, AiWorld world, WorldCapture capture, CapturedEmpire me, int other, DossierBuild build)
+        private static void AppendWhatYouSee(StringBuilder text, AiWorld world, WorldCapture capture, CapturedEmpire me, int other, CapturedRelation relation, DossierBuild build)
         {
+            bool InMyLand(SeenArmy a) => a.Territory >= 0 && a.Territory < capture.TerritoryOwner.Length && capture.TerritoryOwner[a.Territory] == me.Index;
             var armies = me.SeenArmies.Where(a => a.Owner == other).ToList();
+            int inMyLand = armies.Count(InMyLand);
             if (armies.Count > 0)
             {
                 double strength = armies.Sum(a => a.Strength);
-                int inMyLand = armies.Count(a => a.Territory >= 0 && a.Territory < capture.TerritoryOwner.Length && capture.TerritoryOwner[a.Territory] == me.Index);
                 string ratio = me.MilitaryStrength > 0 ? $" ({N(100 * strength / me.MilitaryStrength)}% da sua força total)" : string.Empty;
-                var places = armies.OrderByDescending(a => a.Strength).Take(4).Select(a =>
+                // Armies inside your land first: they are what a complaint is about (T146 E11 asked an ally to leave a
+                // territory where none of its armies was).
+                var places = armies.OrderByDescending(InMyLand).ThenByDescending(a => a.Strength).Take(Math.Max(4, inMyLand)).Select(a =>
                 {
                     Territory(build, a.Territory);
                     // A code of their army: a possible target for ordem_exercito "atacar" while it is in sight.
@@ -576,6 +621,14 @@ namespace CurrencyMod.Diplomacy
                 });
                 text.AppendLine($"   Tropas deles à sua vista: {armies.Count} exército(s), força visível {N(strength)}{ratio}" +
                     (inMyLand > 0 ? $", {inMyLand} DENTRO do seu território" : string.Empty) + " — " + string.Join("; ", places) + ".");
+            }
+            if (inMyLand > 0 && relation.OpenBorders)
+            {
+                text.AppendLine("   Fronteiras abertas: o acordo que vocês assinaram deixa os exércitos deles entrar e ficar no seu território enquanto valer. Isso não é ocupação nem quebra de acordo; pedir que saiam é pedir um favor. Se não quer mais, rompa o acordo cultural (romper_acordo).");
+            }
+            else if (inMyLand == 0 && me.Neighbors.Contains(other))
+            {
+                text.AppendLine("   Exércitos deles dentro do seu território agora: nenhum.");
             }
             var cities = me.SeenCities.Where(c => c.Owner == other).OrderByDescending(c => c.Capital).ThenByDescending(c => c.IsCity).ToList();
             if (cities.Count > 0)
@@ -609,6 +662,39 @@ namespace CurrencyMod.Diplomacy
                 case "hostil": return "hostil";
                 case "alvo_de_guerra": return "ALVO DE GUERRA (seu exército se prepara contra eles)";
                 default: return "neutra";
+            }
+        }
+
+        /// <summary>The nation's own ambitions: what it wants, the plan, the deadline and what needs reviewing.</summary>
+        private static void AppendAmbitions(StringBuilder text, AiNation nation, CapturedEmpire me, int turn)
+        {
+            List<NationAmbition> active = nation?.ActiveAmbitions() ?? new List<NationAmbition>();
+            if (active.Count == 0)
+            {
+                text.AppendLine("SUAS AMBIÇÕES: nenhuma ainda. Um líder sem ambição só reage e fica para trás. Escolha NESTE TURNO de 1 a 3 (set_ambition): "
+                    + "o que sua nação quer conquistar nesta era e na próxima, concreto e com nomes do dossiê (uma cidade ou território a tomar, ser o centro do comércio de uma região, "
+                    + "espalhar sua fé, liderar ou derrubar um bloco, rebaixar um rival, enriquecer acima de alguém), com o próximo passo e o prazo.");
+                return;
+            }
+            text.AppendLine("SUAS AMBIÇÕES (o rumo da sua nação, não um roteiro: siga, improvise ou desvie conforme o turno):");
+            foreach (NationAmbition ambition in active)
+            {
+                string deadline = ambition.DeadlineTurn <= turn
+                    ? $"o prazo que você se deu passou (turno {ambition.DeadlineTurn}): siga, troque o plano ou desista"
+                    : $"plano até o turno {ambition.DeadlineTurn} (faltam {ambition.DeadlineTurn - turn})";
+                string review = ambition.Era < me.EraIndex ? " · definida numa era anterior: revise se ainda faz sentido" : string.Empty;
+                string declared = ambition.Declared != null ? $" · em público você diz: «{ambition.Declared}»" : " · secreta";
+                text.AppendLine($"- Ambição {ambition.Slot} (desde o turno {ambition.SetTurn}): {ambition.Text}");
+                text.AppendLine($"  Próximo passo: {ambition.Plan ?? "nenhum definido"} · {deadline}{review}{declared}");
+            }
+            if (active.Count < AiNation.MaxActiveAmbitions)
+            {
+                text.AppendLine($"  (slots livres: {AiNation.MaxActiveAmbitions - active.Count}; crie outra se tiver motivo)");
+            }
+            List<NationAmbition> closed = nation.Ambitions.Where(a => a.Status != "active").OrderByDescending(a => a.ClosedTurn).Take(3).ToList();
+            foreach (NationAmbition old in closed)
+            {
+                text.AppendLine($"  Antes: {(old.Status == "done" ? "cumpriu" : "abandonou")} «{old.Text}» no turno {old.ClosedTurn}" + (old.Outcome != null ? $" ({old.Outcome})" : string.Empty) + ".");
             }
         }
 
@@ -1056,6 +1142,7 @@ namespace CurrencyMod.Diplomacy
         {
             AppendGroups(correspondence, world, capture, self, turn, build);
             Blocs.BlocDossier.Append(correspondence, world, self, turn, build.Context, e => Name(capture, e));
+            Blocs.BlocDossier.AppendCongress(correspondence, world, self, turn, build.Context, e => Name(capture, e));
             var incoming = world.Letters
                 .Where(l => l.IsFor(self) && l.DeliverTurn <= turn && !l.ReadBy.Contains(self) && !l.RejectedBy.Contains(self))
                 .OrderBy(l => l.DeliverTurn).ThenBy(l => l.Id)
@@ -1360,7 +1447,7 @@ namespace CurrencyMod.Diplomacy
             {
                 text.AppendLine($"- Você está em GUERRA com: {string.Join(", ", build.Context.AtWar.Select(e => $"{Name(capture, e)} (E{e})"))}.");
             }
-            text.AppendLine($"- Até {build.Context.MaxLetters} cartas neste turno, no máximo 1 por nação. Suas cartas: {Delivery.Describe(Delivery.TurnsForEra(capture.Empire(self)?.EraIndex ?? 0))}.");
+            text.AppendLine($"- Até {build.Context.MaxLetters} cartas neste turno, no máximo 1 por nação (negociar com várias ao mesmo tempo é normal). Suas cartas: {Delivery.Describe(Delivery.TurnsForEra(capture.Empire(self)?.EraIndex ?? 0))}.");
             text.AppendLine(build.Context.PublicDeclarationAllowed
                 ? "- Declaração pública: disponível neste turno."
                 : $"- Declaração pública: só a partir do turno {nation.LastPublicDeclarationTurn + AiConfig.PublicDeclarationInterval.Value}.");
@@ -1371,14 +1458,21 @@ namespace CurrencyMod.Diplomacy
             // Letters that asked for an answer and got none from this nation yet (a reminder, never an obligation).
             List<Letter> waiting = world.Letters
                 .Where(l => l.ExpectsReply && l.IsFor(self) && l.DeliverTurn <= turn && l.DeliverTurn >= turn - 6 && !l.IsPublic)
-                .Where(l => !world.Letters.Any(mine => mine.From == self && mine.SentTurn >= l.DeliverTurn
+                // A reply is written after the letter existed (higher id): a letter of the same turn written before it does not count.
+                .Where(l => !world.Letters.Any(mine => mine.From == self && mine.SentTurn >= l.DeliverTurn && (mine.InReplyTo == l.Id || mine.Id > l.Id)
                     && (l.IsGroup ? mine.IsGroup && mine.GroupId == l.GroupId : mine.To == l.From)))
                 .OrderBy(l => l.DeliverTurn)
                 .ToList();
             if (waiting.Count > 0)
             {
-                text.AppendLine("- Ainda sem resposta sua (silêncio também é resposta, e quem escreveu nota): "
-                    + string.Join("; ", waiting.Select(l => $"{Name(capture, l.From)} (E{l.From}){(l.IsGroup ? " no grupo GRP" + l.GroupId : string.Empty)}, carta que chegou no turno {l.DeliverTurn}")) + ".");
+                // Each request is something to trade (melhorias item 45): accept and act, ask a price, or refuse.
+                text.AppendLine("- PEDIDOS ESPERANDO VOCÊ (silêncio também é resposta, e quem escreveu nota). Para cada um: aceite (e faça a ação neste turno), peça algo em troca (um trato) ou recuse:");
+                foreach (Letter l in waiting)
+                {
+                    string what = !string.IsNullOrWhiteSpace(l.Demand) ? "exige: " + l.Demand
+                        : !string.IsNullOrWhiteSpace(l.Subject) ? "«" + l.Subject + "»" : "«" + (l.Text ?? string.Empty).Replace('\n', ' ').Substring(0, Math.Min(100, (l.Text ?? string.Empty).Length)).Trim() + ((l.Text ?? string.Empty).Length > 100 ? "…»" : "»");
+                    text.AppendLine($"   · {Name(capture, l.From)} (E{l.From}){(l.IsGroup ? " no grupo GRP" + l.GroupId : string.Empty)}, turno {l.DeliverTurn}: {what}");
+                }
             }
             foreach (Letter letter in world.Letters.Where(l => l.From == self && l.RejectedBy.Count > 0 && l.SentTurn >= turn - 6))
             {
@@ -1404,6 +1498,7 @@ namespace CurrencyMod.Diplomacy
                 Grounding.AddKnown(known, empire.FullName);
                 Grounding.AddKnown(known, empire.Leader);
                 Grounding.AddKnown(known, empire.Culture);
+                Grounding.AddKnown(known, empire.RealCulture);
                 Grounding.AddKnown(known, empire.CurrencyName);
                 foreach (CapturedCity city in empire.Cities)
                 {
@@ -1604,6 +1699,7 @@ namespace CurrencyMod.Diplomacy
             text.AppendLine("Recursos de luxo deste mundo: " + (luxury.Count > 0 ? string.Join(", ", luxury) : "nenhum") + ".");
             text.AppendLine("Mercadoria entre nações é só isto: dinheiro, influência e esses recursos (pelas rotas comerciais), além de cidades e territórios. Comida, produção, ciência e fé não se trocam.");
             text.AppendLine("Nações, líderes, cidades, territórios, exércitos e fatos: só os que aparecem neste dossiê, com esses nomes e números.");
+            text.AppendLine("Cada nação tem um nome de país fixo (o que vem entre parênteses depois do líder) que não muda no jogo inteiro; o povo (cultura) troca a cada era e aparece como \"povo hoje\". Chame as nações pelo nome fixo; cartas antigas podem citar o povo de outra era.");
             text.AppendLine();
         }
 

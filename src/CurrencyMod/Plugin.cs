@@ -12,7 +12,7 @@ namespace CurrencyMod
         public const string PluginName = "CurrencyMod";
         public const string PluginVersion = "1.1.0";
         /// <summary>Product version (Realpolitik): installer, store and update notice. The DLLs have their own.</summary>
-        public const string ProductVersion = "1.3.1";
+        public const string ProductVersion = "1.4.0";
 
         internal static ManualLogSource Log;
         internal static ConfigEntry<KeyboardShortcut> ToggleWindowKey;
@@ -53,7 +53,7 @@ namespace CurrencyMod
     /// </summary>
     public static class ModEntry
     {
-        private const string HarmonyId = "lucas.humankind.currency.core";
+        internal const string HarmonyId = "lucas.humankind.currency.core";
 
         private static Harmony harmony;
         private static GameObject host;
@@ -86,6 +86,7 @@ namespace CurrencyMod
             ApplyPatches(log);
             host.AddComponent<CentralBankWindow>();
             host.AddComponent<DevTools>();
+            host.AddComponent<NativeUI.EscapeFallback>();
             host.AddComponent<NativeUI.NativeBankButton>();
             host.AddComponent<NativeUI.DiplomacyEconomyPanel>();
             host.AddComponent<NativeUI.DiplomacyTradePolicyPanel>();

@@ -17,6 +17,13 @@ namespace CurrencyMod.Diplomacy.Blocs
         /// <summary>Formed (or forming) bloc the nation is a member of.</summary>
         internal static Bloc Of(AiWorld world, int empire) => world?.Blocs.FirstOrDefault(b => b.Has(empire));
 
+        /// <summary>Where a motion lives: the Congress's free agenda when the id is one of its motions, else the empire's bloc.</summary>
+        internal static Bloc ForumOf(AiWorld world, int empire, int motionId)
+        {
+            Bloc congress = world?.CongressForum;
+            return congress != null && congress.Has(empire) && congress.MotionBy(motionId) != null ? congress : Of(world, empire);
+        }
+
         internal static Bloc ById(AiWorld world, int id) => world?.Blocs.FirstOrDefault(b => b.Id == id);
 
         /// <summary>Bloc by its "BLC#" code or by id.</summary>
@@ -190,40 +197,60 @@ namespace CurrencyMod.Diplomacy.Blocs
         // ---------------- Motions ----------------
 
         /// <summary>
-        /// Suggests a motion (regular member) or puts it straight to a vote (president). tarifa: target + "pedagio"|"bloqueio";
-        /// fim_tarifa, admitir, expulsar: target; congresso: arg = position; renomear: arg = name; dissolver.
+        /// Free motion (item 46): a title and a text, interpreted later by the technical commission. A regular member
+        /// suggests it; the president puts it straight to a vote.
         /// </summary>
-        internal static string Propose(AiWorld world, int empire, string kind, int target, string arg, string reason, int turn, out BlocMotion motion)
+        internal static string Propose(AiWorld world, int empire, string title, string text, int turn, out BlocMotion motion, int expel = -1, Bloc forum = null)
         {
             motion = null;
-            Bloc bloc = Of(world, empire);
+            Bloc bloc = forum ?? Of(world, empire);
+            if (forum != null && !forum.Has(empire))
+            {
+                return L.N("você não faz parte do Congresso Mundial");
+            }
+            if (forum != null && expel >= 0)
+            {
+                return L.N("o Congresso não expulsa ninguém");
+            }
             if (bloc == null || !bloc.Formed)
             {
                 return L.N("você não está num bloco formado");
             }
-            kind = (kind ?? string.Empty).Trim().ToLowerInvariant();
-            if (!BlocMotion.Kinds.Contains(kind))
+            text = Clean(text, Bloc.MotionTextMax);
+            title = Clean(title, Bloc.MotionTitleMax);
+            if (text.Length == 0)
             {
-                return "pauta desconhecida (use: " + string.Join(", ", BlocMotion.Kinds) + ")";
+                return L.N("escreva o texto da pauta");
             }
-            string problem = CheckMotion(world, bloc, kind, target, ref arg);
-            if (problem != null)
+            if (title.Length == 0)
             {
-                return problem;
+                title = TitleFrom(text);
             }
-            if (bloc.Motions.Any(m => (m.Status == BlocMotion.Voting || m.Status == BlocMotion.Suggested) && m.Kind == kind && m.Target == target && m.Arg == arg))
+            if (bloc.Motions.Any(m => (m.Status == BlocMotion.Voting || m.Status == BlocMotion.Suggested) && m.Author == empire && string.Equals(m.Text, text, StringComparison.OrdinalIgnoreCase)))
             {
                 return L.N("essa pauta já está aberta");
+            }
+            if (expel >= 0 && (!bloc.Has(expel) || expel == empire))
+            {
+                return L.N("só dá para propor a expulsão de outro membro do bloco");
+            }
+            if (expel >= 0 && bloc.Motions.Any(m => m.Expel == expel && (m.Status == BlocMotion.Voting || m.Status == BlocMotion.Suggested || m.Status == BlocMotion.Tiebreak)))
+            {
+                return L.N("já há uma expulsão desse membro em andamento");
+            }
+            if (bloc.SlotsUsed(empire) >= Bloc.MotionSlots)
+            {
+                return L.F("você já tem {0} pautas ativas (sugeridas, em votação ou em vigor); espere uma acabar", Bloc.MotionSlots);
             }
             motion = new BlocMotion
             {
                 Id = world.NextMotionId++,
-                Kind = kind,
-                Target = target,
-                Arg = arg,
-                Reason = Clean(reason, 200),
+                Kind = BlocMotion.FreeKind,
+                Title = title,
+                Text = text,
                 Author = empire,
                 SuggestedTurn = turn,
+                Expel = expel,
             };
             bloc.Motions.Add(motion);
             if (empire == bloc.President)
@@ -232,16 +259,30 @@ namespace CurrencyMod.Diplomacy.Blocs
             }
             else
             {
-                bloc.Log(turn, "sugeriu", empire, target, kind + (motion.Arg != null ? ":" + motion.Arg : string.Empty));
+                bloc.Log(turn, "sugeriu", empire, -1, title);
             }
             TrimMotions(bloc);
             return null;
         }
 
+        /// <summary>Title from the first sentence of the text (when none was given).</summary>
+        internal static string TitleFrom(string text)
+        {
+            text = (text ?? string.Empty).Trim();
+            int end = text.IndexOfAny(new[] { '.', '\n', ';', ':' });
+            string first = end > 0 ? text.Substring(0, end) : text;
+            if (first.Length > 60)
+            {
+                int space = first.LastIndexOf(' ', 60);
+                first = first.Substring(0, space > 20 ? space : 60) + "…";
+            }
+            return first;
+        }
+
         /// <summary>The president puts a suggestion to a vote (or discards it).</summary>
         internal static string Schedule(AiWorld world, int empire, int motionId, bool open, int turn)
         {
-            Bloc bloc = Of(world, empire);
+            Bloc bloc = ForumOf(world, empire, motionId);
             BlocMotion motion = bloc?.MotionBy(motionId);
             if (motion == null || motion.Status != BlocMotion.Suggested)
             {
@@ -255,14 +296,8 @@ namespace CurrencyMod.Diplomacy.Blocs
             {
                 motion.Status = BlocMotion.Dropped;
                 motion.ClosedTurn = turn;
-                bloc.Log(turn, "descartada", empire, motion.Target, motion.Kind);
+                bloc.Log(turn, "descartada", empire, -1, motion.Title);
                 return null;
-            }
-            string arg = motion.Arg;
-            string problem = CheckMotion(world, bloc, motion.Kind, motion.Target, ref arg);
-            if (problem != null)
-            {
-                return problem;
             }
             Open(bloc, motion, turn);
             return null;
@@ -270,13 +305,21 @@ namespace CurrencyMod.Diplomacy.Blocs
 
         internal static string Vote(AiWorld world, int empire, int motionId, bool yes, int turn)
         {
-            Bloc bloc = Of(world, empire);
+            Bloc bloc = ForumOf(world, empire, motionId);
             BlocMotion motion = bloc?.MotionBy(motionId);
+            if (motion != null && motion.Status == BlocMotion.Tiebreak && empire == bloc.President)
+            {
+                return Decide(world, empire, motionId, yes, turn);
+            }
             if (motion == null || motion.Status != BlocMotion.Voting)
             {
                 return L.N("não há essa pauta em votação no seu bloco");
             }
-            if (motion.Kind == "expulsar" && motion.Target == empire)
+            if (empire == bloc.President)
+            {
+                return L.N("o presidente não vota: ele escolhe o que vai a votação e desempata");
+            }
+            if (empire == motion.Expel)
             {
                 return L.N("quem é alvo da expulsão não vota");
             }
@@ -285,138 +328,194 @@ namespace CurrencyMod.Diplomacy.Blocs
             return null;
         }
 
+        /// <summary>The president's decision on a motion waiting for the tie-break.</summary>
+        internal static string Decide(AiWorld world, int empire, int motionId, bool yes, int turn)
+        {
+            Bloc bloc = ForumOf(world, empire, motionId);
+            BlocMotion motion = bloc?.MotionBy(motionId);
+            if (motion == null || motion.Status != BlocMotion.Tiebreak)
+            {
+                return L.N("não há essa pauta esperando o desempate");
+            }
+            if (bloc.President != empire)
+            {
+                return L.N("só o presidente desempata");
+            }
+            motion.PresidentDecision = yes;
+            Close(world, bloc, motion, yes, turn, byPresident: true);
+            return null;
+        }
+
+        /// <summary>Who votes on a motion: every member but the president and the member it would expel.</summary>
+        internal static List<int> Voters(Bloc bloc, BlocMotion motion) => bloc.Members.Where(m => m != bloc.President && m != motion.Expel).ToList();
+
         private static void Open(Bloc bloc, BlocMotion motion, int turn)
         {
             motion.Status = BlocMotion.Voting;
             motion.OpenedTurn = turn;
             motion.Votes.Clear();
-            bloc.Log(turn, "pauta", bloc.President, motion.Target, motion.Kind + (motion.Arg != null ? ":" + motion.Arg : string.Empty));
+            bloc.Log(turn, "pauta", bloc.President, -1, motion.Title);
         }
 
-        private static string CheckMotion(AiWorld world, Bloc bloc, string kind, int target, ref string arg)
-        {
-            switch (kind)
-            {
-                case "tarifa":
-                    arg = (arg ?? "pedagio").Trim().ToLowerInvariant().Replace("pedágio", "pedagio");
-                    if (arg != "pedagio" && arg != "bloqueio")
-                    {
-                        return "a tarifa é \"pedagio\" ou \"bloqueio\"";
-                    }
-                    if (target < 0 || bloc.Has(target))
-                    {
-                        return L.N("a tarifa comum é contra uma nação de fora do bloco");
-                    }
-                    return null;
-                case "fim_tarifa":
-                    arg = null;
-                    return bloc.Tariffs.Any(t => t.Target == target) ? null : L.N("não há tarifa comum contra essa nação");
-                case "admitir":
-                    arg = null;
-                    if (target < 0 || bloc.Has(target))
-                    {
-                        return L.N("essa nação já é membro");
-                    }
-                    if (bloc.Members.Count + bloc.Invites.Count >= Bloc.MaxMembers)
-                    {
-                        return L.N("o bloco está cheio");
-                    }
-                    return bloc.InviteFor(target) != null ? L.N("essa nação já tem um convite aberto") : null;
-                case "expulsar":
-                    arg = null;
-                    return bloc.Has(target) ? null : L.N("essa nação não é membro");
-                case "congresso":
-                    arg = (arg ?? string.Empty).Trim();
-                    return BlocCongress.Check(arg, TurnCapture.Latest);
-                case "renomear":
-                    arg = Clean(arg, 40);
-                    if (arg.Length == 0)
-                    {
-                        return L.N("diga o nome novo");
-                    }
-                    string name = arg;
-                    return world.Blocs.Any(b => b != bloc && string.Equals(b.Name, name, StringComparison.OrdinalIgnoreCase)) ? L.N("já existe um bloco com esse nome") : null;
-                case "dissolver":
-                    arg = null;
-                    return null;
-            }
-            return L.N("pauta desconhecida");
-        }
-
-        /// <summary>Closes the motion when everyone eligible has voted, or when the deadline has passed.</summary>
+        /// <summary>
+        /// Closes the motion when every voter has voted, or when the deadline has passed. Simple majority; a tie (or no
+        /// vote at all) goes to the president. An expulsion needs 2/3 of the voters; a majority short of that also goes
+        /// to the president.
+        /// </summary>
         private static void CloseIfDone(AiWorld world, Bloc bloc, BlocMotion motion, int turn)
         {
             List<int> voters = Voters(bloc, motion);
+            motion.Votes.Remove(bloc.President); // votes cast before the rule (2026-10-12) do not count
             bool everyone = voters.All(v => motion.Votes.ContainsKey(v));
             if (!everyone && turn < motion.Deadline)
             {
                 return;
             }
-            bool passed;
-            if (motion.Kind == "expulsar")
+            int yes = motion.Votes.Count(v => v.Value && voters.Contains(v.Key));
+            int no = motion.Votes.Count(v => !v.Value && voters.Contains(v.Key));
+            bool tie = yes == no;
+            bool shortExpulsion = motion.Expel >= 0 && yes > no && yes * 3 < Math.Max(1, voters.Count) * 2;
+            if (tie || shortExpulsion)
             {
-                passed = motion.Votes.Count(v => v.Value && voters.Contains(v.Key)) * 3 >= voters.Count * 2;
+                motion.Status = BlocMotion.Tiebreak;
+                motion.TiebreakTurn = turn;
+                bloc.Log(turn, "desempate", bloc.President, motion.Expel, motion.Title);
+                return;
             }
-            else if (motion.Yes != motion.No)
-            {
-                passed = motion.Yes > motion.No;
-            }
-            else
-            {
-                // Tie (including nobody voted): the president's vote decides; without it, the motion fails.
-                passed = motion.Votes.TryGetValue(bloc.President, out bool presidentYes) && presidentYes && motion.Yes > 0;
-            }
+            Close(world, bloc, motion, yes > no, turn, byPresident: false);
+        }
+
+        private static void Close(AiWorld world, Bloc bloc, BlocMotion motion, bool passed, int turn, bool byPresident)
+        {
             motion.Status = passed ? BlocMotion.Passed : BlocMotion.Failed;
             motion.ClosedTurn = turn;
-            bloc.Log(turn, passed ? "aprovada" : "rejeitada", -1, motion.Target, motion.Kind + (motion.Arg != null ? ":" + motion.Arg : string.Empty));
+            bloc.Log(turn, passed ? "aprovada" : "rejeitada", -1, -1, motion.Title);
             if (passed)
             {
-                Apply(world, bloc, motion, turn);
+                var resolution = new BlocResolution
+                {
+                    Id = world.NextResolutionId++,
+                    MotionId = motion.Id,
+                    Title = motion.Title,
+                    Text = motion.Text,
+                    Author = motion.Author,
+                    PassedTurn = turn,
+                    Yes = motion.Yes,
+                    No = motion.No,
+                    Voters = Voters(bloc, motion).Count,
+                    Votes = new Dictionary<int, bool>(motion.Votes),
+                    ByPresident = byPresident,
+                };
+                bloc.Resolutions.Add(resolution);
+                if (motion.Expel >= 0 && bloc.Has(motion.Expel))
+                {
+                    // The only mechanical effect a motion has: the expelled member leaves (the resolution is done).
+                    Leave(world, motion.Expel, turn, expelled: true);
+                    resolution.Status = BlocResolution.ExpiredStatus;
+                    resolution.RevokedTurn = turn;
+                }
+                if (bloc.Resolutions.Count > 30)
+                {
+                    BlocResolution oldest = bloc.Resolutions.FirstOrDefault(r => r.Status != BlocResolution.InForceStatus);
+                    if (oldest != null)
+                    {
+                        bloc.Resolutions.Remove(oldest);
+                    }
+                }
             }
         }
 
-        private static List<int> Voters(Bloc bloc, BlocMotion motion)
+        /// <summary>
+        /// A member records that another broke a resolution (or the bloc's word). The mod does not judge it: the
+        /// accusation is only the accuser's word, shown to every member with its evidence.
+        /// </summary>
+        internal static string Accuse(AiWorld world, int accuser, int accused, int resolutionId, string evidence, int turn, bool congress = false)
         {
-            return bloc.Members.Where(m => !(motion.Kind == "expulsar" && m == motion.Target)).ToList();
-        }
-
-        private static void Apply(AiWorld world, Bloc bloc, BlocMotion motion, int turn)
-        {
-            switch (motion.Kind)
+            Bloc forum = world?.CongressForum;
+            bool inCongress = forum != null && forum.Has(accuser) && (congress || resolutionId >= 0 && forum.ResolutionBy(resolutionId) != null);
+            if (congress && !inCongress)
             {
-                case "tarifa":
-                    bloc.Tariffs.RemoveAll(t => t.Target == motion.Target);
-                    bloc.Tariffs.Add(new BlocTariff { Target = motion.Target, Mode = motion.Arg, Since = turn });
-                    break;
-                case "fim_tarifa":
-                    bloc.Tariffs.RemoveAll(t => t.Target == motion.Target);
-                    break;
-                case "admitir":
-                    if (!bloc.Has(motion.Target) && bloc.InviteFor(motion.Target) == null)
-                    {
-                        bloc.Invites.Add(new BlocInvite { Empire = motion.Target, From = bloc.President, Turn = turn });
-                        bloc.Log(turn, "convidou", bloc.President, motion.Target);
-                    }
-                    break;
-                case "expulsar":
-                    Leave(world, motion.Target, turn, expelled: true);
-                    break;
-                case "congresso":
-                    bloc.CongressLine = new BlocCongressLine { Choice = motion.Arg, Turn = turn, SessionKey = BlocCongress.SessionKeyFor(motion.Arg, TurnCapture.Latest) };
-                    break;
-                case "renomear":
-                    bloc.Log(turn, "renomeado", -1, -1, bloc.Name);
-                    bloc.Name = motion.Arg;
-                    ChatGroup group = world.Groups.FirstOrDefault(g => g.Id == bloc.GroupId);
-                    if (group != null)
-                    {
-                        group.Name = bloc.Name;
-                    }
-                    break;
-                case "dissolver":
-                    Dissolve(world, bloc, turn);
-                    break;
+                return L.N("você não faz parte do Congresso Mundial");
             }
+            Bloc bloc = inCongress ? forum : Of(world, accuser);
+            if (bloc == null || !bloc.Formed)
+            {
+                return L.N("você não está num bloco formado");
+            }
+            if (accused == accuser || !bloc.Has(accused))
+            {
+                return L.N("só dá para acusar outro membro do seu bloco");
+            }
+            if (resolutionId >= 0 && bloc.ResolutionBy(resolutionId) == null)
+            {
+                return L.N("não há essa resolução no seu bloco");
+            }
+            evidence = Clean(evidence, 300);
+            if (evidence.Length == 0)
+            {
+                return L.N("diga o que você viu (a evidência)");
+            }
+            if (bloc.Accusations.Any(a => a.Accuser == accuser && a.Accused == accused && a.Resolution == resolutionId && turn - a.Turn < 3))
+            {
+                return L.N("você já fez essa acusação há pouco");
+            }
+            bloc.Accusations.Add(new BlocAccusation { Turn = turn, Accuser = accuser, Accused = accused, Resolution = resolutionId, Evidence = evidence });
+            if (bloc.Accusations.Count > 60)
+            {
+                bloc.Accusations.RemoveRange(0, bloc.Accusations.Count - 60);
+            }
+            BlocResolution resolution = bloc.ResolutionBy(resolutionId);
+            bloc.Log(turn, "acusou", accuser, accused, resolution != null ? resolution.Title : null);
+            return null;
+        }
+
+        /// <summary>
+        /// Moves an old save to the free model once: open typed motions become free motions (title from the type, text
+        /// from the reason), common tariffs become resolutions in force, and the joint Congress position is cleared.
+        /// </summary>
+        internal static void Migrate(AiWorld world, Bloc bloc, int turn)
+        {
+            if (bloc.Migrated)
+            {
+                return;
+            }
+            bloc.Migrated = true;
+            foreach (BlocMotion motion in bloc.Motions)
+            {
+                if (motion.Kind == BlocMotion.FreeKind || motion.Kind == null)
+                {
+                    continue;
+                }
+                string legacy = BlocDossier.DescribeLegacy(motion, e => "E" + e);
+                if (motion.Status == BlocMotion.Voting || motion.Status == BlocMotion.Suggested)
+                {
+                    motion.Title = TitleFrom(string.IsNullOrWhiteSpace(motion.Reason) ? legacy : motion.Reason);
+                    motion.Text = Clean(string.IsNullOrWhiteSpace(motion.Reason) ? legacy : motion.Reason, Bloc.MotionTextMax);
+                    motion.Kind = BlocMotion.FreeKind;
+                    motion.SuggestedTurn = Math.Max(motion.SuggestedTurn, turn); // the clock restarts with the new model
+                }
+                else
+                {
+                    motion.Title = legacy;
+                    motion.Text = motion.Reason;
+                }
+            }
+            foreach (BlocTariff tariff in bloc.Tariffs)
+            {
+                string mode = tariff.Mode == "bloqueio" ? "bloqueio" : "pedágio";
+                bloc.Resolutions.Add(new BlocResolution
+                {
+                    Id = world.NextResolutionId++,
+                    Title = $"Tarifa comum: {mode} contra E{tariff.Target}",
+                    Text = $"Todos os membros aplicam {mode} nos seus postos comerciais contra E{tariff.Target}.",
+                    Author = bloc.President,
+                    PassedTurn = turn,
+                    Voters = bloc.Members.Count,
+                });
+            }
+            bloc.Tariffs.Clear();
+            bloc.CongressLine = null;
+            Plugin.Log.LogInfo($"Bloc {bloc.Handle}: moved to free motions ({bloc.Resolutions.Count} resolution(s)).");
         }
 
         // ---------------- President ----------------
@@ -474,21 +573,69 @@ namespace CurrencyMod.Diplomacy.Blocs
                     changed = true;
                 }
             }
-            if (world.BlocTickTurn != turn && world.Blocs.Count > 0)
+            if (world.BlocTickTurn != turn && (world.Blocs.Count > 0 || world.CongressForum != null))
             {
                 world.BlocTickTurn = turn;
                 Tick(world, turn);
+                if (world.CongressForum != null)
+                {
+                    TickMotions(world, world.CongressForum, turn);
+                }
                 changed = true;
             }
             return changed;
         }
 
-        /// <summary>Per-turn step: expired invites, failed formation, motions at their deadline and the election.</summary>
+        /// <summary>The motion part of the turn step, also used by the Congress's free agenda: lapsed resolutions, late
+        /// tie-breaks, stale suggestions and motions at their deadline.</summary>
+        internal static void TickMotions(AiWorld world, Bloc bloc, int turn)
+        {
+            foreach (BlocResolution lapsed in bloc.InForce.Where(r => turn >= r.Expires).ToList())
+            {
+                lapsed.Status = BlocResolution.ExpiredStatus;
+                lapsed.RevokedTurn = turn;
+                bloc.Log(turn, "resolucao_venceu", lapsed.Author, -1, lapsed.Title);
+            }
+            foreach (BlocMotion waiting in bloc.Motions.Where(m => m.Status == BlocMotion.Tiebreak && turn - m.TiebreakTurn >= BlocMotion.TiebreakTurns).ToList())
+            {
+                Close(world, bloc, waiting, false, turn, byPresident: false);
+            }
+            foreach (BlocMotion stale in bloc.Suggestions.Where(m => turn - m.SuggestedTurn >= Bloc.SuggestionTurns).ToList())
+            {
+                stale.Status = BlocMotion.Dropped;
+                stale.ClosedTurn = turn;
+                bloc.Log(turn, "expirou", stale.Author, -1, stale.Title);
+            }
+            foreach (BlocMotion motion in bloc.OpenMotions.ToList())
+            {
+                CloseIfDone(world, bloc, motion, turn);
+            }
+        }
+
+        /// <summary>Per-turn step: expired invites and suggestions, failed formation, motions at their deadline and the election.</summary>
         internal static void Tick(AiWorld world, int turn)
         {
             foreach (Bloc bloc in world.Blocs.ToList())
             {
                 bloc.Members.RemoveAll(m => m < 0);
+                Migrate(world, bloc, turn);
+                foreach (BlocResolution lapsed in bloc.InForce.Where(r => turn >= r.Expires).ToList())
+                {
+                    lapsed.Status = BlocResolution.ExpiredStatus;
+                    lapsed.RevokedTurn = turn;
+                    bloc.Log(turn, "resolucao_venceu", lapsed.Author, -1, lapsed.Title);
+                }
+                foreach (BlocMotion waiting in bloc.Motions.Where(m => m.Status == BlocMotion.Tiebreak && turn - m.TiebreakTurn >= BlocMotion.TiebreakTurns).ToList())
+                {
+                    // The president did not decide in time: the motion fails.
+                    Close(world, bloc, waiting, false, turn, byPresident: false);
+                }
+                foreach (BlocMotion stale in bloc.Suggestions.Where(m => turn - m.SuggestedTurn >= Bloc.SuggestionTurns).ToList())
+                {
+                    stale.Status = BlocMotion.Dropped;
+                    stale.ClosedTurn = turn;
+                    bloc.Log(turn, "expirou", stale.Author, -1, stale.Title);
+                }
                 foreach (BlocInvite invite in bloc.Invites.Where(i => turn - i.Turn >= Bloc.InviteTurns).ToList())
                 {
                     bloc.Invites.Remove(invite);

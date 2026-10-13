@@ -52,7 +52,7 @@ namespace CurrencyMod
                 return 0;
             }
             EconomySimulation.EmpireEffects effects = EffectsOf(settlement);
-            return effects != null ? effects.StabilityLoss : 0;
+            return (effects != null ? effects.StabilityLoss : 0) + TradeHubs.StabilityLoss(settlement);
         }
 
         /// <summary>Stability target with inflation and unemployment applied, never below the city's guaranteed minimum.</summary>
@@ -106,6 +106,38 @@ namespace CurrencyMod
             }
         }
 
+        /// <summary>
+        /// One-off money between empires in the last turn (gifts, ultimatum tributes, surrender: MoneyKind.Other), each in
+        /// the empire's own currency. Not a forecast: it shows in the money tooltip as "last turn" (melhorias-jogando item 21).
+        /// </summary>
+        internal static void LastTurnTransfers(Empire empire, int currentTurn, out double received, out double given)
+        {
+            received = 0;
+            given = 0;
+            CurrencyWorld world = CurrencyManager.Current;
+            if (!Enabled || !(empire is MajorEmpire major) || world?.TradeHistory == null)
+            {
+                return;
+            }
+            lock (CurrencyManager.Lock)
+            {
+                foreach (TradePoint point in world.TradeHistory.Where(p => p.Turn >= currentTurn - 1))
+                {
+                    foreach (MoneyFlow flow in point.Money.Where(m => m.Kind == MoneyKind.Other))
+                    {
+                        if (flow.To == major.Index)
+                        {
+                            received += flow.Gain;
+                        }
+                        if (flow.From == major.Index)
+                        {
+                            given += flow.Paid;
+                        }
+                    }
+                }
+            }
+        }
+
         /// <summary>Bloc refund of route upkeep expected at the next end of turn: last turn's amount (BlocTrade).</summary>
         internal static double ProjectedBlocRefund(Empire empire)
         {
@@ -122,7 +154,7 @@ namespace CurrencyMod
             try
             {
                 double extra = ProjectedInterest(empire) + ProjectedTransit(empire) + ProjectedBlocRefund(empire)
-                    + ProjectedTolls(empire, received: true) + ProjectedTolls(empire, received: false);
+                    + ProjectedTolls(empire, received: true) + ProjectedTolls(empire, received: false) + TradeHubs.ProjectedMoney(empire.Index);
                 if (Math.Abs(extra) >= 0.05)
                 {
                     return net + (FixedPoint)(float)extra;
@@ -154,6 +186,10 @@ namespace CurrencyMod
         private static readonly StaticString BlocRefundId = new StaticString("CurrencyMod_BlocRefund");
         private static readonly StaticString TollsReceivedId = new StaticString("CurrencyMod_TollsReceived");
         private static readonly StaticString TollsPaidId = new StaticString("CurrencyMod_TollsPaid");
+        private static readonly StaticString HubMoneyId = new StaticString("CurrencyMod_TradeHubs");
+        private static readonly StaticString HubCrimeId = new StaticString("CurrencyMod_TradeHubCrime");
+        private static readonly StaticString HubMinorityId = new StaticString("CurrencyMod_TradeHubMinorities");
+        private static readonly StaticString SupplyCrisisId = new StaticString("CurrencyMod_SupplyCrisis");
         private static bool loggedError;
 
         private static void Postfix(ref PropertyBreakdownWorker __instance, SimulationEntity simulationEntity, string propertyName, BreakdownOptions options)
@@ -183,6 +219,7 @@ namespace CurrencyMod
                     added |= AddPart(ref __instance, NativeEffects.ProjectedBlocRefund(empire), L.T("Desconto do bloco na manutenção das rotas"), BlocRefundId);
                     added |= AddPart(ref __instance, NativeEffects.ProjectedTolls(empire, received: true), L.T("Pedágios recebidos nos seus postos"), TollsReceivedId);
                     added |= AddPart(ref __instance, NativeEffects.ProjectedTolls(empire, received: false), L.T("Pedágios pagos a outros impérios"), TollsPaidId);
+                    added |= AddPart(ref __instance, TradeHubs.ProjectedMoney(empire.Index), L.T("Entrepostos comerciais"), HubMoneyId);
                 }
                 if (added)
                 {
@@ -225,12 +262,16 @@ namespace CurrencyMod
             {
                 return false;
             }
+            TradeHubs.StabilityParts(settlement, out double crime, out double minorities, out double supply);
+            bool trade = AddPart(ref worker, -crime, L.T("Crime nas rotas de comércio"), HubCrimeId);
+            trade |= AddPart(ref worker, -minorities, L.T("Minorias estrangeiras trazidas pelo comércio"), HubMinorityId);
+            trade |= AddPart(ref worker, -supply, L.T("Crise de abastecimento (rota cortada)"), SupplyCrisisId);
             EconomySimulation.EmpireEffects effects = NativeEffects.EffectsOf(settlement);
             if (effects == null)
             {
-                return false;
+                return trade;
             }
-            bool added = AddPart(ref worker, -effects.InflationLoss, L.F("Inflação de {0} por turno", NativeEffects.Percent(effects.InflationRate)), InflationId);
+            bool added = trade | AddPart(ref worker, -effects.InflationLoss, L.F("Inflação de {0} por turno", NativeEffects.Percent(effects.InflationRate)), InflationId);
             added |= AddPart(ref worker, -effects.UnemploymentLoss, L.T("Desemprego pelo crédito caro"), UnemploymentId);
             return added;
         }

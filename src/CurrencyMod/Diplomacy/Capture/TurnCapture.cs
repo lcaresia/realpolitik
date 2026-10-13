@@ -79,6 +79,7 @@ namespace CurrencyMod.Diplomacy.Capture
             };
 
             CaptureTerritories(world, majors, capture);
+            CaptureReligions(capture);
             try
             {
                 InternationalAncillary international = Sandbox.InternationalAncillary;
@@ -182,6 +183,84 @@ namespace CurrencyMod.Diplomacy.Capture
             }
         }
 
+        /// <summary>
+        /// Religions and the dominant religion of each territory (melhorias-jogando item 35): the game's belief
+        /// propagation state, read as it is (no simulation change).
+        /// </summary>
+        private static void CaptureReligions(WorldCapture capture)
+        {
+            int count = capture.TerritoryOwner.Length;
+            capture.TerritoryReligion = Enumerable.Repeat(-1, count).ToArray();
+            capture.TerritoryReligionContestant = Enumerable.Repeat(-1, count).ToArray();
+            capture.TerritoryTurnsToConvert = new int[count];
+            try
+            {
+                ReligionManager manager = Sandbox.ReligionManager;
+                if (manager == null)
+                {
+                    return;
+                }
+                var infos = manager.ReligionInfo.Data;
+                int religions = infos?.Length ?? 0;
+                capture.ReligionNames = new string[religions];
+                capture.ReligionLeader = new int[religions];
+                for (int r = 0; r < religions; r++)
+                {
+                    capture.ReligionNames[r] = GameAccess.Clean(infos[r].Name.ToString());
+                    capture.ReligionLeader[r] = infos[r].LeaderEmpireIndex;
+                }
+                var territories = manager.BeliefInfoPerTerritory.Data;
+                for (int t = 0; t < count && territories != null && t < territories.Length; t++)
+                {
+                    capture.TerritoryReligion[t] = territories[t].InfluencerBeliefIndex;
+                    capture.TerritoryReligionContestant[t] = territories[t].ContestantBeliefIndex;
+                    capture.TerritoryTurnsToConvert[t] = territories[t].NumberOfTurnBeforeConversion;
+                }
+            }
+            catch (Exception ex)
+            {
+                Plugin.Log.LogWarning($"Capture: religions unavailable ({ex.Message}).");
+            }
+        }
+
+        /// <summary>Enacted civics and the ones waiting for a choice (melhorias-jogando item 34).</summary>
+        private static void CaptureCivics(MajorEmpire empire, CapturedEmpire captured)
+        {
+            try
+            {
+                var civics = empire.DepartmentOfDevelopment.Civics;
+                for (int k = 0; k < civics.Length; k++)
+                {
+                    var civic = civics.Data[k];
+                    CivicDefinition definition = civic.CivicDefinition;
+                    if (definition == null || (civic.CivicStatus != CivicStatuses.Enacted && civic.CivicStatus != CivicStatuses.Available))
+                    {
+                        continue;
+                    }
+                    var entry = new CapturedCivic { Name = definition.Name.ToString(), Enacted = civic.CivicStatus == CivicStatuses.Enacted, Index = k };
+                    if (entry.Enacted)
+                    {
+                        entry.Choice = civic.ActiveChoiceName.ToString();
+                        entry.Turn = civic.TurnOnLastChoice;
+                    }
+                    else if (definition.Choices != null)
+                    {
+                        entry.Options.AddRange(definition.Choices.Select(c => c.Name.ToString()));
+                        CivicActionFailureFlag flags = CivicActionFailureFlag.None;
+                        empire.DepartmentOfDevelopment.FillCivicActivateFailureFlags(k, ref flags);
+                        entry.Blocked = flags == CivicActionFailureFlag.None ? null : CivicFlow.Explain(flags);
+                    }
+                    captured.Civics.Add(entry);
+                }
+                captured.CivicCost = (float)empire.DepartmentOfDevelopment.GetEnactCivicInfluenceCost();
+                captured.Religion = empire.Religion?.Entity != null ? empire.Religion.Entity.Index : -1;
+            }
+            catch (Exception ex)
+            {
+                Plugin.Log.LogWarning($"Capture: civics of E{empire.Index} unavailable ({ex.Message}).");
+            }
+        }
+
         private static int TerritoryAt(World world, WorldPosition position)
         {
             if (!position.IsWorldPositionValid())
@@ -214,6 +293,7 @@ namespace CurrencyMod.Diplomacy.Capture
                 return captured;
             }
 
+            CaptureCivics(empire, captured);
             captured.Money = (float)empire.MoneyStock.Value;
             captured.MoneyNet = (float)empire.MoneyNet.Value;
             captured.Influence = (float)empire.InfluenceStock.Value;
@@ -297,6 +377,8 @@ namespace CurrencyMod.Diplomacy.Capture
                     int open = captured.FullName?.LastIndexOf('(') ?? -1;
                     int close = captured.FullName?.LastIndexOf(')') ?? -1;
                     captured.Culture = open >= 0 && close > open ? captured.FullName.Substring(open + 1, close - open - 1).Trim() : culture;
+                    // With the fixed names in the game's own labels ("Valdoria · Godos"), the real culture is the original.
+                    captured.Culture = NativeNames.OriginalCulture(index) ?? captured.Culture;
                 }
             }
             catch (Exception)
@@ -675,8 +757,17 @@ namespace CurrencyMod.Diplomacy.Capture
                             continue;
                         }
                         bool suspended = relation.TradeRoadStatus == TradeRoadStatus.Suspended;
-                        AddTrade(capture, relation.LeftTradeExchange.Entity, suspended, majors);
-                        AddTrade(capture, relation.RightTradeExchange.Entity, suspended, majors);
+                        var transit = new List<int>();
+                        for (int i = 0; i < relation.PathAsTerritories.Count; i++)
+                        {
+                            MajorEmpire owner = relation.PathAsTerritories[i] != null ? TradeBlockade.OwnerOf(relation.PathAsTerritories[i].Index) : null;
+                            if (owner != null && owner.Index != relation.LeftEmpireIndex && owner.Index != relation.RightEmpireIndex && !transit.Contains(owner.Index))
+                            {
+                                transit.Add(owner.Index);
+                            }
+                        }
+                        AddTrade(capture, relation.LeftTradeExchange.Entity, suspended, majors, transit);
+                        AddTrade(capture, relation.RightTradeExchange.Entity, suspended, majors, transit);
                     }
                 }
             }
@@ -743,7 +834,7 @@ namespace CurrencyMod.Diplomacy.Capture
             }
         }
 
-        private static void AddTrade(WorldCapture capture, ExternalTradeExchange exchange, bool suspended, int majors)
+        private static void AddTrade(WorldCapture capture, ExternalTradeExchange exchange, bool suspended, int majors, List<int> transit)
         {
             Empire buyer = exchange?.BuyerEmpire.Entity;
             Empire seller = exchange?.SellerEmpire.Entity;
@@ -751,13 +842,15 @@ namespace CurrencyMod.Diplomacy.Capture
             {
                 return;
             }
-            var trade = new CapturedTrade { Buyer = buyer.Index, Seller = seller.Index, Suspended = suspended };
+            var trade = new CapturedTrade { Buyer = buyer.Index, Seller = seller.Index, Suspended = suspended, Transit = transit };
             ResourceDefinition[] definitions = DepartmentOfResources.ResourceDefinitionByResourceType;
             for (int i = 0; definitions != null && i < ResourceSlots && i < definitions.Length; i++)
             {
-                if (definitions[i] != null && (float)exchange.GetBoughtResourceAccessCount((ResourceType)i) > 0)
+                int bought = definitions[i] != null ? (int)(float)exchange.GetBoughtResourceAccessCount((ResourceType)i) : 0;
+                if (bought > 0)
                 {
                     trade.Resources.Add(i);
+                    trade.Counts[i] = bought;
                 }
             }
             if (trade.Resources.Count > 0)

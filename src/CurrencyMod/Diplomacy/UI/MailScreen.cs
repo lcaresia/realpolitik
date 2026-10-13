@@ -69,8 +69,9 @@ namespace CurrencyMod.Diplomacy.UI
             L.N("Nações que você conhece: escrever para elas ou recusar as cartas privadas delas."),
             L.N("Conversas com várias nações ao mesmo tempo: todos os membros leem cada mensagem."),
         };
-        private static readonly string[] TypeIds = { "privada", "ultimato", "publica", "grupo" };
-        private static readonly string[] TypeNames = { L.N("Carta privada"), L.N("Ultimato"), L.N("Declaração pública"), L.N("Mensagem de grupo") };
+        // "trato" (melhorias item 45): a private letter that also records a deal in the ledger (what each side gives, deadline).
+        private static readonly string[] TypeIds = { "privada", "ultimato", "publica", "grupo", "trato" };
+        private static readonly string[] TypeNames = { L.N("Carta privada"), L.N("Ultimato"), L.N("Declaração pública"), L.N("Mensagem de grupo"), L.N("Trato") };
         private static readonly int[] PeriodTurns = { 0, 5, 15, 30 };
         private static readonly string[] PeriodNames = { L.N("Período: tudo"), L.N("Últimos 5 turnos"), L.N("Últimos 15 turnos"), L.N("Últimos 30 turnos") };
 
@@ -120,10 +121,16 @@ namespace CurrencyMod.Diplomacy.UI
         private UITextField subjectField;
         private UITextField bodyField;
         private UITextField demandField;
+        private Transform giveItem;
+        private UITextField giveField;
+        private Transform getItem;
+        private UITextField getField;
         private UISlider deadlineSlider;
         private int composeTo = -1;
         /// <summary>Group of the compose panel (type "grupo"); -1 = create a new group with newGroupMembers.</summary>
         private int composeGroup = -1;
+        /// <summary>The group message being answered (Reply on a group message), -1 for a new message.</summary>
+        private int groupReplyToId = -1;
         private readonly HashSet<int> newGroupMembers = new HashSet<int>();
         private readonly List<NationRow> groupRows = new List<NationRow>();
         private int composeType;
@@ -455,6 +462,10 @@ namespace CurrencyMod.Diplomacy.UI
                 subjectField = subjectItem.GetComponent<UITextField>();
                 demandItem = CloneField(fieldDonor, "DemandField", 34f, multiline: false, maxChars: 200, hint: L.T("O que você exige (ultimato)"));
                 demandField = demandItem.GetComponent<UITextField>();
+                giveItem = CloneField(fieldDonor, "DealGiveField", 34f, multiline: false, maxChars: 200, hint: L.T("O que você dá (trato)"));
+                giveField = giveItem.GetComponent<UITextField>();
+                getItem = CloneField(fieldDonor, "DealGetField", 34f, multiline: false, maxChars: 200, hint: L.T("O que ele dá (trato)"));
+                getField = getItem.GetComponent<UITextField>();
                 bodyItem = CloneField(fieldDonor, "BodyField", 300f, multiline: true, maxChars: AiConfig.PlayerLetterLimit, hint: L.T("Escreva sua carta como o líder do seu povo…"));
                 bodyField = bodyItem.GetComponent<UITextField>();
                 // TextChange is bound in Update (EnsureTextChange), after the field loads.
@@ -586,6 +597,13 @@ namespace CurrencyMod.Diplomacy.UI
                 SetFeedback(L.T("A carta está vazia."), true);
                 return;
             }
+            string give = giveField?.Text.Trim() ?? string.Empty;
+            string get = getField?.Text.Trim() ?? string.Empty;
+            if (type == "trato" && (give.Length == 0 || get.Length == 0))
+            {
+                SetFeedback(L.T("Um trato precisa dizer o que você dá e o que ele dá."), true);
+                return;
+            }
             string demand = demandField?.Text.Trim();
             if (type == "ultimato" && string.IsNullOrEmpty(demand))
             {
@@ -594,11 +612,29 @@ namespace CurrencyMod.Diplomacy.UI
             }
             int deadline = deadlineSlider != null ? Mathf.RoundToInt(deadlineSlider.CurrentValue) : 3;
             int inReplyTo = type == "publica" ? -1 : replyToId >= 0 ? replyToId : replyDetached ? -2 : -1;
-            string result = module.SendPlayerLetter(type == "publica" ? Letter.Everyone : composeTo, type, subjectField?.Text.Trim(), text, demand, deadline, inReplyTo: inReplyTo);
+            string result = module.SendPlayerLetter(type == "publica" ? Letter.Everyone : composeTo, type == "trato" ? "privada" : type, subjectField?.Text.Trim(), text, demand, deadline, inReplyTo: inReplyTo);
             if (result.StartsWith("ok"))
             {
                 int arrives = ParseArrival(result);
                 SetFeedback(arrives >= 0 ? L.F("Carta enviada. Chega no turno {0}.", arrives) : L.T("Carta enviada."), false);
+                if (type == "trato" && AiModule.World != null)
+                {
+                    // The deal goes in the ledger now; the nation sees it in its dossier as "recorded by them".
+                    var json = new Newtonsoft.Json.Linq.JObject
+                    {
+                        ["with"] = "E" + composeTo,
+                        ["i_give"] = give,
+                        ["they_give"] = get,
+                        ["deadline"] = deadline,
+                        ["secret"] = true,
+                    };
+                    string recorded = DealLedger.Record(AiModule.World, module.PlayerIndex, json.ToString(), TurnCapture.Latest?.Turn ?? 0);
+                    bool ok = recorded.StartsWith("registrado");
+                    SetFeedback(ok ? L.T("Carta enviada e trato registrado.") : L.F("Carta enviada, mas o trato não foi registrado: {0}", recorded), !ok);
+                    giveField?.ReplaceText(string.Empty);
+                    getField?.ReplaceText(string.Empty);
+                    module.MarkDirty();
+                }
                 bodyField.ReplaceText(string.Empty);
                 subjectField?.ReplaceText(string.Empty);
                 demandField?.ReplaceText(string.Empty);
@@ -638,7 +674,7 @@ namespace CurrencyMod.Diplomacy.UI
             }
             else
             {
-                result = module.SendPlayerGroupLetter(composeGroup, subjectField?.Text.Trim(), text);
+                result = module.SendPlayerGroupLetter(composeGroup, subjectField?.Text.Trim(), text, groupReplyToId);
             }
             if (result.StartsWith("ok"))
             {
@@ -646,6 +682,7 @@ namespace CurrencyMod.Diplomacy.UI
                 SetFeedback(arrives >= 0 ? L.F("Enviada. Chega no turno {0}.", arrives) : L.T("Mensagem enviada ao grupo."), false);
                 bodyField.ReplaceText(string.Empty);
                 subjectField?.ReplaceText(string.Empty);
+                groupReplyToId = -1;
             }
             else
             {
@@ -693,6 +730,12 @@ namespace CurrencyMod.Diplomacy.UI
             }
             string subject = string.IsNullOrWhiteSpace(letter.Subject) ? string.Empty : (letter.Subject.StartsWith("Re:") ? letter.Subject : "Re: " + letter.Subject);
             ComposeTo(letter.From, subject);
+            // A private reply is always a private letter: after replying in a group the panel stayed on "group" and the
+            // reply went to every member of the bloc (melhorias item 51). An ultimatum the player chose stays.
+            if (TypeIds[composeType] != "ultimato" && TypeIds[composeType] != "trato")
+            {
+                composeType = Array.IndexOf(TypeIds, "privada");
+            }
             replyToId = letter.Id;
             nextRefresh = 0;
         }
@@ -1030,11 +1073,14 @@ namespace CurrencyMod.Diplomacy.UI
             bool answered = !letter.IsPublic && module.PlayerAnswered(letter);
             // A public statement that talks about you (name, people of any era or city): golden title and a "Mentions you" chip.
             bool citesMe = letter.IsPublic && Mentions.Cites(letter, capture, AiModule.World, me);
-            string groupName = letter.IsGroup ? AiModule.World.Groups.FirstOrDefault(g => g.Id == letter.GroupId)?.Name ?? "GRP" + letter.GroupId : null;
-            string title = NationAndLeader(capture, letter.From) + (letter.IsPublic ? " · " + L.T("a todos") : letter.IsGroup ? " · " + L.F("no grupo {0}", Escape(groupName)) : string.Empty);
-            B.SetLabel(top, "TitleGroup/Title", citesMe ? $"<c={Gold}>{title}</c>" : title);
+            // The group's name goes in the type chip (melhorias item 54): in the title it was cut off to fit the buttons.
+            string title = NationAndLeader(capture, letter.From) + (letter.IsPublic ? " · " + L.T("a todos") : string.Empty);
+            string badge = RelationBadge(capture, me, letter.From, out string badgeHelp);
+            B.SetLabel(top, "TitleGroup/Title", badge + (citesMe ? $"<c={Gold}>{title}</c>" : title));
+            B.Tip(top, "TitleGroup/Title", NationAndLeader(capture, letter.From), badgeHelp);
             B.SetChip(top, "StatsTable/PopCount", fresh ? $"<c={Green}>{L.T("Nova")}</c> · " + L.F("chegou no turno {0}", letter.DeliverTurn) : L.F("Chegou no turno {0}", letter.DeliverTurn));
-            B.SetChip(top, "StatsTable/Fortification", TypeChip(letter.Type));
+            B.SetChip(top, "StatsTable/Fortification", TypeChip(letter));
+            TypeTip(capture, top, letter);
             // The leader is already in the title: the chip only shows the situation, when there is one.
             bool hasState = answered || !letter.IsPublic && letter.ExpectsReply;
             B.SetVisible(top.Find("StatsTable/ExtensionsCount"), hasState || citesMe);
@@ -1081,9 +1127,11 @@ namespace CurrencyMod.Diplomacy.UI
         private void FillSentRow(AiModule module, WorldCapture capture, LetterRow row, Transform top, Letter letter, int turn)
         {
             string to = letter.IsPublic ? L.T("Você · a todas as nações") : L.F("Para {0}", NationAndLeader(capture, letter.To, inline: true));
-            B.SetLabel(top, "TitleGroup/Title", to);
+            string sentBadge = letter.IsPublic || letter.IsGroup ? string.Empty : RelationBadge(capture, AiModule.Instance?.PlayerIndex ?? -1, letter.To, out string sentHelp);
+            B.SetLabel(top, "TitleGroup/Title", sentBadge + to);
             B.SetChip(top, "StatsTable/PopCount", L.F("Enviada no turno {0}", letter.SentTurn));
-            B.SetChip(top, "StatsTable/Fortification", TypeChip(letter.Type));
+            B.SetChip(top, "StatsTable/Fortification", TypeChip(letter));
+            TypeTip(capture, top, letter);
             B.SetVisible(top.Find("StatsTable/ExtensionsCount"), true);
             B.SetChip(top, "StatsTable/ExtensionsCount", StatusChip(module, letter, turn, out string statusHelp));
             B.SetVisible(row.Primary.transform, false);
@@ -1185,6 +1233,32 @@ namespace CurrencyMod.Diplomacy.UI
             return string.IsNullOrWhiteSpace(nation?.Leader) ? culture : culture + " · " + GameText.InlineUi(nation.Leader);
         }
 
+        /// <summary>The type chip; a group message shows the group's name ("Group: Name", shortened).</summary>
+        internal static string TypeChip(Letter letter)
+        {
+            if (!letter.IsGroup)
+            {
+                return TypeChip(letter.Type);
+            }
+            string name = GroupName(letter);
+            return L.F("Grupo: {0}", Escape(name.Length > 22 ? name.Substring(0, 21).TrimEnd() + "…" : name));
+        }
+
+        /// <summary>Hover help for the type chip of a group message: the group's full name and members.</summary>
+        internal static void TypeTip(WorldCapture capture, Transform top, Letter letter)
+        {
+            if (!letter.IsGroup)
+            {
+                return;
+            }
+            ChatGroup group = AiModule.World?.Groups.FirstOrDefault(g => g.Id == letter.GroupId);
+            B.Tip(top, "StatsTable/Fortification", L.T("Mensagem de grupo"),
+                L.F("Grupo: {0}", Escape(GroupName(letter))) + (group != null ? "\n" + L.F("Membros: {0}", string.Join(", ", group.Members.Select(m => NationAndLeader(capture, m, inline: true)))) : string.Empty));
+        }
+
+        private static string GroupName(Letter letter) =>
+            AiModule.World?.Groups.FirstOrDefault(g => g.Id == letter.GroupId)?.Name ?? "GRP" + letter.GroupId;
+
         internal static string TypeChip(string type)
         {
             switch (type)
@@ -1205,6 +1279,7 @@ namespace CurrencyMod.Diplomacy.UI
                 case "ultimato": return L.T("Exigência com prazo. Chega mesmo para quem recusa sua correspondência.");
                 case "publica": return L.T("Todas as nações que conhecem quem escreveu leem. Serve de propaganda, aviso ou denúncia.");
                 case "grupo": return L.T("Todos os membros do grupo leem. Bom para combinar algo entre várias nações ao mesmo tempo.");
+                case "trato": return L.T("Carta privada que também registra um trato no livro: o que você dá, o que ele dá e o prazo. Use depois de combinar por carta; a nação vê o trato e pode cobrar ou dizer que você rompeu.");
                 default: return L.T("Só o destinatário lê. Não chega se ele recusar a sua correspondência.");
             }
         }
@@ -1225,6 +1300,7 @@ namespace CurrencyMod.Diplomacy.UI
                     if (clicked != null && clicked.IsGroup)
                     {
                         ComposeToGroup(clicked.GroupId); // reply in the group, to all members
+                        groupReplyToId = clicked.Id;
                         return;
                     }
                     StartReply(clicked);
@@ -1421,15 +1497,20 @@ namespace CurrencyMod.Diplomacy.UI
             // Type.
             Transform typeTop = typeCard.Find("Table/Top");
             B.SetLabel(typeTop, "TitleGroup/Title", L.T(TypeNames[composeType]));
-            B.SetChip(typeTop, "StatsTable/PopCount", type == "ultimato" ? L.T("Exigência com prazo") : type == "publica" ? L.T("Todos leem") : type == "grupo" ? L.T("Os membros leem") : L.T("Só ele lê"));
+            List<Deal> openDeals = type == "trato" && AiModule.World != null
+                ? AiModule.World.Deals.Where(d => d.Status == Deal.Open && d.Involves(module.PlayerIndex) && d.Involves(composeTo)).ToList() : new List<Deal>();
+            B.SetChip(typeTop, "StatsTable/PopCount", type == "ultimato" ? L.T("Exigência com prazo") : type == "publica" ? L.T("Todos leem") : type == "grupo" ? L.T("Os membros leem")
+                : type == "trato" ? (openDeals.Count == 0 ? L.T("Nenhum trato aberto com ele") : L.F("{0} trato(s) aberto(s) com ele", openDeals.Count)) : L.T("Só ele lê"));
             B.HideChild(typeTop, "StatsTable/Fortification");
             B.HideChild(typeTop, "StatsTable/ExtensionsCount");
             B.SetVisible(typeButton.transform, true); // the sample's button can come hidden: every compose button is shown explicitly
             B.SetButtonText(typeButton, L.T("Trocar"));
             FitTitle(typeTop, typeButton.GetComponent<UITransform>().Width + 20f);
             B.HideOutputs(typeTop);
-            B.Tip(typeTop, "StatsTable/PopCount", L.T(TypeNames[composeType]), TypeHelp(type));
-            B.Tip(typeButton.transform, string.Empty, L.T("Trocar tipo"), L.T("Carta privada → Ultimato → Declaração pública → Mensagem de grupo."));
+            B.Tip(typeTop, "StatsTable/PopCount", L.T(TypeNames[composeType]), TypeHelp(type)
+                + string.Concat(openDeals.Select(d => "\n" + L.F("{0}: você dá «{1}»; ele dá «{2}» · até o turno {3}", d.Handle,
+                    Escape(d.From == module.PlayerIndex ? d.FromGives : d.WithGives), Escape(d.From == module.PlayerIndex ? d.WithGives : d.FromGives), d.DeadlineTurn))));
+            B.Tip(typeButton.transform, string.Empty, L.T("Trocar tipo"), L.T("Carta privada → Ultimato → Declaração pública → Mensagem de grupo → Trato."));
 
             // In reply to.
             B.SetVisible(replyCard, replying != null);
@@ -1449,11 +1530,20 @@ namespace CurrencyMod.Diplomacy.UI
             }
 
             B.SetVisible(demandItem, type == "ultimato");
-            B.SetVisible(deadlineItem, type == "ultimato");
+            B.SetVisible(giveItem, type == "trato");
+            B.SetVisible(getItem, type == "trato");
+            B.SetVisible(deadlineItem, type == "ultimato" || type == "trato");
             if (deadlineItem != null)
             {
                 deadlineItem.GetComponent<UILabel>().Text = L.F("Prazo: {0} turnos", Mathf.RoundToInt(deadlineSlider.CurrentValue));
-                NativeUIKit.Tip(deadlineItem, L.T("Prazo do ultimato"), L.T("Turnos que a nação tem para cumprir a exigência, contados a partir do envio."));
+                if (type == "trato")
+                {
+                    NativeUIKit.Tip(deadlineItem, L.T("Prazo do trato"), L.T("Turnos para os dois lados cumprirem. Vencido o prazo, a nação confere se você cumpriu e fecha o trato como cumprido ou rompido."));
+                }
+                else
+                {
+                    NativeUIKit.Tip(deadlineItem, L.T("Prazo do ultimato"), L.T("Turnos que a nação tem para cumprir a exigência, contados a partir do envio."));
+                }
             }
 
             // Send.
@@ -1473,11 +1563,56 @@ namespace CurrencyMod.Diplomacy.UI
             B.Tip(sendTop, "StatsTable/PopCount", L.T("Tamanho"), L.F("Cartas acima de {0} caracteres são cortadas. Cartas curtas costumam ser mais bem lidas.", max));
             B.Tip(sendButton.transform, string.Empty, L.T("Enviar"), L.T("Manda a carta. Ela aparece em Enviadas com a situação da entrega."));
 
-            Transform[] order = { recipientCard, typeCard, replyCard, subjectItem, demandItem, deadlineItem, bodyItem, sendCard };
+            Transform[] order = { recipientCard, typeCard, replyCard, subjectItem, demandItem, giveItem, getItem, deadlineItem, bodyItem, sendCard };
             foreach (Transform item in order)
             {
                 item?.SetAsLastSibling();
             }
+        }
+
+        /// <summary>
+        /// A colored dot before a nation's name (melhorias item 39), to tell friend from foe at a glance: red at war, green
+        /// allied or in your bloc, orange in another bloc, grey otherwise. The help lists the relation, the blocs and the
+        /// treaties.
+        /// </summary>
+        internal static string RelationBadge(WorldCapture capture, int me, int other, out string help)
+        {
+            help = string.Empty;
+            CapturedRelation relation = capture?.Empire(me)?.RelationWith(other);
+            if (relation == null || me < 0 || other < 0 || me == other)
+            {
+                return string.Empty;
+            }
+            Blocs.Bloc mine = Blocs.BlocEngine.Of(AiModule.World, me);
+            Blocs.Bloc theirs = Blocs.BlocEngine.Of(AiModule.World, other);
+            bool sameBloc = mine != null && mine == theirs && mine.Formed;
+            bool rivalBloc = theirs != null && theirs.Formed && theirs != mine;
+            string color = relation.AtWar ? Red : relation.Alliance || sameBloc ? Green : rivalBloc ? "E8A25E" : "9AA3AD";
+            var lines = new List<string> { L.F("Relação: {0}", RelationChip(relation)) };
+            if (sameBloc)
+            {
+                lines.Add(L.F("Bloco: os dois na {0}", Escape(mine.Name)));
+            }
+            else if (theirs != null && theirs.Formed)
+            {
+                lines.Add(L.F("Bloco: ele é da {0}", Escape(theirs.Name)));
+            }
+            else
+            {
+                lines.Add(L.T("Bloco: ele não está em nenhum"));
+            }
+            var pacts = new List<string>();
+            if (relation.NonAggression) pacts.Add(L.T("não agressão"));
+            if (relation.OpenBorders) pacts.Add(L.T("fronteiras abertas"));
+            if (relation.Trade) pacts.Add(L.T("acordo comercial"));
+            if (relation.SharedMaps) pacts.Add(L.T("mapas compartilhados"));
+            if (pacts.Count > 0)
+            {
+                lines.Add(L.F("Tratados: {0}", string.Join(", ", pacts)));
+            }
+            lines.Add(L.T("● vermelho: guerra · verde: aliado ou do seu bloco · laranja: de outro bloco · cinza: o resto."));
+            help = string.Join("\n", lines);
+            return $"<c={color}>●</c> ";
         }
 
         internal static string RelationChip(CapturedRelation relation)
@@ -1679,6 +1814,7 @@ namespace CurrencyMod.Diplomacy.UI
             composeType = Array.IndexOf(TypeIds, "grupo");
             composeGroup = groupId;
             replyToId = -1;
+            groupReplyToId = -1;
             feedback = null;
             nextRefresh = 0;
         }
@@ -1837,6 +1973,24 @@ namespace CurrencyMod.Diplomacy.UI
                     return "ok: members " + string.Join(",", Instance.newGroupMembers);
                 case "subject":
                     Instance.subjectField?.ReplaceText(string.Join(" ", parts.Skip(1)));
+                    return "ok";
+                case "type":
+                {
+                    // type privada|ultimato|publica|grupo|trato: same as cycling the Type button.
+                    int index = parts.Length > 1 ? Array.IndexOf(TypeIds, parts[1]) : -1;
+                    if (index < 0)
+                    {
+                        return "usage: ai mail type " + string.Join("|", TypeIds);
+                    }
+                    Instance.composeType = index;
+                    Instance.nextRefresh = 0;
+                    return "ok";
+                }
+                case "give":
+                    Instance.giveField?.ReplaceText(string.Join(" ", parts.Skip(1)));
+                    return "ok";
+                case "get":
+                    Instance.getField?.ReplaceText(string.Join(" ", parts.Skip(1)));
                     return "ok";
                 case "send":
                     // Same as the Send button (really sends).

@@ -24,6 +24,14 @@ namespace CurrencyMod.Diplomacy.Capture
         public string[] TerritoryNames = new string[0];
         /// <summary>Owner of each territory: major empire index, or -1 (no owner / independent people).</summary>
         public int[] TerritoryOwner = new int[0];
+        /// <summary>Religion names by religion index (the game's name, or the one its founder gave).</summary>
+        public string[] ReligionNames = new string[0];
+        /// <summary>Founder/leader empire of each religion (-1 when none).</summary>
+        public int[] ReligionLeader = new int[0];
+        /// <summary>Dominant religion of each territory (-1 when none), the one converting it (-1) and turns left.</summary>
+        public int[] TerritoryReligion = new int[0];
+        public int[] TerritoryReligionContestant = new int[0];
+        public int[] TerritoryTurnsToConvert = new int[0];
         public bool[] TerritoryOcean = new bool[0];
         public int[][] Adjacent = new int[0][];
         /// <summary>Deposits of each resource on the map (index = ResourceType; 0 = the resource does not exist in this world).</summary>
@@ -82,7 +90,12 @@ namespace CurrencyMod.Diplomacy.Capture
         public bool Human;
         public string FullName;
         public string Leader;
+        /// <summary>The nation's fixed name once AiWorld.FixNames ran (NationNaming); before that, the game's culture.</summary>
         public string Culture;
+        /// <summary>The game's current culture ("Os Romanos"), which changes every era; null until NationNaming ran.</summary>
+        public string RealCulture;
+        /// <summary>Fixed name for the whole game ("Valdoria"); null until NationNaming ran.</summary>
+        public string NationName;
         public int EraIndex;
         public string EraName;
         public uint Archetypes;
@@ -108,6 +121,13 @@ namespace CurrencyMod.Diplomacy.Capture
         public string CurrencyName;
         public string CurrencySymbol;
 
+        /// <summary>The empire's religion index (-1 when it follows none).</summary>
+        public int Religion = -1;
+        /// <summary>Influence cost of enacting a civic now.</summary>
+        public float CivicCost;
+        /// <summary>Enacted civics and the ones waiting for a choice (melhorias-jogando item 34).</summary>
+        public List<CapturedCivic> Civics = new List<CapturedCivic>();
+
         public List<CapturedCity> Cities = new List<CapturedCity>();
         public List<CapturedArmy> Armies = new List<CapturedArmy>();
         /// <summary>Relation with each other major empire (null at its own index).</summary>
@@ -120,6 +140,23 @@ namespace CurrencyMod.Diplomacy.Capture
         public List<int> Neighbors = new List<int>();
 
         public CapturedRelation RelationWith(int other) => other >= 0 && other < Relations.Length ? Relations[other] : null;
+    }
+
+    internal sealed class CapturedCivic
+    {
+        /// <summary>Civic definition name (GameGlossary.Title gives the readable title).</summary>
+        public string Name;
+        /// <summary>Enacted choice name; null when the civic waits for a choice.</summary>
+        public string Choice;
+        /// <summary>Choice names, for civics waiting for a choice.</summary>
+        public List<string> Options = new List<string>();
+        public bool Enacted;
+        /// <summary>Turn of the last choice (enacted civics).</summary>
+        public int Turn = -1;
+        /// <summary>Index in the empire's civic table (choose_civic).</summary>
+        public int Index = -1;
+        /// <summary>Why the nation cannot enact it now (civics waiting for a choice); null = it can.</summary>
+        public string Blocked;
     }
 
     internal sealed class CapturedCity
@@ -434,6 +471,10 @@ namespace CurrencyMod.Diplomacy.Capture
         public int Seller;
         public bool Suspended;
         public List<int> Resources = new List<int>();
+        /// <summary>Accesses bought per resource (ResourceType → count), for the dependency map.</summary>
+        public Dictionary<int, int> Counts = new Dictionary<int, int>();
+        /// <summary>Major empires whose territories the route crosses (not the two ends): who could cut it.</summary>
+        public List<int> Transit = new List<int>();
     }
 
     /// <summary>One turn's toll: each side in its own currency.</summary>

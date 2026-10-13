@@ -115,8 +115,18 @@ namespace CurrencyMod.Diplomacy
             PeakHoursUtc = config.Bind(S, "HorariosPicoUTC", "01-04,06-10",
                 "Só DeepSeek: faixas de horário de pico em UTC, de segunda a sexta (formato 01-04,06-10).");
 
-            MaxLettersPerTurn = config.Bind(S, "CartasPorTurno", 3,
+            MaxLettersPerTurn = config.Bind(S, "CartasPorTurno", 5,
                 "Cartas que cada nação pode enviar por turno (somando todos os destinatários).");
+            // Negotiation needs pace (melhorias item 45): the old default of 3 letters per turn goes up to 5, once.
+            ConfigEntry<bool> lettersRaised = config.Bind(S, "LetterLimitRaised", false, "Internal: the old default of 3 letters per turn was already raised to 5.");
+            if (!lettersRaised.Value)
+            {
+                if (MaxLettersPerTurn.Value == 3)
+                {
+                    MaxLettersPerTurn.Value = 5;
+                }
+                lettersRaised.Value = true;
+            }
             LetterMaxWords = config.Bind(S, "PalavrasPorCarta", 150,
                 "Tamanho máximo de uma carta escrita pela IA, em palavras. O prompt pede cartas de 30 até ~2/3 disso; acima de 1,25× a resposta é devolvida para encurtar.");
             PlayerLetterMaxChars = config.Bind(S, "CaracteresCartaJogador", 2000,

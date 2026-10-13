@@ -35,6 +35,86 @@ namespace CurrencyMod
         /// (EditorOrderCreateCampAt). Used to build test scenarios (e.g. a route crossing two territories of the
         /// same owner, for the inner-outpost toll).
         /// </summary>
+        /// <summary>
+        /// "game trade [refresh]": the trade network (hubs with level, effects and risks; grand routes; supply crises).
+        /// "game trade cargo T#": faith and culture the routes add in a territory. "game trade epidemic City": the next end
+        /// of turn strikes that hub (test). "game trade labels": the route map's network labels.
+        /// </summary>
+        private static string TradeCommand(string args)
+        {
+            string[] words = args.Split(new[] { ' ' }, 2, StringSplitOptions.RemoveEmptyEntries);
+            string verb = words.Length > 0 ? words[0].ToLowerInvariant() : string.Empty;
+            switch (verb)
+            {
+                case "cargo":
+                    return words.Length > 1 && int.TryParse(words[1].TrimStart('T', 't'), out int territory) ? TradeCargo.Describe(territory) : "usage: game trade cargo T#";
+                case "epidemic":
+                    if (words.Length < 2)
+                    {
+                        return "usage: game trade epidemic <city name>";
+                    }
+                    TradeHubs.ForcedEpidemic = words[1].Trim();
+                    return $"the next end of turn strikes {TradeHubs.ForcedEpidemic} (if it is a hub)";
+                case "hover":
+                    RouteLabels.ForcedHover = words.Length > 1 && words[1].Trim() != "off" ? words[1].Trim() : null;
+                    return RouteLabels.ForcedHover != null ? $"hover panel forced on the label with '{RouteLabels.ForcedHover}'" : "hover back to the mouse";
+                case "labels":
+                {
+                    var labels = RouteVisuals.Labels;
+                    string drawn = $"in trade view {RouteLabels.InView} · drawn {RouteLabels.Drawn} · off screen or under a panel {RouteLabels.Skipped}\n";
+                    return labels == null || labels.Count == 0 ? drawn + "no labels (open the trade view)"
+                        : drawn + string.Join("\n", labels.Select(l => $"{l.Kind} tile {l.Tile}: {l.Text}{(l.Subtitle != null ? " / " + l.Subtitle : string.Empty)}"));
+                }
+            }
+            TradeNetwork.Snapshot network = verb == "refresh" ? TradeNetwork.Refresh() : TradeNetwork.Current;
+            var text = new StringBuilder($"trade network (turn {network.Turn}, enabled {TradeNetwork.Enabled}, levels at {string.Join("/", TradeNetwork.LevelRoutes())} routes): {network.Hubs.Count} hubs, {network.GrandRoutes.Count} grand routes, cargo in {network.CargoByTerritory.Count} territories, spies shielded {TradeHubs.ShieldedSpies}\n");
+            foreach (TradeNetwork.Hub hub in network.Hubs.OrderByDescending(h => h.Level).ThenByDescending(h => h.Routes))
+            {
+                TradeHubs.Effects e = hub.Effects;
+                text.AppendLine($"  E{hub.Empire} {hub.Name} [T{string.Join(",T", hub.Territories)}] L{hub.Level} routes {hub.Routes} (grand {hub.GrandRoutes}) goods {hub.Goods} · stability {hub.Stability:0} growth {hub.Growth:0.0} foreign {hub.ForeignShare:P0}"
+                    + $" · money +{e.Money:0.#} growth +{e.GrowthPercent:P0} influence +{e.Influence:0.#} science +{e.SciencePercent:P0}"
+                    + $" · crime -{e.CrimeLoss:0.##} minorities -{e.MinorityLoss:0.##} spy {e.SpyShield:P0} epidemic {e.EpidemicChance:P1}");
+            }
+            if (verb == "routes")
+            {
+                // Length of every active route (territories, lands), to calibrate what counts as a grand route.
+                foreach (var relation in Amplitude.Mercury.Sandbox.Sandbox.TradeController.ExternalTradeRelations)
+                {
+                    if (relation == null || relation.TradeRoadStatus != TradeRoadStatus.Active)
+                    {
+                        continue;
+                    }
+                    var owners = new System.Collections.Generic.HashSet<int> { relation.LeftEmpireIndex, relation.RightEmpireIndex };
+                    for (int i = 0; i < relation.PathAsTerritories.Count; i++)
+                    {
+                        int owner = TradeNetwork.OwnerIndex(relation.PathAsTerritories[i].Index);
+                        if (owner >= 0)
+                        {
+                            owners.Add(owner);
+                        }
+                    }
+                    text.AppendLine($"  route E{relation.LeftEmpireIndex}↔E{relation.RightEmpireIndex}: {relation.PathAsTerritories.Count} territories, {owners.Count} lands, goods {TradeBlockade.ResourcesBought(relation.LeftTradeExchange.Entity) + TradeBlockade.ResourcesBought(relation.RightTradeExchange.Entity)}");
+                }
+            }
+            foreach (TradeNetwork.GrandRoute route in network.GrandRoutes)
+            {
+                text.AppendLine($"  grand: {route.Name} (E{route.Left}↔E{route.Right}) {route.Territories} territories, {route.Nations} nations, goods {route.Goods}, name tile {route.NameTile}, hubs {string.Join(", ", route.HubNames)}");
+            }
+            for (int i = 0; i < Amplitude.Mercury.Sandbox.Sandbox.NumberOfMajorEmpires; i++)
+            {
+                if (TradeHubs.SupplyCrisis(i, out string what))
+                {
+                    text.AppendLine($"  supply crisis E{i}: {what}");
+                }
+                double factor = TradeHubs.DebtInflationFactor(i);
+                if (factor > 1.0001)
+                {
+                    text.AppendLine($"  E{i} debt inflation ×{factor:0.00} (only applies with debt)");
+                }
+            }
+            return text.ToString();
+        }
+
         private static string SpawnCamp(string args)
         {
             string[] items = (args ?? string.Empty).Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
@@ -202,6 +282,8 @@ namespace CurrencyMod
                     }
                     return TradeBlockade.Describe(what == "detail");
                 }
+                case "trade":
+                    return TradeCommand((rest ?? string.Empty).Trim());
                 case "civic":
                 {
                     // "game civic E# CivicName": an empire's current law (active choice, status, turn of the last change);
@@ -327,7 +409,7 @@ namespace CurrencyMod
                         + " | battle [auto|retreat] | mood [E#] | new <2-16> [size]|restore | spectator on|off | quit | menu | economy"
                         + " | interest <E#> <pct>|auto | rpn <name> | breakdown industry|stability|money [n] | interaction ... | focus <path>|off"
                         + " | spy E# T# [unit] | outpost E# T# | camera T#|tile | zoom 0..1 | surrender ... | congress ... | routes [detail|labels|colors]"
-                        + " | civic E# Civic | buy E# luxury|strategic [E#] | toll ... | expansion [on|off] | alert <text>|off";
+                        + " | trade [refresh|routes|cargo T#|epidemic City|labels|hover text|off] | civic E# Civic | buy E# luxury|strategic [E#] | toll ... | expansion [on|off] | alert <text>|off";
             }
         }
 

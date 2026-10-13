@@ -73,7 +73,7 @@ namespace CurrencyMod.Diplomacy
         public Dictionary<string, int> KnownMinors = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
         public HashSet<int> AtWar = new HashSet<int>();
         public bool PublicDeclarationAllowed = true;
-        public int MaxLetters = 3;
+        public int MaxLetters = 5;
         public int MaxLetterWords = 350;
         public int MaxDiaryWords = 120;
         /// <summary>Words of the game's real names (nations, leaders, peoples, cities, territories, resources), in
@@ -88,6 +88,10 @@ namespace CurrencyMod.Diplomacy
         public int BlocId = -1;
         public HashSet<string> BlocInvites = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         public HashSet<string> BlocMotions = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        /// <summary>The nation sits in the World Congress's free agenda (melhorias item 40); its open motions are in BlocMotions too.</summary>
+        public bool CongressForum;
+        /// <summary>Deals (D#) of the nation listed in the dossier.</summary>
+        public HashSet<string> Deals = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         public bool BlocElection;
         /// <summary>The nation's last recent letter to each destination (Letter.Everyone = public statement).</summary>
         public Dictionary<int, PreviousLetter> LastLetters = new Dictionary<int, PreviousLetter>();
@@ -115,6 +119,8 @@ namespace CurrencyMod.Diplomacy
         public bool CongressExists;
         public bool PresideNow;
         public Dictionary<string, string> ProposableLaws = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        /// <summary>Civics waiting for a choice (CV code → definition and options), for choose_civic.</summary>
+        public Dictionary<string, CivicFlow.CivicRef> ChoosableCivics = new Dictionary<string, CivicFlow.CivicRef>(StringComparer.OrdinalIgnoreCase);
         public bool LawVoteOpen;
         public bool LawVoted;
         /// <summary>Law being voted (definition name), to store the se_perder stance.</summary>
@@ -246,7 +252,7 @@ namespace CurrencyMod.Diplomacy
                     Trust = Clamp(Int(item["confianca"]), -100, 100),
                     Fear = Clamp(Int(item["medo"]), 0, 100),
                     Anger = Clamp(Int(item["raiva"]), 0, 100),
-                    Reason = Str(item["motivo"]),
+                    Reason = Str(item["reason"]) ?? Str(item["motivo"]),
                 });
             }
         }
@@ -448,6 +454,73 @@ namespace CurrencyMod.Diplomacy
                         problem = OneOf(item, "foco", Focuses);
                         summary = $"foco em {Str(item["foco"])}";
                         break;
+                    case "assess_nation":
+                    {
+                        string assessed = Str(item["nation"])?.Trim().ToUpperInvariant();
+                        string assessedDoctrine = Str(item["doctrine"])?.Trim().ToLowerInvariant();
+                        if (assessed == null || !context.KnownEmpires.ContainsKey(assessed))
+                        {
+                            problem = $"\"nation\" = uma nação que você conhece (E#), não '{assessed}'";
+                        }
+                        else if (NationDoctrines.ByKey(assessedDoctrine) == null)
+                        {
+                            problem = "\"doctrine\" é uma de: " + NationDoctrines.KeyList();
+                        }
+                        summary = $"leitura de {assessed}: {assessedDoctrine}";
+                        break;
+                    }
+                    case "record_deal":
+                    {
+                        string dealWith = Str(item["with"])?.Trim().ToUpperInvariant();
+                        if (dealWith == null || !context.KnownEmpires.ContainsKey(dealWith))
+                        {
+                            problem = $"\"with\" = uma nação que você conhece (E#), não '{dealWith}'";
+                        }
+                        else if (string.IsNullOrWhiteSpace(Str(item["i_give"])) && string.IsNullOrWhiteSpace(Str(item["they_give"])))
+                        {
+                            problem = "diga o que cada lado dá (\"i_give\" e \"they_give\")";
+                        }
+                        summary = $"trato com {dealWith}: dou {Str(item["i_give"])}; recebo {Str(item["they_give"])}";
+                        break;
+                    }
+                    case "close_deal":
+                    {
+                        string dealHandle = Str(item["deal"])?.Trim().ToUpperInvariant();
+                        string dealStatus = Str(item["status"])?.Trim().ToLowerInvariant();
+                        if (dealHandle == null || !context.Deals.Contains(dealHandle))
+                        {
+                            problem = $"trato '{dealHandle}' não está em SEUS TRATOS";
+                        }
+                        else if (dealStatus != "kept" && dealStatus != "broken" && dealStatus != "cancelled")
+                        {
+                            problem = "\"status\" = kept (cumprido), broken (o outro lado rompeu) ou cancelled (desfeito)";
+                        }
+                        summary = $"fechar o trato {dealHandle}: {dealStatus}";
+                        break;
+                    }
+                    case "set_ambition":
+                    {
+                        int slot = Int(item["slot"]);
+                        string ambitionStatus = (Str(item["status"]) ?? "active").Trim().ToLowerInvariant();
+                        if (slot < 1 || slot > AiNation.MaxActiveAmbitions)
+                        {
+                            problem = $"\"slot\" = 1 a {AiNation.MaxActiveAmbitions}";
+                        }
+                        else if (ambitionStatus != "active" && ambitionStatus != "done" && ambitionStatus != "dropped")
+                        {
+                            problem = "\"status\" = active, done ou dropped";
+                        }
+                        else if (ambitionStatus == "active" && string.IsNullOrWhiteSpace(Str(item["ambition"])) && string.IsNullOrWhiteSpace(Str(item["plan"])))
+                        {
+                            problem = "falta \"ambition\" (ou \"plan\", para só atualizar o plano)";
+                        }
+                        else if ((Str(item["ambition"]) ?? string.Empty).Length > 300 || (Str(item["plan"]) ?? string.Empty).Length > 300)
+                        {
+                            problem = "ambição e plano têm até 300 caracteres cada";
+                        }
+                        summary = $"ambição {slot}: {Str(item["ambition"]) ?? ambitionStatus}";
+                        break;
+                    }
                     case "declarar_guerra":
                         problem = Empire(item, context, out string warTarget) ?? OneOf(item, "tipo", WarTypes);
                         if (problem == null && context.AtWar.Contains(context.KnownEmpires[warTarget]))
@@ -827,22 +900,46 @@ namespace CurrencyMod.Diplomacy
                         summary = $"{(item["aceitar"]?.Type == JTokenType.Boolean && (bool)item["aceitar"] ? "aceitar" : "recusar")} o convite do bloco {handle}";
                         break;
                     }
+                    case "propose_motion":
                     case "pauta_bloco":
                     {
-                        string kind = Str(item["tipo"])?.Trim().ToLowerInvariant();
-                        if (context.BlocId < 0)
+                        string motionText = Str(item["text"]) ?? Str(item["motivo"]);
+                        bool toCongress = Blocs.BlocActions.IsCongress(item);
+                        if (toCongress && !context.CongressForum)
                         {
-                            problem = "você não está num bloco formado";
+                            problem = "não há Congresso Mundial com pautas livres nesta partida";
                         }
-                        else if (kind == null || !Blocs.BlocMotion.Kinds.Contains(kind))
+                        else if (!toCongress && context.BlocId < 0)
                         {
-                            problem = "\"tipo\" é um de: " + string.Join(", ", Blocs.BlocMotion.Kinds);
+                            problem = "você não está num bloco formado (para o Congresso Mundial, use \"forum\": \"congress\")";
                         }
-                        else if (kind == "tarifa" || kind == "fim_tarifa" || kind == "admitir" || kind == "expulsar")
+                        else if (string.IsNullOrWhiteSpace(motionText))
                         {
-                            problem = Empire(item, context, out _);
+                            problem = "falta \"text\" (o texto da pauta, até 500 caracteres)";
                         }
-                        summary = $"pauta do bloco: {kind} {Str(item["nacao"])} {Str(item["valor"])}".TrimEnd();
+                        else if (motionText.Length > Blocs.Bloc.MotionTextMax)
+                        {
+                            problem = $"\"text\" tem {motionText.Length} caracteres; o máximo é {Blocs.Bloc.MotionTextMax}";
+                        }
+                        summary = $"pauta {(toCongress ? "do Congresso" : "do bloco")}: {Str(item["title"]) ?? Blocs.BlocEngine.TitleFrom(motionText)}";
+                        break;
+                    }
+                    case "accuse_breach":
+                    {
+                        bool atCongress = Blocs.BlocActions.IsCongress(item);
+                        if (atCongress ? !context.CongressForum : context.BlocId < 0 && !context.CongressForum)
+                        {
+                            problem = atCongress ? "não há Congresso Mundial com pautas livres nesta partida" : "você não está num bloco formado";
+                        }
+                        else
+                        {
+                            string accusedHandle = Str(item["nation"]); problem = accusedHandle != null && context.KnownEmpires.ContainsKey(accusedHandle) ? null : $"nação '{accusedHandle}' desconhecida (use um código E do dossiê)";
+                        }
+                        if (problem == null && string.IsNullOrWhiteSpace(Str(item["evidence"])))
+                        {
+                            problem = "falta \"evidence\" (o que você viu)";
+                        }
+                        summary = $"acusar {Str(item["nation"])} de descumprir {Str(item["resolution"]) ?? "o compromisso do bloco"}";
                         break;
                     }
                     case "abrir_pauta":
@@ -851,7 +948,7 @@ namespace CurrencyMod.Diplomacy
                         string handle = Str(item["pauta"])?.Trim().ToUpperInvariant();
                         if (handle == null || !context.BlocMotions.Contains(handle))
                         {
-                            problem = $"pauta '{handle}' não está aberta no seu bloco (use um P# de BLOCOS)";
+                            problem = $"pauta '{handle}' não está aberta no seu bloco nem no Congresso (use um P# de BLOCOS ou de CONGRESSO MUNDIAL — PAUTAS LIVRES)";
                         }
                         summary = name == "abrir_pauta" ? $"pôr a pauta {handle} em votação" : $"votar {Str(item["voto"])} na pauta {handle}";
                         break;
@@ -962,6 +1059,21 @@ namespace CurrencyMod.Diplomacy
                             problem = $"{destination} é cidade sua: para guardá-la use \"defender\"";
                         }
                         summary = goal == "parar" ? $"parar {army}" : $"{goal} {army} → {destination}";
+                        break;
+                    }
+                    case "choose_civic":
+                    {
+                        string civicCode = Str(item["civic"])?.Trim().ToUpperInvariant();
+                        int option = Int(item["option"]);
+                        if (civicCode == null || !context.ChoosableCivics.TryGetValue(civicCode, out CivicFlow.CivicRef civicRef))
+                        {
+                            problem = $"cívico '{civicCode}' não está esperando escolha (use um código CV da lista CÍVICOS ESPERANDO A SUA ESCOLHA)";
+                        }
+                        else if (option < 1 || option > civicRef.Options.Count)
+                        {
+                            problem = $"\"option\" = um número de 1 a {civicRef.Options.Count}";
+                        }
+                        summary = $"escolher o cívico {civicCode}, opção {option}";
                         break;
                     }
                     case "renomear":

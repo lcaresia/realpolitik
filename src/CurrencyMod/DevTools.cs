@@ -19,6 +19,7 @@ namespace CurrencyMod
     /// Commands:
     ///   screenshot [name]          captures the game screen
     ///   rec &lt;name&gt; &lt;seconds&gt; [fps] records jpg frames at a fixed fps into dev\out\rec_&lt;name&gt;\
+    ///   perf [seconds]             times the mod's patches and components (PerfProbe.cs)
     ///   find &lt;text&gt;               finds labels whose visible text contains the text
     ///   tree [visible|all] [root]  tree of UITransforms (optionally only under a root)
     ///   inspect &lt;path&gt; [depth]   detailed dump (components, styles, serialized fields)
@@ -43,7 +44,7 @@ namespace CurrencyMod
         internal static string ResultPath;
         private static DevTools instance;
 
-        private static string OutDir => Path.GetDirectoryName(ResultPath);
+        internal static string OutDir => Path.GetDirectoryName(ResultPath);
 
         /// <summary>The _Modding\dev folder (test input files).</summary>
         internal static string DevDir => Path.GetDirectoryName(OutDir);
@@ -102,6 +103,26 @@ namespace CurrencyMod
                             instance.StartCoroutine(instance.RecordFrames(line, ra[0], secs, recFps));
                             return;
                         }
+                    case "perf":
+                        // perf [seconds]: times the mod's patches and components while you use the screen (PerfProbe.cs).
+                        if (instance == null)
+                        {
+                            Write(line, "error: no DevTools component");
+                            return;
+                        }
+                        // perf <seconds> [bare] [scroll <path to a UIScrollView>]
+                        string[] pa = args.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+                        float perfSeconds = pa.Length > 0 && float.TryParse(pa[0], System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out float ps) ? ps : 5f;
+                        int scrollAt = Array.IndexOf(pa, "scroll");
+                        Amplitude.UI.Interactables.UIScrollView perfScroll = scrollAt >= 0 && scrollAt + 1 < pa.Length
+                            ? FindByPath(pa[scrollAt + 1])?.GetComponent<Amplitude.UI.Interactables.UIScrollView>() : null;
+                        if (scrollAt >= 0 && perfScroll == null)
+                        {
+                            Write(line, "error: no UIScrollView at that path");
+                            return;
+                        }
+                        instance.StartCoroutine(PerfProbe.Run(ModEntry.HarmonyId, perfSeconds, pa.Contains("bare"), perfScroll, report => Write(line, report)));
+                        return;
                     case "find":
                         Write(line, FindLabels(args));
                         return;
@@ -133,8 +154,20 @@ namespace CurrencyMod
                     case "windows":
                         Write(line, ListWindows());
                         return;
+                    case "uicmds":
+                        Write(line, NativeUI.UIHookGuard.RenderCommands(args == "all"));
+                        return;
+                    case "uihook":
+                        Write(line, NativeUI.UIHookGuard.Report());
+                        return;
+                    case "exceptions":
+                        Write(line, GameExceptionLog.Report());
+                        return;
                     case "cameras":
                         Write(line, ListCameras());
+                        return;
+                    case "camera":
+                        Write(line, ToggleCamera(args));
                         return;
                     case "resolution":
                         Write(line, SetResolution(args));
@@ -809,6 +842,87 @@ namespace CurrencyMod
                 text.AppendLine($"UIView {view.name} depth={view.Depth} fullscreen={view.IsFullscreen} camera={(view.RenderCamera != null ? view.RenderCamera.name : "null")}");
             }
             text.AppendLine($"time scale={Time.timeScale} captureFramerate={Time.captureFramerate} unscaledDelta={Time.unscaledDeltaTime:0.0000}");
+            return text.ToString();
+        }
+
+        /// <summary>
+        /// `camera &lt;name&gt; on|off` enables or disables the active cameras with that name; `camera &lt;name&gt; &lt;Component&gt; on|off`
+        /// toggles one of their behaviours. Rendering experiments (item 28): undo with the opposite command.
+        /// </summary>
+        private static string ToggleCamera(string args)
+        {
+            string[] words = args.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+            if (words.Length < 2)
+            {
+                return "usage: camera <name> on|off  |  camera <name> <Component> on|off";
+            }
+            bool on = words[words.Length - 1].Equals("on", StringComparison.OrdinalIgnoreCase);
+            string component = words.Length > 2 ? words[1] : null;
+            var text = new StringBuilder();
+            if (words[1] == "pp")
+            {
+                foreach (Camera camera in Resources.FindObjectsOfTypeAll<Camera>().Where(c => c != null && c.gameObject.scene.name != null && c.gameObject.activeInHierarchy && c.name == words[0]))
+                {
+                    text.Append(DumpPostProcess(camera));
+                }
+                return text.Length > 0 ? text.ToString() : "error: no active camera with that name";
+            }
+            foreach (Camera camera in Resources.FindObjectsOfTypeAll<Camera>())
+            {
+                if (camera == null || camera.gameObject.scene.name == null || !camera.gameObject.activeInHierarchy || camera.name != words[0])
+                {
+                    continue;
+                }
+                if (component == null)
+                {
+                    camera.enabled = on;
+                    text.AppendLine($"ok: {camera.name} enabled={camera.enabled}");
+                    continue;
+                }
+                foreach (Behaviour behaviour in camera.GetComponents<Behaviour>().Where(b => b != null && b.GetType().Name == component))
+                {
+                    behaviour.enabled = on;
+                    text.AppendLine($"ok: {camera.name}.{component} enabled={behaviour.enabled}");
+                }
+            }
+            return text.Length > 0 ? text.ToString() : "error: no active camera or component with that name";
+        }
+
+        /// <summary>The post-process stack of a camera: override profile and every effect with its overridden values.</summary>
+        private static string DumpPostProcess(Camera camera)
+        {
+            var text = new StringBuilder();
+            Component layer = camera.GetComponents<Component>().FirstOrDefault(c => c != null && c.GetType().Name == "PostProcessLayer");
+            if (layer == null)
+            {
+                return $"{camera.name}: no PostProcessLayer\n";
+            }
+            object profile = Traverse.Create(layer).Field("ProfileOverride").GetValue();
+            text.AppendLine($"{camera.name}: PostProcessLayer enabled={((Behaviour)layer).enabled} override={(profile as UnityEngine.Object)?.name ?? "none"} bundlesInited={Traverse.Create(layer).Field("haveBundlesBeenInited").GetValue()}");
+            if (Traverse.Create(layer).Field("m_Bundles").GetValue() is System.Collections.IDictionary bundles)
+            {
+                foreach (System.Collections.DictionaryEntry entry in bundles)
+                {
+                    object settings = Traverse.Create(entry.Value).Property("settings").GetValue();
+                    if (settings == null)
+                    {
+                        continue;
+                    }
+                    var values = new List<string>();
+                    foreach (System.Reflection.FieldInfo field in settings.GetType().GetFields(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance))
+                    {
+                        object parameter = field.GetValue(settings);
+                        if (parameter == null || parameter.GetType().GetField("overrideState") == null)
+                        {
+                            continue;
+                        }
+                        object value = parameter.GetType().GetField("value")?.GetValue(parameter);
+                        values.Add($"{field.Name}={value}");
+                    }
+                    bool active = settings.GetType().GetField("active")?.GetValue(settings) as bool? ?? false;
+                    text.AppendLine($"  {((Type)entry.Key).Name} active={active} {string.Join(" ", values)}");
+                }
+            }
             return text.ToString();
         }
 

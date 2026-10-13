@@ -127,7 +127,13 @@ namespace CurrencyMod.Diplomacy.Llm.Providers
                 return null;
             }
             string text = (run.Stdout + "\n" + run.Stderr).ToLowerInvariant();
-            return run.ExitCode == 0 && text.Contains("logged in") && !text.Contains("not logged in");
+            if (text.Contains("not logged in"))
+            {
+                return false;
+            }
+            // Anything else that is not a clear "logged in" (a crash, a network hiccup, an update notice) keeps the last
+            // state: one bad check took Codex out of the queue and sent four nations to a dead fallback key (T171).
+            return run.ExitCode == 0 && text.Contains("logged in") ? true : (bool?)null;
         }
 
         /// <summary>

@@ -129,6 +129,35 @@ namespace CurrencyMod.NativeUI
             return world.LastProcessedTurn < 0 ? all : all.Where(p => p.Turn <= world.LastProcessedTurn).ToList();
         }
 
+        private static string headerKey;
+        private static int headerWindow;
+        private static Dictionary<int, PartnerTotals> headerTotals;
+
+        /// <summary>
+        /// The trade totals by partner for the headers, computed once per turn: each of the trade view's empire rows used to
+        /// copy and sum the whole history again (~120 ms on a late game, melhorias item 42).
+        /// </summary>
+        private static bool HeaderTotals(CurrencyWorld world, int me, out int window, out Dictionary<int, PartnerTotals> byPartner)
+        {
+            List<TradePoint> all = world.TradeHistory;
+            string key = $"{me}:{world.LastProcessedTurn}:{all?.Count ?? 0}:{(all != null && all.Count > 0 ? all[all.Count - 1].Turn : -1)}";
+            if (key != headerKey)
+            {
+                List<TradePoint> history = CompleteHistory(world);
+                headerKey = key;
+                headerTotals = null;
+                if (history.Count > 0)
+                {
+                    int last = history[history.Count - 1].Turn;
+                    headerWindow = WindowTurns(history, last, TradeAverageTurns);
+                    headerTotals = TotalsByPartner(history, me, last - headerWindow + 1, last);
+                }
+            }
+            window = headerWindow;
+            byPartner = headerTotals;
+            return byPartner != null;
+        }
+
         /// <summary>
         /// Another empire's trade header (trade view market, melhorias-jogando item 22): a short line (relation,
         /// exchange rate, trade balance per turn) and the details for its tooltip (what you buy and sell, averaged like
@@ -166,12 +195,9 @@ namespace CurrencyMod.NativeUI
                 shortParts.Add(L.F("1 {0} = {1} {2}", mine.Symbol, rate, other.Symbol));
                 lines.Add(L.F("Câmbio: 1 {0} vale {1} {2} ({3}).", mine.PluralOrName, rate, other.PluralOrName, other.Symbol));
             }
-            List<TradePoint> history = CompleteHistory(world);
-            if (history.Count > 0)
+            if (HeaderTotals(world, me, out int window, out Dictionary<int, PartnerTotals> byPartner))
             {
-                int last = history[history.Count - 1].Turn;
-                int window = WindowTurns(history, last, TradeAverageTurns);
-                if (TotalsByPartner(history, me, last - window + 1, last).TryGetValue(partner, out PartnerTotals totals)
+                if (byPartner.TryGetValue(partner, out PartnerTotals totals)
                     && (totals.PaidTotal > 0.05 || totals.GainTotal > 0.05 || totals.BoughtGoods > 0 || totals.SoldGoods > 0))
                 {
                     double balance = (totals.GainTotal - totals.PaidTotal) / window;

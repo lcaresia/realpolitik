@@ -24,6 +24,7 @@ the command words around them are English.
 |---|---|---|
 | `screenshot [name]` | `screenshot [name]` | captures the game screen to `dev\out\<name>.png` |
 | `rec <nome> <segundos> [fps]` | `rec <name> <seconds> [fps]` | records jpg frames at a fixed fps into `dev\out\rec_<name>\` |
+| — | `perf <seconds> [bare] [scroll <path>]` | times every method the mod patches plus its components' Update/OnGUI, and the frame times (after a 2 s warm-up; logs "Perf: measuring" when it starts). `bare` = frames only (patching ~135 methods takes seconds); `scroll` scrolls a UIScrollView row by row during the run (`PerfProbe.cs`) |
 | `find <text>` | `find <text>` | labels whose visible text contains the text |
 | `tree [visible\|all] [root]` | same | tree of UITransforms |
 | `inspect <path> [depth]` | same | components, styles and serialized fields |
@@ -96,6 +97,11 @@ the command words around them are English.
 | `jogo rotas [detalhe]` | `game routes [detail]` | trade blockade summary (with full paths) |
 | `jogo rotas rotulos` | `game routes labels` | route value labels from the last render |
 | `jogo rotas cores [E#\|todas]` | `game routes colors [E#\|all]` | colors routes as seen by another empire |
+| — | `game trade [refresh\|routes]` | trade network: hubs (territories, level, effects, risks), grand routes, supply crises; `routes` lists every active route length |
+| — | `game trade cargo T#` | faith and culture the routes add in a territory |
+| — | `game trade epidemic <city>` | the next end of turn strikes that hub (test) |
+| — | `game trade labels` | route map network labels and how many were drawn |
+| — | `game trade hover <text>\|off` | forces the hover panel of the label containing the text |
 | `jogo civico E# Civico` | `game civic E# Civic` | an empire's current law |
 | `jogo comprar E# luxo\|estrategico [E#]` | `game buy E# luxury\|strategic [E#]` | buys all resources of a category |
 | `jogo pedagio E# E# livre\|pedagio\|bloqueio` | `game toll E# E# free\|toll\|block` | sets the mode on all of the first empire's posts |
@@ -141,6 +147,7 @@ the command words around them are English.
 | `ia bloco ...` | `ai bloc ...` | see below |
 | `ia aliancas ...` | `ai alliances ...` | see below |
 | `ia mencoes [texto]` | `ai mentions [text]` | public statements that mention the player / tests a text |
+| — | `ai names [E# name]` | fixed nation names (NationNaming): list, or rename one nation |
 | — | `ai injection <text>` | prompt-injection detector on a text (flagged/clean + neutralized) |
 | `ia espionagem` | `ai espionage` | spies and interception chances (also `dev\out\espionage.txt`) |
 | `ia espionagem unidades` | `ai espionage units` | agent unit types and stealthy armies |
@@ -164,15 +171,15 @@ the command words around them are English.
 ### `ai bloc` (`Diplomacy\Blocs\BlocCommands.cs`)
 
 `ver` → `show` · `fundar <nome> E#...` → `found <name> E#...` · `aceitar BLC#` → `accept BLC#` ·
-`recusar BLC#` → `decline BLC#` · `sair` → `leave` · `pautar <tipo> [E#] [arg]` → `propose <kind> [E#] [arg]` (motion
-kinds keep their stored names: `tarifa`, `fim_tarifa`, `admitir`, `expulsar`, `congresso`, `renomear`, `dissolver`) ·
+`recusar BLC#` → `decline BLC#` · `sair` → `leave` · `propose <title_with_underscores> <free text...>` (free motion,
+item 47) · `accuse E# [R#] <evidence...>` (records an accusation in the bloc's book) ·
 `abrir <id>` → `open <id>` · `descartar <id>` → `discard <id>` · `votar <id> sim\|nao` → `vote <id> yes\|no` ·
-`presidente E#` → `president E#` · `turno [+N]` → `turn [+N]` · trailing `como E#` → `as E#`
+`presidente E#` → `president E#` · `turno [+N]` → `turn [+N]` · trailing `como E#` → `as E#` · `congress` (World Congress free agenda) · `cpropose <title_with_underscores> <text...>` · `caccuse E# [R#] <evidence...>` (item 40; `turn +N` also ticks the Congress)
 
 ### `ai alliances` (`Diplomacy\UI\AlliancesScreen.cs`)
 
-`abrir` → `open` · `fechar` → `close` · `secao N` → `section N` · `tipo N` → `kind N` · `alvo E#` → `target E#` ·
-`valor N` → `value N` · `texto ...` → `text ...` · `convidar E#` → `invite E#` · `enviar` → `send`
+`abrir` → `open` · `fechar` → `close` · `secao N` → `section N` · `texto ...` → `text ...` · `convidar E#` → `invite E#` ·
+`enviar` → `send` (the motion form is free text only since item 47)
 
 ### `ai council` (`Diplomacy\AiCommands.cs`, `Diplomacy\UI\CouncilScreen.cs`)
 
@@ -209,3 +216,14 @@ kinds keep their stored names: `tarifa`, `fim_tarifa`, `admitir`, `expulsar`, `c
 | `backup.ps1` | zip backup of the project |
 | `extract-texts.ps1` (was `extrair-textos.ps1`) | extracts the `L.T/L.F/L.N` texts from the code |
 | `validate-translation.ps1` (was `validar-traducao.ps1`) | checks the `Lang\*.json` tables against the code |
+
+## Rendering diagnostics (item 28, 2026-10-12)
+
+| Command | What it does |
+|---|---|
+| `uihook` | UI drawer stack repairs, screens that freeze the map, animation manager, blur materials, avatar renders, UI texture alpha (also saves `dev\out\gamma.png`), global shader keywords |
+| `uicmds [all]` | main view render commands in draw order; unbalanced push/pop, begin/end, enter/leave scopes |
+| `exceptions` | exceptions the game caught and swallowed (Diagnostics.LogException), most frequent first |
+| `camera <name> on\|off` | enables/disables active cameras with that name (experiments; undo with the opposite) |
+| `camera <name> <Component> on\|off` | toggles one behaviour of that camera (e.g. `camera Camera PostProcessLayer off`) |
+| `camera <name> pp` | the camera's post-process stack and effect values |

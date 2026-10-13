@@ -254,7 +254,7 @@ namespace CurrencyMod.Diplomacy
             Application.OpenURL(viewer.Url);
         }
 
-        private static void ShowNotice(string text)
+        internal static void ShowNotice(string text)
         {
             try
             {
@@ -297,6 +297,7 @@ namespace CurrencyMod.Diplomacy
             {
                 lastTurnSeen = turn;
                 turnSeenAt = Time.unscaledTime;
+                Llm.Providers.ProviderRouter.ProbeNow();
                 Runtime.Event($"Turn {turn}.");
                 AiLog.Prune(World.GameGuid, turn);
                 dirty = true;
@@ -328,6 +329,10 @@ namespace CurrencyMod.Diplomacy
             try
             {
                 // Blocs (item 16): the turn step and the snapshot that the toll and mutual defense read on the simulation thread.
+                if (Blocs.CongressForum.Sync(World, capture, turn))
+                {
+                    dirty = true;
+                }
                 if (Blocs.BlocEngine.Step(World, turn))
                 {
                     dirty = true;
@@ -372,6 +377,7 @@ namespace CurrencyMod.Diplomacy
             {
                 Plugin.Log.LogError($"[IA] Player council: {ex}");
             }
+
             if (consecutiveFailures >= 3)
             {
                 SetStatus("API com erro", "err", Runtime.Details.Values.Select(d => d.LastError).LastOrDefault(e => e != null) ?? "falhas seguidas");
@@ -420,6 +426,14 @@ namespace CurrencyMod.Diplomacy
             catch (Exception ex)
             {
                 Plugin.Log.LogWarning($"[IA] Congress (fallbacks to the native AI): {ex.Message}");
+            }
+            try
+            {
+                CivicFlow.TrackFallbacks(turn);
+            }
+            catch (Exception ex)
+            {
+                Plugin.Log.LogWarning($"[IA] Civics (fallback to the native AI): {ex.Message}");
             }
 
             // Patronages chosen by the language AI (only peoples that still exist in the turn snapshot).
@@ -667,7 +681,7 @@ namespace CurrencyMod.Diplomacy
                 // The title changes with the era ("Líder" → "Rei"); the name always comes from the game.
                 nation.Persona.LeaderName = build.Facts.LeaderName;
             }
-            string persona = Prompts.PersonaSection(build.Facts, nation.Persona);
+            string persona = Prompts.PersonaSection(build.Facts, nation.Persona, NationDoctrines.Section(NationDoctrines.For(World, capture, empire)));
             var job = new DecisionJob
             {
                 Session = session,
@@ -799,8 +813,9 @@ namespace CurrencyMod.Diplomacy
                     From = job.EmpireIndex,
                     To = draft.To,
                     Type = draft.Type,
-                    Subject = draft.Subject,
-                    Text = draft.Text,
+                    // Codes that slipped past the validator become names; the signature uses the fixed nation name.
+                    Subject = LetterNames.Humanize(draft.Subject, World, TurnCapture.Latest, job.EmpireIndex),
+                    Text = LetterNames.Humanize(draft.Text, World, TurnCapture.Latest, job.EmpireIndex),
                     Demand = draft.Demand,
                     DeadlineTurns = draft.DeadlineTurns,
                     ExpectsReply = draft.ExpectsReply,
@@ -886,6 +901,22 @@ namespace CurrencyMod.Diplomacy
                 else if (action.Name == "rota_pedagio")
                 {
                     status = ApplyTollChoice(nation, action.Json, turn);
+                }
+                else if (action.Name == "assess_nation")
+                {
+                    status = NationDoctrines.Assess(World, nation.EmpireIndex, action.Json, turn);
+                    dirty = true;
+                }
+                else if (action.Name == "record_deal" || action.Name == "close_deal")
+                {
+                    status = action.Name == "record_deal" ? DealLedger.Record(World, nation.EmpireIndex, action.Json, turn) : DealLedger.Close(World, nation.EmpireIndex, action.Json, turn);
+                    dirty = true;
+                }
+                else if (action.Name == "set_ambition")
+                {
+                    int era = Capture.TurnCapture.Latest?.Empire(nation.EmpireIndex)?.EraIndex ?? 0;
+                    status = nation.SetAmbition(action.Json, turn, era);
+                    dirty = true;
                 }
                 else if (action.Name == "definir_postura" || action.Name == "definir_foco")
                 {
@@ -1063,7 +1094,7 @@ namespace CurrencyMod.Diplomacy
         }
 
         /// <summary>Player message to one of their groups, by the era's delivery rule. "ok: … turno N" or "error: …".</summary>
-        internal string SendPlayerGroupLetter(int groupId, string subject, string text)
+        internal string SendPlayerGroupLetter(int groupId, string subject, string text, int inReplyTo = -1)
         {
             ChatGroup group = World?.Groups.FirstOrDefault(g => g.Id == groupId);
             if (group == null || !group.Members.Contains(playerIndex))
@@ -1082,6 +1113,12 @@ namespace CurrencyMod.Diplomacy
             }
             int delay = Delivery.TurnsFor(TurnCapture.Latest, playerIndex);
             Letter letter = SendGroupMessage(playerIndex, group, string.IsNullOrWhiteSpace(subject) ? null : subject.Replace("<", "‹").Replace(">", "›"), text, currentTurn, delay);
+            // A reply in the group marks the group message as answered (it never did: the badge kept asking for a reply).
+            Letter original = inReplyTo >= 0 ? LetterById(inReplyTo) : null;
+            if (original != null && original.IsGroup && original.GroupId == groupId)
+            {
+                letter.InReplyTo = original.Id;
+            }
             Runtime.Event($"Player message to group {group.Handle} (arrives on turn {letter.DeliverTurn}).");
             return "ok: " + L.F("mensagem ao grupo; chega no turno {0}", letter.DeliverTurn);
         }
@@ -1492,6 +1529,18 @@ namespace CurrencyMod.Diplomacy
                     }
                     problem = "eixo desconhecido";
                     return null;
+                }
+                case "choose_civic":
+                {
+                    string code = ((string)item["civic"])?.Trim().ToUpperInvariant();
+                    if (code == null || !job.Context.ChoosableCivics.TryGetValue(code, out CivicFlow.CivicRef civic))
+                    {
+                        problem = "cívico desconhecido";
+                        return null;
+                    }
+                    intent.CivicName = civic.Name;
+                    intent.Choice = JsonInt(item["option"]) - 1;
+                    return intent; // no major nation involved
                 }
                 case "renomear":
                     intent.Entity = World.GuidForHandle((string)item["alvo"]);

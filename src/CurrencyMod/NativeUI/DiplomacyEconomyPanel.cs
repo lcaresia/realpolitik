@@ -32,6 +32,10 @@ namespace CurrencyMod.NativeUI
         }
 
         private Transform panel;
+        /// <summary>Second box under the economy: the leader's doctrine, how they read you and the blocs (items 41, 47).</summary>
+        private Transform policyPanel;
+        private Transform policyTitle;
+        private Transform policyText;
         private Transform title;
         private Transform subtitle;
         private Transform headerMine;
@@ -162,6 +166,32 @@ namespace CurrencyMod.NativeUI
                 NativeUIKit.SetVisible(row.Gauge.Find("LockGroup"), false);
                 rows.Add(row);
             }
+            // Foreign policy box, right under the economy one.
+            Transform leftoverPolicy = group.Find(PanelName + "_Policy");
+            if (leftoverPolicy != null)
+            {
+                NativeUIKit.Dispose(leftoverPolicy);
+            }
+            const float policyHeight = 150f;
+            policyPanel = NativeUIKit.Clone(boxDonor, group, PanelName + "_Policy", "UIScrollView", "ScrollingDragArea");
+            Transform policyViewport = policyPanel.Find("Viewport");
+            if (policyViewport != null)
+            {
+                DestroyImmediate(policyViewport.gameObject);
+            }
+            NativeUIKit.Place(policyPanel, left, top + height + 12f, PanelWidth, policyHeight);
+            foreach (Transform child in policyPanel)
+            {
+                NativeUIKit.Place(child, 0, 0, PanelWidth, policyHeight);
+            }
+            policyTitle = NativeUIKit.Clone(titleDonor, policyPanel, "Title");
+            NativeUIKit.Place(policyTitle, 0, 4, PanelWidth, 32);
+            NativeUIKit.Align(policyTitle, HorizontalAlignment.Center);
+            NativeUIKit.Label(policyTitle).Color = new Color(1f, 0.875f, 0.584f);
+            policyText = NativeUIKit.Clone(sentenceDonor, policyPanel, "Text");
+            NativeUIKit.Label(policyText).AutoAdjustHeight = false;
+            NativeUIKit.Place(policyText, 24, 42, PanelWidth - 48, policyHeight - 50);
+            NativeUIKit.Align(policyText, HorizontalAlignment.Left);
             Plugin.Log.LogInfo("Economy panel created on the diplomacy screen.");
         }
 
@@ -175,10 +205,12 @@ namespace CurrencyMod.NativeUI
             int other = Snapshots.DiplomaticCursorSnapshot.PresentationData.OtherEmpireIndex;
             bool valid = other >= 0 && other < game.NumberOfMajorEmpires && other < game.EmpireInfo.Length && me < game.EmpireInfo.Length && other != me;
             NativeUIKit.SetVisible(panel, valid);
+            NativeUIKit.SetVisible(policyPanel, valid);
             if (!valid)
             {
                 return;
             }
+            RefreshPolicy(me, other);
 
             CurrencyWorld world = CurrencyManager.Ensure(game.GameID, game.NumberOfMajorEmpires);
             lock (CurrencyManager.Lock)
@@ -231,6 +263,58 @@ namespace CurrencyMod.NativeUI
             }
         }
 
+        /// <summary>The leader's doctrine, how that AI reads you (its own view) and the blocs of both.</summary>
+        private void RefreshPolicy(int me, int other)
+        {
+            if (policyPanel == null)
+            {
+                return;
+            }
+            NativeUIKit.SetText(policyTitle, L.T("Política externa"));
+            Diplomacy.AiWorld ai = Diplomacy.AiModule.World;
+            var lines = new List<string>();
+            Diplomacy.NationDoctrines.Doctrine doctrine = ai != null && ai.Doctrines.TryGetValue(other, out string key) ? Diplomacy.NationDoctrines.ByKey(key) : null;
+            lines.Add(doctrine != null
+                ? L.F("<b>Doutrina dele:</b> {0}", L.T(doctrine.Name)) + " — " + L.T(DoctrineEssence(doctrine.Key))
+                : L.T("<b>Doutrina dele:</b> ainda não definida (a IA decide no primeiro turno dela)."));
+            Diplomacy.NationPerception view = null;
+            ai?.Get(other)?.Perceptions.TryGetValue(me, out view);
+            Diplomacy.NationDoctrines.Doctrine seen = Diplomacy.NationDoctrines.ByKey(view?.Doctrine);
+            lines.Add(seen != null
+                ? L.F("<b>Como ele te vê:</b> {0}", L.T(seen.Name)) + (string.IsNullOrEmpty(view.Note) ? string.Empty : " — <i>" + view.Note + "</i>")
+                : L.T("<b>Como ele te vê:</b> ainda sem opinião formada."));
+            Diplomacy.Blocs.Bloc mine = Diplomacy.Blocs.BlocEngine.Of(ai, me);
+            Diplomacy.Blocs.Bloc theirs = Diplomacy.Blocs.BlocEngine.Of(ai, other);
+            string blocs = theirs == null ? L.T("sem bloco")
+                : mine != null && mine == theirs ? L.F("ambos em {0}", theirs.Name)
+                : L.F("em {0}", theirs.Name) + (mine != null ? " · " + L.F("você em {0}", mine.Name) : string.Empty);
+            lines.Add(L.F("<b>Blocos:</b> {0}", blocs));
+            NativeUIKit.SetText(policyText, string.Join("\n", lines));
+            NativeUIKit.Tip(policyText, L.T("Política externa"), L.T("A doutrina é o papel que esta nação busca no mundo (sorteada no começo da partida, ligada ao temperamento do líder). \"Como ele te vê\" é a leitura que a IA dele faz de você: só a opinião dela, pode estar errada, e cada nação te vê de um jeito."));
+        }
+
+        /// <summary>One-line essence of each doctrine, for the profile.</summary>
+        private static string DoctrineEssence(string key)
+        {
+            switch (key)
+            {
+                case "isolationist": return L.N("o mundo é perigoso; prefere ficar fora de blocos e um mundo dividido");
+                case "coalition": return L.N("segurança coletiva: funda blocos e cobra as regras de todos");
+                case "regional": return L.N("quer mandar na própria vizinhança e não admite intrusos");
+                case "faith": return L.N("a fé decide quem é amigo");
+                case "kin": return L.N("só confia nos de cultura parecida");
+                case "imperialist": return L.N("expandir é o destino; os fracos são alvo");
+                case "mercantile": return L.N("lucro acima de bandeiras; odeia bloqueios");
+                case "opportunist": return L.N("sem amigos permanentes, só interesses");
+                case "satellite": return L.N("busca a proteção de um vizinho forte");
+                case "neutral": return L.N("neutra e útil a todos, sem alianças militares");
+                case "crusade": return L.N("quer espalhar o próprio modelo de governo");
+                case "honor": return L.N("respeita a força; ofensa se paga");
+                case "suzerain": return L.N("quer vassalos que paguem tributo");
+            }
+            return string.Empty;
+        }
+
         private static string ShortEmpireName(int empireIndex)
         {
             string name = CentralBankWindow.EmpireName(empireIndex);
@@ -268,6 +352,8 @@ namespace CurrencyMod.NativeUI
         {
             NativeUIKit.Dispose(panel);
             panel = null;
+            NativeUIKit.Dispose(policyPanel);
+            policyPanel = null;
         }
     }
 }

@@ -210,12 +210,36 @@ namespace CurrencyMod.NativeUI
             // Money of resources per turn (melhorias-jogando item 23): purchases, sales and route upkeep with other empires,
             // from the bank's trade ledger. Recorded per partner, not per resource, so the value is per turn.
             var moneyByTurn = new Dictionary<int, (double Paid, double Gain)>();
+            // Per resource (item 31): purchases record their resource type since 1.3.2; route upkeep stays in the total.
+            var moneyByResource = new Dictionary<(int Turn, int Type), (double Paid, double Gain)>();
             CurrencyWorld ledgerWorld = CurrencyManager.Current;
             foreach (TradePoint point in ledgerWorld?.TradeHistory ?? new List<TradePoint>())
             {
+                foreach (MoneyFlow flow in point.Money.Where(m => m.Kind == MoneyKind.Resources && m.Resource >= 0 && (m.From == localIndex || m.To == localIndex)))
+                {
+                    moneyByResource.TryGetValue((point.Turn, flow.Resource), out var sum);
+                    moneyByResource[(point.Turn, flow.Resource)] = (sum.Paid + (flow.From == localIndex ? flow.Paid : 0), sum.Gain + (flow.To == localIndex ? flow.Gain : 0));
+                }
                 double paid = point.Money.Where(m => m.From == localIndex && (m.Kind == MoneyKind.Resources || m.Kind == MoneyKind.Upkeep)).Sum(m => m.Paid);
                 double gain = point.Money.Where(m => m.To == localIndex && (m.Kind == MoneyKind.Resources || m.Kind == MoneyKind.Upkeep)).Sum(m => m.Gain);
                 moneyByTurn[point.Turn] = (paid, gain);
+            }
+            string ResourceMoney(int turn, int type)
+            {
+                if (!moneyByResource.TryGetValue((turn, type), out var money) || (money.Paid < 0.05 && money.Gain < 0.05))
+                {
+                    return string.Empty;
+                }
+                var parts = new List<string>();
+                if (money.Paid >= 0.05)
+                {
+                    parts.Add($"<c={TextPatches.NegativeColor}>-{mine.Symbol} {Format.Money(money.Paid)}</c>");
+                }
+                if (money.Gain >= 0.05)
+                {
+                    parts.Add($"+{mine.Symbol} {Format.Money(money.Gain)}");
+                }
+                return " · " + string.Join(" ", parts);
             }
             string MoneyText(int turn) => moneyByTurn.TryGetValue(turn, out var money) && (money.Paid > 0.05 || money.Gain > 0.05)
                 ? L.F("pago {0} {1} · recebido {0} {2}", mine.Symbol, Format.Money(money.Paid), Format.Money(money.Gain))
@@ -253,7 +277,7 @@ namespace CurrencyMod.NativeUI
                     double value = index < series[s].Values.Length ? series[s].Values[index] : double.NaN;
                     if (!double.IsNaN(value))
                     {
-                        hover.Add(names[s] + L.Colon + value.ToString("0"));
+                        hover.Add(names[s] + L.Colon + value.ToString("0") + (s < lines.Count ? ResourceMoney(first + index, lines[s]) : string.Empty));
                     }
                 }
                 string money = MoneyText(first + index);

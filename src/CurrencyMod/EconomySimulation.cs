@@ -391,7 +391,7 @@ namespace CurrencyMod
         /// Central Bank ledger: records a money movement in the current turn, only if one of the sides is a human player
         /// (events between AIs are not shown on screen and would only bloat the save). The caller already holds CurrencyManager.Lock.
         /// </summary>
-        internal static void RecordMoney(CurrencyWorld world, int from, int to, double paid, double gain, int kind)
+        internal static void RecordMoney(CurrencyWorld world, int from, int to, double paid, double gain, int kind, int resource = -1)
         {
             Sandbox sandbox = SandboxManager.Sandbox;
             if (sandbox == null || world == null)
@@ -402,7 +402,7 @@ namespace CurrencyMod
             {
                 return;
             }
-            world.RecordMoney(sandbox.Turn, from, to, paid, gain, kind);
+            world.RecordMoney(sandbox.Turn, from, to, paid, gain, kind, resource);
         }
 
         /// <summary>The empire's access to each strategic and luxury resource (type → amount), only the ones it has.</summary>
@@ -499,6 +499,8 @@ namespace CurrencyMod
             {
                 int deficitTurns = Math.Min(5, (int)(float)empire.ConsecutiveTurnEndedInMoneyDeficit.Value);
                 debt = EconomyConfig.DeficitInflation.Value + EconomyConfig.DeficitInflationPerTurn.Value * deficitTurns;
+                // Trade hubs in debt: the cost of living rises faster (only with debt; a rich treasury feels nothing).
+                debt *= TradeHubs.DebtInflationFactor(empire.Index);
             }
             else if (income > 0)
             {

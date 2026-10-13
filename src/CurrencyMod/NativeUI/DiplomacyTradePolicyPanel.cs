@@ -463,6 +463,13 @@ namespace CurrencyMod.NativeUI
                 {
                     buttons[i].State = on;
                 }
+                // The toggle's own "on" look is too faint: the chosen mode also gets a gold check (melhorias item 52).
+                UILabel label = buttons[i] != null ? NativeUIKit.Label(buttons[i].transform) : null;
+                string text = on ? "<c=F2C46D>✓ " + L.T(ModeLabels[i]) + "</c>" : L.T(ModeLabels[i]);
+                if (label != null && label.Text != text)
+                {
+                    label.Text = text;
+                }
             }
             updatingButtons = false;
         }

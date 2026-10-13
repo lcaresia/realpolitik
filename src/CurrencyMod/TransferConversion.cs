@@ -24,6 +24,8 @@ namespace CurrencyMod
             public readonly Dictionary<int, double> Paid = new Dictionary<int, double>();
             public readonly Dictionary<int, double> Received = new Dictionary<int, double>();
             public string Source;
+            /// <summary>Resource type of a single-resource purchase (the order's ResourceType argument), or -1.</summary>
+            public int Resource = -1;
         }
 
         [ThreadStatic] private static Context current;
@@ -89,11 +91,19 @@ namespace CurrencyMod
                 }
             }
 
-            private static void Prefix(MethodBase __originalMethod)
+            private static void Prefix(MethodBase __originalMethod, object[] __args)
             {
                 if (depth++ == 0)
                 {
                     current = new Context { Source = __originalMethod.DeclaringType?.Name + "." + __originalMethod.Name };
+                    if (__originalMethod.Name == "OrderSetTradeResourceAccessCountFor" && __args != null)
+                    {
+                        object resource = __args.FirstOrDefault(a => a != null && a.GetType().Name == "ResourceType");
+                        if (resource != null)
+                        {
+                            current.Resource = Convert.ToInt32(resource);
+                        }
+                    }
                 }
             }
 
@@ -184,7 +194,7 @@ namespace CurrencyMod
                     double netPaid = Math.Max(0, context.Paid[payer] - (context.Received.TryGetValue(payer, out double back) ? back : 0));
                     double paidShare = totalReceived > 0 ? netPaid * (received.Value / totalReceived) : 0;
                     EconomySimulation.RecordMoney(world, payer, receiver, paidShare, received.Value * rate,
-                        context.Source != null && context.Source.StartsWith("TradeController") ? MoneyKind.Resources : MoneyKind.Other);
+                        context.Source != null && context.Source.StartsWith("TradeController") ? MoneyKind.Resources : MoneyKind.Other, context.Resource);
                 }
                 double adjustment = received.Value * (rate - 1.0);
                 if (Math.Abs(adjustment) < 0.001)
