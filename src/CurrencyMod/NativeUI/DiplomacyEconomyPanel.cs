@@ -43,9 +43,21 @@ namespace CurrencyMod.NativeUI
         private readonly List<Row> rows = new List<Row>();
         private float nextUpdate;
         private bool failed;
+        /// <summary>The native "History" popup of the Relations tab; our panels sit over it, so they hide while it is open.</summary>
+        private DiplomaticScreen_HistoryPanel history;
+        private bool historyWasOpen;
+
+        private bool HistoryOpen => history != null
+            && (history.Visibility == UIAbstractShowable.VisibilityState.Visible || history.Visibility == UIAbstractShowable.VisibilityState.Showing);
 
         private void Update()
         {
+            // Every frame, so the panels never cover the popup while it opens (reported by Xenouzik and RedGuy, 2026-10-14).
+            if (panel != null && HistoryOpen != historyWasOpen)
+            {
+                historyWasOpen = !historyWasOpen;
+                nextUpdate = 0f;
+            }
             if (Time.unscaledTime < nextUpdate)
             {
                 return;
@@ -68,6 +80,7 @@ namespace CurrencyMod.NativeUI
                 {
                     rows.Clear();
                     Build(screen.transform);
+                    history = screen.GetComponentInChildren<DiplomaticRelationsPanel>(true)?.historyPanel;
                 }
                 Refresh();
                 failed = false;
@@ -204,8 +217,8 @@ namespace CurrencyMod.NativeUI
             int me = game.LocalEmpireInfo.EmpireIndex;
             int other = Snapshots.DiplomaticCursorSnapshot.PresentationData.OtherEmpireIndex;
             bool valid = other >= 0 && other < game.NumberOfMajorEmpires && other < game.EmpireInfo.Length && me < game.EmpireInfo.Length && other != me;
-            NativeUIKit.SetVisible(panel, valid);
-            NativeUIKit.SetVisible(policyPanel, valid);
+            NativeUIKit.SetVisible(panel, valid && !HistoryOpen);
+            NativeUIKit.SetVisible(policyPanel, valid && !HistoryOpen);
             if (!valid)
             {
                 return;
@@ -352,6 +365,7 @@ namespace CurrencyMod.NativeUI
         {
             NativeUIKit.Dispose(panel);
             panel = null;
+            history = null;
             NativeUIKit.Dispose(policyPanel);
             policyPanel = null;
         }

@@ -1,3 +1,4 @@
+using System.Linq;
 using BepInEx.Configuration;
 using UnityEngine;
 
@@ -42,6 +43,7 @@ namespace CurrencyMod.Diplomacy
         internal static ConfigEntry<bool> PlayerCouncilAutoOpen;
         internal static ConfigEntry<int> PlayerCouncilSpeakers;
         internal static ConfigEntry<int> PlayerCouncilInterval;
+        internal static ConfigEntry<KeyboardShortcut> CouncilKey;
         internal static ConfigEntry<bool> Interception;
         internal static ConfigEntry<float> InterceptionMaxChance;
         internal static ConfigEntry<float> InterceptionCurve;
@@ -146,8 +148,17 @@ namespace CurrencyMod.Diplomacy
                 "A tela do conselho abre sozinha quando a reunião do turno fica pronta, se você estiver com o mapa livre (sem tropa, cidade ou menu aberto). Desligado: só o selo no botão avisa.");
             PlayerCouncilSpeakers = config.Bind(S, "ConselhoFalasPorTurno", 6,
                 "Quantos ministros falam na reunião do turno, além da Mão (os de pasta mais urgente).");
-            PlayerCouncilInterval = config.Bind(S, "ConselhoIntervaloTurnos", 7,
-                "De quantos em quantos turnos o seu conselho se reúne sozinho. Entre uma reunião e outra, ele só se reúne se você convocar uma audiência (botão na tela do conselho); a audiência recomeça a contagem. Emergências não convocam o conselho.");
+            // New English key (the old "ConselhoIntervaloTurnos" stored a fixed 7, which ignored the game speed).
+            PlayerCouncilInterval = config.Bind(S, "CouncilIntervalTurns", 0,
+                "De quantos em quantos turnos o seu conselho se reúne sozinho. 0 = automático pela velocidade do jogo (7 no Normal); -1 = só quando você convocar uma audiência. Também muda na tela do conselho. Entre uma reunião e outra, ele só se reúne se você convocar uma audiência; a audiência recomeça a contagem.");
+            // F7: the game already uses F1 (help), F5 (quick save), F9 (quick load) and Shift+F10 (dev command `keys`).
+            CouncilKey = config.Bind(S, "CouncilShortcut", new KeyboardShortcut(KeyCode.F7),
+                "Tecla que abre e fecha a tela do conselho (funciona também no Neolítico, quando a barra de botões ainda não aparece). Evite F5 e F9: são o salvar e o carregar rápido do jogo.");
+            if (CouncilKey.Value.MainKey == KeyCode.F9 && !CouncilKey.Value.Modifiers.Any())
+            {
+                // An early test build used F9, which also quick-loads the last save.
+                CouncilKey.Value = new KeyboardShortcut(KeyCode.F7);
+            }
             Interception = config.Bind(S, "Interceptacao", true,
                 "Espiões (agentes furtivos do jogo) no território de quem escreve ou de quem recebe podem interceptar cartas privadas. A carta interceptada nunca chega; quem interceptou lê inteira. Ultimatos e declarações públicas não são interceptados.");
             InterceptionMaxChance = config.Bind(S, "InterceptacaoChanceMax", 0.5f,

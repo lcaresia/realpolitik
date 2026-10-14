@@ -638,6 +638,22 @@ namespace CurrencyMod.Diplomacy
             return dispatched;
         }
 
+        /// <summary>settle_letter: the nation's own letter stops asking for a reply (handled in another letter).</summary>
+        private string SettleLetter(AiNation nation, string json, int turn)
+        {
+            int id = DecisionParser.LetterId((string)JObject.Parse(json)["letter"]);
+            Letter letter = World.Letters.FirstOrDefault(l => l.Id == id && l.From == nation.EmpireIndex);
+            if (letter == null || !letter.ExpectsReply)
+            {
+                return "não aplicada: carta não encontrada ou já não pede resposta";
+            }
+            letter.ExpectsReply = false;
+            letter.SettledTurn = turn;
+            dirty = true;
+            Runtime.Event($"Letter L{id} from E{nation.EmpireIndex} to E{letter.To} no longer asks for a reply (settled on turn {turn}).");
+            return "feito: a carta não pede mais resposta";
+        }
+
         private bool Dispatch(AiNation nation, WorldCapture capture)
         {
             int empire = nation.EmpireIndex;
@@ -851,6 +867,10 @@ namespace CurrencyMod.Diplomacy
                 if (action.Name == "bloquear_correspondencia" || action.Name == "desbloquear_correspondencia")
                 {
                     status = ApplyMailBlock(nation, action, job.Context);
+                }
+                else if (action.Name == "settle_letter")
+                {
+                    status = SettleLetter(nation, action.Json, turn);
                 }
                 else if (action.Name == "demitir_ministro")
                 {
@@ -1651,6 +1671,57 @@ namespace CurrencyMod.Diplomacy
         /// Test ("ai test parser E#"): a decision with bad letters (unknown recipient, too long, empty, ultimatum without
         /// a demand) and one good letter, validated as on the 1st attempt and as on the last one (lenient).
         /// </summary>
+        /// <summary>
+        /// Test ("ai test settle E#"): the two-threads case (Xenouzik, 2026-10-14). The nation writes to you asking for a
+        /// reply (still on the way), you write to it on the same turn; its dossier must list its letter under "SUAS CARTAS
+        /// QUE AINDA PEDEM RESPOSTA", settle_letter must pass the validator and the letter must stop asking for a reply.
+        /// </summary>
+        internal string DevSettleTest(int empire)
+        {
+            WorldCapture capture = TurnCapture.Latest;
+            if (World == null || capture?.Empire(empire) == null || currentTurn < 0)
+            {
+                return "error: no turn snapshot or invalid nation";
+            }
+            var theirs = new Letter
+            {
+                Id = World.NextLetterId++, From = empire, To = playerIndex, Type = "privada", Subject = "Test: the toll of Huayto",
+                Text = "We demand an answer about the toll.", ExpectsReply = true, SentTurn = currentTurn, DeliverTurn = currentTurn + 1,
+                InterceptionChecked = true,
+            };
+            var mine = new Letter
+            {
+                Id = World.NextLetterId++, From = playerIndex, To = empire, Type = "privada", Subject = "Test: the toll",
+                Text = "About the toll: I already answered in my other letter, I accept the accord.", ExpectsReply = true,
+                SentTurn = currentTurn, DeliverTurn = currentTurn, InterceptionChecked = true,
+            };
+            World.Letters.Add(theirs);
+            World.Letters.Add(mine);
+            dirty = true;
+            var text = new System.Text.StringBuilder();
+            DossierBuild build = DossierBuilder.Build(World, capture, empire);
+            string listed = build.Text.Split('\n').FirstOrDefault(l => l.Contains($"L{theirs.Id} "));
+            text.AppendLine($"dossier lists L{theirs.Id}: {(listed != null ? "yes · " + listed.Trim() : "NO")}");
+            string json = new JObject
+            {
+                ["diario"] = "Test diary.",
+                ["acoes"] = new JArray { new JObject { ["acao"] = "settle_letter", ["letter"] = $"L{theirs.Id}", ["reason"] = "answered in the other letter" } },
+            }.ToString(Formatting.None);
+            var errors = new List<string>();
+            Decision decision = DecisionParser.Parse(json, build.Context, errors, lenient: false);
+            text.AppendLine($"validator: {(decision != null ? "accepted" : "rejected")}{(errors.Count > 0 ? " · " + string.Join(" | ", errors) : string.Empty)}");
+            var wrong = new List<string>();
+            DecisionParser.Parse(json.Replace($"L{theirs.Id}", "L1"), build.Context, wrong, lenient: false);
+            text.AppendLine($"unknown code rejected: {(wrong.Count > 0 ? "yes" : "NO")}");
+            ActionDraft draft = decision?.Actions.FirstOrDefault();
+            if (draft != null)
+            {
+                text.AppendLine("apply: " + SettleLetter(World.Ensure(empire), draft.Json, currentTurn));
+            }
+            text.AppendLine($"L{theirs.Id}: expects reply {theirs.ExpectsReply} · settled on turn {theirs.SettledTurn} · L{mine.Id} is yours (open the mail to see the chip next turn)");
+            return text.ToString();
+        }
+
         internal string DevParserTest(int empire)
         {
             WorldCapture capture = TurnCapture.Latest;
@@ -1710,6 +1781,10 @@ namespace CurrencyMod.Diplomacy
             if (string.IsNullOrEmpty(name))
             {
                 return "error: missing \"acao\"";
+            }
+            if (name == "settle_letter")
+            {
+                return "ok: " + SettleLetter(World.Ensure(empire), item.ToString(Formatting.None), currentTurn);
             }
             if (name == "politica_comercial" || name == "rota_pedagio")
             {

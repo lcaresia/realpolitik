@@ -30,6 +30,7 @@ the command words around them are English.
 | `inspect <path> [depth]` | same | components, styles and serialized fields |
 | `layout <path>` | same | state of a UILayout |
 | `findtype <type>` | same | objects of a component type |
+| — | `keys [filter]` | the game's key bindings (map/action: modifiers+key \| alt), to pick free mod shortcuts (the game uses F1, F5, F9, Shift+F10) |
 | `responders <x> <y>` | same | responders under a screen point, in click order |
 | `windows` | same | game windows and whether they are open |
 | — | `cameras` | cameras and UI views (depth, clear, target, components): diagnose rendering bugs |
@@ -80,6 +81,7 @@ the command words around them are English.
 | `jogo novo <2-16> [tamanho]` / `jogo novo restaurar` | `game new <2-16> [size]` / `game new restore` | starts a new test game / restores settings |
 | `jogo espectador on\|off` | `game spectator on\|off` | native AI plays the local empire |
 | `jogo sair` | `game quit` | quits the game normally |
+| — | `game report [note]` / `game report status` | sends an error report like the Realpolitik screen button (`Support\ErrorReport.cs`) / shows the last one (state, code, local copy) |
 | `jogo menu` | `game menu` | back to the main menu without saving |
 | `jogo economia` | `game economy` | economy audit |
 | `jogo juros <E#> <pct>\|auto` | `game interest <E#> <pct>\|auto` | forces an interest rate |
@@ -160,7 +162,7 @@ the command words around them are English.
 | `ia congresso [agora]` | `ai congress [now]` | Congress diagnostics (also `dev\out\congress.txt`) |
 | `ia conselho ...` | `ai council ...` | see below |
 | `ia provedor ...` / `ia provedores` | `ai provider ...` / `ai providers` | see below |
-| `ia teste carta-de E# [texto]\|parser E#\|congresso\|conselho-json` | `ai test letter-from E# [text]\|parser E#\|congress\|council-json` | bug-review scenarios |
+| `ia teste carta-de E# [texto]\|parser E#\|congresso\|conselho-json` | `ai test letter-from E# [text]\|settle E#\|parser E#\|congress\|council-json` | bug-review scenarios; `settle E#` = two parallel letters on the same matter, checks the dossier list, the validator and `settle_letter` |
 
 ### `ai mail` (`Diplomacy\UI\MailScreen.cs`)
 

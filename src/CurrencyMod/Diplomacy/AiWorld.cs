@@ -585,6 +585,11 @@ namespace CurrencyMod.Diplomacy
         public string Demand;
         public int DeadlineTurns;
         public bool ExpectsReply;
+        /// <summary>
+        /// Turn the sender stopped asking for a reply (settle_letter: the matter was handled in another letter), or -1.
+        /// ExpectsReply goes false at the same time; this only tells the interface why.
+        /// </summary>
+        public int SettledTurn = -1;
         public int SentTurn;
         public int DeliverTurn;
         /// <summary>

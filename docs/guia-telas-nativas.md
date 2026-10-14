@@ -420,10 +420,10 @@ Dois cuidados a mais (revisão de 2026-10-05):
 
 **Testar teclado sem mexer no PC do usuário.** `SendKeys` e `SetForegroundWindow` não chegam ao jogo (o Windows não
 deixa outro processo pôr a janela na frente). Mandar a mensagem direto para a janela funciona, com o jogo em segundo
-plano: `PostMessage(MainWindowHandle, WM_KEYDOWN/WM_KEYUP, vk, 1 | scan<<16)` para teclas (F8 = 0x77/0x42, ESC =
+plano: `PostMessage(MainWindowHandle, WM_KEYDOWN/WM_KEYUP, vk, 1 | scan<<16)` para teclas (F7 = 0x76/0x41, F8 = 0x77/0x42, ESC =
 0x1B/0x01) e `WM_CHAR` (0x102) para digitar. Com `game focus <caminho do campo>` antes, dá para testar campo de texto,
 atalhos e ESC do começo ao fim (testado em 2026-10-05: "ola" entrou no campo; F8 bloqueado no campo; foco solto ao
-fechar o correio; F8 e ESC voltaram).
+fechar o correio; F8 e ESC voltaram). **Segure a tecla uns 300 ms** entre o KEYDOWN e o KEYUP: com 80 ms o atalho do mod (`KeyboardShortcut.IsDown`) às vezes não vê a tecla (2026-10-14). E nunca teste com F5/F9: são o salvar e o carregar rápido do jogo (o F9 carregou um auto-save no meio de um teste); `keys` lista as teclas do jogo.
 
 ## Revisão geral da interface (2026-10-07): lições
 - **Nunca use `show InternationalScreen`/`show` em telas cheias do jogo para "abrir a diplomacia".** Deixa a câmera em visão estratégica,

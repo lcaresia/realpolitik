@@ -158,7 +158,11 @@ namespace CurrencyMod.Diplomacy.Council
                     continue;
                 }
                 string name = capture.Empire(relation.Other)?.FullName ?? "E" + relation.Other;
-                if (relation.TheirDemands.Count > 0 || relation.DemandsAgainstMe)
+                // Only demands that still wait for the player: once refused, at war or in the Congress the game keeps them
+                // on record (DemandsAgainstMe stays true), but there is nothing left to answer.
+                bool inCongress = relation.Crisis == "InternationalCrisisVoteOnGoing" || relation.Crisis == "InternationalCrisisVoteEnded";
+                bool refusedByMe = relation.Crisis == "DemandRefused" && relation.CrisisRefuser == player;
+                if (relation.TheirDemands.Count > 0 && !relation.AtWar && !inCongress && !refusedByMe)
                 {
                     topics.Add(L.F("Exigências de {0} esperam resposta.", name));
                 }
@@ -248,8 +252,70 @@ namespace CurrencyMod.Diplomacy.Council
         /// <summary>Turn of the next automatic meeting: the latest meeting (automatic or audience) + the interval.</summary>
         internal static int NextAutoTurn(AiWorld world)
         {
+            int interval = AutoInterval();
+            if (interval < 0)
+            {
+                return int.MaxValue;
+            }
             CouncilMeeting last = LastMeeting(world);
-            return last == null ? 0 : last.Turn + Math.Max(1, AiConfig.PlayerCouncilInterval.Value);
+            return last == null ? 0 : last.Turn + interval;
+        }
+
+        /// <summary>Choices of the council screen's schedule button, in click order (0 = by game speed, -1 = never).</summary>
+        internal static readonly int[] IntervalChoices = { 0, 3, 5, 7, 10, 15, 20, -1 };
+
+        /// <summary>Turns at Normal speed between automatic meetings, when the setting is automatic.</summary>
+        private const int BaseInterval = 7;
+
+        /// <summary>Turns between automatic meetings: the setting, or 7 scaled by the game speed; -1 = only by audience.</summary>
+        internal static int AutoInterval()
+        {
+            int setting = AiConfig.PlayerCouncilInterval.Value;
+            if (setting != 0)
+            {
+                return setting < 0 ? -1 : setting;
+            }
+            return Math.Max(2, (int)Math.Round(BaseInterval * SpeedMultiplier()));
+        }
+
+        private static float SpeedMultiplier()
+        {
+            try
+            {
+                float multiplier = (float)Amplitude.Mercury.Sandbox.Sandbox.GameSpeedController.CurrentGameSpeedDefinition.DefaultGameSpeedMultiplier;
+                return multiplier > 0f ? multiplier : 1f;
+            }
+            catch (Exception)
+            {
+                return 1f;
+            }
+        }
+
+        /// <summary>Moves the schedule setting to the next choice (council screen button) and saves the .cfg.</summary>
+        internal static void CycleInterval()
+        {
+            int index = Array.IndexOf(IntervalChoices, AiConfig.PlayerCouncilInterval.Value);
+            AiConfig.PlayerCouncilInterval.Value = IntervalChoices[(index + 1) % IntervalChoices.Length];
+        }
+
+        /// <summary>When the council meets on its own next: "on its own on turn N" or "only by audience".</summary>
+        internal static string NextAutoLabel(AiWorld world, int turn)
+        {
+            int next = NextAutoTurn(world);
+            return next == int.MaxValue ? L.T("Só por audiência") : L.F("Sozinho no turno {0}", Math.Max(turn, next));
+        }
+
+        /// <summary>Player-facing schedule: "every N turns (by speed)", "every N turns" or "only by audience".</summary>
+        internal static string DescribeInterval()
+        {
+            int interval = AutoInterval();
+            if (interval < 0)
+            {
+                return L.T("Só por audiência");
+            }
+            return AiConfig.PlayerCouncilInterval.Value == 0
+                ? L.F("A cada {0} turnos (velocidade do jogo)", interval)
+                : L.F("A cada {0} turnos", interval);
         }
 
         private static CouncilMeeting Open(AiWorld world, int turn, bool requested)

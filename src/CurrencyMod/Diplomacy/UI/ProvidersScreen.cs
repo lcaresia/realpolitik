@@ -45,6 +45,9 @@ namespace CurrencyMod.Diplomacy.UI
         private const float ToggleTop = 210f;
         private const float ToggleStep = 76f;
 
+        /// <summary>Section id of "Report a problem" (not a provider).</summary>
+        internal const string ReportSection = "#report";
+
         internal static ProvidersScreen Instance;
         internal static bool IsOpen => Instance != null && Instance.Shown;
 
@@ -66,6 +69,7 @@ namespace CurrencyMod.Diplomacy.UI
         /// <summary>null = "Em uso"; otherwise, the provider id.</summary>
         private readonly List<string> toggleIds = new List<string>();
         private string section;
+        internal string CurrentSection => section;
         private bool pendingOpen;
         private string pendingSection;
         private float nextRefresh;
@@ -90,6 +94,12 @@ namespace CurrencyMod.Diplomacy.UI
         private Row nationsRow;
         private Row languageRow;
         private Row reasoningRow;
+        private Row noteRow;
+        private Row reportRow;
+        private Row folderRow;
+        private UITextField noteField;
+        /// <summary>The report note survives switching sections and closing the screen.</summary>
+        private static string reportNote = string.Empty;
         private UITextField keyField;
         private ProviderDef keyProvider;
         private UITextFieldResponder hookedResponder;
@@ -285,10 +295,11 @@ namespace CurrencyMod.Diplomacy.UI
         {
             var ids = new List<string> { null };
             ids.AddRange(ProviderCatalog.All.Select(p => p.Id));
+            ids.Add(ReportSection);
             for (int i = 0; i < ids.Count; i++)
             {
                 Transform item = i == 0 ? toggleSample : Instantiate(toggleSample.gameObject, toggleTable).transform;
-                item.name = "Section_" + (ids[i] ?? "uso");
+                item.name = "Section_" + (ids[i] == ReportSection ? "report" : ids[i] ?? "uso");
                 UIToggle toggle = item.GetComponent<UIToggle>();
                 toggle.ClickDoesntSwitchOff = true;
                 toggle.GetComponent<UITransform>().InteractiveSelf = true;
@@ -403,8 +414,8 @@ namespace CurrencyMod.Diplomacy.UI
                 pendingSection = id;
                 return;
             }
-            ProviderDef provider = id == null ? null : ProviderCatalog.Get(id);
-            if (id != null && (provider == null || !provider.Visible))
+            ProviderDef provider = id == null || id == ReportSection ? null : ProviderCatalog.Get(id);
+            if (id != null && id != ReportSection && (provider == null || !provider.Visible))
             {
                 id = null;
                 provider = null;
@@ -437,6 +448,12 @@ namespace CurrencyMod.Diplomacy.UI
             privacyLabel = null;
             queueRow = accountRow = keyRow = pasteRow = modelRow = testRow = siteRow = deleteRow = null;
             enabledRow = capRow = nationsRow = languageRow = reasoningRow = null;
+            if (noteField != null)
+            {
+                reportNote = noteField.Text ?? string.Empty;
+            }
+            noteRow = reportRow = folderRow = null;
+            noteField = null;
             if (keyField != null && hookedResponder != null)
             {
                 keyField.TextValidation -= KeyField_TextValidation;
@@ -452,6 +469,14 @@ namespace CurrencyMod.Diplomacy.UI
             ClearRows();
             float y = RowsTop + 12f;
             introLabel = AddText(ref y, 60f);
+            if (section == ReportSection)
+            {
+                noteRow = AddNoteField(ref y);
+                reportRow = AddButton(ref y, SendReport);
+                folderRow = AddButton(ref y, OpenReportFolder);
+                privacyLabel = AddText(ref y, 120f);
+                return;
+            }
             if (provider == null)
             {
                 enabledRow = AddDrop(ref y, OnEnabledChanged);
@@ -707,8 +732,12 @@ namespace CurrencyMod.Diplomacy.UI
             B.SetLabel(closeButton.transform, string.Empty, inGame ? "%SystemSettingPauseMenuButtonTitle" : "%SystemSettingMainMenuButtonTitle");
             B.Tip(closeButton.transform, string.Empty, L.T("Voltar"), L.T("Fecha esta tela. O ESC também fecha. Tudo já fica salvo."));
             RefreshToggles();
-            ProviderDef provider = section == null ? null : ProviderCatalog.Get(section);
-            if (provider == null)
+            ProviderDef provider = section == null || section == ReportSection ? null : ProviderCatalog.Get(section);
+            if (section == ReportSection)
+            {
+                RefreshReport();
+            }
+            else if (provider == null)
             {
                 RefreshSummary();
             }
@@ -726,6 +755,16 @@ namespace CurrencyMod.Diplomacy.UI
             for (int i = 0; i < toggles.Count; i++)
             {
                 string id = toggleIds[i];
+                if (id == ReportSection)
+                {
+                    Transform reportItem = toggles[i].transform;
+                    B.SetVisible(reportItem, true);
+                    NativeUIKit.Place(reportItem, 0f, ToggleTop - 210f + slot * ToggleStep, 306f, 60f);
+                    slot++;
+                    B.SetLabel(reportItem, string.Empty, L.T("Relatar um problema") + "\n" + $"<c={ReportColor()}>{ReportState()}</c>");
+                    B.Tip(reportItem, string.Empty, L.T("Relatar um problema"), L.T("Envia os registros do jogo e do mod para a equipe analisar um erro, um travamento ou algo estranho."));
+                    continue;
+                }
                 ProviderDef provider = id == null ? null : ProviderCatalog.Get(id);
                 bool visible = provider == null || provider.Visible;
                 Transform item = toggles[i].transform;
@@ -743,6 +782,119 @@ namespace CurrencyMod.Diplomacy.UI
                     ? L.T("Resumo: o que está em uso agora, a fila de provedores e os limites da partida.")
                     : ProviderHelp(provider) + "\n" + StateHelp(provider, chain));
             }
+        }
+
+        // ---------------- Report a problem ----------------
+
+        private static string ReportState()
+        {
+            switch (Support.ErrorReport.Current)
+            {
+                case Support.ErrorReport.State.Sending: return L.T("Enviando…");
+                case Support.ErrorReport.State.Sent: return L.F("Enviado · {0}", Support.ErrorReport.Code);
+                case Support.ErrorReport.State.Failed: return L.T("Não foi enviado");
+                default: return L.T("Enviar registros");
+            }
+        }
+
+        private static string ReportColor()
+        {
+            switch (Support.ErrorReport.Current)
+            {
+                case Support.ErrorReport.State.Sent: return Green;
+                case Support.ErrorReport.State.Failed: return Red;
+                default: return Grey;
+            }
+        }
+
+        private static void OpenReportFolder()
+        {
+            System.IO.Directory.CreateDirectory(Support.ErrorReport.Folder);
+            Application.OpenURL("file:///" + Support.ErrorReport.Folder.Replace(System.IO.Path.DirectorySeparatorChar, '/'));
+        }
+
+        /// <summary>Button row with the native text field (save notes) in place of the button: what happened, in the player's words.</summary>
+        private Row AddNoteField(ref float y)
+        {
+            Row row = AddButton(ref y, () => { });
+            B.SetVisible(row.Button.transform, false);
+            row.Label.Margins = new RectMargins(row.Label.Margins.Left, 650f, row.Label.Margins.Top, row.Label.Margins.Bottom);
+            if (fieldDonor == null)
+            {
+                fieldDonor = DevTools.FindByPath(SaveNotesDonor);
+            }
+            if (fieldDonor == null)
+            {
+                return row;
+            }
+            Transform item = NativeUIKit.Clone(fieldDonor, row.Root, "NoteField");
+            item.gameObject.SetActive(true);
+            NativeUIKit.Place(item, RowWidth - 630f, 10f, 620f, RowHeight - 20f);
+            noteField = item.GetComponent<UITextField>();
+            noteField.maximumChars = 1000;
+            noteField.whiteList = string.Empty;
+            noteField.BlackList = "<>{}";
+            noteField.multiline = false;
+            noteField.InstructionText = $"<c=F5EBE166><i>{L.T("Ex.: o jogo travou ao sair; a janela X ficou por cima da Y")}</i></c>";
+            NativeUIKit.BlockGameShortcuts(noteField);
+            if (!string.IsNullOrEmpty(reportNote))
+            {
+                noteField.ReplaceText(reportNote);
+            }
+            NativeUIKit.Tip(item, L.T("O que aconteceu?"), L.T("Opcional, mas ajuda muito: o que você fazia, o que esperava e o que aconteceu."));
+            return row;
+        }
+
+        private void SendReport()
+        {
+            if (noteField != null)
+            {
+                reportNote = noteField.Text ?? string.Empty;
+            }
+            NativeUIKit.ReleaseTextFocus();
+            if (Support.ErrorReport.Send(reportNote))
+            {
+                nextRefresh = 0;
+            }
+        }
+
+        private void RefreshReport()
+        {
+            sectionTitleLabel.Text = L.T("Relatar um problema");
+            introLabel.Text = L.T("Algo deu errado? Envie os registros do jogo e do mod para a equipe analisar. Depois de enviar, você recebe um código: mande esse código no Discord ou no GitHub, junto com o que aconteceu.");
+            if (noteField != null)
+            {
+                reportNote = noteField.Text ?? string.Empty;
+            }
+            SetRowLabel(noteRow, L.T("O que aconteceu?"), L.T("O que aconteceu?"), L.T("Opcional, mas ajuda muito: o que você fazia, o que esperava e o que aconteceu."));
+
+            Support.ErrorReport.State state = Support.ErrorReport.Current;
+            string label;
+            switch (state)
+            {
+                case Support.ErrorReport.State.Sending:
+                    label = L.T("Juntando e enviando os registros…");
+                    break;
+                case Support.ErrorReport.State.Sent:
+                    label = $"<c={Green}>{L.F("Enviado. Seu código: {0}", Support.ErrorReport.Code)}</c>";
+                    break;
+                case Support.ErrorReport.State.Failed:
+                    label = $"<c={Red}>{L.F("Não foi enviado: {0}", Support.ErrorReport.Error)}</c>";
+                    break;
+                default:
+                    label = L.T("Enviar os registros para análise");
+                    break;
+            }
+            SetRowLabel(reportRow, label, L.T("Enviar registros"), L.T("Junta os registros, apaga chaves e o seu nome de usuário e envia ao servidor do mod. Uma cópia fica salva neste PC."));
+            B.SetLabel(reportRow.Button.transform, string.Empty, state == Support.ErrorReport.State.Sent ? L.T("Enviar de novo") : L.T("Enviar"));
+            reportRow.Button.GetComponent<UITransform>().InteractiveSelf = state != Support.ErrorReport.State.Sending;
+
+            string saved = Support.ErrorReport.SavedPath;
+            SetRowLabel(folderRow, saved != null ? L.F("Cópia salva: {0}", System.IO.Path.GetFileName(saved)) : L.T("Pasta dos relatórios salvos"),
+                L.T("Abrir a pasta"), L.T("Abre a pasta com as cópias dos relatórios. Se o envio falhar, você pode anexar o arquivo no Discord ou no GitHub."));
+            B.SetLabel(folderRow.Button.transform, string.Empty, L.T("Abrir"));
+
+            privacyLabel.Text = L.T("O que é enviado: os registros do BepInEx e do Unity (desta sessão e da anterior, para pegar travamentos e fechamentos), os registros da IA desta partida (dossiês, pedidos e respostas dos últimos turnos), as configurações do mod e do BepInEx, os relatórios de diagnóstico do próprio jogo e um resumo do PC (Windows, processador, memória, placa de vídeo, resolução). Chaves de API, e-mails e o seu nome de usuário do Windows são apagados antes. O servidor guarda os relatórios por 90 dias.");
         }
 
         private static string UsageLine(List<ProviderDef> chain)

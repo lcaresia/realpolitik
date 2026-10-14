@@ -303,7 +303,7 @@ Escreva uma linha em `_Modding\dev\cmd.txt` com o jogo aberto. O resultado sai e
 | `ai espionage …` / `ai intercept …` | Espiões e interceptação de cartas (§13). |
 | `ai congress [now]` | O Congresso visto pela foto do turno (ou tirada agora): DLC, liberação, peso de cada nação, consulados, alavancagem, presidência, leis, votações com votos e subornos, crises, consenso, leis impostas e notícias. Grava `dev\out\congresso.txt`. |
 | `ai action E# {json}` | Uma ação qualquer de uma nação da IA (o mesmo json das decisões), pelo mesmo caminho do executor, sem a validação do dossiê. Fica na memória da nação. |
-| `ai council [show\|open\|close\|section 0..2\|speak <text>\|fire <portfolio>\|convene]\|convene]` | O seu conselho (§14): mostra a última reunião em texto, abre a tela, fala com os ministros, demite e convoca uma audiência (ou de novo depois de uma falha). Sozinho, ele se reúne a cada `ConselhoIntervaloTurnos` (7) turnos. |
+| `ai council [show\|open\|close\|section 0..2\|speak <text>\|fire <portfolio>\|convene]\|convene]` | O seu conselho (§14): mostra a última reunião em texto, abre a tela, fala com os ministros, demite e convoca uma audiência (ou de novo depois de uma falha). Sozinho, ele se reúne a cada `CouncilIntervalTurns` turnos (0 = automático: 7 no Normal, escalado pela velocidade do jogo; -1 = só por audiência; também muda no cartão "Reuniões automáticas" da tela). F7 abre e fecha a tela (`CouncilShortcut`). |
 | `ai test letter-from E# [text] \| parser E# \| congress \| council-json` | Cenários da revisão de bugs: carta de uma nação para você (vale com nação eliminada); decisão com cartas erradas na 1ª e na última tentativa; a espera da 1ª sessão do Congresso numa sequência de presidentes; resposta do conselho fora do formato pelo `ApplyMeeting` de verdade. |
 | `ai armies E#` | Exércitos da nação com o código A (da foto do turno), em marcha ou não, e a missão de cada um (§12). |
 | `ai army E# A# move\|attack\|defend\|stop <T#\|C#\|A#\|-> [turns]` | A mesma ordem que a IA de linguagem daria, registrada na memória da nação (o resultado aparece no `ai actions`). |
@@ -1216,7 +1216,19 @@ roda), no pacote vendido, assumindo o risco de política: a OpenAI pede aprovaç
   Credit; 401/sem login → Auth (força conferir o login de novo); tempo esgotado mata o processo.
 - **Custo em dólar:** zero (cota do plano). Plus: o gpt-6-luna tem cota bem maior que os Sol (ver
   `research\provedores-ia.md`).
-## 16. Licença (removida em 2026-10-08)
+## 16. Cartas resolvidas em outra carta (`settle_letter`, 2026-10-14)
+
+Com o atraso do mensageiro, é comum haver duas conversas sobre o mesmo assunto: a nação manda uma carta pedindo
+resposta e, antes de ela chegar, você já tratou do assunto em outra carta (relato do Xenouzik, 2026-10-14). O mod não
+fecha nada sozinho (a IA decide, ver `feedback-ai-freedom`):
+- o dossiê lista, em LEMBRETES, as cartas da própria nação que ainda pedem resposta **e** cujo destinatário escreveu de
+  novo depois delas ("SUAS CARTAS QUE AINDA PEDEM RESPOSTA", código `L<id>`, só as dos últimos 8 turnos);
+- a ação `settle_letter` (`{"letter": "L12", "reason": "..."}`) tira o pedido de resposta: `ExpectsReply = false` e
+  `SettledTurn` = o turno (`AiWorld.Letter`);
+- o correio e a aba Cartas mostram o selo "Já resolvida" no lugar de "Pede resposta"; a carta some de "para responder".
+Teste sem gastar API: `ai test settle E#`.
+
+## 17. Licença (removida em 2026-10-08)
 
 O mod passou a ser gratuito e de código aberto (MIT). A chave de licença, o servidor de licenças e a loja foram
 removidos do código: a Diplomacia IA funciona para todos que configurarem um provedor na tela Realpolitik.

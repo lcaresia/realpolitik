@@ -126,6 +126,9 @@ namespace CurrencyMod
                     case "find":
                         Write(line, FindLabels(args));
                         return;
+                    case "keys":
+                        Write(line, KeyBindings(args));
+                        return;
                     case "tree":
                         Write(line, DumpTree(args));
                         return;
@@ -410,6 +413,30 @@ namespace CurrencyMod
                 .Where(t => PathOf(t) == path || PathOf(t).EndsWith("/" + path))
                 .ToList();
             return matches.OrderBy(t => t.gameObject.activeInHierarchy ? 0 : 1).FirstOrDefault();
+        }
+
+        /// <summary>`keys [filter]`: the game's key bindings (action map, action, key and alternative), to pick free mod shortcuts.</summary>
+        private static string KeyBindings(string filter)
+        {
+            var service = Amplitude.Framework.Services.GetService<Amplitude.Framework.Input.IActionMappingService>();
+            if (service == null)
+            {
+                return "error: no action mapping service";
+            }
+            var text = new StringBuilder();
+            foreach (KeyValuePair<string, string> pair in service.EnumerateActionMapNamesAndActionIds())
+            {
+                if (!service.TryGetActionKeyBinding(pair.Key, pair.Value, out Amplitude.Framework.Input.ActionMapDefinition.KeyBinding binding))
+                {
+                    continue;
+                }
+                string entry = $"{pair.Key}/{pair.Value}: {binding.Modifiers}+{binding.KeyCode} | alt {binding.AltModifiers}+{binding.AltKeyCode}";
+                if (string.IsNullOrEmpty(filter) || entry.IndexOf(filter, StringComparison.OrdinalIgnoreCase) >= 0)
+                {
+                    text.AppendLine(entry);
+                }
+            }
+            return text.Length > 0 ? text.ToString() : "no bindings matched";
         }
 
         private static string FindLabels(string text)

@@ -734,8 +734,14 @@ namespace CurrencyMod.Diplomacy.UI
                     B.Tip(top, "StatsTable/PopCount", L.T("Chegada"), L.F("Escrita no turno {0}, chegou no turno {1}.", letter.SentTurn, letter.DeliverTurn));
                     B.SetChip(top, "StatsTable/Fortification", MailScreen.TypeChip(letter));
                     MailScreen.TypeTip(capture, top, letter);
-                    B.SetVisible(top.Find("StatsTable/ExtensionsCount"), !letter.IsPublic && letter.ExpectsReply);
-                    if (!letter.IsPublic && letter.ExpectsReply)
+                    bool settled = !answered && letter.SettledTurn >= 0;
+                    B.SetVisible(top.Find("StatsTable/ExtensionsCount"), !letter.IsPublic && (letter.ExpectsReply || settled));
+                    if (settled)
+                    {
+                        B.SetChip(top, "StatsTable/ExtensionsCount", L.T("Já resolvida"));
+                        B.Tip(top, "StatsTable/ExtensionsCount", L.T("Já resolvida"), L.T("Quem escreveu considera o assunto tratado em outra carta e não espera mais resposta a esta."));
+                    }
+                    else if (!letter.IsPublic && letter.ExpectsReply)
                     {
                         B.SetChip(top, "StatsTable/ExtensionsCount", answered ? $"<c={Green}>" + L.T("Respondida") + "</c>" : letter.Type == "ultimato" ? MailScreen.UltimatumChip(letter, turn) : $"<c={Gold}>" + L.T("Pede resposta") + "</c>");
                         // The row is reused: without this, the "Status" tooltip of one of your letters stayed.

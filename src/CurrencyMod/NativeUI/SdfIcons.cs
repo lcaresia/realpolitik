@@ -89,6 +89,20 @@ namespace CurrencyMod.NativeUI
             });
         }
 
+        /// <summary>Report a problem: speech bubble with a cut-out exclamation mark.</summary>
+        public static Texture2D Report()
+        {
+            return Render("CurrencyMod_Report", p =>
+            {
+                float bubble = Box(p, new Vector2(0.50f, 0.42f), new Vector2(0.30f, 0.24f)) - 0.08f;
+                float tail = Triangle(p, new Vector2(0.28f, 0.66f), new Vector2(0.46f, 0.66f), new Vector2(0.22f, 0.88f));
+                float shape = Mathf.Min(bubble, tail);
+                float bang = Mathf.Min(Segment(p, new Vector2(0.50f, 0.24f), new Vector2(0.50f, 0.46f), 0.055f),
+                    Circle(p, new Vector2(0.50f, 0.59f), 0.06f));
+                return Mathf.Max(shape, -bang);
+            });
+        }
+
         /// <summary>Exchange rate: two arrows in opposite directions (currency exchange).</summary>
         public static Texture2D Exchange()
         {

@@ -12,7 +12,7 @@ namespace CurrencyMod
         public const string PluginName = "CurrencyMod";
         public const string PluginVersion = "1.1.0";
         /// <summary>Product version (Realpolitik): installer, store and update notice. The DLLs have their own.</summary>
-        public const string ProductVersion = "1.4.0";
+        public const string ProductVersion = "1.5.0";
 
         internal static ManualLogSource Log;
         internal static ConfigEntry<KeyboardShortcut> ToggleWindowKey;
@@ -31,6 +31,7 @@ namespace CurrencyMod
                 config.Reload();
             }
             L.Bind(config);
+            Support.ErrorReport.Bind(config);
             ToggleWindowKey = config.Bind("Interface", "AtalhoBancoCentral", new KeyboardShortcut(KeyCode.F8),
                 "Tecla que abre/fecha a janela do Banco Central.");
             UiScale = config.Bind("Interface", "EscalaJanela", 0f,
@@ -64,6 +65,7 @@ namespace CurrencyMod
             Plugin.BindConfig(config);
             DevTools.ResultPath = resultPath;
             host = hostObject;
+            Support.SessionLog.Start();
 
             if (!string.IsNullOrEmpty(carriedState))
             {
@@ -95,6 +97,7 @@ namespace CurrencyMod
             host.AddComponent<Diplomacy.UI.MailButton>();
             host.AddComponent<Diplomacy.UI.CouncilButton>();
             host.AddComponent<Diplomacy.UI.AlliancesButton>();
+            host.AddComponent<Support.ReportButton>();
             host.AddComponent<Diplomacy.UI.CorrespondenceTab>();
             host.AddComponent<Diplomacy.UI.InterceptedLettersTab>();
             host.AddComponent<Diplomacy.UI.ProvidersButtons>();
@@ -154,6 +157,7 @@ namespace CurrencyMod
             // Each step separately: an exception halfway (an original that Harmony does not restore, for example) would
             // make the loader lose the state, and the new generation would create an economy from scratch for the open game.
             TryStep("language AI", Diplomacy.AiModule.Shutdown);
+            TryStep("session log", Support.SessionLog.Stop);
             TryStep("native AI locks", Diplomacy.NativeAiLocks.Carry);
             TryStep("patches", () => harmony?.UnpatchSelf());
             harmony = null;

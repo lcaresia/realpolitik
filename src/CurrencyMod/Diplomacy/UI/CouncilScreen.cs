@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -79,6 +79,8 @@ namespace CurrencyMod.Diplomacy.UI
         private Transform speakCard;
         private Transform sendCard;
         private Transform stateCard;
+        private Transform scheduleCard;
+        private UIButton scheduleButton;
         private Transform fieldItem;
         private UITextField field;
         private UIButton sendButton;
@@ -319,7 +321,31 @@ namespace CurrencyMod.Diplomacy.UI
             {
                 SetFeedback(PlayerCouncil.Retry().Replace("ok: ", string.Empty), false);
             };
+            // Automatic meetings: how often the council meets on its own (Xenouzik's feedback, 2026-10-14).
+            scheduleCard = sideTable.InstantiateChild(sideSample, "ScheduleCard").transform;
+            scheduleButton = scheduleCard.Find("Table/Top/LiberateButton").GetComponent<UIButton>();
+            scheduleButton.LeftClick += b =>
+            {
+                PlayerCouncil.CycleInterval();
+                nextRefresh = 0;
+            };
             B.SetVisible(sideSample, false);
+        }
+
+        private void FillSchedule()
+        {
+            B.SetVisible(scheduleCard, true);
+            Transform top = scheduleCard.Find("Table/Top");
+            B.SetLabel(top, "TitleGroup/Title", L.T("Reuniões automáticas"));
+            B.SetChip(top, "StatsTable/PopCount", PlayerCouncil.DescribeInterval());
+            B.HideChild(top, "StatsTable/Fortification");
+            B.HideChild(top, "StatsTable/ExtensionsCount");
+            B.SetVisible(scheduleButton.transform, true);
+            B.SetButtonText(scheduleButton, L.T("Mudar"));
+            MailScreen.FitTitle(top, scheduleButton.GetComponent<UITransform>().Width + 20f);
+            B.HideOutputs(top);
+            B.Tip(top, "StatsTable/PopCount", L.T("Reuniões automáticas"), L.T("De quantos em quantos turnos o conselho se reúne sozinho. No automático, segue a velocidade do jogo (7 turnos no Normal). Cada reunião é uma chamada à API."));
+            B.Tip(scheduleButton.transform, string.Empty, L.T("Mudar"), L.T("Passa para o próximo intervalo: automático, 3, 5, 7, 10, 15, 20 turnos ou só por audiência."));
         }
 
         private void Speak()
@@ -377,10 +403,9 @@ namespace CurrencyMod.Diplomacy.UI
             if (meeting == null)
             {
                 // Council dismissed this turn: the send card becomes the audience request.
-                int next = Math.Max(turn, PlayerCouncil.NextAutoTurn(AiModule.World));
                 B.SetLabel(top, "TitleGroup/Title", L.T("O conselho está dispensado"));
-                B.SetChip(top, "StatsTable/Fortification", L.F("Sozinho no turno {0}", next));
-                B.Tip(top, "StatsTable/Fortification", L.T("Próxima reunião"), L.F("O conselho se reúne sozinho a cada {0} turnos. Uma audiência agora recomeça a contagem.", Math.Max(1, AiConfig.PlayerCouncilInterval.Value)));
+                B.SetChip(top, "StatsTable/Fortification", PlayerCouncil.NextAutoLabel(AiModule.World, turn));
+                B.Tip(top, "StatsTable/Fortification", L.T("Próxima reunião"), PlayerCouncil.DescribeInterval() + ". " + L.T("Uma audiência agora recomeça a contagem. Mude o intervalo no cartão Reuniões automáticas, abaixo."));
                 Transform idleTop = sendCard.Find("Table/Top");
                 string idleTitle = feedback ?? L.T("Peça uma audiência");
                 B.SetLabel(idleTop, "TitleGroup/Title", feedback != null && feedbackIsError ? $"<c={Red}>{idleTitle}</c>" : idleTitle);
@@ -394,7 +419,8 @@ namespace CurrencyMod.Diplomacy.UI
                 B.Tip(idleTop, "StatsTable/PopCount", L.T("Custo"), L.T("A audiência é uma reunião completa do conselho: uma chamada à API."));
                 B.Tip(sendButton.transform, string.Empty, L.T("Convocar"), L.T("Reúne o conselho agora. Depois que a reunião sair, você pode falar com os ministros."));
                 B.SetVisible(stateCard, false);
-                foreach (Transform item in new[] { speakCard, fieldItem, sendCard, stateCard })
+                FillSchedule();
+                foreach (Transform item in new[] { speakCard, fieldItem, sendCard, stateCard, scheduleCard })
                 {
                     item?.SetAsLastSibling();
                 }
@@ -444,7 +470,8 @@ namespace CurrencyMod.Diplomacy.UI
                 B.Tip(retryButton.transform, string.Empty, L.T("Convocar de novo"), L.T("Tenta a reunião (ou a sua última fala) de novo."));
             }
 
-            Transform[] order = { speakCard, fieldItem, sendCard, stateCard };
+            FillSchedule();
+            Transform[] order = { speakCard, fieldItem, sendCard, stateCard, scheduleCard };
             foreach (Transform item in order)
             {
                 item?.SetAsLastSibling();
@@ -635,11 +662,18 @@ namespace CurrencyMod.Diplomacy.UI
 
         private void FillMeeting(CouncilMeeting meeting, AiNation nation, WorldCapture capture, int era, int turn)
         {
+            // Urgent topics behind the "!" badge go on top, so opening the council always shows why it called you.
+            List<string> urgent = PlayerCouncil.UrgentTopics(capture, AiModule.Instance?.PlayerIndex ?? -1);
+            int urgentRows = urgent.Count > 0 ? 1 : 0;
             if (meeting == null)
             {
                 sectionTitleLabel.Text = L.T("Reunião do conselho");
-                SetRowCount(1);
-                FillNotice(rows[0], L.T("O conselho ainda não se reuniu"), L.F("Sozinho no turno {0}", Math.Max(turn, PlayerCouncil.NextAutoTurn(AiModule.World))),
+                SetRowCount(1 + urgentRows);
+                if (urgentRows > 0)
+                {
+                    FillUrgent(rows[0], urgent);
+                }
+                FillNotice(rows[urgentRows], L.T("O conselho ainda não se reuniu"), PlayerCouncil.NextAutoLabel(AiModule.World, turn),
                     L.T("O conselho se reúne sozinho de tempos em tempos. Se quiser ouvi-lo antes, convoque uma audiência à direita."));
                 return;
             }
@@ -660,9 +694,15 @@ namespace CurrencyMod.Diplomacy.UI
             int count = summary + meeting.Speeches.Count + meeting.Exchanges.Sum(e => 1 + e.Replies.Count + (e.Status == "pronta" ? 0 : 1)) + (meeting.Notes.Count > 0 ? 1 : 0);
             sectionTitleLabel.Text = meeting.Turn == turn
                 ? L.F("Reunião do turno {0} · {1} ministro(s) falaram", meeting.Turn, meeting.Speeches.Count - 1)
-                : L.F("Última reunião: turno {0} · a próxima é no turno {1}, ou quando você convocar", meeting.Turn, PlayerCouncil.NextAutoTurn(AiModule.World));
-            SetRowCount(count);
+                : PlayerCouncil.NextAutoTurn(AiModule.World) == int.MaxValue
+                    ? L.F("Última reunião: turno {0} · a próxima só quando você convocar", meeting.Turn)
+                    : L.F("Última reunião: turno {0} · a próxima é no turno {1}, ou quando você convocar", meeting.Turn, PlayerCouncil.NextAutoTurn(AiModule.World));
+            SetRowCount(count + urgentRows);
             int index = 0;
+            if (urgentRows > 0)
+            {
+                FillUrgent(rows[index++], urgent);
+            }
             // Newest first (melhorias item 38): your latest speech and its replies at the top, then the earlier ones,
             // and the turn's meeting at the end. Inside each exchange the order stays natural (you speak, they answer).
             string exchangesKey = $"{meeting.Turn}:{meeting.Exchanges.Count}:{meeting.Exchanges.Count(e => e.Status == "pronta")}";
@@ -783,6 +823,12 @@ namespace CurrencyMod.Diplomacy.UI
             text = (text ?? string.Empty).Trim();
             int end = text.IndexOfAny(new[] { '.', '!', '?' });
             return end > 0 && end < text.Length - 1 ? text.Substring(0, end + 1) : text;
+        }
+
+        private void FillUrgent(Row row, List<string> urgent)
+        {
+            FillNotice(row, L.T("O conselho quer falar com você:"), $"<c={Red}>!</c> {urgent.Count}",
+                string.Join("\n", urgent.Select(t => "• " + MailScreen.Escape(t))) + "\n" + L.T("Convoque uma audiência à direita para ouvir o conselho sobre isso."));
         }
 
         private void FillNotice(Row row, string title, string chip, string text)
@@ -913,6 +959,8 @@ namespace CurrencyMod.Diplomacy.UI
                 Row row = rows[i];
                 row.Portfolio = null;
                 Transform top = row.Card.Find("Table/Top");
+                // Rows are reused from the Ministers section: without this, a minister's portrait stayed on the card.
+                SetPortrait(row, null);
                 B.SetLabel(top, "TitleGroup/Title", L.F("Reunião do turno {0}", meeting.Turn));
                 B.SetChip(top, "StatsTable/PopCount", L.F("{0} fala(s)", meeting.Speeches.Count - 1));
                 B.SetVisible(top.Find("StatsTable/Fortification"), true);

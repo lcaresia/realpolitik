@@ -193,6 +193,18 @@ namespace CurrencyMod
             return $"ok: {unit} of E{owner} requested on tile {chosen} of T{territory} (check with 'ai snapshot' and 'ai espionage')";
         }
 
+        /// <summary>`game report [note]` sends a report like the screen button; `game report status` shows the last one.</summary>
+        private static string Report(string rest)
+        {
+            if (rest == "status")
+            {
+                return $"report: {Support.ErrorReport.Current}, code {Support.ErrorReport.Code ?? "-"}, error {Support.ErrorReport.Error ?? "-"}, file {Support.ErrorReport.SavedPath ?? "-"}";
+            }
+            return Support.ErrorReport.Send(string.IsNullOrEmpty(rest) ? "dev channel test" : rest)
+                ? "ok: report started (check with 'game report status')"
+                : "error: a report is already being sent";
+        }
+
         internal static string Execute(string args)
         {
             string[] parts = (args ?? string.Empty).Split(new[] { ' ' }, 2);
@@ -232,6 +244,8 @@ namespace CurrencyMod
                     return NewGame(rest);
                 case "spectator":
                     return Spectator(rest);
+                case "report":
+                    return Report(rest);
                 case "quit":
                     // Quits the game the normal way: killing the process leaves Steam thinking it is still running (AppError_16).
                     UnityEngine.Application.Quit();

@@ -1082,12 +1082,18 @@ namespace CurrencyMod.Diplomacy.UI
             B.SetChip(top, "StatsTable/Fortification", TypeChip(letter));
             TypeTip(capture, top, letter);
             // The leader is already in the title: the chip only shows the situation, when there is one.
-            bool hasState = answered || !letter.IsPublic && letter.ExpectsReply;
+            bool settled = !answered && letter.SettledTurn >= 0;
+            bool hasState = answered || settled || !letter.IsPublic && letter.ExpectsReply;
             B.SetVisible(top.Find("StatsTable/ExtensionsCount"), hasState || citesMe);
             if (hasState)
             {
                 B.SetChip(top, "StatsTable/ExtensionsCount", answered ? $"<c={Green}>{L.T("Respondida")}</c>"
+                    : settled ? L.T("Já resolvida")
                     : letter.Type == "ultimato" ? UltimatumChip(letter, turn) : $"<c={Gold}>{L.T("Pede resposta")}</c>");
+                if (settled)
+                {
+                    B.Tip(top, "StatsTable/ExtensionsCount", L.T("Já resolvida"), L.T("Quem escreveu considera o assunto tratado em outra carta e não espera mais resposta a esta."));
+                }
             }
             else if (citesMe)
             {

@@ -102,6 +102,8 @@ namespace CurrencyMod.Diplomacy
         public Dictionary<string, GrievanceRef> Grievances = new Dictionary<string, GrievanceRef>(StringComparer.OrdinalIgnoreCase);
         /// <summary>Nations with demands against this nation that it can still answer.</summary>
         public HashSet<int> DemandsToAnswer = new HashSet<int>();
+        /// <summary>Own letters still asking for a reply after the recipient wrote again (ids), for settle_letter.</summary>
+        public HashSet<int> OpenRequests = new HashSet<int>();
         /// <summary>Nations against which this nation has open demands.</summary>
         public HashSet<int> DemandsMade = new HashSet<int>();
         /// <summary>Surrender: to whom the nation can offer or impose it, and whose surrender awaits its answer.</summary>
@@ -170,6 +172,13 @@ namespace CurrencyMod.Diplomacy
 
     internal static class DecisionParser
     {
+        /// <summary>"L12" (or "12") → 12; -1 when it is not a letter code.</summary>
+        internal static int LetterId(string code)
+        {
+            code = code?.Trim().TrimStart('L', 'l');
+            return int.TryParse(code, out int id) ? id : -1;
+        }
+
         private static readonly HashSet<string> Postures = new HashSet<string> { "aliado", "amigavel", "neutro", "desconfiado", "hostil", "alvo_de_guerra" };
         private static readonly HashSet<string> Focuses = new HashSet<string> { "expansao", "economia", "ciencia", "militar", "fe", "cultura" };
         private static readonly HashSet<string> Agreements = new HashSet<string> { "economico", "informacao", "cultural", "militar", "alianca" };
@@ -792,6 +801,16 @@ namespace CurrencyMod.Diplomacy
                         problem = Empire(item, context, out string tollOwner) ?? OneOf(item, "escolha", TollChoices);
                         summary = $"suas rotas nos postos de {tollOwner}: {Str(item["escolha"])}";
                         break;
+                    case "settle_letter":
+                    {
+                        int settled = LetterId(Str(item["letter"]));
+                        if (!context.OpenRequests.Contains(settled))
+                        {
+                            problem = $"\"letter\" = um código L da lista SUAS CARTAS QUE AINDA PEDEM RESPOSTA, não '{Str(item["letter"])}'";
+                        }
+                        summary = $"carta L{settled} não pede mais resposta";
+                        break;
+                    }
                     case "bloquear_correspondencia":
                     case "desbloquear_correspondencia":
                         problem = Empire(item, context, out string mailTarget);

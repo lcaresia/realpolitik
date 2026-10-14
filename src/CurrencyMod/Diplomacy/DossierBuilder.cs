@@ -1474,12 +1474,52 @@ namespace CurrencyMod.Diplomacy
                     text.AppendLine($"   · {Name(capture, l.From)} (E{l.From}){(l.IsGroup ? " no grupo GRP" + l.GroupId : string.Empty)}, turno {l.DeliverTurn}: {what}");
                 }
             }
+            AppendOpenRequests(text, world, capture, self, turn, build);
             foreach (Letter letter in world.Letters.Where(l => l.From == self && l.RejectedBy.Count > 0 && l.SentTurn >= turn - 6))
             {
                 foreach (int refuser in letter.RejectedBy)
                 {
                     text.AppendLine($"- Sua carta do turno {letter.SentTurn} para {Name(capture, refuser)} (E{refuser}) foi devolvida: eles recusam a sua correspondência privada.");
                 }
+            }
+        }
+
+        /// <summary>
+        /// Own letters that still ask for a reply although the recipient has written again since (two threads on the same
+        /// matter, common with the messenger delay). The nation decides whether the new letter settled them (settle_letter);
+        /// nothing is closed on its own.
+        /// </summary>
+        private static void AppendOpenRequests(StringBuilder text, AiWorld world, WorldCapture capture, int self, int turn, DossierBuild build)
+        {
+            var open = new List<(Letter Mine, Letter Newer)>();
+            foreach (Letter mine in world.Letters.Where(l => l.From == self && !l.IsPublic && !l.IsGroup && l.ExpectsReply && l.SentTurn >= turn - 8))
+            {
+                if (world.Letters.Any(r => r.InReplyTo == mine.Id && r.From == mine.To))
+                {
+                    continue;
+                }
+                Letter newer = world.Letters
+                    .Where(r => r.From == mine.To && r.IsFor(self) && r.DeliverTurn <= turn && r.SentTurn >= mine.SentTurn && r.Id != mine.Id)
+                    .OrderByDescending(r => r.Id)
+                    .FirstOrDefault();
+                if (newer != null)
+                {
+                    open.Add((mine, newer));
+                }
+            }
+            if (open.Count == 0)
+            {
+                return;
+            }
+            text.AppendLine("- SUAS CARTAS QUE AINDA PEDEM RESPOSTA, mas o destinatário já escreveu de novo depois delas (com o atraso do mensageiro, é comum haver duas conversas sobre o mesmo assunto). Se a carta nova já tratou do assunto, ou ele perdeu o sentido, use settle_letter e pare de cobrar resposta; se ainda espera resposta, não faça nada:");
+            foreach ((Letter mine, Letter newer) in open)
+            {
+                build.Context.OpenRequests.Add(mine.Id);
+                string what = !string.IsNullOrWhiteSpace(mine.Demand) ? "exige: " + mine.Demand
+                    : !string.IsNullOrWhiteSpace(mine.Subject) ? "«" + mine.Subject + "»"
+                    : "«" + Shorten((mine.Text ?? string.Empty).Replace('\n', ' '), 20) + "»";
+                string transit = mine.DeliverTurn > turn ? $", ainda a caminho (chega no turno {mine.DeliverTurn})" : string.Empty;
+                text.AppendLine($"   · L{mine.Id} para {Name(capture, mine.To)} (E{mine.To}), escrita no turno {mine.SentTurn}{transit}: {what} · depois dela chegou a carta dele escrita no turno {newer.SentTurn}");
             }
         }
 

@@ -46,6 +46,11 @@ namespace CurrencyMod.Diplomacy.UI
 
         private void Update()
         {
+            // Shortcut (F7): opens the council even when the bar is hidden (Neolithic, Xenouzik's feedback 2026-10-14).
+            if (AiConfig.CouncilKey.Value.IsDown() && !NativeUIKit.TypingInField() && CouncilScreen.Instance != null)
+            {
+                CouncilScreen.SetOpen(!CouncilScreen.IsOpen);
+            }
             if (button == null)
             {
                 if (Time.unscaledTime >= nextAttempt)
@@ -155,8 +160,11 @@ namespace CurrencyMod.Diplomacy.UI
 
         private void RefreshTooltip(CouncilMeeting meeting)
         {
-            tooltipTarget.Title = L.T("Conselho");
-            string state = meeting == null ? L.F("O conselho está dispensado. Ele se reúne sozinho no turno {0}, ou quando você convocar uma audiência.", PlayerCouncil.NextAutoTurn(AiModule.World))
+            tooltipTarget.Title = L.T("Conselho") + $" ({AiConfig.CouncilKey.Value})";
+            int nextAuto = PlayerCouncil.NextAutoTurn(AiModule.World);
+            string state = meeting == null
+                ? (nextAuto == int.MaxValue ? L.T("O conselho está dispensado. Ele só se reúne quando você convocar uma audiência.")
+                    : L.F("O conselho está dispensado. Ele se reúne sozinho no turno {0}, ou quando você convocar uma audiência.", nextAuto))
                 : meeting.Status == "pronta" ? (meeting.Seen ? L.T("A reunião deste turno já aconteceu.") : L.T("A reunião deste turno está pronta."))
                 : meeting.Status == "erro" ? L.T("A reunião deste turno falhou; abra para convocar de novo.")
                 : L.T("O conselho está se reunindo.");
@@ -274,6 +282,22 @@ namespace CurrencyMod.Diplomacy.UI
             if (instance == this)
             {
                 instance = null;
+            }
+        }
+
+        /// <summary>
+        /// In the Neolithic the game hides the whole control bar, because none of its own buttons can show yet, and the
+        /// council button went with it. With the council button in the bar, the bar shows.
+        /// </summary>
+        [HarmonyPatch(typeof(ControlBanner), nameof(ControlBanner.ShouldBeShown))]
+        private static class ShowBarPatch
+        {
+            private static void Postfix(ref bool __result)
+            {
+                if (!__result && instance != null && instance.button != null)
+                {
+                    __result = true;
+                }
             }
         }
 

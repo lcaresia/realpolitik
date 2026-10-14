@@ -371,6 +371,8 @@ namespace CurrencyMod.Diplomacy
                     {
                         case "letter-from" when nation >= 0:
                             return module.DevLetterFrom(nation, testArgs.Length > 2 ? testArgs[2] : null);
+                        case "settle" when nation >= 0:
+                            return module.DevSettleTest(nation);
                         case "parser" when nation >= 0:
                             return module.DevParserTest(nation);
                         case "congress":
@@ -378,7 +380,7 @@ namespace CurrencyMod.Diplomacy
                         case "council-json":
                             return AiModule.World != null ? Council.PlayerCouncil.SelfTestMalformed(AiModule.World, module.PlayerIndex) : "error: no game";
                         default:
-                            return "usage: ai test letter-from E# [text] | parser E# | congress | council-json";
+                            return "usage: ai test letter-from E# [text] | settle E# | parser E# | congress | council-json";
                     }
                 }
                 case "letters":
