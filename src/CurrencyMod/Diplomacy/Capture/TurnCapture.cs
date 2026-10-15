@@ -60,6 +60,35 @@ namespace CurrencyMod.Diplomacy.Capture
             return sandbox == null ? null : Capture(sandbox, fromMainThread: true);
         }
 
+        /// <summary>
+        /// Main thread, mid-turn: re-reads the stocks of one empire in the turn snapshot (treasury, influence, stability...),
+        /// so a prompt built later in the turn sees money picked up or spent since the start of the turn. Returns the
+        /// treasury before the refresh (NaN when nothing was read).
+        /// </summary>
+        internal static double RefreshStocks(WorldCapture capture, int index)
+        {
+            CapturedEmpire captured = capture?.Empire(index);
+            Sandbox sandbox = SandboxManager.Sandbox;
+            if (captured == null || !captured.Alive || sandbox == null || sandbox.GUID.ToString() != capture.Guid
+                || index < 0 || index >= (Sandbox.MajorEmpires?.Length ?? 0))
+            {
+                return double.NaN;
+            }
+            MajorEmpire empire = Sandbox.MajorEmpires[index];
+            if (empire == null || !empire.IsAlive)
+            {
+                return double.NaN;
+            }
+            double before = captured.Money;
+            captured.Money = (float)empire.MoneyStock.Value;
+            captured.MoneyNet = (float)empire.MoneyNet.Value;
+            captured.Influence = (float)empire.InfluenceStock.Value;
+            captured.InfluenceNet = (float)empire.InfluenceNet.Value;
+            captured.Science = (float)empire.ResearchNet.Value;
+            captured.Stability = (float)empire.Stability.Value;
+            return before;
+        }
+
         /// <summary>The surrender preview uses RPN and a static game queue: only on the game thread (start-of-turn snapshot).</summary>
         [ThreadStatic]
         private static bool previewAllowed;

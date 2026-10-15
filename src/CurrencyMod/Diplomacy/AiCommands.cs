@@ -421,7 +421,8 @@ namespace CurrencyMod.Diplomacy
 
         /// <summary>
         /// "ai council [show|open|close|section n|speak &lt;text&gt;|fire &lt;portfolio&gt;|appoint &lt;portfolio&gt; &lt;id|1|2|3&gt;|faith T#|
-        /// veteran &lt;portfolio&gt; &lt;turns&gt;|candidates|convene]": the player's council (convene = audience, or again after a failure).
+        /// veteran &lt;portfolio&gt; &lt;turns&gt;|candidates|convene|prompt]": the player's council (convene = audience, or again after a
+        /// failure; prompt = the meeting prompt as it would be sent now, without a call).
         /// "show" (default) shows the turn's meeting as text.
         /// </summary>
         private static string CouncilCommand(AiModule module, string rest)
@@ -490,6 +491,8 @@ namespace CurrencyMod.Diplomacy
                 }
                 case "convene":
                     return Council.PlayerCouncil.Convene();
+                case "prompt":
+                    return Council.PlayerCouncil.DevPrompt();
                 case "open":
                 case "close":
                 case "section":

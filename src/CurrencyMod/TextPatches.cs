@@ -85,11 +85,42 @@ namespace CurrencyMod
             private static readonly AccessTools.FieldRef<MoneyTooltipBrick, UILabel> NetLabel =
                 AccessTools.FieldRefAccess<MoneyTooltipBrick, UILabel>("moneyNetLabel");
 
+            /// <summary>Height of the native income label (one line, as the prefab ships it).</summary>
+            private const float NativeNetHeight = 48f;
+
+            /// <summary>One line of the label's font (size 22).</summary>
+            private const float LineHeight = 23f;
+
+            /// <summary>Average glyph width of that font and the usable width of the 360 px bubble.</summary>
+            private const float CharWidth = 11f;
+            private const float UsableWidth = 340f;
+
+            private static readonly Regex Markup = new Regex(@"<[^<>]*>|\[[^\[\]]*\]", RegexOptions.Compiled);
+
+            /// <summary>Lines the text takes once wrapped (estimated: the label only measures itself once visible).</summary>
+            private static int VisualLines(string text)
+            {
+                int lines = 0;
+                foreach (string part in text.Split('\n'))
+                {
+                    int chars = Markup.Replace(part, "##").Length;
+                    lines += Math.Max(1, (int)Math.Ceiling(chars * CharWidth / UsableWidth));
+                }
+                return lines;
+            }
+
             private static void Postfix(MoneyTooltipBrick __instance, bool __result)
             {
                 string line = LocalTooltipLine;
                 if (!__result || !EconomyConfig.EnableTooltipLine.Value || string.IsNullOrEmpty(line))
                 {
+                    // Without the mod's lines (online game, line off), the label goes back to its native one-line box.
+                    UILabel native = __result ? NetLabel(__instance) : null;
+                    if (native != null)
+                    {
+                        native.WordWrap = false;
+                        FitHeight(__instance, native, NativeNetHeight);
+                    }
                     return;
                 }
                 try
@@ -107,7 +138,7 @@ namespace CurrencyMod
                             text = $"<c={NegativeColor}>{text}</c>";
                         }
                         double interest = me != null ? NativeEffects.ProjectedInterest(me) : 0;
-                        string interestPart = Math.Abs(interest) >= 0.05 ? "  ·  " + L.F("{0}/turno de juros", Format.SignedMoney(interest)) : string.Empty;
+                        string interestPart = Math.Abs(interest) >= 0.05 ? "\n" + L.F("{0}/turno de juros", Format.SignedMoney(interest)) : string.Empty;
                         string transfers = string.Empty;
                         if (me != null)
                         {
@@ -123,15 +154,45 @@ namespace CurrencyMod
                             }
                             if (parts.Count > 0)
                             {
-                                transfers = "\n" + L.T("Último turno (não se repete):") + " " + string.Join("  ·  ", parts);
+                                transfers = "\n" + L.T("Último turno (não se repete):") + "\n" + string.Join("\n", parts);
                             }
                         }
                         label.Text = text + "\n" + line + interestPart + transfers;
+                        // One line height per value: the native label has a fixed one-line height. Wrap is on for the
+                        // long gift lines (German), so each value counts the lines it wraps into.
+                        label.AutoAdjustHeight = false;
+                        label.WordWrap = true;
+                        FitHeight(__instance, label, Math.Max(NativeNetHeight, VisualLines(label.Text) * LineHeight + 4f));
                     }
                 }
                 catch (Exception ex)
                 {
                     Plugin.Log.LogWarning($"Money tooltip: {ex.Message}");
+                }
+            }
+
+            /// <summary>
+            /// Sets the income label's height and grows the brick to match. The brick's table layout ships disabled (the
+            /// rows are placed once in the prefab), so it would not grow by itself and the next section was drawn over the
+            /// extra lines; the income label is the last row, so the brick ends where it ends. The bricks table above it
+            /// re-stacks the bricks when the brick's size changes.
+            /// </summary>
+            private static void FitHeight(MoneyTooltipBrick brick, UILabel label, float height)
+            {
+                Amplitude.UI.UITransform box = label?.GetComponent<Amplitude.UI.UITransform>();
+                Amplitude.UI.UITransform frame = brick.GetComponent<Amplitude.UI.UITransform>();
+                if (box == null || frame == null)
+                {
+                    return;
+                }
+                if (Math.Abs(box.Height - height) > 0.5f)
+                {
+                    box.Height = height;
+                }
+                float bottom = box.Y + height;
+                if (Math.Abs(frame.Height - bottom) > 0.5f)
+                {
+                    frame.Height = bottom;
                 }
             }
         }
@@ -149,9 +210,9 @@ namespace CurrencyMod
                 return;
             }
             LocalCurrencyPlural = mine.PluralOrName;
-            // One short line: the income label in the money tooltip has a fixed height (one extra line overlaps the
-            // titles) and does not wrap (with currency and exchange rate together the text spilled out of both sides of the bubble).
-            LocalTooltipLine = L.F("Inflação {0}  ·  Juros {1}", Format.Percent(mine.InflationRate), Format.Percent(mine.InterestRate));
+            // One value per line: the native income label does not wrap, so values side by side spilled out of the
+            // bubble (Discord report, English UI); the tooltip patch lets the label grow to fit the lines.
+            LocalTooltipLine = L.F("Inflação {0}", Format.Percent(mine.InflationRate)) + "\n" + L.F("Juros {0}", Format.Percent(mine.InterestRate));
         }
     }
 

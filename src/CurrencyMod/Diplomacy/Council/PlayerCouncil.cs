@@ -630,7 +630,8 @@ namespace CurrencyMod.Diplomacy.Council
                     messages.Add(new ChatMessage("assistant", before.Raw));
                 }
             }
-            messages.Add(new ChatMessage("user", ExchangeRequest(meeting.Exchanges[index].PlayerText, meeting.Notes)));
+            RefreshStocks(capture, player);
+            messages.Add(new ChatMessage("user", ExchangeRequest(meeting.Exchanges[index].PlayerText, meeting.Notes, TreasuryNow(capture.Empire(player)))));
             meeting.Exchanges[index].Status = "pensando";
             meeting.Exchanges[index].Error = null;
             Launch(world, meeting.Turn, player, index, "resposta" + (index + 1), messages);
@@ -1077,6 +1078,9 @@ namespace CurrencyMod.Diplomacy.Council
                 error = "sem a foto do turno";
                 return false;
             }
+            // The turn snapshot is from the start of the turn: money picked up or spent since then (curiosities, hires,
+            // purchases) must reach the council, so the player's stocks are read live right before the dossier.
+            RefreshStocks(capture, player);
             DossierBuild build;
             try
             {
@@ -1147,10 +1151,67 @@ namespace CurrencyMod.Diplomacy.Council
                 + "Pastas: " + string.Join(", ", CouncilBank.Portfolios.Where(p => p != "mao")) + ".";
         }
 
-        private static string ExchangeRequest(string playerText, List<string> notes)
+        /// <summary>Dev ("ai council prompt"): the meeting prompt as it would be sent right now, without calling the AI.</summary>
+        internal static string DevPrompt()
+        {
+            AiModule module = AiModule.Instance;
+            AiWorld world = AiModule.World;
+            WorldCapture capture = TurnCapture.Latest;
+            if (module == null || world == null || capture == null || module.PlayerIndex < 0)
+            {
+                return "error: no game or no turn snapshot";
+            }
+            if (inFlight)
+            {
+                return "error: the council is answering; try again when it is done";
+            }
+            promptTurn = -1;
+            if (!PreparePrompt(world, capture, module.PlayerIndex, module.CurrentTurn, out string error))
+            {
+                return "error: " + error;
+            }
+            promptTurn = -1; // the next real meeting builds its own prompt
+            return "=== SYSTEM ===\n" + system + "\n\n=== USER ===\n" + user;
+        }
+
+        /// <summary>Re-reads the player's stocks in the turn snapshot (main thread) and logs when the treasury moved.</summary>
+        private static void RefreshStocks(WorldCapture capture, int player)
+        {
+            try
+            {
+                double before = TurnCapture.RefreshStocks(capture, player);
+                double after = capture.Empire(player)?.Money ?? double.NaN;
+                if (!double.IsNaN(before) && Math.Abs(after - before) >= 0.5)
+                {
+                    Plugin.Log?.LogInfo($"[IA] Player council: treasury read live, {before:0.#} -> {after:0.#} since the turn snapshot.");
+                }
+            }
+            catch (Exception ex)
+            {
+                Plugin.Log?.LogWarning($"[IA] Player council: live treasury read failed, using the turn snapshot: {ex.Message}");
+            }
+        }
+
+        /// <summary>The treasury as it is now, for answers given later in the turn than the meeting's dossier.</summary>
+        private static string TreasuryNow(CapturedEmpire me)
+        {
+            if (me == null)
+            {
+                return null;
+            }
+            var ptBr = System.Globalization.CultureInfo.GetCultureInfo("pt-BR");
+            string net = (me.MoneyNet >= 0 ? "+" : string.Empty) + Math.Round(me.MoneyNet).ToString("#,0", ptBr);
+            return $"Tesouro agora (vale mais que o número do dossiê): {Math.Round(me.Money).ToString("#,0", ptBr)} {me.CurrencyName ?? "ouro"}, {net} por turno.";
+        }
+
+        private static string ExchangeRequest(string playerText, List<string> notes, string treasury = null)
         {
             var text = new StringBuilder();
             text.AppendLine($"O líder responde ao conselho: «{playerText}»");
+            if (treasury != null)
+            {
+                text.AppendLine(treasury);
+            }
             if (notes != null && notes.Count > 0)
             {
                 text.AppendLine("Mudanças no conselho desde a reunião: " + string.Join(" ", notes));

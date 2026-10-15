@@ -1,8 +1,4 @@
-[en] Confirmar acusação
-[en] Confirmar bloqueio
-[es] Confirmar acusação
-[es] Confirmar bloqueio
-[fr] Confirmar acusação
-[fr] Confirmar bloqueio
-[de] Confirmar acusação
-[de] Confirmar bloqueio
+[en] Inflação {0}  ·  Juros {1}
+[es] Inflação {0}  ·  Juros {1}
+[fr] Inflação {0}  ·  Juros {1}
+[de] Inflação {0}  ·  Juros {1}

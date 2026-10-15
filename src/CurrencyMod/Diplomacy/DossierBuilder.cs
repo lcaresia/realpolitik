@@ -768,7 +768,7 @@ namespace CurrencyMod.Diplomacy
                 string answer = inCongress ? "A disputa está no Congresso mundial (seção do Congresso)."
                     : relation.AtWar ? "Em guerra elas não se respondem: entram nos termos de uma rendição."
                     : refused && relation.CrisisRefuser == other
-                    ? "Eles RECUSARAM: você tem pretexto para guerra formal (declarar_guerra formal), se quiser."
+                    ? $"Eles RECUSARAM{RefusalTurn(relation, other)}: você tem pretexto para guerra formal (declarar_guerra formal), se quiser. " + RefusedDemandRule(theyRefused: true)
                     : $"Eles podem aceitar, recusar ou pedir prazo{(relation.TheyStalled ? " (já pediram prazo uma vez)" : string.Empty)}.";
                 bool consulate = capture.Congress != null && me.Index < capture.Congress.Consulate.Length && capture.Congress.Consulate[me.Index];
                 string congressOffer = inCongress ? string.Empty
@@ -797,7 +797,7 @@ namespace CurrencyMod.Diplomacy
                 }
                 else if (refused && relation.CrisisRefuser == me.Index)
                 {
-                    text.AppendLine($"   Exigências deles que você RECUSOU: {list}. Eles têm pretexto para guerra formal contra você.");
+                    text.AppendLine($"   Exigências deles que você RECUSOU{RefusalTurn(relation, me.Index)}: {list}. Eles têm pretexto para guerra formal contra você. " + RefusedDemandRule(theyRefused: false));
                 }
                 else
                 {
@@ -820,6 +820,28 @@ namespace CurrencyMod.Diplomacy
             {
                 text.AppendLine("   A votação do Congresso sobre a disputa entre vocês terminou: veja o veredito na seção do Congresso.");
             }
+        }
+
+        /// <summary>" no turno N" from the relation log, or empty when the refusal is not in the log.</summary>
+        private static string RefusalTurn(CapturedRelation relation, int refuser)
+        {
+            LogItem last = relation.Log.Where(l => l.Action == "RefuseDemands" && l.Initiator == refuser).OrderByDescending(l => l.Turn).FirstOrDefault();
+            return last == null ? string.Empty : $" no turno {last.Turn}";
+        }
+
+        /// <summary>
+        /// The game's rule after a refusal (BaseDiplomaticState: AcceptDemands fails with DemandRefused): the refuser can no
+        /// longer accept or pay the demand until the demander withdraws it or makes a new one. Without this, a nation reads
+        /// every turn without payment as fresh defiance (Discord report: "unpaid claim" for many turns).
+        /// </summary>
+        private static string RefusedDemandRule(bool theyRefused)
+        {
+            return theyRefused
+                ? "Regra do jogo: depois de uma recusa, eles NÃO conseguem mais aceitar nem cumprir esta exigência (pagar, ceder, converter); a resposta fica travada "
+                    + "até você retirá-la (retirar_exigencias, que apaga a queixa) ou fazer uma exigência nova contra eles (aí todas voltam a valer e eles podem aceitar). "
+                    + "Cada turno sem cumprimento desde a recusa não é um desafio novo: pelo jogo eles não podem cumprir. Fora disso, só por presente (presentear) ou acordo em carta."
+                : "Regra do jogo: depois da sua recusa, você NÃO consegue mais aceitar nem cumprir esta exigência pelo jogo; ela fica travada "
+                    + "até eles a retirarem ou fazerem uma exigência nova. Se quiser compensá-los, só por presente (presentear) ou acordo em carta.";
         }
 
         private static string DemandList(WorldCapture capture, CapturedEmpire me, List<CapturedDemand> demands, DossierBuild build)
