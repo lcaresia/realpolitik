@@ -1,4 +1,4 @@
-[en] Inflação {0}  ·  Juros {1}
-[es] Inflação {0}  ·  Juros {1}
-[fr] Inflação {0}  ·  Juros {1}
-[de] Inflação {0}  ·  Juros {1}
+[en] Ninguém opina por esta pasta nem rende bônus de veterano. Os candidatos são os mesmos até a próxima era ou até você nomear alguém.
+[es] Ninguém opina por esta pasta nem rende bônus de veterano. Os candidatos são os mesmos até a próxima era ou até você nomear alguém.
+[fr] Ninguém opina por esta pasta nem rende bônus de veterano. Os candidatos são os mesmos até a próxima era ou até você nomear alguém.
+[de] Ninguém opina por esta pasta nem rende bônus de veterano. Os candidatos são os mesmos até a próxima era ou até você nomear alguém.

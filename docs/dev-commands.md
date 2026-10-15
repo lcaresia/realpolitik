@@ -187,7 +187,7 @@ item 47) · `accuse E# [R#] <evidence...>` (records an accusation in the bloc's 
 
 `ver` → `show` (default) · `abrir` → `open` · `fechar` → `close` · `secao N` → `section N` · `falar <texto>` → `speak <text>` ·
 `demitir <pasta>` → `fire <portfolio>` · `nomear <pasta> <id\|1\|2\|3>` → `appoint <portfolio> <id\|1\|2\|3>` ·
-`fe T#` → `faith T#` · `veterano <pasta> <turnos>` → `veteran <portfolio> <turns>` · `candidatos` → `candidates` ·
+`fe T#` → `faith T#` · `veterano <pasta> <turnos>` → `veteran <portfolio> <turns>` · `candidatos` → `candidates` · — → `age <portfolio> <turns>` (rotation test: the seat's candidates waited N turns more; one gives up when the patience runs out) ·
 `reunir\|convocar` → `convene` · — → `prompt` (the meeting prompt as it would be sent now, with the treasury read live;
 no AI call). Portfolio ids keep their stored names (`agricultura`, `financas`, `guerra`, ...).
 

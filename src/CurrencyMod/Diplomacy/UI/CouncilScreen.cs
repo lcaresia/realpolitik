@@ -874,7 +874,7 @@ namespace CurrencyMod.Diplomacy.UI
             int index = council.Count;
             foreach (string seat in vacant)
             {
-                FillVacant(rows[index++], seat, era, cost, seat == expandedSeat);
+                FillVacant(rows[index++], nation, seat, era, cost, turn, seat == expandedSeat);
                 if (seat == expandedSeat)
                 {
                     foreach (string id in candidates)
@@ -1122,7 +1122,7 @@ namespace CurrencyMod.Diplomacy.UI
             }
         }
 
-        private void FillVacant(Row row, string seat, int era, int cost, bool open)
+        private void FillVacant(Row row, AiNation nation, string seat, int era, int cost, int turn, bool open)
         {
             row.Portfolio = seat;
             row.Vacant = seat;
@@ -1138,9 +1138,22 @@ namespace CurrencyMod.Diplomacy.UI
             MailScreen.FitTitle(top, row.Button.GetComponent<UITransform>().Width + 20f);
             SetPortrait(row, null);
             B.HideOutputs(top);
-            B.Tip(top, "StatsTable/PopCount", L.T("Pasta vaga"), L.T("Ninguém opina por esta pasta nem rende bônus de veterano. Os candidatos são os mesmos até a próxima era ou até você nomear alguém."));
+            int patience = CouncilEngine.CandidatePatience();
+            B.Tip(top, "StatsTable/PopCount", L.T("Pasta vaga"), L.F("Ninguém opina por esta pasta nem rende bônus de veterano. Os candidatos mudam na próxima era; até lá, a cada {0} turnos um deles cansa de esperar e outro entra no lugar.", patience));
             B.Tip(row.Button.transform, string.Empty, L.T("Escolher"), L.T("Mostra os 3 candidatos desta pasta, logo abaixo."));
-            MailScreen.SetBody(row.Body, L.F("Bônus de quem ficar no cargo: {0}, +1% a cada 5 turnos, até +10%.", VeteranArea(seat)));
+            string body = L.F("Bônus de quem ficar no cargo: {0}, +1% a cada 5 turnos, até +10%.", VeteranArea(seat));
+            // The last candidate who gave up (CouncilEngine.RotateCandidate), while it is recent.
+            if (nation.CouncilCandidateLeft != null && nation.CouncilCandidateLeft.TryGetValue(seat, out string left))
+            {
+                string[] parts = left.Split('|');
+                if (parts.Length == 3 && int.TryParse(parts[2], out int leftTurn) && turn - leftTurn < patience)
+                {
+                    string gone = CouncilBank.ById(parts[0])?.Name ?? "?";
+                    string came = CouncilBank.ById(parts[1])?.Name ?? "?";
+                    body += $"\n<c={Gold}>" + L.F("Turno {0}: {1} cansou de esperar e foi embora; {2} entrou na lista.", leftTurn, MailScreen.Escape(gone), MailScreen.Escape(came)) + "</c>";
+                }
+            }
+            MailScreen.SetBody(row.Body, body);
         }
 
         /// <summary>"Likes X; distrusts Y." from the minister's sympathies, or null when there are none.</summary>

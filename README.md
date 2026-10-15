@@ -46,6 +46,28 @@ empires on any map.
 
 Without an AI provider everything else still works, and nations use the game's native AI.
 
+**Updating:** close the game and run the new Setup over the old one; there is no need to uninstall first. Your
+settings, API keys and saves stay as they are.
+
+**Keyboard shortcuts** (one per bottom-bar button; each button's tooltip shows its key):
+
+| Key | Opens |
+|---|---|
+| F2 | Diplomatic Mail |
+| F3 | Alliances |
+| F4 | Report a problem |
+| F6 | Realpolitik screen (AI providers, limits, language) |
+| F7 | Council (also in the Neolithic, before the bar shows) |
+| F8 | Central Bank |
+| F10 | web viewer (debug) |
+
+Pressing the key again closes the screen. Shortcuts do nothing while you type in a field or with the pause menu open.
+The game keeps F1, F5 (quick save), F9 (quick load) and Shift+F10; Steam keeps F12.
+
+**Report a problem:** the speech-bubble button on the bottom bar (or F4) sends the game and mod logs, including the
+previous session, to the team and gives you a code to share on Discord or GitHub. Keys, e-mails and your Windows user
+name are removed first.
+
 **Tested with:** HUMANKIND 1.31.4836 (Windows), BepInEx 5.4.23.5 x64, with and without the Together We Rule DLC.
 **Not supported:** multiplayer (the mod turns itself off), Mac, Xbox / Microsoft Store.
 
@@ -137,14 +159,18 @@ memory.
 
 - **Appointing:** every council starts with only the Hand. Each vacant portfolio offers 3 candidates (traits, starting
   credibility, loyalty and ambition, sympathies toward other nations, and how their traits shape the advice), and
-  appointing one costs influence. AI nations appoint and fire the same way.
+  appointing one costs influence. AI nations appoint and fire the same way. Candidates don't wait forever: every ~10
+  turns (scaled by game speed) one of a seat's three gives up and someone new takes the place, one at a time.
 - **Painted portraits:** 72 portraits, one per portfolio, epoch and gender; no two candidates of a seat share a face.
 - **Veterans:** a minister in office gains +1% every 5 turns in the portfolio's area (industry, stability, faith,
   influence, trade income, interception chance…), up to +10%.
 - **AI nations:** ministers come from a personality bank, and their titles change by era and culture. Their opinions
   feed the leader's dossier at no extra API cost.
-- **Your council** (three-busts button):
-  - Every turn the Hand opens the agenda and the most urgent ministers speak about your realm, using your own dossier.
+- **Your council** (three-busts button or F7):
+  - Meetings happen on their own every few turns (automatic by game speed, 3 to 20 turns, or only when you summon an
+    audience); the Hand opens the agenda and the most urgent ministers speak about your realm, using your own dossier.
+  - The council reads your treasury live when it meets and each time you answer, so money picked up or spent during
+    the turn counts.
   - You can answer them. Their regard for you changes, and it also follows the wars, peaces and agreements you actually
     make.
   - Fire ministers on the Ministers tab; previous meetings stay readable.
@@ -375,6 +401,8 @@ Every Setup.exe on the Releases page is built by GitHub Actions from the public 
 Most docs are in Portuguese.
 
 - [docs/mapa-do-projeto.md](docs/mapa-do-projeto.md): project map, install layout, build, MoreEmpires.
+- [docs/mapa/README.md](docs/mapa/README.md): functionality map, every screen and button with screenshots.
+- [docs/relatorios-de-erro.md](docs/relatorios-de-erro.md): how "Report a problem" works and how the team reads reports.
 - [docs/diplomacia-ia.md](docs/diplomacia-ia.md): AI Diplomacy internals (turn loop, dossier, config, viewer,
   commands, mail, actions, espionage, council, providers).
 - [docs/design-diplomacia-ia.md](docs/design-diplomacia-ia.md): design decisions.

@@ -183,7 +183,7 @@ Embaixo à esquerda: **Voltar ao jogo**.
 | Seção | Conteúdo | Botões | Print |
 |---|---|---|---|
 | **Reunião do turno** | "O conselho quer falar com você", Resumo do conselho, fala da Mão do Trono, uma seção por pasta | — | ![](prints/f_council_0.jpg) |
-| **Ministros** | "N no cargo • N pastas vagas"; cartão de cada ministro (traços, voz, lealdade, ambição, simpatias, números da pasta) e de cada pasta vaga (custo de nomear e bônus) | **Demitir** (vira **Confirmar** por 5 s; o segundo clique demite); **Escolher** / **Fechar** na pasta vaga (mostra 3 candidatos, cada um com **Nomear · custo**) | ![](prints/f_council_1.jpg) |
+| **Ministros** | "N no cargo • N pastas vagas"; cartão de cada ministro (traços, voz, lealdade, ambição, simpatias, números da pasta) e de cada pasta vaga (custo de nomear e bônus) | **Demitir** (vira **Confirmar** por 5 s; o segundo clique demite); **Escolher** / **Fechar** na pasta vaga (mostra 3 candidatos, cada um com **Nomear · custo**). A lista muda na próxima era e, até lá, a cada ~10 turnos (ajustado pela velocidade do jogo) um candidato cansa de esperar e outro entra; o cartão da pasta mostra quem saiu e quem entrou, e a reunião do turno anota a troca | ![](prints/f_council_1.jpg) ![](prints/f_council_rotation.jpg) |
 | **Reuniões anteriores** | as últimas 12 reuniões, com falas e conselhos | — | ![](prints/f_council_2.jpg) |
 
 As falas usam nomes, nunca códigos internos ("Huayto", "o exército de Selvara"; não T29, A99, C18).

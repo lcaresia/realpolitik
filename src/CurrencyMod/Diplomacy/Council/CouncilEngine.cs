@@ -89,10 +89,14 @@ namespace CurrencyMod.Diplomacy.Council
                     nation.Council.Add(Make(world, nation, capture, hand, "mao", turn));
                 }
             }
+            nation.CouncilCandidatesSince = nation.CouncilCandidatesSince ?? new Dictionary<string, int>();
+            nation.CouncilCandidateLeft = nation.CouncilCandidateLeft ?? new Dictionary<string, string>();
             int era = capture?.Empire(nation.EmpireIndex)?.EraIndex ?? 0;
             if (era != nation.CouncilCandidatesEra)
             {
                 nation.CouncilCandidates.Clear();
+                nation.CouncilCandidatesSince.Clear();
+                nation.CouncilCandidateLeft.Clear();
                 nation.CouncilCandidatesEra = era;
             }
             var taken = new HashSet<string>(nation.CouncilCandidates.Values.SelectMany(v => v));
@@ -101,11 +105,18 @@ namespace CurrencyMod.Diplomacy.Council
                 if (portfolio == "mao" || nation.Council.Any(m => m.Portfolio == portfolio))
                 {
                     nation.CouncilCandidates.Remove(portfolio);
+                    nation.CouncilCandidatesSince.Remove(portfolio);
+                    nation.CouncilCandidateLeft.Remove(portfolio);
                     continue;
                 }
                 if (nation.CouncilCandidates.TryGetValue(portfolio, out List<string> current) && current.Count > 0)
                 {
+                    RotateCandidate(world, nation, portfolio, current, era, turn, taken);
                     continue;
+                }
+                if (turn >= 0)
+                {
+                    nation.CouncilCandidatesSince[portfolio] = turn;
                 }
                 var picks = new List<string>();
                 for (int attempt = 0; picks.Count < CandidatesPerSeat && attempt < CandidatesPerSeat * 4; attempt++)
@@ -128,6 +139,58 @@ namespace CurrencyMod.Diplomacy.Council
                 AiModule.Instance?.MarkDirty();
             }
             nation.Council.Sort((a, b) => Array.IndexOf(CouncilBank.Portfolios, a.Portfolio).CompareTo(Array.IndexOf(CouncilBank.Portfolios, b.Portfolio)));
+        }
+
+        /// <summary>Turns a candidate waits before one of the seat gives up: 10 on Normal speed, scaled like the meetings.</summary>
+        internal static int CandidatePatience() => Math.Max(3, (int)Math.Round(10 * PlayerCouncil.SpeedMultiplier()));
+
+        /// <summary>
+        /// Every <see cref="CandidatePatience"/> turns one of a vacant seat's candidates gets tired of waiting and leaves;
+        /// a new one takes the place (Discord feedback 2026-10-14: the same 3 people waited the whole era). Only one at a
+        /// time, so the player never loses all the names they were weighing at once.
+        /// </summary>
+        private static void RotateCandidate(AiWorld world, AiNation nation, string portfolio, List<string> current, int era, int turn, HashSet<string> taken)
+        {
+            if (turn < 0)
+            {
+                return; // turn not known yet (right after a load or a core reload): never count from -1
+            }
+            if (!nation.CouncilCandidatesSince.TryGetValue(portfolio, out int since) || since > turn || since < 0)
+            {
+                // Lists drawn before this rule (old saves) start counting now.
+                if (turn >= 0)
+                {
+                    nation.CouncilCandidatesSince[portfolio] = turn;
+                }
+                AiModule.Instance?.MarkDirty();
+                return;
+            }
+            if (turn - since < CandidatePatience())
+            {
+                return;
+            }
+            int index = (int)(Hash($"{world.GameGuid}|{nation.EmpireIndex}|{portfolio}|{turn}|leaves") % (uint)current.Count);
+            string leaving = current[index];
+            var others = current.Where(id => id != leaving).ToList();
+            Personality newcomer = null;
+            for (int attempt = 0; attempt < CandidatesPerSeat * 4 && newcomer == null; attempt++)
+            {
+                Personality person = Pick(world, nation, portfolio, era * 1000 + turn, attempt, new HashSet<string>(taken) { leaving });
+                if (person != null && others.Count(id => CouncilBank.ById(id)?.Gender == person.Gender) < 2)
+                {
+                    newcomer = person;
+                }
+            }
+            nation.CouncilCandidatesSince[portfolio] = turn;
+            if (newcomer == null)
+            {
+                return; // nobody free in the bank: the same people keep waiting
+            }
+            current[index] = newcomer.Id;
+            taken.Add(newcomer.Id);
+            nation.CouncilCandidateLeft[portfolio] = $"{leaving}|{newcomer.Id}|{turn}";
+            AiModule.Instance?.MarkDirty();
+            PlayerCouncil.NoteCandidateLeft(world, nation, portfolio, leaving, newcomer.Id, era, turn);
         }
 
         /// <summary>

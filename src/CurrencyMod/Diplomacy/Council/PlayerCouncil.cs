@@ -278,7 +278,7 @@ namespace CurrencyMod.Diplomacy.Council
             return Math.Max(2, (int)Math.Round(BaseInterval * SpeedMultiplier()));
         }
 
-        private static float SpeedMultiplier()
+        internal static float SpeedMultiplier()
         {
             try
             {
@@ -497,6 +497,29 @@ namespace CurrencyMod.Diplomacy.Council
             AiModule.Runtime.Event("Player council: " + result + ".");
             module.MarkDirty();
             return "ok: " + result;
+        }
+
+        /// <summary>
+        /// A candidate of the player's vacant portfolio gave up waiting (CouncilEngine.RotateCandidate): this turn's meeting
+        /// gets the change; the vacant seat card on the Ministers section shows it too.
+        /// </summary>
+        internal static void NoteCandidateLeft(AiWorld world, AiNation nation, string portfolio, string leftId, string newId, int era, int turn)
+        {
+            AiModule module = AiModule.Instance;
+            if (module == null || nation == null || nation.EmpireIndex != module.PlayerIndex)
+            {
+                return;
+            }
+            string left = CouncilBank.ById(leftId)?.Name ?? "?";
+            string newcomer = CouncilBank.ById(newId)?.Name ?? "?";
+            string seat = CouncilBank.PortfolioNames.TryGetValue(portfolio, out string seatName) ? L.T(seatName) : portfolio;
+            AiModule.Runtime.Event($"Player council: candidate {leftId} gave up on {portfolio}; {newId} takes the place.");
+            CouncilMeeting meeting = Meeting(world, turn);
+            if (meeting != null)
+            {
+                meeting.Notes.Add($"{left}, candidato(a) à pasta {(CouncilBank.PortfolioNames.TryGetValue(portfolio, out string seatPt) ? seatPt : portfolio)}, cansou de esperar e foi embora; {newcomer} entrou na lista");
+                meeting.NotesUi.Add(L.F("{0} cansou de esperar pela vaga ({1}) e foi embora; {2} entrou na lista", left, seat, newcomer));
+            }
         }
 
         /// <summary>

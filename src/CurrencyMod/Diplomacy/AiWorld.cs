@@ -336,6 +336,10 @@ namespace CurrencyMod.Diplomacy
         public Dictionary<string, List<string>> CouncilCandidates = new Dictionary<string, List<string>>();
         /// <summary>Era in which the candidates were drawn.</summary>
         public int CouncilCandidatesEra = -1;
+        /// <summary>Turn each vacant portfolio's list was drawn or last changed (one candidate gives up every so many turns).</summary>
+        public Dictionary<string, int> CouncilCandidatesSince = new Dictionary<string, int>();
+        /// <summary>The last candidate who gave up waiting, per portfolio: "leftId|newId|turn".</summary>
+        public Dictionary<string, string> CouncilCandidateLeft = new Dictionary<string, string>();
         /// <summary>
         /// Cash floors set by the language AI on each decision (set_cash_floors): the native AI does not spend money in a
         /// category if the treasury would end below that category's floor. Floors may be negative (planned debt).

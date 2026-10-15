@@ -489,6 +489,28 @@ namespace CurrencyMod.Diplomacy
                     lines.Append("in office: " + string.Join(", ", self.Council.Select(m => $"{m.Portfolio} {m.Name} (since T{m.Since}, veteran +{Council.CouncilEngine.VeteranBonus(m, module.CurrentTurn)}%)")));
                     return lines.ToString();
                 }
+                case "age":
+                {
+                    // "ai council age <portfolio> <turns>": rotation test; the seat's candidates have waited N turns more.
+                    string[] bits = (arg ?? string.Empty).Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+                    AiNation self = world?.Ensure(module.PlayerIndex);
+                    if (self == null || bits.Length < 2 || !int.TryParse(bits[1], out int waited))
+                    {
+                        return "usage: ai council age <vacant portfolio> <turns>";
+                    }
+                    string portfolio = bits[0].ToLowerInvariant();
+                    Council.CouncilEngine.Ensure(world, self, TurnCapture.Latest, module.CurrentTurn);
+                    if (self.CouncilCandidatesSince == null || !self.CouncilCandidatesSince.ContainsKey(portfolio))
+                    {
+                        return "error: no candidates waiting for " + portfolio;
+                    }
+                    string before = string.Join(",", self.CouncilCandidates[portfolio]);
+                    self.CouncilCandidatesSince[portfolio] -= waited;
+                    Council.CouncilEngine.Ensure(world, self, TurnCapture.Latest, module.CurrentTurn);
+                    string after = string.Join(",", self.CouncilCandidates[portfolio]);
+                    return $"ok: patience {Council.CouncilEngine.CandidatePatience()} turns · before {before} · after {after}"
+                        + (self.CouncilCandidateLeft.TryGetValue(portfolio, out string left) ? " · last change " + left : string.Empty);
+                }
                 case "convene":
                     return Council.PlayerCouncil.Convene();
                 case "prompt":
