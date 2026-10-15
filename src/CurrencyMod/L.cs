@@ -216,6 +216,18 @@ namespace CurrencyMod
             }
         }
 
+        /// <summary>
+        /// A count with the right plural instead of "turno(s)": <c>L.P(n, "{0} turno", "{0} turnos")</c>. Both forms are
+        /// translation keys (extract-texts.ps1 picks up the two literals); extra arguments fill {1}, {2}...
+        /// </summary>
+        internal static string P(int n, string one, string many, params object[] more)
+        {
+            var args = new object[more.Length + 1];
+            args[0] = n;
+            Array.Copy(more, 0, args, 1, more.Length);
+            return F(n == 1 ? one : many, args);
+        }
+
         /// <summary>Only marks the text for extraction (static lists); returns the Portuguese itself.</summary>
         internal static string N(string pt) => pt;
 

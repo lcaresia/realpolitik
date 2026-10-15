@@ -96,7 +96,7 @@ namespace CurrencyMod
 
         private void Update()
         {
-            if (Plugin.ToggleWindowKey.Value.IsDown() && !keyboardCaptured && !NativeUI.NativeUIKit.TypingInField())
+            if (!keyboardCaptured && NativeUI.NativeUIKit.ShortcutPressed(Plugin.ToggleWindowKey.Value, NativeUI.NativeBankWindow.IsOpen || IsOpen))
             {
                 if (NativeUI.NativeBankWindow.Instance != null)
                 {

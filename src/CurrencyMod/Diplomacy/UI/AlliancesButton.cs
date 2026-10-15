@@ -39,6 +39,10 @@ namespace CurrencyMod.Diplomacy.UI
 
         private void Update()
         {
+            if (AlliancesScreen.Instance != null && NativeUIKit.ShortcutPressed(AiConfig.AlliancesKey.Value, AlliancesScreen.IsOpen))
+            {
+                AlliancesScreen.SetOpen(!AlliancesScreen.IsOpen);
+            }
             if (button == null)
             {
                 if (Time.unscaledTime >= nextAttempt)
@@ -75,7 +79,7 @@ namespace CurrencyMod.Diplomacy.UI
 
         private void TryCreate()
         {
-            if (!AiConfig.Enabled.Value || !CentralBankWindow.IsInGame || SavePatches.IsGameOnline())
+            if (!CentralBankWindow.IsInGame || SavePatches.IsGameOnline())
             {
                 return;
             }
@@ -142,7 +146,7 @@ namespace CurrencyMod.Diplomacy.UI
 
         private void RefreshTooltip(string mark)
         {
-            tooltipTarget.Title = L.T("Alianças");
+            tooltipTarget.Title = L.T("Alianças") + $" ({AiConfig.AlliancesKey.Value})";
             tooltipTarget.Description = (mark != null ? L.T("Há algo esperando por você: convite, voto ou eleição.") + "\n" : string.Empty)
                 + L.T("Blocos de nações: comércio livre entre membros, defesa mútua e pautas livres que viram resoluções; quem descumpre pode ser acusado no livro do bloco.");
         }

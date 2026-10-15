@@ -190,7 +190,7 @@ namespace CurrencyMod.NativeUI
 
         private void RefreshTooltip()
         {
-            tooltipTarget.Title = L.T("Banco Central");
+            tooltipTarget.Title = L.T("Banco Central") + $" ({Plugin.ToggleWindowKey.Value})";
             string description = TextPatches.LocalTooltipLine != null
                 ? L.T("Moeda, câmbio, inflação e juros do seu império.") + "\n" + TextPatches.LocalTooltipLine
                 : L.T("Moeda, câmbio, inflação e juros do seu império.");

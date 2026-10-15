@@ -203,9 +203,11 @@ namespace CurrencyMod.NativeUI
                     double balance = (totals.GainTotal - totals.PaidTotal) / window;
                     string color = balance > 0.05 ? GainColor : balance < -0.05 ? PaidColor : null;
                     shortParts.Add(Colored(L.F("saldo {0}/t", Signed(balance)), color));
-                    lines.Add(L.F("Você compra {0} recurso(s) dele: {1} {2}/turno.", totals.BoughtGoods, mine?.Symbol, Format.Money(totals.PaidTotal / window)));
-                    lines.Add(L.F("Você vende {0} recurso(s) a ele: {1} {2}/turno.", totals.SoldGoods, mine?.Symbol, Format.Money(totals.GainTotal / window)));
-                    lines.Add(L.F("Média dos últimos {0} turno(s), com a manutenção das rotas. Detalhes no Banco Central, aba Comércio.", window));
+                    int bought = totals.BoughtGoods;
+                    int sold = totals.SoldGoods;
+                    lines.Add(L.P(bought, "Você compra {0} recurso desse império: {1} {2}/turno.", "Você compra {0} recursos desse império: {1} {2}/turno.", mine?.Symbol, Format.Money(totals.PaidTotal / window)));
+                    lines.Add(L.P(sold, "Você vende {0} recurso a esse império: {1} {2}/turno.", "Você vende {0} recursos a esse império: {1} {2}/turno.", mine?.Symbol, Format.Money(totals.GainTotal / window)));
+                    lines.Add(L.P(window, "Média do último turno, com a manutenção das rotas. Detalhes no Banco Central, aba Comércio.", "Média dos últimos {0} turnos, com a manutenção das rotas. Detalhes no Banco Central, aba Comércio."));
                 }
             }
             if (shortParts.Count == 0)
@@ -271,16 +273,17 @@ namespace CurrencyMod.NativeUI
                     Colored(L.F("Saldo {0}/turno", Signed(balance)), balanceColor),
                     L.F("Recursos: você compra {0} · vende {1}", partner.BoughtGoods, partner.SoldGoods));
                 Tip(top, "StatsTable/PopCount", L.T("Saldo com esse império"),
-                    L.F("O que você ganhou com ele menos o que pagou a ele (manutenção das rotas incluída), por turno, em {1} (média de {0} turno(s)). Verde: você ganha mais do que paga; vermelho: você paga mais do que ganha.", window, mine.PluralOrName));
+                    L.P(window, "O que você ganhou com esse império menos o que pagou a ele (manutenção das rotas incluída), por turno, em {1} (média de {0} turno). Verde: você ganha mais do que paga; vermelho: você paga mais do que ganha.",
+                        "O que você ganhou com esse império menos o que pagou a ele (manutenção das rotas incluída), por turno, em {1} (média de {0} turnos). Verde: você ganha mais do que paga; vermelho: você paga mais do que ganha.", mine.PluralOrName));
                 Tip(top, "StatsTable/Fortification", L.T("Recursos negociados"),
-                    L.T("Quantos tipos de recurso você compra dele e quantos ele compra de você pelas rotas comerciais."));
+                    L.T("Quantos tipos de recurso você compra desse império e quantos esse império compra de você pelas rotas comerciais."));
 
                 FillTradeBar(row.PaidBar, TradeBarTop, cardWidth, paid, maxValue / window, PaidColor,
                     L.F("Você paga {0} {1}/turno", mine.Symbol, Format.Money(paid)), L.T("O que você paga"),
-                    L.F("Média de {0} turno(s), em {1}.", window, mine.PluralOrName) + "\n" + Breakdown(partner.Paid, window, true));
+                    L.P(window, "Média de {0} turno, em {1}.", "Média de {0} turnos, em {1}.", mine.PluralOrName) + "\n" + Breakdown(partner.Paid, window, true));
                 FillTradeBar(row.GainBar, TradeBarTop + TradeBarStep, cardWidth, gain, maxValue / window, GainColor,
                     L.F("Você ganha {0} {1}/turno", mine.Symbol, Format.Money(gain)), L.T("O que você ganha"),
-                    L.F("Média de {0} turno(s), em {1}.", window, mine.PluralOrName) + "\n" + Breakdown(partner.Gain, window, false));
+                    L.P(window, "Média de {0} turno, em {1}.", "Média de {0} turnos, em {1}.", mine.PluralOrName) + "\n" + Breakdown(partner.Gain, window, false));
                 HideOutputs(top, TradeCardHeight);
             }
             SetTradeVisible(true);
@@ -451,7 +454,7 @@ namespace CurrencyMod.NativeUI
             chartYLabels[2].Text = Format.Money(min);
             chartXLabels[0].Text = L.F("Turno {0}", first);
             chartXLabels[1].Text = L.F("Turno {0}", last);
-            SetLabel(top, "TitleGroup/Title", L.F("Dinheiro com outros impérios, últimos {0} turnos", history.Count));
+            SetLabel(top, "TitleGroup/Title", L.P(history.Count, "Dinheiro com outros impérios, último turno", "Dinheiro com outros impérios, últimos {0} turnos"));
             string[] chips =
             {
                 Dot(PaidColor) + L.F("Você paga {0}/turno", Format.Money(averagePaid)),

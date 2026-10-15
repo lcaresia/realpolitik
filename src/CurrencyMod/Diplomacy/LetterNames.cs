@@ -22,8 +22,28 @@ namespace CurrencyMod.Diplomacy
                 return text;
             }
             text = Codes.Replace(text, match => Name(match.Groups[1].Value[0], int.Parse(match.Groups[2].Value), match.Value, world, capture) ?? match.Value);
+            text = RepeatedName.Replace(text, "$1");
             return FixSignature(text, capture.Empire(sender));
         }
+
+        /// <summary>
+        /// Only the code pass, for texts shown to the player that are not letters (bloc motions, council speeches): the
+        /// player never sees the dossier codes, so "postos para E15" reads "postos para Valdoria".
+        /// </summary>
+        internal static string NamesOnly(string text)
+        {
+            WorldCapture capture = TurnCapture.Latest;
+            if (string.IsNullOrEmpty(text) || capture == null)
+            {
+                return text;
+            }
+            AiWorld world = AiModule.World;
+            string named = Codes.Replace(text, match => Name(match.Groups[1].Value[0], int.Parse(match.Groups[2].Value), match.Value, world, capture) ?? match.Value);
+            // "Huayto (T29)" became "Huayto (Huayto)": keep one.
+            return named == text ? text : RepeatedName.Replace(named, "$1");
+        }
+
+        private static readonly Regex RepeatedName = new Regex(@"(\p{L}[\p{L}'’\-]*(?: \p{L}[\p{L}'’\-]*){0,3}) \(\1\)", RegexOptions.Compiled);
 
         private static string Name(char kind, int number, string code, AiWorld world, WorldCapture capture)
         {

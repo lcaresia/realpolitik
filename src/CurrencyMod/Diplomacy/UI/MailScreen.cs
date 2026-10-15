@@ -139,6 +139,9 @@ namespace CurrencyMod.Diplomacy.UI
         private bool replyDetached;
         private string feedback;
         private bool feedbackIsError;
+        /// <summary>Group whose "Sair" was clicked once; a second click before the deadline confirms.</summary>
+        private int confirmLeaveGroup = -1;
+        private float confirmLeaveGroupUntil;
 
         internal static bool IsOpen => Instance != null && Instance.Shown;
 
@@ -464,9 +467,9 @@ namespace CurrencyMod.Diplomacy.UI
                 demandField = demandItem.GetComponent<UITextField>();
                 giveItem = CloneField(fieldDonor, "DealGiveField", 34f, multiline: false, maxChars: 200, hint: L.T("O que você dá (trato)"));
                 giveField = giveItem.GetComponent<UITextField>();
-                getItem = CloneField(fieldDonor, "DealGetField", 34f, multiline: false, maxChars: 200, hint: L.T("O que ele dá (trato)"));
+                getItem = CloneField(fieldDonor, "DealGetField", 34f, multiline: false, maxChars: 200, hint: L.T("O que a outra parte dá (trato)"));
                 getField = getItem.GetComponent<UITextField>();
-                bodyItem = CloneField(fieldDonor, "BodyField", 300f, multiline: true, maxChars: AiConfig.PlayerLetterLimit, hint: L.T("Escreva sua carta como o líder do seu povo…"));
+                bodyItem = CloneField(fieldDonor, "BodyField", 300f, multiline: true, maxChars: AiConfig.PlayerLetterLimit, hint: L.T("Escreva sua carta em nome do seu povo…"));
                 bodyField = bodyItem.GetComponent<UITextField>();
                 // TextChange is bound in Update (EnsureTextChange), after the field loads.
             }
@@ -601,7 +604,7 @@ namespace CurrencyMod.Diplomacy.UI
             string get = getField?.Text.Trim() ?? string.Empty;
             if (type == "trato" && (give.Length == 0 || get.Length == 0))
             {
-                SetFeedback(L.T("Um trato precisa dizer o que você dá e o que ele dá."), true);
+                SetFeedback(L.T("Um trato precisa dizer o que você dá e o que a outra parte dá."), true);
                 return;
             }
             string demand = demandField?.Text.Trim();
@@ -630,7 +633,15 @@ namespace CurrencyMod.Diplomacy.UI
                     };
                     string recorded = DealLedger.Record(AiModule.World, module.PlayerIndex, json.ToString(), TurnCapture.Latest?.Turn ?? 0);
                     bool ok = recorded.StartsWith("registrado");
-                    SetFeedback(ok ? L.T("Carta enviada e trato registrado.") : L.F("Carta enviada, mas o trato não foi registrado: {0}", recorded), !ok);
+                    if (!ok)
+                    {
+                        // The ledger reason is written for the AI (action names, field names): log it, show a plain text.
+                        Plugin.Log.LogInfo($"Mail: deal not recorded ({recorded}).");
+                    }
+                    string why = recorded.Contains("tratos abertos")
+                        ? L.F("Você já tem {0} tratos abertos; espere um expirar antes de registrar outro.", DealLedger.MaxOpenPerNation)
+                        : L.T("O trato não pôde ser registrado.");
+                    SetFeedback(ok ? L.T("Carta enviada e trato registrado.") : L.F("Carta enviada, mas o trato não foi registrado: {0}", why), !ok);
                     giveField?.ReplaceText(string.Empty);
                     getField?.ReplaceText(string.Empty);
                     module.MarkDirty();
@@ -1171,7 +1182,7 @@ namespace CurrencyMod.Diplomacy.UI
             }
             if (letter.IsPublic)
             {
-                help = L.F("Lida por {0} nação(ões) até agora.", letter.ReadBy.Count);
+                help = L.P(letter.ReadBy.Count, "Lida por {0} nação até agora.", "Lida por {0} nações até agora.");
                 return L.F("Lida por {0}", letter.ReadBy.Count);
             }
             Letter reply = module.ReplyTo(letter);
@@ -1184,10 +1195,10 @@ namespace CurrencyMod.Diplomacy.UI
             }
             if (letter.ReadBy.Contains(letter.To))
             {
-                help = L.T("O destinatário já leu. Se ele responder, a carta chega pelo tempo de entrega da era dele.");
+                help = L.T("O destinatário já leu. Se houver resposta, ela chega pelo tempo de entrega da era de quem responde.");
                 return $"<c={Green}>{L.T("Lida")}</c>";
             }
-            help = L.T("Chegou; o destinatário lê no começo do próximo turno dele.");
+            help = L.T("Chegou; o destinatário lê no começo do próximo turno.");
             return L.T("Entregue");
         }
 
@@ -1214,7 +1225,10 @@ namespace CurrencyMod.Diplomacy.UI
             }
             if (!string.IsNullOrWhiteSpace(letter.Demand))
             {
-                parts.Add($"<c={Red}>{L.F("Exigência: {0} — prazo de {1} turnos (vence no turno {2}).", Escape(letter.Demand), letter.DeadlineTurns, letter.SentTurn + letter.DeadlineTurns)}</c>");
+                int deadlineTurns = letter.DeadlineTurns;
+                string demandLine = L.P(deadlineTurns, "Exigência: {1} — prazo de {0} turno (expira no turno {2}).", "Exigência: {1} — prazo de {0} turnos (expira no turno {2}).",
+                    Escape(letter.Demand), letter.SentTurn + letter.DeadlineTurns);
+                parts.Add($"<c={Red}>{demandLine}</c>");
             }
             parts.Add(Escape(letter.Text));
             // What this means in the game: what the sender did to you on the letter's turn and the rules it cites.
@@ -1285,8 +1299,8 @@ namespace CurrencyMod.Diplomacy.UI
                 case "ultimato": return L.T("Exigência com prazo. Chega mesmo para quem recusa sua correspondência.");
                 case "publica": return L.T("Todas as nações que conhecem quem escreveu leem. Serve de propaganda, aviso ou denúncia.");
                 case "grupo": return L.T("Todos os membros do grupo leem. Bom para combinar algo entre várias nações ao mesmo tempo.");
-                case "trato": return L.T("Carta privada que também registra um trato no livro: o que você dá, o que ele dá e o prazo. Use depois de combinar por carta; a nação vê o trato e pode cobrar ou dizer que você rompeu.");
-                default: return L.T("Só o destinatário lê. Não chega se ele recusar a sua correspondência.");
+                case "trato": return L.T("Carta privada que também registra um trato no livro: o que você dá, o que a outra parte dá e o prazo. Use depois de combinar por carta; a nação vê o trato e pode cobrar ou dizer que você rompeu.");
+                default: return L.T("Só o destinatário lê; não chega se essa nação recusar a sua correspondência.");
             }
         }
 
@@ -1376,6 +1390,8 @@ namespace CurrencyMod.Diplomacy.UI
             {
                 return;
             }
+            // AI-written texts (council speeches, bloc motions) may still carry dossier codes: the player sees names.
+            text = LetterNames.NamesOnly(text);
             if (label.Text != text)
             {
                 label.Text = text;
@@ -1506,15 +1522,15 @@ namespace CurrencyMod.Diplomacy.UI
             List<Deal> openDeals = type == "trato" && AiModule.World != null
                 ? AiModule.World.Deals.Where(d => d.Status == Deal.Open && d.Involves(module.PlayerIndex) && d.Involves(composeTo)).ToList() : new List<Deal>();
             B.SetChip(typeTop, "StatsTable/PopCount", type == "ultimato" ? L.T("Exigência com prazo") : type == "publica" ? L.T("Todos leem") : type == "grupo" ? L.T("Os membros leem")
-                : type == "trato" ? (openDeals.Count == 0 ? L.T("Nenhum trato aberto com ele") : L.F("{0} trato(s) aberto(s) com ele", openDeals.Count)) : L.T("Só ele lê"));
+                : type == "trato" ? (openDeals.Count == 0 ? L.T("Nenhum trato aberto com essa nação") : L.P(openDeals.Count, "{0} trato aberto com essa nação", "{0} tratos abertos com essa nação")) : L.T("Só o destinatário lê"));
             B.HideChild(typeTop, "StatsTable/Fortification");
             B.HideChild(typeTop, "StatsTable/ExtensionsCount");
             B.SetVisible(typeButton.transform, true); // the sample's button can come hidden: every compose button is shown explicitly
-            B.SetButtonText(typeButton, L.T("Trocar"));
+            B.SetButtonText(typeButton, L.T("Próximo tipo"));
             FitTitle(typeTop, typeButton.GetComponent<UITransform>().Width + 20f);
             B.HideOutputs(typeTop);
             B.Tip(typeTop, "StatsTable/PopCount", L.T(TypeNames[composeType]), TypeHelp(type)
-                + string.Concat(openDeals.Select(d => "\n" + L.F("{0}: você dá «{1}»; ele dá «{2}» · até o turno {3}", d.Handle,
+                + string.Concat(openDeals.Select(d => "\n" + L.F("Você dá «{0}»; a outra parte dá «{1}» · até o turno {2}",
                     Escape(d.From == module.PlayerIndex ? d.FromGives : d.WithGives), Escape(d.From == module.PlayerIndex ? d.WithGives : d.FromGives), d.DeadlineTurn))));
             B.Tip(typeButton.transform, string.Empty, L.T("Trocar tipo"), L.T("Carta privada → Ultimato → Declaração pública → Mensagem de grupo → Trato."));
 
@@ -1528,11 +1544,11 @@ namespace CurrencyMod.Diplomacy.UI
                 B.HideChild(replyTop, "StatsTable/Fortification");
                 B.HideChild(replyTop, "StatsTable/ExtensionsCount");
                 B.SetVisible(replyButton.transform, true);
-                B.SetButtonText(replyButton, L.T("Soltar"));
+                B.SetButtonText(replyButton, L.T("Carta nova"));
                 FitTitle(replyTop, replyButton.GetComponent<UITransform>().Width + 20f);
                 B.HideOutputs(replyTop);
                 B.Tip(replyTop, "StatsTable/PopCount", L.T("Em resposta a"), L.T("Esta carta fica ligada à original: as duas aparecem juntas em Respondidas."));
-                B.Tip(replyButton.transform, string.Empty, L.T("Soltar"), L.T("Escreve uma carta nova, sem ligar a esta."));
+                B.Tip(replyButton.transform, string.Empty, L.T("Carta nova"), L.T("Escreve uma carta nova, sem ligar a esta."));
             }
 
             B.SetVisible(demandItem, type == "ultimato");
@@ -1541,7 +1557,7 @@ namespace CurrencyMod.Diplomacy.UI
             B.SetVisible(deadlineItem, type == "ultimato" || type == "trato");
             if (deadlineItem != null)
             {
-                deadlineItem.GetComponent<UILabel>().Text = L.F("Prazo: {0} turnos", Mathf.RoundToInt(deadlineSlider.CurrentValue));
+                deadlineItem.GetComponent<UILabel>().Text = L.P(Mathf.RoundToInt(deadlineSlider.CurrentValue), "Prazo: {0} turno", "Prazo: {0} turnos");
                 if (type == "trato")
                 {
                     NativeUIKit.Tip(deadlineItem, L.T("Prazo do trato"), L.T("Turnos para os dois lados cumprirem. Vencido o prazo, a nação confere se você cumpriu e fecha o trato como cumprido ou rompido."));
@@ -1601,11 +1617,11 @@ namespace CurrencyMod.Diplomacy.UI
             }
             else if (theirs != null && theirs.Formed)
             {
-                lines.Add(L.F("Bloco: ele é da {0}", Escape(theirs.Name)));
+                lines.Add(L.F("Bloco: essa nação é da {0}", Escape(theirs.Name)));
             }
             else
             {
-                lines.Add(L.T("Bloco: ele não está em nenhum"));
+                lines.Add(L.T("Bloco: essa nação não está em nenhum"));
             }
             var pacts = new List<string>();
             if (relation.NonAggression) pacts.Add(L.T("não agressão"));
@@ -1728,27 +1744,38 @@ namespace CurrencyMod.Diplomacy.UI
                 int unread = messages.Count(l => l.From != me && !l.ReadBy.Contains(me));
                 B.SetLabel(top, "TitleGroup/Title", Escape(group.Name));
                 B.SetChip(top, "StatsTable/PopCount", L.F("{0} membros", group.Members.Count));
-                B.SetChip(top, "StatsTable/Fortification", unread > 0 ? $"<c={Green}>" + L.F("{0} nova(s)", unread) + "</c>" : L.F("{0} mensagem(ns)", messages.Count));
+                B.SetChip(top, "StatsTable/Fortification", unread > 0 ? $"<c={Green}>" + L.P(unread, "{0} nova", "{0} novas") + "</c>" : messages.Count == 0 ? L.T("Nenhuma mensagem") : L.P(messages.Count, "{0} mensagem", "{0} mensagens"));
                 B.SetVisible(top.Find("StatsTable/ExtensionsCount"), true);
                 B.SetChip(top, "StatsTable/ExtensionsCount", group.Creator == me ? L.T("Criado por você") : L.F("Criado por {0}", NationAndLeader(capture, group.Creator, inline: true)));
                 B.HideOutputs(top);
                 B.SetVisible(row.WriteButton.transform, true);
                 B.SetButtonText(row.WriteButton, L.T("Escrever"));
-                SetSecondButton(row.BlockButton, row.WriteButton, L.T("Sair"));
+                bool confirmingLeave = confirmLeaveGroup == group.Id && Time.unscaledTime < confirmLeaveGroupUntil;
+                SetSecondButton(row.BlockButton, row.WriteButton, confirmingLeave ? L.T("Confirmar") : L.T("Sair"));
                 FitTitle(top, row.WriteButton.GetComponent<UITransform>().Width + row.BlockButton.GetComponent<UITransform>().Width + 28f);
                 string members = string.Join(", ", group.Members.Select(m => m == me ? L.T("você") : NationAndLeader(capture, m, inline: true)));
                 B.Tip(top, "StatsTable/PopCount", L.T("Membros"), Escape(members));
                 B.Tip(row.WriteButton.transform, string.Empty, L.T("Escrever ao grupo"), L.T("Endereça o painel de escrever a este grupo: todos os membros leem."));
-                B.Tip(row.BlockButton.transform, string.Empty, L.T("Sair do grupo"), L.T("Você deixa de receber as mensagens. Grupo com menos de 2 membros acaba."));
+                B.Tip(row.BlockButton.transform, string.Empty, confirmingLeave ? L.T("Confirmar a saída") : L.T("Sair do grupo"),
+                    confirmingLeave ? L.T("Clique de novo para sair. Você deixa de receber as mensagens; grupo com menos de 2 membros acaba.")
+                    : L.T("Você deixa de receber as mensagens. Grupo com menos de 2 membros acaba. Pede confirmação."));
                 var lines = new List<string> { $"<c={Gold}>" + L.T("Membros:") + "</c> " + Escape(members) };
                 foreach (Letter message in messages.Take(6).Reverse())
                 {
                     string who = message.From == me ? L.T("Você") : NationAndLeader(capture, message.From);
                     string text = message.Text ?? string.Empty;
-                    lines.Add($"<c={Gold}>T{message.SentTurn} {Escape(who)}:</c> " + Escape(text.Length > 400 ? text.Substring(0, 400) + "…" : text));
+                    lines.Add($"<c={Gold}>" + L.F("Turno {0} · {1}:", message.SentTurn, Escape(who)) + "</c> " + Escape(text.Length > 400 ? text.Substring(0, 400) + "…" : text));
                 }
                 SetBody(row.Body, string.Join("\n", lines));
             }
+            // The way to start another group stays at the end of the list (before, it only existed while there was none).
+            ShowEmpty(L.T("Criar outro grupo"), L.T("Várias nações na mesma conversa"), L.T("Criar outro grupo"),
+                L.T("Abre a seção Nações com o painel de escrever em \"Mensagem de grupo\". Marque os membros com \"+ Grupo\", dê um nome no assunto e escreva a primeira mensagem."),
+                L.T("Criar um grupo"), () =>
+                {
+                    ComposeToGroup(-1);
+                    SelectSection(Section.Nations);
+                });
             // Viewing the group means reading its messages.
             if (NativeUIKit.IsReallyVisible(listTable))
             {
@@ -1769,9 +1796,23 @@ namespace CurrencyMod.Diplomacy.UI
                 write.LeftClick += b => ComposeToGroup(groupRows[index].Empire);
                 leave.LeftClick += b =>
                 {
+                    // Second click within 5 s confirms (same as leaving a bloc).
+                    int groupId = groupRows[index].Empire;
+                    if (confirmLeaveGroup != groupId || Time.unscaledTime >= confirmLeaveGroupUntil)
+                    {
+                        confirmLeaveGroup = groupId;
+                        confirmLeaveGroupUntil = Time.unscaledTime + 5f;
+                        nextRefresh = 0;
+                        return;
+                    }
+                    confirmLeaveGroup = -1;
                     AiModule module = AiModule.Instance;
-                    string why = module?.LeaveGroup(module.PlayerIndex, groupRows[index].Empire);
-                    SetFeedback(why == null ? L.T("Você saiu do grupo.") : why, why != null);
+                    string why = module?.LeaveGroup(module.PlayerIndex, groupId);
+                    // LeaveGroup's reasons are written for the AI nations; the player gets a plain text.
+                    string shown = why == null ? L.T("Você saiu do grupo.")
+                        : why.Contains("bloco") ? L.T("Este é o grupo do bloco: para sair dele, saia do bloco.")
+                        : L.T("Você não está neste grupo.");
+                    SetFeedback(shown, why != null);
                 };
                 groupRows.Add(row);
             }

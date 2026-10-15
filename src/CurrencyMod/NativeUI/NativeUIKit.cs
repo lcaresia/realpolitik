@@ -277,6 +277,38 @@ namespace CurrencyMod.NativeUI
             return UIInteractivityManager.Instance?.FocusedResponder is UITextFieldResponder;
         }
 
+        /// <summary>Whether a screen's shortcut was pressed and should toggle it: closing always works, opening only when <see cref="ShortcutAllowed"/>.</summary>
+        public static bool ShortcutPressed(BepInEx.Configuration.KeyboardShortcut key, bool isOpen)
+        {
+            return key.IsDown() && !TypingInField() && (isOpen || ShortcutAllowed());
+        }
+
+        /// <summary>
+        /// Whether a mod shortcut (F2, F3, F4, F6, F7, F8) may open its screen now: not typing in a field and no pause
+        /// menu or system screen (Settings, Realpolitik) on top, which the mod's screens would end up stacked on.
+        /// </summary>
+        public static bool ShortcutAllowed()
+        {
+            if (TypingInField())
+            {
+                return false;
+            }
+            try
+            {
+                var group = Amplitude.Mercury.UI.Windows.WindowsManager.Instance?.GetWindowsGroup<Amplitude.Mercury.UI.Windows.SystemFullscreenGroup>();
+                if (group?.windows != null && group.windows.Any(w => w != null && w.Shown))
+                {
+                    return false;
+                }
+                var pause = Amplitude.Mercury.UI.Helpers.WindowsUtils.GetWindow<Amplitude.Mercury.UI.PauseMenuModalWindow>();
+                return pause == null || !pause.Shown;
+            }
+            catch (System.Exception)
+            {
+                return true;
+            }
+        }
+
         /// <summary>
         /// Releases a text field's focus when its window is hidden. While hidden, the field keeps capturing the keyboard
         /// (KeyboardOnly) and swallows ESC and the game's shortcuts until the next click.

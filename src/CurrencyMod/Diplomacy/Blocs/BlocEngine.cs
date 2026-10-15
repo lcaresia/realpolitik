@@ -70,7 +70,7 @@ namespace CurrencyMod.Diplomacy.Blocs
             int wait = CooldownLeft(world, founder, turn);
             if (wait > 0)
             {
-                return $"ainda faltam {wait} turnos da espera depois de sair de um bloco";
+                return WaitProblem(wait);
             }
             if (world.Blocs.Any(b => string.Equals(b.Name, name, StringComparison.OrdinalIgnoreCase)))
             {
@@ -79,11 +79,12 @@ namespace CurrencyMod.Diplomacy.Blocs
             List<int> guests = (invitees ?? Enumerable.Empty<int>()).Where(e => e != founder).Distinct().ToList();
             if (guests.Count < Bloc.MinMembers - 1)
             {
-                return $"convide pelo menos {Bloc.MinMembers - 1} nações (o bloco nasce com {Bloc.MinMembers})";
+                // Counts in the text: already translated here (the caller's L.T leaves an unknown text as it is).
+                return L.F("convide pelo menos {0} nações (o bloco nasce com {1})", Bloc.MinMembers - 1, Bloc.MinMembers);
             }
             if (guests.Count > Bloc.MaxMembers - 1)
             {
-                return $"no máximo {Bloc.MaxMembers - 1} convites";
+                return L.F("no máximo {0} convites", Bloc.MaxMembers - 1);
             }
             bloc = new Bloc
             {
@@ -103,6 +104,8 @@ namespace CurrencyMod.Diplomacy.Blocs
             world.Blocs.Add(bloc);
             return null;
         }
+
+        private static string WaitProblem(int wait) => L.P(wait, "ainda falta {0} turno da espera depois de sair de um bloco", "ainda faltam {0} turnos da espera depois de sair de um bloco");
 
         /// <summary>Accepts or declines an invite. On accepting, drops the other invites; the bloc forms with 3 members.</summary>
         internal static string Respond(AiWorld world, int empire, Bloc bloc, bool accept, int turn)
@@ -126,7 +129,7 @@ namespace CurrencyMod.Diplomacy.Blocs
             if (wait > 0)
             {
                 bloc.Invites.Add(invite);
-                return $"ainda faltam {wait} turnos da espera depois de sair de um bloco";
+                return WaitProblem(wait);
             }
             if (bloc.Members.Count >= Bloc.MaxMembers)
             {

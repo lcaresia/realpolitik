@@ -31,6 +31,8 @@ namespace CurrencyMod.Diplomacy.Blocs
         public const int TermTurns = 20;
         /// <summary>Waiting turns after leaving (or being expelled) before joining another bloc.</summary>
         public const int LeaveCooldown = 10;
+        /// <summary>Turns an accusation counts against a member (and stays listed in the book).</summary>
+        public const int AccusationTurns = 30;
 
         public int Id;
         public string Name;
@@ -98,7 +100,7 @@ namespace CurrencyMod.Diplomacy.Blocs
             + Resolutions.Count(r => r.Author == member && r.Status == BlocResolution.InForceStatus);
 
         /// <summary>Accusations against a member in the last <paramref name="turns"/> turns.</summary>
-        public int AccusedCount(int member, int turn, int turns = 30) => Accusations.Count(a => a.Accused == member && turn - a.Turn <= turns);
+        public int AccusedCount(int member, int turn, int turns = AccusationTurns) => Accusations.Count(a => a.Accused == member && turn - a.Turn <= turns);
 
         public void Log(int turn, string kind, int actor = -1, int target = -1, string arg = null)
         {

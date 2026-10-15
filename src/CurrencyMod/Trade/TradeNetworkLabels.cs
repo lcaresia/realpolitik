@@ -60,7 +60,7 @@ namespace CurrencyMod
                     Level = hub.Level,
                     Paid = mine,
                     Text = mine ? TradeNetwork.LevelName(hub.Level) : new string('◆', Math.Max(1, hub.Level)),
-                    Subtitle = mine ? L.F("{0} · {1} rotas", hub.Name, hub.Routes) : null,
+                    Subtitle = mine ? L.P(hub.Routes, "{1} · {0} rota", "{1} · {0} rotas", hub.Name) : null,
                     Detail = HubDetail(hub, mine),
                 });
             }
@@ -119,8 +119,9 @@ namespace CurrencyMod
             {
                 $"{hub.Name} · {TradeNetwork.LevelName(hub.Level)}",
                 hub.GrandRoutes > 0
-                    ? L.F("{0} rotas passam por aqui, {1} delas grandes rotas.", hub.Routes, hub.GrandRoutes)
-                    : L.F("{0} rotas passam por aqui.", hub.Routes),
+                    ? (hub.Routes == 1 ? L.T("1 rota passa por aqui: é uma grande rota.")
+                        : L.P(hub.GrandRoutes, "{1} rotas passam por aqui, {0} delas grande rota.", "{1} rotas passam por aqui, {0} delas grandes rotas.", hub.Routes))
+                    : L.P(hub.Routes, "{0} rota passa por aqui.", "{0} rotas passam por aqui."),
             };
             var gains = new List<string> { L.F("+{0} dinheiro", Format.Money(effects.Money)) };
             if (effects.GrowthPercent > 0)

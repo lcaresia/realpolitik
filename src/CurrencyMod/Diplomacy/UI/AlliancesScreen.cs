@@ -88,6 +88,9 @@ namespace CurrencyMod.Diplomacy.UI
         private string feedback;
         private bool feedbackIsError;
         private float confirmLeaveUntil;
+        /// <summary>Button armed by a first click (accusations); a second click before the deadline acts.</summary>
+        private string confirmKey;
+        private float confirmKeyUntil;
 
         internal static bool IsOpen => Instance != null && Instance.Shown;
 
@@ -458,8 +461,8 @@ namespace CurrencyMod.Diplomacy.UI
             if (view.Mine == null)
             {
                 int invites = BlocEngine.InvitesFor(view.World, view.Me).Count();
-                return L.F("Turno {0}. Você não está em nenhum bloco · {1} bloco(s) no mundo", view.Turn, blocs)
-                    + (invites > 0 ? " · " + L.F("{0} convite(s) para você", invites) : string.Empty) + ".";
+                return L.P(blocs, "Turno {1}. Você não está em nenhum bloco · {0} bloco no mundo", "Turno {1}. Você não está em nenhum bloco · {0} blocos no mundo", view.Turn)
+                    + (invites > 0 ? " · " + L.P(invites, "{0} convite para você", "{0} convites para você") : string.Empty) + ".";
             }
             return L.F("Turno {0}. {1} · {2} membros · presidente: {3}", view.Turn, Esc(view.Mine.Name), view.Mine.Members.Count, Who(view, view.Mine.President)) + ".";
         }
@@ -474,7 +477,7 @@ namespace CurrencyMod.Diplomacy.UI
                 sectionTitleLabel.Text = L.T("Meu bloco");
                 int wait = BlocEngine.CooldownLeft(view.World, view.Me, view.Turn);
                 SetRowCount(rows, listTable, cardSample, 5);
-                Notice(rows[0], L.T("Você não está em nenhum bloco"), wait > 0 ? $"<c={Red}>" + L.F("Espera: {0} turnos", wait) + "</c>" : L.T("Funde um à direita"),
+                Notice(rows[0], L.T("Você não está em nenhum bloco"), wait > 0 ? $"<c={Red}>" + L.P(wait, "Espera: {0} turno", "Espera: {0} turnos") + "</c>" : L.T("Funde um à direita"),
                     L.T("Um bloco é uma aliança de várias nações (como a OTAN ou o BRICS). Funde o seu à direita, com um nome e pelo menos 2 convidados, ou aceite um convite na seção Convites. Cada nação fica em um bloco só."));
                 FillBenefits(view, null, 1);
                 return;
@@ -499,10 +502,10 @@ namespace CurrencyMod.Diplomacy.UI
                 L.T("Formação"), L.F("O bloco nasce com {0} membros. Convites valem {1} turnos.", Bloc.MinMembers, Bloc.InviteTurns));
             Chip(top, 1, L.F("Presidente: {0}", Short(view, bloc.President)), L.T("Presidente"),
                 L.F("Só o presidente põe pautas em votação. Mandato de {0} turnos; no fim há eleição, com 1 voto por membro (empate mantém o atual).", Bloc.TermTurns));
-            Chip(top, 2, bloc.ElectionOpened >= 0 ? $"<c={Gold}>" + L.T("Eleição aberta") + "</c>" : L.F("Mandato: {0} turno(s)", Math.Max(0, bloc.TermEnds - view.Turn)),
+            Chip(top, 2, bloc.ElectionOpened >= 0 ? $"<c={Gold}>" + L.T("Eleição aberta") + "</c>" : L.P(TurnsLeft(bloc.TermEnds - view.Turn), "Mandato: {0} turno", "Mandato: {0} turnos"),
                 L.T("Mandato"), L.F("O mandato atual vai até o turno {0}.", bloc.TermEnds));
             int open = bloc.OpenMotions.Count();
-            Chip(top, 3, open > 0 ? L.F("{0} pauta(s) em votação", open) : null, L.T("Pautas"), L.T("Veja e vote na seção Pautas e eleição."));
+            Chip(top, 3, open > 0 ? L.P(open, "{0} pauta em votação", "{0} pautas em votação") : null, L.T("Pautas"), L.T("Veja e vote na seção Pautas e eleição."));
             SetButtons(row, bloc.GroupId >= 0 ? L.T("Conversa do bloco") : null, () => OpenGroup(bloc), null, null);
             B.Tip(row.Button.transform, string.Empty, L.T("Conversa do bloco"), L.T("Abre o grupo do bloco no Correio: todos os membros leem cada mensagem."));
             var lines = new List<string>
@@ -530,13 +533,14 @@ namespace CurrencyMod.Diplomacy.UI
             Title(trade, L.T("Comércio interno"));
             BlocTrade.LastRefund.TryGetValue(view.Me, out double refund);
             int routes = on ? view.Capture.Trades.Count(t => bloc.Has(t.Buyer) && bloc.Has(t.Seller) && (t.Buyer == view.Me || t.Seller == view.Me)) : 0;
-            Chip(top, 0, state, L.T("Comércio interno"), L.T("Entre membros não há pedágio nem bloqueio, e a manutenção das rotas sai 25% mais barata."));
-            Chip(top, 1, on ? L.F("{0} rota(s) com membros", routes) : null, L.T("Rotas"), L.T("Rotas comerciais suas com outros membros do bloco."));
+            int discount = (int)Math.Round(BlocTrade.UpkeepDiscount * 100);
+            Chip(top, 0, state, L.T("Comércio interno"), L.F("Entre membros não há pedágio nem bloqueio, e a manutenção das rotas sai {0}% mais barata.", discount));
+            Chip(top, 1, on ? L.P(routes, "{0} rota com membros", "{0} rotas com membros") : null, L.T("Rotas"), L.T("Rotas comerciais suas com outros membros do bloco."));
             Chip(top, 2, on ? L.F("Manutenção devolvida: {0}", refund.ToString("0.#", L.Culture)) : null, L.T("Manutenção"),
-                L.T("Quanto você recebeu de volta no último turno: 25% da manutenção que pagou nas rotas com membros."));
+                L.F("Quanto você recebeu de volta no último turno: {0}% da manutenção que pagou nas rotas com membros.", discount));
             Chip(top, 3, null, null, null);
             SetButtons(trade, null, null, null, null);
-            Body(trade, L.T("Sem pedágio nem bloqueio entre membros (o posto deixa passar sozinho) e 25% de desconto na manutenção das rotas entre vocês."));
+            Body(trade, L.F("Sem pedágio nem bloqueio entre membros (o posto deixa passar sozinho) e {0}% de desconto na manutenção das rotas entre vocês.", discount));
 
             // Mutual defense.
             Row defense = rows[first + 1];
@@ -544,7 +548,7 @@ namespace CurrencyMod.Diplomacy.UI
             Title(defense, L.T("Defesa mútua"));
             int calls = on ? bloc.History.Count(e => e.Kind == "defesa") : 0;
             Chip(top, 0, state, L.T("Defesa mútua"), L.T("Quem é de fora e declara guerra a um membro dá aos outros membros (em paz com ele) a reclamação \"Em guerra com aliado\": um motivo de guerra. Ninguém é obrigado a lutar."));
-            Chip(top, 1, on ? L.F("Acionada {0} vez(es)", calls) : null, L.T("Acionamentos"), L.T("Quantas vezes alguém de fora declarou guerra a um membro."));
+            Chip(top, 1, on ? L.P(calls, "Acionada {0} vez", "Acionada {0} vezes") : null, L.T("Acionamentos"), L.T("Quantas vezes alguém de fora declarou guerra a um membro."));
             Chip(top, 2, null, null, null);
             Chip(top, 3, null, null, null);
             SetButtons(defense, null, null, null, null);
@@ -558,13 +562,13 @@ namespace CurrencyMod.Diplomacy.UI
             top = Top(resolutions);
             Title(resolutions, L.T("Resoluções em vigor"));
             List<BlocResolution> inForce = on ? bloc.InForce.ToList() : new List<BlocResolution>();
-            Chip(top, 0, state, L.T("Resoluções"), L.F("Pauta aprovada vira resolução por {0} turnos e obriga todos os membros, inclusive quem votou contra. Depois vence e precisa ser proposta de novo.", Bloc.ResolutionTurns));
+            Chip(top, 0, state, L.T("Resoluções"), L.F("Pauta aprovada vira resolução por {0} turnos e obriga todos os membros, inclusive quem votou contra. Depois expira e precisa ser proposta de novo.", Bloc.ResolutionTurns));
             Chip(top, 1, on ? L.F("{0} em vigor", inForce.Count) : null, L.T("Em vigor"), L.T("Veja o texto e as acusações na seção Pautas e eleição."));
             Chip(top, 2, null, null, null);
             Chip(top, 3, null, null, null);
             SetButtons(resolutions, null, null, null, null);
             Body(resolutions, inForce.Count > 0
-                ? string.Join("\n", inForce.Select(r => L.F("{0} «{1}», até o turno {2}", r.Handle, Esc(r.Title), r.Expires)))
+                ? string.Join("\n", inForce.Select(r => L.F("{0} «{1}», até o turno {2}", ResolutionName(r), Esc(r.Title), r.Expires)))
                 : L.T("Nenhuma resolução em vigor. Proponha uma pauta à direita: o texto é livre."));
 
             // The bloc's book of accusations.
@@ -572,22 +576,22 @@ namespace CurrencyMod.Diplomacy.UI
             top = Top(book);
             Title(book, L.T("Livro do bloco"));
             int againstMe = on ? bloc.AccusedCount(view.Me, view.Turn) : 0;
-            List<BlocAccusation> recent = on ? bloc.Accusations.Where(a => view.Turn - a.Turn <= 15).OrderByDescending(a => a.Turn).Take(4).ToList() : new List<BlocAccusation>();
+            List<BlocAccusation> recent = on ? bloc.Accusations.Where(a => view.Turn - a.Turn <= Bloc.AccusationTurns).OrderByDescending(a => a.Turn).Take(4).ToList() : new List<BlocAccusation>();
             Chip(top, 0, state, L.T("Livro do bloco"), L.T("Ninguém fiscaliza pelos membros: o mod não interpreta nem aplica as resoluções. Quem acha que outro membro descumpriu registra a acusação aqui, com a evidência que viu; todos leem e cada um decide se acredita."));
-            Chip(top, 1, on ? (againstMe > 0 ? $"<c={Red}>" + L.F("Contra você: {0}", againstMe) + "</c>" : L.T("Nada contra você")) : null, L.T("Contra você"), L.T("Acusações contra você nos últimos 30 turnos."));
+            Chip(top, 1, on ? (againstMe > 0 ? $"<c={Red}>" + L.F("Contra você: {0}", againstMe) + "</c>" : L.T("Nada contra você")) : null, L.T("Contra você"), L.F("Acusações contra você nos últimos {0} turnos.", Bloc.AccusationTurns));
             Chip(top, 2, null, null, null);
             Chip(top, 3, null, null, null);
             SetButtons(book, null, null, null, null);
             Body(book, recent.Count > 0
                 ? string.Join("\n", recent.Select(a => AccusationUi(view, bloc, a)))
-                : L.T("Nenhuma acusação. Para acusar um membro, escreva a evidência no campo à direita (comece com R1, R2… para citar a resolução) e use o botão Acusar no cartão dele."));
+                : L.T("Nenhuma acusação. Para acusar um membro, escreva a evidência no campo à direita (comece com o número da resolução, por exemplo: «Resolução 2: manteve a rota aberta») e use o botão Acusar no cartão desse membro."));
         }
 
         private string AccusationUi(View view, Bloc bloc, BlocAccusation accusation)
         {
             BlocResolution resolution = bloc.ResolutionBy(accusation.Resolution);
             return L.F("Turno {0}: {1} acusa {2}{3}: {4}", accusation.Turn, Who(view, accusation.Accuser), Who(view, accusation.Accused),
-                resolution != null ? " (" + resolution.Handle + ")" : string.Empty, Esc(accusation.Evidence));
+                resolution != null ? " (" + ResolutionName(resolution) + ")" : string.Empty, Esc(accusation.Evidence));
         }
 
         private void FillMember(View view, Row row, Bloc bloc, int member)
@@ -600,7 +604,7 @@ namespace CurrencyMod.Diplomacy.UI
                 // The term's end on the president's own card (melhorias-jogando item 27).
                 int left = bloc.TermEnds - view.Turn;
                 string term = bloc.ElectionOpened >= 0 ? L.T("eleição aberta")
-                    : left <= 3 ? L.F("eleição em {0} turno(s)", Math.Max(0, left))
+                    : left <= 3 ? L.P(TurnsLeft(left), "eleição em {0} turno", "eleição em {0} turnos")
                     : L.F("até o turno {0}", bloc.TermEnds);
                 Chip(top, 0, $"<c={Gold}>" + L.T("Presidente") + " · " + term + "</c>", L.T("Mandato"),
                     L.F("O presidente põe pautas em votação; os outros sugerem. Mandato de {0} turnos, até o turno {1}; no fim há eleição, com 1 voto por membro (empate mantém o atual).", Bloc.TermTurns, bloc.TermEnds));
@@ -609,18 +613,19 @@ namespace CurrencyMod.Diplomacy.UI
             {
                 Chip(top, 0, member == bloc.Founder ? L.T("Fundador") : L.T("Membro"), L.T("Papel"), L.T("O presidente põe pautas em votação; os outros sugerem."));
             }
-            Chip(top, 1, empire != null ? L.F("Fama {0}", Math.Round(empire.Fame)) : null, L.T("Fama"), L.F("{0}º lugar em fama.", empire?.FameRank ?? 0));
+            Chip(top, 1, empire != null ? L.F("Fama {0}", Math.Round(empire.Fame)) : null, L.T("Fama"), (empire?.FameRank ?? 0) > 0 ? L.F("{0}º lugar em fama.", empire.FameRank) : string.Empty);
             Chip(top, 2, empire != null ? L.F("Força {0}", Math.Round(empire.MilitaryStrength)) : null, L.T("Força militar"), L.F("{0} unidades.", empire?.UnitCount ?? 0));
-            Chip(top, 3, empire != null ? (empire.EraName ?? L.F("Era {0}", empire.EraIndex + 1)) : null, L.T("Era"), L.F("{0} cidade(s), {1} território(s).", empire?.Cities.Count ?? 0, empire?.TerritoryCount ?? 0));
-            SetButtons(row, member != view.Me && bloc.Formed ? L.T("Acusar") : null, () => Accuse(view, member),
+            Chip(top, 3, empire != null ? (empire.EraName ?? L.F("Era {0}", empire.EraIndex + 1)) : null, L.T("Era"), CitiesAndTerritories(empire));
+            string accuseKey = "bloc:" + member;
+            SetButtons(row, member != view.Me && bloc.Formed ? (Confirming(accuseKey) ? L.T("Confirmar") : L.T("Acusar")) : null, () => Accuse(view, member),
                 member != view.Me && bloc.Formed ? L.T("Expulsão") : null, () => ProposeExpulsion(view, member));
             if (member != view.Me && bloc.Formed)
             {
-                B.Tip(row.Second.transform, string.Empty, L.T("Expulsão"), L.T("Propõe a expulsão deste membro (o motivo vai no campo à direita). Passa com 2/3 dos votos; com maioria mas sem 2/3, o presidente decide. Aprovada, ele sai do bloco."));
+                B.Tip(row.Second.transform, string.Empty, L.T("Expulsão"), L.T("Propõe a expulsão deste membro (o motivo vai no campo à direita). Passa com 2/3 dos votos; com maioria mas sem 2/3, o presidente decide. Aprovada, o membro sai do bloco."));
             }
             if (member != view.Me && bloc.Formed)
             {
-                B.Tip(row.Button.transform, string.Empty, L.T("Acusar"), L.T("Registra no livro do bloco que este membro descumpriu. Escreva a evidência no campo à direita; comece com R1, R2… para citar a resolução. É só a sua palavra: os outros decidem se acreditam."));
+                B.Tip(row.Button.transform, string.Empty, L.T("Acusar"), L.T("Registra no livro do bloco que este membro descumpriu. Escreva a evidência no campo à direita; comece com o número da resolução (ex.: «Resolução 2: manteve a rota aberta»). É só a sua palavra: os outros decidem se acreditam. Pede confirmação."));
             }
             CapturedRelation relation = view.Capture.Empire(view.Me)?.RelationWith(member);
             var lines = new List<string>();
@@ -636,7 +641,7 @@ namespace CurrencyMod.Diplomacy.UI
             int accused = bloc.AccusedCount(member, view.Turn);
             if (accused > 0)
             {
-                lines.Add($"<c={Red}>" + L.F("Acusado {0} vez(es) no livro do bloco (30 turnos)", accused) + "</c>");
+                lines.Add($"<c={Red}>" + L.P(accused, "Acusado {0} vez no livro do bloco (30 turnos)", "Acusado {0} vezes no livro do bloco (30 turnos)") + "</c>");
             }
             Body(row, string.Join("\n", lines));
         }
@@ -659,7 +664,8 @@ namespace CurrencyMod.Diplomacy.UI
             var resolutions = bloc.InForce.ToList();
             bool election = bloc.ElectionOpened >= 0;
             int count = (election ? 1 + bloc.Members.Count : 0) + open.Count + suggestions.Count + resolutions.Count + closed.Count;
-            sectionTitleLabel.Text = L.F("Pautas · {0} resolução(ões) em vigor · {1} em votação · {2} sugestão(ões)", resolutions.Count, open.Count, suggestions.Count);
+            sectionTitleLabel.Text = L.T("Pautas") + " · " + L.P(resolutions.Count, "{0} resolução em vigor", "{0} resoluções em vigor") + " · " + L.F("{0} em votação", open.Count)
+                + " · " + L.P(suggestions.Count, "{0} sugestão", "{0} sugestões");
             if (count == 0)
             {
                 SetRowCount(rows, listTable, cardSample, 1);
@@ -713,7 +719,8 @@ namespace CurrencyMod.Diplomacy.UI
             var closed = forum.Motions.Where(m => m.ClosedTurn >= 0).OrderByDescending(m => m.ClosedTurn).ThenByDescending(m => m.Id).Take(6).ToList();
             var resolutions = forum.InForce.ToList();
             int count = open.Count + suggestions.Count + resolutions.Count + closed.Count;
-            sectionTitleLabel.Text = L.F("Congresso · {0} resolução(ões) · {1} em votação · {2} sugestão(ões)", resolutions.Count, open.Count, suggestions.Count);
+            sectionTitleLabel.Text = L.T("Congresso") + " · " + L.P(resolutions.Count, "{0} resolução", "{0} resoluções") + " · " + L.F("{0} em votação", open.Count)
+                + " · " + L.P(suggestions.Count, "{0} sugestão", "{0} sugestões");
             if (count == 0)
             {
                 SetRowCount(rows, listTable, cardSample, 1);
@@ -761,17 +768,17 @@ namespace CurrencyMod.Diplomacy.UI
             Title(info, L.T("Pauta livre no Congresso"));
             Chip(top, 0, president ? $"<c={Gold}>" + L.T("Vai direto à votação") + "</c>" : L.T("Vira sugestão"), L.T("Como funciona"),
                 president ? L.F("Você preside: a pauta entra em votação na hora, por {0} turnos.", Bloc.VoteTurns)
-                    : L.F("Quem preside decide se põe a sua sugestão em votação; sem decisão em {0} turnos, ela vence.", Bloc.SuggestionTurns));
+                    : L.F("Quem preside decide se põe a sua sugestão em votação; sem decisão em {0} turnos, ela expira.", Bloc.SuggestionTurns));
             Chip(top, 1, used >= Bloc.MotionSlots ? $"<c={Red}>" + L.F("Pautas: {0}/{1}", used, Bloc.MotionSlots) + "</c>" : L.F("Pautas: {0}/{1}", used, Bloc.MotionSlots),
                 L.T("Pautas ativas"), L.F("Cada nação tem até {0} pautas ativas no Congresso: sugeridas, em votação ou resoluções suas em vigor.", Bloc.MotionSlots));
-            Chip(top, 2, L.F("Preside: {0}", Short(view, forum.President)), L.T("Presidente"), L.T("Preside quem preside a sessão de leis do Congresso: põe sugestões em votação e desempata, sem votar."));
+            Chip(top, 2, L.F("Preside: {0}", Short(view, forum.President)), L.T("Presidente"), L.T("Quem preside a sessão de leis do Congresso põe sugestões em votação e desempata, sem votar."));
             Chip(top, 3, null, null, null);
             SetButtons(info, null, null, null, null);
-            Body(info, L.F("Escreva o que o mundo deve fazer (até {0} letras; a primeira frase vira o título). Aprovada, vale {1} turnos e só fica registrada: o mod não aplica nada. Para acusar alguém, comece o texto com o código da nação (e da resolução, se houver): \"E3 R2 manteve a rota aberta\".", Bloc.MotionTextMax, Bloc.ResolutionTurns));
+            Body(info, L.F("Escreva o que o mundo deve fazer (até {0} letras; a primeira frase vira o título). Aprovada, vale {1} turnos e só fica registrada: o mod não aplica nada. Para acusar alguém, comece o texto com o nome da nação (e o número da resolução, se houver): \"Calderra Resolução 2 manteve a rota aberta\".", Bloc.MotionTextMax, Bloc.ResolutionTurns));
             order.Add(info.Card);
 
             ShowField(L.T("Ex.: Proteção da Rota da Seda. Nenhuma nação cobra pedágio nas caravanas que passam por Hàojīng."),
-                L.T("Texto"), L.F("Até {0} letras. Cite nações pelo nome ou pelo código (E14).", Bloc.MotionTextMax), Bloc.MotionTextMax);
+                L.T("Texto"), L.F("Até {0} letras. Cite as nações pelo nome.", Bloc.MotionTextMax), Bloc.MotionTextMax);
             order.Add(fieldItem);
 
             Row send = sideRows[1];
@@ -781,7 +788,8 @@ namespace CurrencyMod.Diplomacy.UI
             Chip(top, 1, null, null, null);
             Chip(top, 2, null, null, null);
             Chip(top, 3, null, null, null);
-            SetButtons(send, president ? L.T("Pôr em votação") : L.T("Sugerir"), () => ProposeToCongress(view, field?.Text), L.T("Acusar"), () => AccuseAtCongress(view));
+            SetButtons(send, president ? L.T("Pôr em votação") : L.T("Sugerir"), () => ProposeToCongress(view, field?.Text),
+                Confirming(CongressAccuseKey) ? L.T("Confirmar") : L.T("Acusar"), () => AccuseAtCongress(view));
             Body(send, string.Empty);
             B.SetVisible(send.Body, false);
             order.Add(send.Card);
@@ -796,19 +804,48 @@ namespace CurrencyMod.Diplomacy.UI
             }
         }
 
+        private const string CongressAccuseKey = "congress";
+
         /// <summary>"E3 R2 evidence" in the field: an accusation in the Congress's book.</summary>
         private void AccuseAtCongress(View view)
         {
             string text = (field?.Text ?? string.Empty).Trim();
-            System.Text.RegularExpressions.Match match = System.Text.RegularExpressions.Regex.Match(text, @"^[Ee](\d+)[\s:.,-]*(?:[Rr](\d+)[\s:.,-]*)?");
-            if (!match.Success)
+            // The player never sees the E# codes: the text may start with the nation's name, its leader or its people
+            // ("Calderra Resolução 2 manteve a rota aberta"); the code still works.
+            int accused = -1;
+            int skip = 0;
+            System.Text.RegularExpressions.Match code = System.Text.RegularExpressions.Regex.Match(text, @"^[Ee](\d+)\b");
+            if (code.Success)
             {
-                Act(L.T("Comece com o código da nação acusada (ex.: E3 R2 manteve a rota aberta)."), null);
+                accused = int.Parse(code.Groups[1].Value);
+                skip = code.Length;
+            }
+            else
+            {
+                foreach (CapturedEmpire empire in view.Capture.Empires.Where(e => e != null && e.Index != view.Me))
+                {
+                    foreach (string name in new[] { empire.NationName, empire.Leader, empire.Culture })
+                    {
+                        if (!string.IsNullOrWhiteSpace(name) && name.Length > skip && text.StartsWith(name, StringComparison.OrdinalIgnoreCase))
+                        {
+                            accused = empire.Index;
+                            skip = name.Length;
+                        }
+                    }
+                }
+            }
+            if (accused < 0)
+            {
+                Act(L.T("Comece com o nome da nação acusada (ex.: Calderra Resolução 2 manteve a rota aberta)."), null);
                 return;
             }
-            int accused = int.Parse(match.Groups[1].Value);
-            int resolution = match.Groups[2].Success ? int.Parse(match.Groups[2].Value) : -1;
-            if (Act(BlocEngine.Accuse(view.World, view.Me, accused, resolution, text.Substring(match.Length), view.Turn, congress: true), L.T("Acusação registrada no livro do Congresso.")))
+            if (!Confirmed(CongressAccuseKey))
+            {
+                return;
+            }
+            string rest = text.Substring(skip).TrimStart(' ', ':', '.', ',', '-');
+            int resolution = ParseResolution(ref rest);
+            if (Act(BlocEngine.Accuse(view.World, view.Me, accused, resolution, rest, view.Turn, congress: true), L.T("Acusação registrada no livro do Congresso.")))
             {
                 field?.ReplaceText(string.Empty);
             }
@@ -832,7 +869,7 @@ namespace CurrencyMod.Diplomacy.UI
             int votes = bloc.ElectionVotes.Count(v => v.Value == candidate);
             bool chosen = bloc.ElectionVotes.TryGetValue(view.Me, out int mine) && mine == candidate;
             Title(row, $"<c={Gold}>›</c> " + Esc(MailScreen.NationAndLeader(view.Capture, candidate)) + (candidate == view.Me ? " " + L.T("(você)") : string.Empty));
-            Chip(top, 0, L.F("{0} voto(s)", votes), L.T("Votos"), L.T("Votos recebidos até agora."));
+            Chip(top, 0, L.P(votes, "{0} voto", "{0} votos"), L.T("Votos"), L.T("Votos recebidos até agora."));
             Chip(top, 1, candidate == bloc.President ? L.T("Presidente atual") : null, L.T("Presidente atual"), L.T("Fica no cargo se houver empate."));
             Chip(top, 2, chosen ? $"<c={Green}>" + L.T("Seu voto") + "</c>" : null, L.T("Seu voto"), string.Empty);
             Chip(top, 3, null, null, null);
@@ -885,7 +922,7 @@ namespace CurrencyMod.Diplomacy.UI
             bool president = bloc.President == view.Me;
             Title(row, L.F("Sugestão: {0}", MotionTitle(view, motion)));
             Chip(top, 0, L.F("De {0}", Short(view, motion.Author)), L.T("Autor"), string.Empty);
-            Chip(top, 1, L.F("Vence no turno {0}", motion.SuggestedTurn + Bloc.SuggestionTurns), L.T("Prazo"), L.F("Sem decisão do presidente em {0} turnos, a sugestão vence.", Bloc.SuggestionTurns));
+            Chip(top, 1, L.F("Expira no turno {0}", motion.SuggestedTurn + Bloc.SuggestionTurns), L.T("Prazo"), L.F("Sem decisão do presidente em {0} turnos, a sugestão expira.", Bloc.SuggestionTurns));
             Chip(top, 2, president ? $"<c={Gold}>" + L.T("Você decide") + "</c>" : L.T("Aguarda o presidente"), L.T("Sugestão"), L.T("Só o presidente põe sugestões em votação."));
             Chip(top, 3, null, null, null);
             if (president)
@@ -918,12 +955,12 @@ namespace CurrencyMod.Diplomacy.UI
         private void FillResolution(View view, Row row, Bloc bloc, BlocResolution resolution)
         {
             Transform top = Top(row);
-            Title(row, $"<c={Green}>{resolution.Handle}</c> " + Esc(resolution.Title));
-            Chip(top, 0, L.F("Até o turno {0}", resolution.Expires), L.T("Vigência"), L.F("Vale {0} turnos; depois vence e precisa ser proposta de novo.", Bloc.ResolutionTurns));
+            Title(row, $"<c={Green}>{ResolutionName(resolution)}</c> " + Esc(resolution.Title));
+            Chip(top, 0, L.F("Até o turno {0}", resolution.Expires), L.T("Vigência"), L.F("Vale {0} turnos; depois expira e precisa ser proposta de novo.", Bloc.ResolutionTurns));
             Chip(top, 1, L.F("Sim {0} · Não {1}", resolution.Yes, resolution.No), L.T("Placar"), L.F("Aprovada no turno {0}, proposta por {1}.", resolution.PassedTurn, Short(view, resolution.Author)));
             List<BlocAccusation> accusations = bloc.Accusations.Where(a => a.Resolution == resolution.Id).OrderByDescending(a => a.Turn).ToList();
             int mine = accusations.Count(a => a.Accused == view.Me);
-            Chip(top, 2, accusations.Count == 0 ? null : mine > 0 ? $"<c={Red}>" + L.F("{0} acusação(ões), {1} contra você", accusations.Count, mine) + "</c>" : L.F("{0} acusação(ões)", accusations.Count),
+            Chip(top, 2, accusations.Count == 0 ? null : mine > 0 ? $"<c={Red}>" + L.P(accusations.Count, "{0} acusação, {1} contra você", "{0} acusações, {1} contra você", mine) + "</c>" : L.P(accusations.Count, "{0} acusação", "{0} acusações"),
                 L.T("Livro do bloco"), L.T("Acusações registradas pelos membros sobre esta resolução. É a palavra de quem acusou, não um julgamento."));
             Chip(top, 3, null, null, null);
             SetButtons(row, null, null, null, null);
@@ -946,7 +983,7 @@ namespace CurrencyMod.Diplomacy.UI
         {
             if (motion.Kind == BlocMotion.FreeKind || motion.Kind == null)
             {
-                return Esc(motion.Title ?? string.Empty);
+                return Esc(LetterNames.NamesOnly(motion.Title ?? string.Empty));
             }
             switch (motion.Kind)
             {
@@ -985,7 +1022,7 @@ namespace CurrencyMod.Diplomacy.UI
         {
             var mine = BlocEngine.InvitesFor(view.World, view.Me).ToList();
             var sent = view.Mine?.Invites.ToList() ?? new List<BlocInvite>();
-            sectionTitleLabel.Text = L.F("Convites · {0} para você · {1} enviado(s)", mine.Count, sent.Count);
+            sectionTitleLabel.Text = L.P(sent.Count, "Convites · {1} para você · {0} enviado", "Convites · {1} para você · {0} enviados", mine.Count);
             if (mine.Count + sent.Count == 0)
             {
                 SetRowCount(rows, listTable, cardSample, 1);
@@ -1002,10 +1039,10 @@ namespace CurrencyMod.Diplomacy.UI
                 Transform top = Top(row);
                 Title(row, L.F("Convite: {0}", Esc(bloc.Name)));
                 Chip(top, 0, L.F("De {0}", Short(view, invite.From)), L.T("Quem convidou"), string.Empty);
-                Chip(top, 1, L.F("{0} membro(s)", bloc.Members.Count), L.T("Membros"), string.Join(", ", bloc.Members.Select(m => Who(view, m))));
-                Chip(top, 2, L.F("Vence no turno {0}", invite.Turn + Bloc.InviteTurns), L.T("Prazo"), L.T("Sem resposta, o convite vence."));
-                Chip(top, 3, view.Mine != null ? $"<c={Red}>" + L.T("Você já tem bloco") + "</c>" : wait > 0 ? $"<c={Red}>" + L.F("Espera: {0} turnos", wait) + "</c>" : null,
-                    L.T("Um bloco por nação"), L.T("Para aceitar, saia do seu bloco antes (e espere 10 turnos)."));
+                Chip(top, 1, L.P(bloc.Members.Count, "{0} membro", "{0} membros"), L.T("Membros"), string.Join(", ", bloc.Members.Select(m => Who(view, m))));
+                Chip(top, 2, L.F("Expira no turno {0}", invite.Turn + Bloc.InviteTurns), L.T("Prazo"), L.T("Sem resposta, o convite expira."));
+                Chip(top, 3, view.Mine != null ? $"<c={Red}>" + L.T("Você já tem bloco") + "</c>" : wait > 0 ? $"<c={Red}>" + L.P(wait, "Espera: {0} turno", "Espera: {0} turnos") + "</c>" : null,
+                    L.T("Um bloco por nação"), L.P(Bloc.LeaveCooldown, "Para aceitar, saia do seu bloco antes (e espere {0} turno).", "Para aceitar, saia do seu bloco antes (e espere {0} turnos)."));
                 SetButtons(row, L.T("Aceitar"), () => Act(BlocEngine.Respond(view.World, view.Me, bloc, true, view.Turn), L.F("Você entrou em {0}.", Esc(bloc.Name))),
                     L.T("Recusar"), () => Act(BlocEngine.Respond(view.World, view.Me, bloc, false, view.Turn), L.T("Convite recusado.")));
                 Body(row, L.F("Membros: {0}", string.Join(", ", bloc.Members.Select(m => Who(view, m))))
@@ -1017,7 +1054,7 @@ namespace CurrencyMod.Diplomacy.UI
                 Transform top = Top(row);
                 Title(row, L.F("Convite para {0}", Esc(MailScreen.NationAndLeader(view.Capture, invite.Empire, inline: true))));
                 Chip(top, 0, L.F("Turno {0}", invite.Turn), L.T("Enviado"), string.Empty);
-                Chip(top, 1, L.F("Vence no turno {0}", invite.Turn + Bloc.InviteTurns), L.T("Prazo"), string.Empty);
+                Chip(top, 1, L.F("Expira no turno {0}", invite.Turn + Bloc.InviteTurns), L.T("Prazo"), string.Empty);
                 Chip(top, 2, L.T("Aguardando resposta"), L.T("Situação"), string.Empty);
                 Chip(top, 3, null, null, null);
                 SetButtons(row, null, null, null, null);
@@ -1055,7 +1092,7 @@ namespace CurrencyMod.Diplomacy.UI
                 foreach (BlocResolution resolution in bloc.InForce)
                 {
                     bool aboutMe = (resolution.Text ?? string.Empty).Contains("E" + view.Me) || (resolution.Title ?? string.Empty).Contains("E" + view.Me);
-                    string text = L.F("{0} «{1}»", resolution.Handle, Esc(resolution.Title));
+                    string text = L.F("{0} «{1}»", ResolutionName(resolution), Esc(resolution.Title));
                     lines.Add(aboutMe && bloc != view.Mine ? $"<c={Red}>{text}</c>" : text);
                 }
                 Body(row, string.Join("\n", lines));
@@ -1075,14 +1112,14 @@ namespace CurrencyMod.Diplomacy.UI
                 return;
             }
             var turns = bloc.History.GroupBy(e => e.Turn).OrderByDescending(g => g.Key).ToList();
-            sectionTitleLabel.Text = L.F("Histórico · {0} acontecimento(s)", bloc.History.Count);
+            sectionTitleLabel.Text = L.P(bloc.History.Count, "Histórico · {0} acontecimento", "Histórico · {0} acontecimentos");
             SetRowCount(rows, listTable, cardSample, turns.Count);
             for (int i = 0; i < turns.Count; i++)
             {
                 Row row = rows[i];
                 Transform top = Top(row);
                 Title(row, L.F("Turno {0}", turns[i].Key));
-                Chip(top, 0, L.F("{0} acontecimento(s)", turns[i].Count()), L.T("Acontecimentos"), string.Empty);
+                Chip(top, 0, L.P(turns[i].Count(), "{0} acontecimento", "{0} acontecimentos"), L.T("Acontecimentos"), string.Empty);
                 Chip(top, 1, null, null, null);
                 Chip(top, 2, null, null, null);
                 Chip(top, 3, null, null, null);
@@ -1098,14 +1135,23 @@ namespace CurrencyMod.Diplomacy.UI
                 case "fundou": return L.F("{0} fundou o bloco.", Who(view, ev.Actor));
                 case "entrou": return L.F("{0} entrou.", Who(view, ev.Actor));
                 case "saiu": return L.F("{0} saiu.", Who(view, ev.Actor));
-                case "expulso": return $"<c={Red}>" + L.F("{0} foi expulso.", Who(view, ev.Actor)) + "</c>";
+                case "expulso": return $"<c={Red}>" + L.F("Expulsão: {0}.", Who(view, ev.Actor)) + "</c>";
                 case "recusou": return L.F("{0} recusou o convite.", Who(view, ev.Actor));
-                case "convidou": return L.F("{0} foi convidado.", Who(view, ev.Target));
-                case "convite_venceu": return L.F("O convite a {0} venceu.", Who(view, ev.Target));
+                case "convidou": return L.F("Convite enviado: {0}.", Who(view, ev.Target));
+                case "convite_venceu": return L.F("O convite a {0} expirou.", Who(view, ev.Target));
                 case "formado": return $"<c={Green}>" + L.T("O bloco se formou.") + "</c>";
                 case "falhou": return L.T("O bloco não se formou a tempo.");
                 case "desfeito": return $"<c={Red}>" + L.T("O bloco se desfez.") + "</c>";
-                case "presidente": return $"<c={Gold}>" + L.F("{0} é o presidente.", Who(view, ev.Actor)) + "</c>";
+                case "presidente":
+                    return $"<c={Gold}>" + (ev.Arg == "reeleito" ? L.F("Presidência: {0} (reeleição).", Who(view, ev.Actor))
+                        : ev.Arg == "eleito" ? L.F("Presidência: {0} (eleição).", Who(view, ev.Actor))
+                        : ev.Arg == "interino" ? L.F("Presidência: {0} (até a próxima eleição).", Who(view, ev.Actor))
+                        : L.F("Presidência: {0}.", Who(view, ev.Actor))) + "</c>";
+                // Kinds written by older versions (saves keep them): the line still says who did what.
+                case "descumpriu":
+                    return $"<c={Red}>" + (ev.Arg != null ? L.F("{0} descumpriu: {1}.", Who(view, ev.Actor), Esc(ev.Arg)) : L.F("{0} descumpriu o compromisso do bloco.", Who(view, ev.Actor))) + "</c>";
+                case "parecer":
+                    return ev.Arg != null ? L.F("{0} deu um parecer: {1}.", Who(view, ev.Actor), Esc(ev.Arg)) : L.F("{0} deu um parecer.", Who(view, ev.Actor));
                 case "eleicao": return L.T("Eleição de presidente aberta.");
                 case "pauta": return L.F("{0} pôs em votação: {1}.", Who(view, ev.Actor), KindUi(ev.Arg) + Target(view, ev));
                 case "sugeriu": return L.F("{0} sugeriu: {1}.", Who(view, ev.Actor), KindUi(ev.Arg) + Target(view, ev));
@@ -1113,14 +1159,16 @@ namespace CurrencyMod.Diplomacy.UI
                 case "aprovada": return $"<c={Green}>" + L.F("Aprovada: {0}.", KindUi(ev.Arg) + Target(view, ev)) + "</c>";
                 case "rejeitada": return $"<c={Red}>" + L.F("Rejeitada: {0}.", KindUi(ev.Arg) + Target(view, ev)) + "</c>";
                 case "renomeado": return L.F("O bloco mudou de nome (antes: {0}).", Esc(ev.Arg));
-                case "expirou": return L.F("A sugestão de {0} venceu sem decisão do presidente: {1}.", Who(view, ev.Actor), Esc(ev.Arg));
+                case "expirou": return L.F("A sugestão de {0} expirou sem decisão do presidente: {1}.", Who(view, ev.Actor), Esc(ev.Arg));
                 case "acusou": return $"<c={Red}>" + (ev.Arg != null ? L.F("{0} acusou {1} de descumprir: {2}.", Who(view, ev.Actor), Who(view, ev.Target), Esc(ev.Arg)) : L.F("{0} acusou {1} de descumprir o compromisso do bloco.", Who(view, ev.Actor), Who(view, ev.Target))) + "</c>";
                 case "revogada": return L.F("Resolução revogada: {0}.", Esc(ev.Arg));
-                case "resolucao_venceu": return L.F("Resolução venceu (10 turnos): {0}.", Esc(ev.Arg));
+                case "resolucao_venceu": return L.P(Bloc.ResolutionTurns, "Resolução expirou ({0} turno): {1}.", "Resolução expirou ({0} turnos): {1}.", Esc(ev.Arg));
                 case "desempate": return $"<c={Gold}>" + L.F("Empate em «{0}»: a decisão é do presidente.", Esc(ev.Arg)) + "</c>";
                 case "defesa": return $"<c={Red}>" + L.F("{0} declarou guerra a {1}; os membros em paz com o agressor ganharam um motivo de guerra.", Who(view, ev.Actor), Who(view, ev.Target)) + "</c>";
             }
-            return ev.Kind;
+            // Unknown kind: never a bare internal word; at least who and about what.
+            string about = ev.Arg != null ? Esc(ev.Arg) : Esc(ev.Kind ?? string.Empty);
+            return ev.Actor >= 0 ? L.F("{0}: {1}.", Who(view, ev.Actor), about) : about;
         }
 
         /// <summary>First visible letter in uppercase (skips the leading color tags).</summary>
@@ -1141,14 +1189,18 @@ namespace CurrencyMod.Diplomacy.UI
 
         private string Target(View view, BlocEvent ev) => ev.Target >= 0 ? " (" + Short(view, ev.Target) + ")" : string.Empty;
 
+        private static readonly HashSet<string> KnownKinds = new HashSet<string> { "tarifa", "fim_tarifa", "admitir", "expulsar", "congresso", "renomear", "dissolver" };
+
         /// <summary>Name of the agenda item type (the history stores "type" or "type:value").</summary>
         private static string KindUi(string kind)
         {
             string value = null;
-            if (kind != null && kind.Contains(":"))
+            // Only the known types carry ":value"; a free motion's title may have its own ':' and stays whole.
+            int colon = kind?.IndexOf(':') ?? -1;
+            if (colon > 0 && KnownKinds.Contains(kind.Substring(0, colon)))
             {
-                value = kind.Substring(kind.IndexOf(':') + 1);
-                kind = kind.Substring(0, kind.IndexOf(':'));
+                value = kind.Substring(colon + 1);
+                kind = kind.Substring(0, colon);
             }
             string name;
             switch (kind)
@@ -1160,7 +1212,7 @@ namespace CurrencyMod.Diplomacy.UI
                 case "congresso": name = L.T("votar junto no Congresso"); break;
                 case "renomear": name = value != null ? L.F("renomear para \"{0}\"", Esc(value)) : L.T("renomear"); break;
                 case "dissolver": name = L.T("desfazer o bloco"); break;
-                default: name = kind ?? "?"; break;
+                default: name = Esc(kind ?? "?"); break;
             }
             return name;
         }
@@ -1235,8 +1287,8 @@ namespace CurrencyMod.Diplomacy.UI
             Row head = sideRows[0];
             Transform top = Top(head);
             Title(head, L.T("Novo bloco"));
-            Chip(top, 0, L.F("{0} convidado(s)", invitees.Count), L.T("Convidados"), L.F("Marque abaixo. O bloco nasce quando {0} nações (com você) estiverem dentro.", Bloc.MinMembers));
-            Chip(top, 1, wait > 0 ? $"<c={Red}>" + L.F("Espera: {0} turnos", wait) + "</c>" : L.F("Mínimo {0}", Bloc.MinMembers - 1), L.T("Mínimo"),
+            Chip(top, 0, L.P(invitees.Count, "{0} convidado", "{0} convidados"), L.T("Convidados"), L.F("Marque abaixo. O bloco nasce quando {0} nações (com você) estiverem dentro.", Bloc.MinMembers));
+            Chip(top, 1, wait > 0 ? $"<c={Red}>" + L.P(wait, "Espera: {0} turno", "Espera: {0} turnos") + "</c>" : L.F("Mínimo {0}", Bloc.MinMembers - 1), L.T("Mínimo"),
                 L.F("Convide pelo menos {0} nações.", Bloc.MinMembers - 1));
             Chip(top, 2, null, null, null);
             Chip(top, 3, null, null, null);
@@ -1273,7 +1325,7 @@ namespace CurrencyMod.Diplomacy.UI
                 Chip(top, 2, null, null, null);
                 Chip(top, 3, null, null, null);
                 bool on = invitees.Contains(empire);
-                SetButtons(row, other == null ? (on ? L.T("Convidado") : L.T("+ Convidar")) : null, () =>
+                SetButtons(row, other == null ? (on ? L.T("✓ Convidado (remover)") : L.T("+ Convidar")) : null, () =>
                 {
                     if (!invitees.Remove(empire))
                     {
@@ -1295,8 +1347,8 @@ namespace CurrencyMod.Diplomacy.UI
             Row row = sideRows[0];
             Transform top = Top(row);
             Title(row, FeedbackTitle(Esc(bloc.Name)));
-            Chip(top, 0, L.F("{0}/{1} membros", bloc.Members.Count, Bloc.MinMembers), L.T("Formação"), L.T("O bloco nasce quando 3 nações estiverem dentro."));
-            Chip(top, 1, L.F("{0} convite(s) abertos", bloc.Invites.Count), L.T("Convites"), string.Join(", ", bloc.Invites.Select(i => Who(view, i.Empire))));
+            Chip(top, 0, L.F("{0}/{1} membros", bloc.Members.Count, Bloc.MinMembers), L.T("Formação"), L.F("O bloco nasce quando {0} nações estiverem dentro.", Bloc.MinMembers));
+            Chip(top, 1, L.P(bloc.Invites.Count, "{0} convite aberto", "{0} convites abertos"), L.T("Convites"), string.Join(", ", bloc.Invites.Select(i => Who(view, i.Empire))));
             Chip(top, 2, null, null, null);
             Chip(top, 3, null, null, null);
             bool confirming = Time.unscaledTime < confirmLeaveUntil;
@@ -1317,7 +1369,7 @@ namespace CurrencyMod.Diplomacy.UI
             Title(info, L.T("Pauta livre"));
             Chip(top, 0, president ? $"<c={Gold}>" + L.T("Vai direto à votação") + "</c>" : L.T("Vira sugestão"), L.T("Como funciona"),
                 president ? L.F("Você é o presidente: a pauta entra em votação na hora, por {0} turnos.", Bloc.VoteTurns)
-                    : L.F("O presidente decide se põe a sua sugestão em votação; sem decisão em {0} turnos, ela vence.", Bloc.SuggestionTurns));
+                    : L.F("O presidente decide se põe a sua sugestão em votação; sem decisão em {0} turnos, ela expira.", Bloc.SuggestionTurns));
             Chip(top, 1, used >= Bloc.MotionSlots ? $"<c={Red}>" + L.F("Pautas: {0}/{1}", used, Bloc.MotionSlots) + "</c>" : L.F("Pautas: {0}/{1}", used, Bloc.MotionSlots),
                 L.T("Pautas ativas"), L.F("Cada membro tem até {0} pautas ativas: sugeridas, em votação ou resoluções suas em vigor.", Bloc.MotionSlots));
             Chip(top, 2, null, null, null);
@@ -1326,8 +1378,8 @@ namespace CurrencyMod.Diplomacy.UI
             Body(info, L.F("Escreva o que o bloco deve fazer, com as suas palavras (até {0} letras; a primeira frase vira o título). Aprovada, vale {1} turnos e obriga todos os membros. Ninguém fiscaliza: cada membro cumpre por conta própria e pode acusar quem não cumprir.", Bloc.MotionTextMax, Bloc.ResolutionTurns));
             order.Add(info.Card);
 
-            ShowField(L.T("Ex.: Bloqueio comum aos Axumitas. Todos os membros fecham seus postos para E14 até que retirem as exigências."),
-                L.T("Texto da pauta"), L.F("Até {0} letras. Cite nações pelo nome ou pelo código (E14).", Bloc.MotionTextMax), Bloc.MotionTextMax);
+            ShowField(L.T("Ex.: Bloqueio comum aos Axumitas. Todos os membros fecham seus postos para os Axumitas até que retirem as exigências."),
+                L.T("Texto da pauta"), L.F("Até {0} letras. Cite as nações pelo nome.", Bloc.MotionTextMax), Bloc.MotionTextMax);
             order.Add(fieldItem);
 
             Row send = sideRows[1];
@@ -1345,7 +1397,7 @@ namespace CurrencyMod.Diplomacy.UI
             Row leave = sideRows[2];
             top = Top(leave);
             Title(leave, L.T("Sair do bloco"));
-            Chip(top, 0, L.F("Espera de {0} turnos", Bloc.LeaveCooldown), L.T("Saída"), L.T("Sair é livre, mas você espera 10 turnos para entrar em outro bloco. Com menos de 3 membros, o bloco se desfaz."));
+            Chip(top, 0, L.F("Espera de {0} turnos", Bloc.LeaveCooldown), L.T("Saída"), L.F("Sair é livre, mas você espera {0} turnos para entrar em outro bloco. Com menos de {1} membros, o bloco se desfaz.", Bloc.LeaveCooldown, Bloc.MinMembers));
             Chip(top, 1, null, null, null);
             Chip(top, 2, null, null, null);
             Chip(top, 3, null, null, null);
@@ -1418,19 +1470,58 @@ namespace CurrencyMod.Diplomacy.UI
         /// <summary>Accuses a member with the field's text as evidence ("R2 ..." cites resolution R2).</summary>
         private void Accuse(View view, int member)
         {
-            string text = (field?.Text ?? string.Empty).Trim();
-            int resolution = -1;
-            System.Text.RegularExpressions.Match match = System.Text.RegularExpressions.Regex.Match(text, @"^[Rr](\d+)[\s:.,-]*");
-            if (match.Success)
+            if (!Confirmed("bloc:" + member))
             {
-                resolution = int.Parse(match.Groups[1].Value);
-                text = text.Substring(match.Length);
+                return;
             }
+            string text = (field?.Text ?? string.Empty).Trim();
+            int resolution = ParseResolution(ref text);
             if (Act(BlocEngine.Accuse(view.World, view.Me, member, resolution, text, view.Turn), L.T("Acusação registrada no livro do bloco.")))
             {
                 field?.ReplaceText(string.Empty);
             }
         }
+
+        /// <summary>"R2", "Res. 2", "Resolução 2" (or the word in the screen language) at the start: the resolution number, cut from the text; -1 if absent.</summary>
+        internal static int ParseResolution(ref string text)
+        {
+            string word = L.T("Resolução {0}").Replace("{0}", string.Empty).Trim();
+            string pattern = @"^(?:r[ée]s(?:olu\w*|\.)?|r" + (word.Length > 0 ? "|" + System.Text.RegularExpressions.Regex.Escape(word) : string.Empty) + @")\s*(\d+)[\s:.,-]*";
+            System.Text.RegularExpressions.Match match = System.Text.RegularExpressions.Regex.Match(text ?? string.Empty, pattern,
+                System.Text.RegularExpressions.RegexOptions.IgnoreCase | System.Text.RegularExpressions.RegexOptions.CultureInvariant);
+            if (!match.Success)
+            {
+                return -1;
+            }
+            text = text.Substring(match.Length);
+            return int.Parse(match.Groups[1].Value);
+        }
+
+        /// <summary>How the player sees a resolution: "Resolução 2" (the AI and the dossier keep the handle "R2").</summary>
+        internal static string ResolutionName(BlocResolution resolution) => L.F("Resolução {0}", resolution.Id);
+
+        private static string CitiesAndTerritories(CapturedEmpire empire)
+        {
+            int cities = empire?.Cities.Count ?? 0;
+            int territories = empire?.TerritoryCount ?? 0;
+            return L.P(cities, "{0} cidade", "{0} cidades") + ", " + L.P(territories, "{0} território.", "{0} territórios.");
+        }
+
+        /// <summary>True on the second click on the same button within 5 s; the first one only arms it (the label asks to confirm).</summary>
+        private bool Confirmed(string key)
+        {
+            if (!Confirming(key))
+            {
+                confirmKey = key;
+                confirmKeyUntil = Time.unscaledTime + 5f;
+                nextRefresh = 0;
+                return false;
+            }
+            confirmKey = null;
+            return true;
+        }
+
+        private bool Confirming(string key) => confirmKey == key && Time.unscaledTime < confirmKeyUntil;
 
         private void Leave(View view)
         {
@@ -1575,6 +1666,8 @@ namespace CurrencyMod.Diplomacy.UI
 
         /// <summary>Only the people ("Os Han"), or "você".</summary>
         private static string Short(View view, int empire) => empire == view.Me ? L.T("você") : Esc(MailScreen.NationAndLeader(view.Capture, empire, inline: true));
+
+        private static int TurnsLeft(int turns) => Math.Max(0, turns);
 
         // ---------------- Button badge ----------------
 

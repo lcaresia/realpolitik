@@ -22,6 +22,7 @@ Mods de código para Humankind via BepInEx 5 + Harmony. Single-player.
 | `docs\negociacao\` | Material do módulo de negociação, ainda em conversa (prints da aba Crise de hoje). | Sim |
 | `dist\` | Pacotes gerados. | Não |
 | `src\HelloHumankind\` | Plugin de teste inicial (modelo mínimo de projeto). Não está instalado. | Sim |
+| `docs\mapa\README.md` | **Mapa de funcionalidades**: toda tela, aba, botão e atalho do mod, com prints. Mudou um botão ou tela? Atualize o mapa no mesmo commit. | Sim |
 | `docs\guia-telas-nativas.md` | **Guia para criar novas telas nativas** (kit, receita, doadores, armadilhas). Inclui a receita de tela do sistema (menu principal e pausa), com o doador do menu principal. | Sim |
 | `research\provedores-ia.md` | Pesquisa dos provedores de IA: endereços, preços, json, erros, logins e o que depende de aprovação. | Sim |
 | `docs\pedidos-provedores.md` | Rascunho (em inglês) da política de privacidade para o site do produto. | Sim |

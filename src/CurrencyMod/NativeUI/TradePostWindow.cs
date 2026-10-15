@@ -46,6 +46,11 @@ namespace CurrencyMod.NativeUI
         private int territoryIndex = -1;
         private int usersCount;
         private float nextRefresh;
+        /// <summary>Empire whose "→ Bloquear" was clicked once, and when that expires; the second click blocks.</summary>
+        private int confirmBlock = -1;
+        private float confirmBlockUntil;
+        /// <summary>Until when "Copiar para todos" waits for the confirming click.</summary>
+        private float confirmApplyAllUntil;
         /// <summary>Sums of the detour preview across rows (for the top card): routes that detour around the toll and barred routes.</summary>
         // Routes (per pair of empires) that detour / get barred: the same route shows up in the rows of both sides.
         private readonly HashSet<string> awayRoutes = new HashSet<string>();
@@ -133,8 +138,8 @@ namespace CurrencyMod.NativeUI
             applyAllButton = noteCard.Find("Table/Top/LiberateButton").GetComponent<UIButton>();
             applyAllButton.LeftClick += ApplyAll_LeftClick;
             ClearInheritedTooltips();
-            BindTooltip(applyAllButton.transform, L.T("Aplicar a todos os postos"),
-                L.T("Copia as escolhas deste posto (livre, pedágio ou bloqueio para cada império) para todos os seus territórios."));
+            BindTooltip(applyAllButton.transform, L.T("Copiar para todos os postos"),
+                L.T("Copia as escolhas deste posto (livre, pedágio ou bloqueio para cada império) para todos os seus territórios. Pede confirmação."));
             headerLabel.Text = L.T("Posto Comercial");
         }
 
@@ -255,6 +260,15 @@ namespace CurrencyMod.NativeUI
             lock (CurrencyManager.Lock)
             {
                 TradeMode next = Next(TradePolicy.StoredMode(world, me, territoryIndex, target));
+                // Blocking can destroy routes: it waits for a second click within 5 s.
+                if (next == TradeMode.Block && !(confirmBlock == target && Time.unscaledTime < confirmBlockUntil))
+                {
+                    confirmBlock = target;
+                    confirmBlockUntil = Time.unscaledTime + 5f;
+                    nextRefresh = 0;
+                    return;
+                }
+                confirmBlock = -1;
                 TradePolicy.SetRule(world, me, territoryIndex, target, next);
                 Plugin.Log.LogInfo($"Post {territoryIndex}: empire {target} → {TradePolicy.ModeName(next)}.");
             }
@@ -291,6 +305,14 @@ namespace CurrencyMod.NativeUI
             {
                 return;
             }
+            // It rewrites every post: the first click only arms it.
+            if (Time.unscaledTime >= confirmApplyAllUntil)
+            {
+                confirmApplyAllUntil = Time.unscaledTime + 5f;
+                nextRefresh = 0;
+                return;
+            }
+            confirmApplyAllUntil = 0;
             List<int> mine = MyTerritories(me);
             int changed = 0;
             lock (CurrencyManager.Lock)
@@ -435,7 +457,7 @@ namespace CurrencyMod.NativeUI
                 Tip(top, "TitleGroup/Title", L.T("Pedágio padrão"),
                     L.T("O que cada rota paga por recurso transportado, por turno, quando você não definiu outro preço. Mude o preço de um império neste posto com − e + na linha dele, ou o preço dele em todos os postos na aba Comércio da diplomacia."));
                 Tip(top, "StatsTable/PopCount", L.T("Rotas estrangeiras"),
-                    blockedHere > 0 ? L.F("Rotas comerciais entre outros impérios que atravessam este território agora. {0} império(s) bloqueado(s) aqui.", blockedHere)
+                    blockedHere > 0 ? L.P(blockedHere, "Rotas comerciais entre outros impérios que atravessam este território agora. {0} império bloqueado aqui.", "Rotas comerciais entre outros impérios que atravessam este território agora. {0} impérios bloqueados aqui.")
                     : L.T("Rotas comerciais entre outros impérios que atravessam este território agora."));
                 Tip(top, "StatsTable/ExtensionsCount", L.T("Pedágios recebidos"),
                     L.T("Total que você arrecadou de pedágio no último turno, em todos os postos. Se a volta sair mais barata que o pedágio, a rota desvia."));
@@ -503,8 +525,8 @@ namespace CurrencyMod.NativeUI
                 SetChip(note, "StatsTable/Fortification", L.T("Vale na próxima ação"));
                 HideChild(note, "StatsTable/ExtensionsCount");
                 SetVisible(note.Find("LiberateButton"), true);
-                SetButtonText(applyAllButton, L.T("Aplicar"));
-                Tip(note, "StatsTable/PopCount", L.T("Seus territórios"), L.T("Quantos postos recebem as escolhas deste ao clicar em Aplicar."));
+                SetButtonText(applyAllButton, Time.unscaledTime < confirmApplyAllUntil ? L.T("Confirmar") : L.T("Copiar para todos"));
+                Tip(note, "StatsTable/PopCount", L.T("Seus territórios"), L.T("Quantos postos recebem as escolhas deste ao clicar em Copiar para todos."));
                 Tip(note, "StatsTable/Fortification", L.T("Quando vale"), L.T("As rotas são recalculadas na sua próxima ação ou no fim do turno."));
             }
             HideOutputs(note);
@@ -587,16 +609,18 @@ namespace CurrencyMod.NativeUI
                     ? L.F("Paga {0} {1} por recurso transportado, por turno, para passar aqui (ou desvia, se a volta sair mais barata).", symbol, Format.Money(price)) + " "
                         + (ownPrice ? L.T("Preço deste posto.") : generalPrice ? L.T("Preço geral desse império (aba Comércio da diplomacia).") : L.T("Preço padrão."))
                         + " " + L.T("Mude com - e +.")
-                        + (paid != null ? " " + L.F("No último turno ele pagou {0} {1} somando todos os seus postos.", symbol, Format.Money(paid.ReceivedByOwner)) : string.Empty)
-                        + (theirs.Count > 0 ? " " + L.F("Nas rotas daqui ele compra {0} e vende {1} recurso(s).", buys, sells) : string.Empty)
+                        + (paid != null ? " " + L.F("No último turno esse império pagou {0} {1} somando todos os seus postos.", symbol, Format.Money(paid.ReceivedByOwner)) : string.Empty)
+                        + (theirs.Count > 0 ? " " + L.P(sells, "Nas rotas daqui esse império compra {1} e vende {0} recurso.", "Nas rotas daqui esse império compra {1} e vende {0} recursos.", buys) : string.Empty)
                 : mode == TradeMode.Block ? L.T("Proibido de passar por aqui. Sem outro caminho, a rota é destruída.")
                 : L.T("Passa livremente por aqui."));
             Tip(top, "StatsTable/ExtensionsCount", paid != null ? L.T("Pedágio pago") : L.T("Comércio nessas rotas"),
-                paid != null ? L.T("Quanto ele pagou a você no último turno, somando todos os seus postos.")
-                : L.T("Recursos que ele compra e vende nas rotas que passam por aqui. Mais recursos, pedágio maior."));
+                paid != null ? L.T("Quanto esse império pagou a você no último turno, somando todos os seus postos.")
+                : L.T("Recursos que esse império compra e vende nas rotas que passam por aqui. Mais recursos, pedágio maior."));
 
             UIButton button = top.Find("LiberateButton").GetComponent<UIButton>();
-            SetButtonText(button, "→ " + (mode == TradeMode.Free ? L.T("Taxar") : mode == TradeMode.Toll ? L.T("Bloquear") : L.T("Liberar")));
+            bool confirmingBlock = mode == TradeMode.Toll && confirmBlock == empire && Time.unscaledTime < confirmBlockUntil;
+            SetButtonText(button, confirmingBlock ? L.T("Confirmar")
+                : "→ " + (mode == TradeMode.Free ? L.T("Cobrar pedágio") : mode == TradeMode.Toll ? L.T("Bloquear") : L.T("Liberar")));
         }
 
         /// <summary>
@@ -735,9 +759,9 @@ namespace CurrencyMod.NativeUI
                 priceUpButtons.Add(up);
                 button.LeftClick += b => CycleMode(rowEmpires[index]);
                 BindTooltip(button.transform, L.T("Livre → Pedágio → Bloqueado"),
-                    L.T("Pedágio: as rotas desse império continuam passando aqui, mas ele paga por turno, por recurso transportado, na sua moeda. Rotas podem desviar se houver outro caminho.") + "\n" +
+                    L.T("Pedágio: as rotas desse império continuam passando aqui, mas esse império paga por turno, por recurso transportado, na sua moeda. Rotas podem desviar se houver outro caminho.") + "\n" +
                     L.T("Bloqueado: as rotas desse império não podem atravessar este território; sem outro caminho, a rota é destruída.") + "\n" +
-                    L.T("Bloquear ou cobrar pedágio dá a ele uma reclamação \"Bloqueio comercial\" contra você."));
+                    L.T("Bloquear ou cobrar pedágio dá a esse império uma reclamação \"Bloqueio comercial\" contra você. Bloquear pede confirmação."));
             }
             for (int i = 0; i < rows.Count; i++)
             {

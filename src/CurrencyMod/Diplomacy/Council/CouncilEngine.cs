@@ -515,7 +515,7 @@ namespace CurrencyMod.Diplomacy.Council
                         m.Advice = m.Has("orgulhoso") || m.Has("rancoroso") ? $"recusar:E{toll.Owner}" : $"acordo:E{toll.Owner}";
                         m.Opinion = $"Pagamos {N(toll.Paid)} {money} de pedágio por turno a {Who(capture, toll.Owner)}. "
                             + (m.Advice.StartsWith("recusar") ? "Isso é tributo disfarçado: exija o fim ou feche nossas rotas." : "Negocie: um acordo vale mais que o pedágio.");
-                        m.OpinionUi = L.F("Pagamos {0} {1} de pedágio por turno a {2}.", NUi(toll.Paid), moneyUi, Who(capture, toll.Owner)) + " "
+                        m.OpinionUi = L.F("Pagamos {0} {1} de pedágio por turno a {2}.", NUi(toll.Paid), moneyUi, WhoUi(capture, toll.Owner)) + " "
                             + (m.Advice.StartsWith("recusar") ? L.T("Isso é tributo disfarçado: exija o fim ou feche nossas rotas.") : L.T("Negocie: um acordo vale mais que o pedágio."));
                     }
                     else
@@ -524,7 +524,7 @@ namespace CurrencyMod.Diplomacy.Council
                         m.Opinion = partners == 0 ? "Não temos rotas de comércio com ninguém: um acordo econômico abriria mercados."
                             : $"Comerciamos com {partners} nação(ões); as rotas rendem.";
                         m.OpinionUi = partners == 0 ? L.T("Não temos rotas de comércio com ninguém: um acordo econômico abriria mercados.")
-                            : L.F("Comerciamos com {0} nação(ões); as rotas rendem.", partners);
+                            : L.P(partners, "Comerciamos com {0} nação; as rotas rendem.", "Comerciamos com {0} nações; as rotas rendem.");
                         if (partners == 0)
                         {
                             m.Advice = "acordo";
@@ -554,7 +554,7 @@ namespace CurrencyMod.Diplomacy.Council
                         m.Urgency = 0.95;
                         m.Advice = "defender";
                         m.Opinion = $"{besieged} cidade(s) nossa(s) sob cerco: isso vem antes de qualquer outra coisa.";
-                        m.OpinionUi = L.F("{0} cidade(s) nossa(s) sob cerco: isso vem antes de qualquer outra coisa.", besieged);
+                        m.OpinionUi = L.P(besieged, "{0} cidade nossa sob cerco: isso vem antes de qualquer outra coisa.", "{0} cidades nossas sob cerco: isso vem antes de qualquer outra coisa.");
                     }
                     else if (me.Stability < 40)
                     {
@@ -597,7 +597,7 @@ namespace CurrencyMod.Diplomacy.Council
                     {
                         m.Urgency = 0.45;
                         m.Opinion = $"Nossos espiões leram {read} carta(s) alheia(s) nos últimos turnos. Use o que sabemos, mas sem revelar como sabemos.";
-                        m.OpinionUi = L.F("Nossos espiões leram {0} carta(s) alheia(s) nos últimos turnos. Use o que sabemos, mas sem revelar como sabemos.", read);
+                        m.OpinionUi = L.P(read, "Nossos espiões leram {0} carta alheia nos últimos turnos. Use o que sabemos, mas sem revelar como sabemos.", "Nossos espiões leram {0} cartas alheias nos últimos turnos. Use o que sabemos, mas sem revelar como sabemos.");
                     }
                     else
                     {
@@ -605,7 +605,7 @@ namespace CurrencyMod.Diplomacy.Council
                         m.Opinion = abroad == 0 ? "Não temos olhos em terra estrangeira: um espião na capital de um rival leria parte das cartas deles."
                             : $"Temos {abroad} espião(ões) em terra estrangeira, quietos por enquanto.";
                         m.OpinionUi = abroad == 0 ? L.T("Não temos olhos em terra estrangeira: um espião na capital de um rival leria parte das cartas deles.")
-                            : L.F("Temos {0} espião(ões) em terra estrangeira, quietos por enquanto.", abroad);
+                            : L.P(abroad, "Temos {0} espião em terra estrangeira, quieto por enquanto.", "Temos {0} espiões em terra estrangeira, quietos por enquanto.");
                     }
                     break;
                 }
@@ -638,21 +638,21 @@ namespace CurrencyMod.Diplomacy.Council
                 {
                     m.Advice = $"atacar:E{other}";
                     m.Opinion = $"Guerra com {Who(capture, other)}: placar {N(relation.MyWarScore)} contra {N(relation.TheirWarScore)}. Pressione agora, antes que se reergam.";
-                    m.OpinionUi = L.F("Guerra com {0}: placar {1} contra {2}. Pressione agora, antes que se reergam.", Who(capture, other), NUi(relation.MyWarScore), NUi(relation.TheirWarScore));
+                    m.OpinionUi = L.F("Guerra com {0}: placar {1} contra {2}. Pressione agora, antes que se reergam.", WhoUi(capture, other), NUi(relation.MyWarScore), NUi(relation.TheirWarScore));
                 }
                 else if (losing || careful)
                 {
                     m.Advice = $"paz:E{other}";
                     m.Opinion = $"Guerra com {Who(capture, other)}: placar {N(relation.MyWarScore)} contra {N(relation.TheirWarScore)}, apoio à guerra {N(relation.MyMoral)} contra {N(relation.TheirMoral)}. "
                         + (losing ? "Estamos perdendo: proponha paz enquanto há o que salvar." : "Já mostramos força; uma paz agora guarda o que ganhamos.");
-                    m.OpinionUi = L.F("Guerra com {0}: placar {1} contra {2}, apoio à guerra {3} contra {4}.", Who(capture, other), NUi(relation.MyWarScore), NUi(relation.TheirWarScore), NUi(relation.MyMoral), NUi(relation.TheirMoral)) + " "
+                    m.OpinionUi = L.F("Guerra com {0}: placar {1} contra {2}, apoio à guerra {3} contra {4}.", WhoUi(capture, other), NUi(relation.MyWarScore), NUi(relation.TheirWarScore), NUi(relation.MyMoral), NUi(relation.TheirMoral)) + " "
                         + (losing ? L.T("Estamos perdendo: proponha paz enquanto há o que salvar.") : L.T("Já mostramos força; uma paz agora guarda o que ganhamos."));
                 }
                 else
                 {
                     m.Advice = "defender";
                     m.Opinion = $"Guerra com {Who(capture, other)}: placar {N(relation.MyWarScore)} contra {N(relation.TheirWarScore)}. Segure as fronteiras e espere o erro deles.";
-                    m.OpinionUi = L.F("Guerra com {0}: placar {1} contra {2}. Segure as fronteiras e espere o erro deles.", Who(capture, other), NUi(relation.MyWarScore), NUi(relation.TheirWarScore));
+                    m.OpinionUi = L.F("Guerra com {0}: placar {1} contra {2}. Segure as fronteiras e espere o erro deles.", WhoUi(capture, other), NUi(relation.MyWarScore), NUi(relation.TheirWarScore));
                 }
                 return;
             }
@@ -663,7 +663,8 @@ namespace CurrencyMod.Diplomacy.Council
                 m.Advice = bold ? $"guerra:E{intruder.Owner}" : "defender";
                 m.Opinion = $"Tropas de {Who(capture, intruder.Owner)} dentro do nosso território ({intruder.Units} unidade(s) em {capture.TerritoryName(intruder.Territory)}). "
                     + (bold ? "Isso é provocação: temos pretexto." : "Reforce as guarnições e exija explicação por carta.");
-                m.OpinionUi = L.F("Tropas de {0} dentro do nosso território ({1} unidade(s) em {2}).", Who(capture, intruder.Owner), intruder.Units, capture.TerritoryName(intruder.Territory)) + " "
+                int intruderUnits = intruder.Units;
+                m.OpinionUi = L.P(intruderUnits, "Tropas de {1} dentro do nosso território ({0} unidade em {2}).", "Tropas de {1} dentro do nosso território ({0} unidades em {2}).", WhoUi(capture, intruder.Owner), capture.TerritoryName(intruder.Territory)) + " "
                     + (bold ? L.T("Isso é provocação: temos pretexto.") : L.T("Reforce as guarnições e exija explicação por carta."));
                 return;
             }
@@ -674,14 +675,15 @@ namespace CurrencyMod.Diplomacy.Council
                 m.Urgency = 0.4;
                 m.Advice = $"guerra:E{hated.Key}";
                 m.Opinion = $"Nossa força total é {N(me.MilitaryStrength)}. {Who(capture, hated.Key)} não merece confiança: prepare as lanças contra eles.";
-                m.OpinionUi = L.F("Nossa força total é {0}. {1} não merece confiança: prepare as lanças contra eles.", NUi(me.MilitaryStrength), Who(capture, hated.Key));
+                m.OpinionUi = L.F("Nossa força total é {0}. {1} não merece confiança: prepare as lanças contra eles.", NUi(me.MilitaryStrength), WhoUi(capture, hated.Key));
                 return;
             }
             m.Urgency = 0.2;
             m.Advice = bold ? "foco:militar" : null;
             m.Opinion = $"Fronteiras calmas. Força total {N(me.MilitaryStrength)} em {me.UnitCount} unidade(s)."
                 + (bold ? " Exército parado enferruja: reforce-o." : string.Empty);
-            m.OpinionUi = L.F("Fronteiras calmas. Força total {0} em {1} unidade(s).", NUi(me.MilitaryStrength), me.UnitCount)
+            int unitCount = me.UnitCount;
+            m.OpinionUi = L.P(unitCount, "Fronteiras calmas. Força total {1} em {0} unidade.", "Fronteiras calmas. Força total {1} em {0} unidades.", NUi(me.MilitaryStrength))
                 + (bold ? " " + L.T("Exército parado enferruja: reforce-o.") : string.Empty);
         }
 
@@ -697,7 +699,7 @@ namespace CurrencyMod.Diplomacy.Council
                 m.Advice = cede ? $"ceder:E{other}" : $"resistir:E{other}";
                 m.Opinion = $"{Who(capture, other)} tem exigências contra nós esperando resposta. "
                     + (cede ? "Ceder custa menos que uma guerra; aceite e cobre gratidão depois." : "Ceder agora convida mais exigências: recuse ou enrole.");
-                m.OpinionUi = L.F("{0} tem exigências contra nós esperando resposta.", Who(capture, other)) + " "
+                m.OpinionUi = L.F("{0} tem exigências contra nós esperando resposta.", WhoUi(capture, other)) + " "
                     + (cede ? L.T("Ceder custa menos que uma guerra; aceite e cobre gratidão depois.") : L.T("Ceder agora convida mais exigências: recuse ou enrole."));
                 return;
             }
@@ -709,7 +711,7 @@ namespace CurrencyMod.Diplomacy.Council
                 bool accept = sympathy >= 0 && !(hard && sympathy < 10);
                 m.Advice = accept ? $"aceitar:E{proposer}" : $"recusar:E{proposer}";
                 m.Opinion = $"Há proposta formal de {Who(capture, proposer)} esperando você. " + (accept ? "Aceite: vale mais um amigo na fronteira." : "Desconfio da pressa deles: deixe esperar.");
-                m.OpinionUi = L.F("Há proposta formal de {0} esperando você.", Who(capture, proposer)) + " " + (accept ? L.T("Aceite: vale mais um amigo na fronteira.") : L.T("Desconfio da pressa deles: deixe esperar."));
+                m.OpinionUi = L.F("Há proposta formal de {0} esperando você.", WhoUi(capture, proposer)) + " " + (accept ? L.T("Aceite: vale mais um amigo na fronteira.") : L.T("Desconfio da pressa deles: deixe esperar."));
                 return;
             }
             // No urgency: lean toward whoever the minister likes, if there is no agreement yet.
@@ -722,13 +724,13 @@ namespace CurrencyMod.Diplomacy.Council
                     m.Urgency = 0.35;
                     m.Advice = $"acordo:E{friend.Key}";
                     m.Opinion = $"{Who(capture, friend.Key)} é gente de palavra. " + (relation.Trade && relation.OpenBorders ? "Já comerciamos: hora de pensar em aliança." : "Um acordo com eles abriria caminho.");
-                    m.OpinionUi = L.F("{0} é gente de palavra.", Who(capture, friend.Key)) + " " + (relation.Trade && relation.OpenBorders ? L.T("Já comerciamos: hora de pensar em aliança.") : L.T("Um acordo com eles abriria caminho."));
+                    m.OpinionUi = L.F("{0} é gente de palavra.", WhoUi(capture, friend.Key)) + " " + (relation.Trade && relation.OpenBorders ? L.T("Já comerciamos: hora de pensar em aliança.") : L.T("Um acordo com eles abriria caminho."));
                     return;
                 }
             }
             m.Urgency = 0.2;
             m.Opinion = $"Conhecemos {context.KnownEmpires.Count} nação(ões); nenhuma pendência diplomática urgente.";
-            m.OpinionUi = L.F("Conhecemos {0} nação(ões); nenhuma pendência diplomática urgente.", context.KnownEmpires.Count);
+            m.OpinionUi = L.P(context.KnownEmpires.Count, "Conhecemos {0} nação; nenhuma pendência diplomática urgente.", "Conhecemos {0} nações; nenhuma pendência diplomática urgente.");
         }
 
         private static void OpineHand(Minister hand, AiWorld world, WorldCapture capture, CapturedEmpire me, List<Minister> others, int turn)
@@ -740,7 +742,7 @@ namespace CurrencyMod.Diplomacy.Council
             {
                 parts.Add($"{i + 1}) {CouncilBank.PortfolioNames[agenda[i].Portfolio]}: {Shorten(agenda[i].Opinion, 18)}");
                 // Portfolio names marked with L.N in CouncilBank.
-                partsUi.Add($"{i + 1}) {L.T(CouncilBank.PortfolioNames[agenda[i].Portfolio])}: {Shorten(agenda[i].OpinionUi ?? agenda[i].Opinion, 18)}");
+                partsUi.Add($"{i + 1}) {L.T(CouncilBank.PortfolioNames[agenda[i].Portfolio])}: {Shorten(agenda[i].OpinionUi ?? LetterNames.NamesOnly(agenda[i].Opinion), 18)}");
             }
             // Ultimatum deadlines that expire now.
             Letter due = world.Letters.Where(l => l.Type == "ultimato" && (l.From == me.Index || (l.To == me.Index && l.Arrived(turn)))
@@ -748,7 +750,7 @@ namespace CurrencyMod.Diplomacy.Council
             string deadline = due == null ? string.Empty
                 : due.From == me.Index ? $" Seu ultimato a {Who(capture, due.To)} venceu: cumpra ou recue." : $" O ultimato de {Who(capture, due.From)} contra nós venceu.";
             string deadlineUi = due == null ? string.Empty
-                : due.From == me.Index ? " " + L.F("Seu ultimato a {0} venceu: cumpra ou recue.", Who(capture, due.To)) : " " + L.F("O ultimato de {0} contra nós venceu.", Who(capture, due.From));
+                : due.From == me.Index ? " " + L.F("Seu ultimato a {0} venceu: cumpra ou recue.", WhoUi(capture, due.To)) : " " + L.F("O ultimato de {0} contra nós venceu.", WhoUi(capture, due.From));
             hand.Urgency = 1;
             hand.Opinion = (parts.Count > 0 ? "Pauta de hoje: " + string.Join(" ", parts) : "Nada urgente na pauta.") + deadline;
             hand.OpinionUi = (partsUi.Count > 0 ? L.F("Pauta de hoje: {0}", string.Join(" ", partsUi)) : L.T("Nada urgente na pauta.")) + deadlineUi;
@@ -901,6 +903,13 @@ namespace CurrencyMod.Diplomacy.Council
         {
             CapturedEmpire them = capture.Empire(empire);
             return them?.Leader != null ? $"{them.Leader} ({them.Culture}, E{empire})" : $"{DossierBuilder.Name(capture, empire)} (E{empire})";
+        }
+
+        /// <summary>Who without the dossier code, for OpinionUi (the player never sees "E7").</summary>
+        private static string WhoUi(WorldCapture capture, int empire)
+        {
+            CapturedEmpire them = capture.Empire(empire);
+            return them?.Leader != null ? $"{them.Leader} ({them.Culture})" : DossierBuilder.Name(capture, empire);
         }
 
         private static string N(double value) => Math.Round(value).ToString("#,0", PtBr);

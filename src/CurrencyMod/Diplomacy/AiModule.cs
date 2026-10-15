@@ -2148,11 +2148,11 @@ namespace CurrencyMod.Diplomacy
             WorldCapture capture = TurnCapture.Latest;
             if (capture == null || capture.Guid != World.GameGuid)
             {
-                return "error: " + L.T("ainda sem foto do turno; tente de novo em alguns segundos");
+                return "error: " + L.T("O turno ainda está carregando; tente de novo em alguns segundos.");
             }
             if (to != Letter.Everyone && !capture.AiEmpires().Contains(to))
             {
-                return "error: " + L.F("E{0} não é uma nação do computador viva", to);
+                return "error: " + L.T("Essa nação não existe mais ou não é controlada pelo computador.");
             }
             text = CleanPlayerText(text);
             if (string.IsNullOrWhiteSpace(text))

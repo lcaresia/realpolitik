@@ -298,7 +298,7 @@ namespace CurrencyMod.NativeUI
                 L.T("Em todos os seus territórios, as rotas desse império pagam pedágio por turno (por recurso transportado), ou desviam se a volta sair mais barata."),
                 L.T("As rotas desse império não podem atravessar nenhum território seu; sem outro caminho, são destruídas."),
             };
-            string extra = index == 0 ? string.Empty : "\n" + L.T("Ele ganha uma reclamação \"Bloqueio comercial\" contra você.");
+            string extra = index == 0 ? string.Empty : "\n" + L.T("Esse império ganha uma reclamação \"Bloqueio comercial\" contra você.");
             UITooltip tooltip = button.GetComponent<UITooltip>();
             if (tooltip != null)
             {
@@ -429,10 +429,12 @@ namespace CurrencyMod.NativeUI
                 NativeUIKit.Tip(info, L.T("Rotas deles"), L.T("Rotas comerciais desse império com terceiros que atravessam algum território seu. Só essas podem ser taxadas ou bloqueadas."));
             }
 
+            // One post: "no seu único posto", never "todos os 1 postos".
+            bool single = territories.Count == 1;
             string state = !uniform.HasValue ? L.F("Misto: {0} com pedágio, {1} bloqueados", taxed, blocked)
-                : uniform.Value == TradeMode.Toll ? L.F("Pedágio em todos os {0} postos", territories.Count)
-                : uniform.Value == TradeMode.Block ? L.F("Bloqueado em todos os {0} postos", territories.Count)
-                : L.F("Livre em todos os {0} postos", territories.Count);
+                : uniform.Value == TradeMode.Toll ? (single ? L.T("Pedágio no seu único posto") : L.F("Pedágio em todos os {0} postos", territories.Count))
+                : uniform.Value == TradeMode.Block ? (single ? L.T("Bloqueado no seu único posto") : L.F("Bloqueado em todos os {0} postos", territories.Count))
+                : single ? L.T("Livre no seu único posto") : L.F("Livre em todos os {0} postos", territories.Count);
             if (ownPrices)
             {
                 state += " · " + L.T("há postos com preço próprio");

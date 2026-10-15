@@ -795,7 +795,7 @@ namespace CurrencyMod.Diplomacy.UI
             B.SetVisible(typeButton.transform, canWrite);
             if (canWrite)
             {
-                B.SetButtonText(typeButton, L.T("Trocar"));
+                B.SetButtonText(typeButton, L.T("Próximo tipo"));
             }
             MailScreen.FitTitle(typeTop, typeButton.GetComponent<UITransform>().Width + 20f);
             B.HideOutputs(typeTop);
@@ -811,11 +811,11 @@ namespace CurrencyMod.Diplomacy.UI
                 B.HideChild(replyTop, "StatsTable/Fortification");
                 B.HideChild(replyTop, "StatsTable/ExtensionsCount");
                 B.SetVisible(replyButton.transform, true); // the sample's button can come hidden
-                B.SetButtonText(replyButton, L.T("Soltar"));
+                B.SetButtonText(replyButton, L.T("Carta nova"));
                 MailScreen.FitTitle(replyTop, replyButton.GetComponent<UITransform>().Width + 20f);
                 B.HideOutputs(replyTop);
                 B.Tip(replyTop, "StatsTable/PopCount", L.T("Em resposta a"), L.T("A carta nova fica ligada à última carta deles que pedia resposta."));
-                B.Tip(replyButton.transform, string.Empty, L.T("Soltar"), L.T("Escreve uma carta nova, sem ligar àquela."));
+                B.Tip(replyButton.transform, string.Empty, L.T("Carta nova"), L.T("Escreve uma carta nova, sem ligar àquela."));
             }
 
             B.SetVisible(subjectItem, canWrite);
@@ -824,7 +824,7 @@ namespace CurrencyMod.Diplomacy.UI
             B.SetVisible(deadlineItem, canWrite && type == "ultimato");
             if (deadlineItem != null)
             {
-                deadlineItem.GetComponent<UILabel>().Text = L.F("Prazo: {0} turnos", Mathf.RoundToInt(deadlineSlider.CurrentValue));
+                deadlineItem.GetComponent<UILabel>().Text = L.P(Mathf.RoundToInt(deadlineSlider.CurrentValue), "Prazo: {0} turno", "Prazo: {0} turnos");
             }
 
             Transform sendTop = sendCard.Find("Table/Top");

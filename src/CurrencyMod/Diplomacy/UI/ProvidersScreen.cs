@@ -54,6 +54,9 @@ namespace CurrencyMod.Diplomacy.UI
         /// <summary>On close: the pause menu comes back (when opened from it).</summary>
         internal static Action Closed;
 
+        /// <summary>Opened from the control bar (report button): the back button returns to the map, not to the pause menu.</summary>
+        internal static bool BackToGame;
+
         private UILabel titleLabel;
         private UILabel descriptionLabel;
         private UILabel sectionTitleLabel;
@@ -729,7 +732,8 @@ namespace CurrencyMod.Diplomacy.UI
             descriptionLabel.Text = L.T("Escolha onde as nações do computador pensam. Nada de editar arquivos.");
             // The same texts as the Settings button: "Menu principal" outside the game, "Voltar" in the pause menu.
             bool inGame = CentralBankWindow.IsInGame;
-            B.SetLabel(closeButton.transform, string.Empty, inGame ? "%SystemSettingPauseMenuButtonTitle" : "%SystemSettingMainMenuButtonTitle");
+            B.SetLabel(closeButton.transform, string.Empty, !inGame ? "%SystemSettingMainMenuButtonTitle"
+                : BackToGame ? L.T("Voltar ao jogo") : "%SystemSettingPauseMenuButtonTitle");
             B.Tip(closeButton.transform, string.Empty, L.T("Voltar"), L.T("Fecha esta tela. O ESC também fecha. Tudo já fica salvo."));
             RefreshToggles();
             ProviderDef provider = section == null || section == ReportSection ? null : ProviderCatalog.Get(section);
@@ -879,7 +883,7 @@ namespace CurrencyMod.Diplomacy.UI
                     label = $"<c={Green}>{L.F("Enviado. Seu código: {0}", Support.ErrorReport.Code)}</c>";
                     break;
                 case Support.ErrorReport.State.Failed:
-                    label = $"<c={Red}>{L.F("Não foi enviado: {0}", Support.ErrorReport.Error)}</c>";
+                    label = $"<c={Red}>{L.F("Não foi enviado: {0}", Support.ErrorReport.ErrorUi)}</c>";
                     break;
                 default:
                     label = L.T("Enviar os registros para análise");
@@ -899,6 +903,11 @@ namespace CurrencyMod.Diplomacy.UI
 
         private static string UsageLine(List<ProviderDef> chain)
         {
+            // With the nations' AI switched off nothing is "in use", even with a provider connected.
+            if (!AiConfig.Enabled.Value)
+            {
+                return L.T("IA desligada");
+            }
             ProviderDef current = ProviderRouter.Current;
             return current != null ? current.Name : L.T("nenhum provedor");
         }
@@ -907,7 +916,7 @@ namespace CurrencyMod.Diplomacy.UI
         {
             if (provider == null)
             {
-                return ProviderRouter.AnyReady ? Green : Red;
+                return AiConfig.Enabled.Value && ProviderRouter.AnyReady ? Green : Red;
             }
             StateText(provider, chain, out string color);
             return color;
@@ -1223,7 +1232,7 @@ namespace CurrencyMod.Diplomacy.UI
 
             SetRowLabel(modelRow, L.T("Modelo"), L.T("Modelo"),
                 provider.Subscription ? L.T("Os modelos que o seu plano libera. ★ = recomendado.")
-                : L.T("★ = recomendado. O valor é uma estimativa por turno com 16 impérios, pelo preço oficial (o gasto real aparece no F10). \"Testar conexão\" traz a lista completa da sua conta."));
+                : L.T("★ = recomendado. O valor é uma estimativa por turno com 16 impérios, pelo preço oficial (o gasto real aparece no resumo Em uso). \"Testar conexão\" traz a lista completa da sua conta."));
             FillModelChoices(provider, force: false);
 
             RefreshTest(provider, has);
@@ -1236,8 +1245,8 @@ namespace CurrencyMod.Diplomacy.UI
             bool armed = Time.unscaledTime < deleteArmedUntil;
             bool isLogin = provider.Login != LoginKind.None && (credential?.IsLogin == true || !provider.AcceptsKey);
             SetRowLabel(deleteRow, isLogin ? L.T("Sair desta conta") : L.T("Apagar a chave"),
-                isLogin ? L.T("Sair") : L.T("Apagar"), L.T("Apaga deste PC a chave ou o login deste provedor. Clique duas vezes para confirmar."));
-            B.SetLabel(deleteRow.Button.transform, string.Empty, armed ? L.T("Confirmar") : isLogin ? L.T("Sair") : L.T("Apagar"));
+                isLogin ? L.T("Sair da conta") : L.T("Apagar"), L.T("Apaga deste PC a chave ou o login deste provedor. Clique duas vezes para confirmar."));
+            B.SetLabel(deleteRow.Button.transform, string.Empty, armed ? L.T("Confirmar") : isLogin ? L.T("Sair da conta") : L.T("Apagar"));
             // The Codex login belongs to Codex (the player logs out through it): nothing to delete here.
             B.SetVisible(deleteRow.Root, has && !codex && !provider.Local);
 
@@ -1336,7 +1345,7 @@ namespace CurrencyMod.Diplomacy.UI
                 label = has ? L.T("Testar conexão") : L.T("Testar conexão (conecte primeiro)");
             }
             SetRowLabel(testRow, label, L.T("Testar conexão"),
-                L.T("Faz uma chamada mínima com o modelo escolhido e confere se a resposta vem em json. Custa frações de centavo (grátis nos modelos grátis)."));
+                L.T("Faz uma chamada mínima com o modelo escolhido e confere se a resposta vem no formato certo. Custa frações de centavo (grátis nos modelos grátis)."));
             B.SetLabel(testRow.Button.transform, string.Empty, L.T("Testar"));
         }
 
@@ -1365,7 +1374,8 @@ namespace CurrencyMod.Diplomacy.UI
             }
             catch (Exception ex)
             {
-                SetFeedback(L.F("Não consegui salvar a chave: {0}", ex.Message), true);
+                Plugin.Log.LogWarning($"Providers: could not save the key for {provider.Id}: {ex}");
+                SetFeedback(L.T("Não consegui salvar a chave neste PC. Veja o registro do mod para detalhes."), true);
                 return; // the field keeps the text to try again
             }
             if (keyField != null)

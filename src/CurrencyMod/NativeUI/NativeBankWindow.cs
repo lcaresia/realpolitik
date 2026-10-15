@@ -663,7 +663,7 @@ namespace CurrencyMod.NativeUI
             string inflationColor = inflation >= threshold2 ? BadColor : (inflation > threshold1 ? WarnColor : null);
             FillCycleCard(CycleCard.Interest, L.F("2 · Inflação → juros: {0} (meta {1})", Colored(Pct(inflation), inflationColor), Pct(meta)), interestText,
                 L.F("Juros {0}", Pct(interest)), L.F("Regra pede {0}", Pct(wanted)), manual ? L.T("Modo manual") : L.T("Modo automático"));
-            CycleTip(CycleCard.Interest, 1, L.T("Regra automática (Taylor)"),
+            CycleTip(CycleCard.Interest, 1, L.T("Regra automática (segue a inflação)"),
                 L.F("Juros neutros ({0}) + 1,5 × (inflação − meta) + um pouco da pressão de demanda, entre {1} e {2}. A inflação que vem da dívida conta quase inteira quando é pequena e cada vez menos quando cresce (teto suave de {3}).", Pct(EconomyConfig.NeutralInterest.Value), Pct(EconomyConfig.MinInterest.Value), Pct(EconomyConfig.MaxInterest.Value), Pct(EconomyConfig.DebtRuleCap.Value)));
             CycleTip(CycleCard.Interest, 2, L.T("Modo dos juros"), L.T("Troque na aba Política."));
 
@@ -717,8 +717,8 @@ namespace CurrencyMod.NativeUI
             {
                 double spread = EconomyConfig.DebtSpread.Value;
                 FillCycleCard(CycleCard.Savings, L.F("Custo da dívida: {0}/turno", Colored(Format.SignedMoney(flow), flowColor)),
-                    L.F("A dívida paga os juros mais {0} de spread, menos a inflação. Saldo negativo também sobe a inflação.", Pct(spread)),
-                    L.F("Juros + spread {0}", Pct(interest + spread)), L.F("Inflação {0}", Pct(inflation)));
+                    L.F("A dívida paga os juros mais {0} de taxa extra da dívida, menos a inflação. Saldo negativo também sobe a inflação.", Pct(spread)),
+                    L.F("Juros + taxa extra {0}", Pct(interest + spread)), L.F("Inflação {0}", Pct(inflation)));
             }
 
             // 7. Inflation trend, decomposed as in the game's tooltips.
@@ -1011,13 +1011,15 @@ namespace CurrencyMod.NativeUI
             double inflationPush = EconomySimulation.InterestInflationPush(mine.InterestRate);
 
             Transform top = policyCard.Find("Table/Top");
-            SetLabel(top, "TitleGroup/Title", L.F("Juros: {0}/turno", Format.Percent(mine.InterestRate)));
+            // The title says the current mode; the button says what a click does.
+            SetLabel(top, "TitleGroup/Title", mine.AutoInterest ? L.F("Juros: {0}/turno · automático", Format.Percent(mine.InterestRate))
+                : L.F("Juros: {0}/turno · manual", Format.Percent(mine.InterestRate)));
             SetChip(top, "StatsTable/PopCount", stock >= 0 ? L.F("Saldo {0}", Format.SignedPercent(realRate)) : L.F("Dívida {0}", Format.SignedPercent(realRate)));
             SetChip(top, "StatsTable/Fortification", L.F("Produção ×{0}", Format.Rate(mine.CreditFactor)));
             SetChip(top, "StatsTable/ExtensionsCount", L.F("Inflação {0}", Format.SignedPercent(inflationPush)));
             HideOutputs(top);
             SetVisible(autoButton.transform, true); // the sample's button can come hidden
-            SetButtonText(autoButton, mine.AutoInterest ? L.T("Modo: automático") : L.T("Modo: manual"));
+            SetButtonText(autoButton, mine.AutoInterest ? L.T("Mudar para manual") : L.T("Mudar para automático"));
             Tip(top, "StatsTable/PopCount", stock >= 0 ? L.T("Rendimento do saldo") : L.T("Custo da dívida"),
                 stock >= 0
                     ? L.T("Quanto o seu saldo cresce (ou encolhe) por turno: juros menos inflação.")
@@ -1066,7 +1068,7 @@ namespace CurrencyMod.NativeUI
                 : CurrencyManager.GuessPlural(fields[0] != null ? fields[0].Text.Trim() : mine.Name);
             string symbol = fields[2] != null ? fields[2].Text.Trim() : mine.Symbol;
             Transform top = previewCard.Find("Table/Top");
-            SetLabel(top, "TitleGroup/Title", L.F("Custa 500 {0}", plural));
+            SetLabel(top, "TitleGroup/Title", L.F("Exemplo: custa 500 {0}", plural));
             SetChip(top, "StatsTable/PopCount", L.F("Exemplo de saldo: {0} {1}", symbol, Format.Money(1250)));
             HideChild(top, "StatsTable/Fortification");
             HideChild(top, "StatsTable/ExtensionsCount");
@@ -1550,7 +1552,7 @@ namespace CurrencyMod.NativeUI
                 seriesNames.Add(L.T("Você"));
                 references.Add(new BankChart.Reference { Value = 1.0, Color = new Color(1f, 1f, 1f) });
                 label = v => Format.Rate(v) + "×";
-                title = L.F("Sua moeda nos últimos {0} turnos", history.Count);
+                title = L.P(history.Count, "Sua moeda no último turno", "Sua moeda nos últimos {0} turnos");
                 chips = new[]
                 {
                     Dot("E3C88A") + L.F("Você {0}×", Format.Rate(mine.ExchangeValue)),
@@ -1572,7 +1574,7 @@ namespace CurrencyMod.NativeUI
                 seriesNames.Add(L.T("Juros"));
                 references.Add(new BankChart.Reference { Value = EconomyConfig.TargetInflation.Value, Color = green });
                 label = v => Format.Percent(v);
-                title = L.F("Inflação e juros nos últimos {0} turnos", history.Count);
+                title = L.P(history.Count, "Inflação e juros no último turno", "Inflação e juros nos últimos {0} turnos");
                 chips = new[]
                 {
                     Dot("E8685E") + L.F("Inflação {0}", Format.Percent(mine.InflationRate)),
@@ -1804,6 +1806,8 @@ namespace CurrencyMod.NativeUI
             return rankRows[index];
         }
 
+        private const int MaxRankRows = 8;
+
         private void FillRanking(GameSnapshot.Data game, CurrencyWorld world, EmpireCurrency mine, int localIndex)
         {
             if (rankCard == null)
@@ -1814,6 +1818,16 @@ namespace CurrencyMod.NativeUI
             entries.AddRange(world.Empires.Where(e => e.EmpireIndex != localIndex && e.EmpireIndex < game.NumberOfMajorEmpires && e.EmpireIndex < game.EmpireInfo.Length
                 && game.EmpireInfo[e.EmpireIndex].IsAlive && TradePostWindow.IsKnown(e.EmpireIndex)));
             entries = entries.OrderByDescending(e => e.ExchangeValue).ToList();
+            // At most 8 rows so the card fits the panel without scrolling; your row always shows, with its position.
+            int myPlace = entries.IndexOf(mine);
+            var places = Enumerable.Range(0, entries.Count).ToList();
+            if (entries.Count > MaxRankRows)
+            {
+                places = places.Take(MaxRankRows - 1).ToList();
+                places.Add(myPlace < MaxRankRows - 1 ? MaxRankRows - 1 : myPlace);
+                places = places.Distinct().OrderBy(p => p).ToList();
+            }
+            entries = places.Select(p => entries[p]).ToList();
             Transform top = rankCard.Find("Table/Top");
             SetLabel(top, "TitleGroup/Title", L.T("Ranking das moedas"));
             Tip(top, "TitleGroup/Title", L.T("Ranking das moedas"), L.T("A força da moeda de cada império que você conhece, da maior para a menor. A sua está em dourado."));
@@ -1840,7 +1854,7 @@ namespace CurrencyMod.NativeUI
                 PlaceIfMoved(row.Name, 8f, y + 3f, nameWidth, 18f);
                 PlaceIfMoved(row.Gauge, 8f + nameWidth + 6f, y, RankGaugeWidth, 22f);
                 PlaceIfMoved(row.Value, 8f + nameWidth + 6f + RankGaugeWidth + 6f, y - 2f, valueWidth, 26f);
-                string name = isMine ? L.T("Você") : ShortEmpireName(entry.EmpireIndex);
+                string name = places[i] + 1 + ". " + (isMine ? L.T("Você") : Diplomacy.NativeNames.FixedName(entry.EmpireIndex) ?? ShortEmpireName(entry.EmpireIndex));
                 NativeUIKit.SetText(row.Name, isMine ? "<c=E3C88A>" + name + "</c>" : name);
                 NativeUIKit.SetText(row.Value, (isMine ? "<c=E3C88A>" : string.Empty) + Format.Rate(entry.ExchangeValue) + "×" + (isMine ? "</c>" : string.Empty));
                 NativeUIKit.StyleGauge(row.ValueGroup, isMine ? new Color(0.89f, 0.78f, 0.54f, 1f) : new Color(0.50f, 0.64f, 0.78f, 1f));

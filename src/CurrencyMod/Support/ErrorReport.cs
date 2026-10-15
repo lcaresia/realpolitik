@@ -41,6 +41,18 @@ namespace CurrencyMod.Support
         internal static State Current { get { lock (Gate) { return state; } } }
         internal static string Code { get { lock (Gate) { return code; } } }
         internal static string Error { get { lock (Gate) { return error; } } }
+
+        /// <summary>The failure in the screen language; the raw exception text stays in the log (and in Error, for dev commands).</summary>
+        internal static string ErrorUi
+        {
+            get
+            {
+                string raw = Error;
+                return raw == NoServer ? L.T("servidor de relatórios não configurado") : L.T("sem conexão com o servidor de relatórios");
+            }
+        }
+
+        private const string NoServer = "no report server configured";
         internal static string SavedPath { get { lock (Gate) { return savedPath; } } }
 
         internal static string Folder => Path.Combine(SessionLog.Folder, "reports");
@@ -89,7 +101,8 @@ namespace CurrencyMod.Support
                 }
                 if (string.IsNullOrEmpty(url))
                 {
-                    Finish(State.Failed, null, "no report server configured");
+                    Plugin.Log.LogWarning($"Error report not sent: {NoServer} (saved at {path}).");
+                    Finish(State.Failed, null, NoServer);
                     return;
                 }
                 string received = Upload(url, bundle);

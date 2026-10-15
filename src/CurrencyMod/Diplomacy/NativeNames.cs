@@ -72,6 +72,12 @@ namespace CurrencyMod.Diplomacy
             }
         }
 
+        /// <summary>The nation's fixed name alone ("Valdoria"), or null without one (short lists such as the currency ranking).</summary>
+        internal static string FixedName(int empire)
+        {
+            return Enabled && fixedNames.TryGetValue(empire, out string name) && !string.IsNullOrWhiteSpace(name) ? name : null;
+        }
+
         /// <summary>"Valdoria · Godos" for a major empire with a fixed name; null otherwise. The culture may be a localization key.</summary>
         internal static string Label(int empire, string culture)
         {

@@ -38,6 +38,10 @@ namespace CurrencyMod.Diplomacy.UI
 
         private void Update()
         {
+            if (MailScreen.Instance != null && NativeUIKit.ShortcutPressed(AiConfig.MailKey.Value, MailScreen.IsOpen))
+            {
+                MailScreen.SetOpen(!MailScreen.IsOpen);
+            }
             if (button == null)
             {
                 if (Time.unscaledTime >= nextAttempt)
@@ -147,7 +151,7 @@ namespace CurrencyMod.Diplomacy.UI
 
         private void RefreshTooltip(int unread)
         {
-            tooltipTarget.Title = L.T("Correio Diplomático");
+            tooltipTarget.Title = L.T("Correio Diplomático") + $" ({AiConfig.MailKey.Value})";
             string news = unread == 0 ? L.T("Nenhuma carta nova.") : unread == 1 ? L.T("1 carta nova.") : L.F("{0} cartas novas.", unread);
             AiModule module = AiModule.Instance;
             int cites = module == null ? 0 : module.PlayerInbox().Count(l => l.IsPublic && !l.ReadBy.Contains(module.PlayerIndex)

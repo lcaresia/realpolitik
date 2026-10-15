@@ -46,7 +46,7 @@ namespace CurrencyMod.Diplomacy
     /// </summary>
     internal static class DealLedger
     {
-        private const int MaxOpenPerNation = 8;
+        internal const int MaxOpenPerNation = 8;
 
         internal static string Record(AiWorld world, int empire, string json, int turn)
         {

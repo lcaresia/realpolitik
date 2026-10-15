@@ -73,7 +73,7 @@ namespace CurrencyMod.NativeUI
                 int count = ordered[i].Value;
                 GameGlossary.ResourceEntry entry = GameGlossary.Resource(type);
                 Transform top = rows[i].Find("Table/Top");
-                SetLabel(top, "TitleGroup/Title", entry?.Name ?? ("#" + type));
+                SetLabel(top, "TitleGroup/Title", entry?.Name ?? L.T("Recurso desconhecido"));
                 SetChip(top, "StatsTable/PopCount", count == 1 ? L.T("1 acesso") : L.F("{0} acessos", count));
                 SetChip(top, "StatsTable/Fortification", entry != null && entry.Strategic ? L.T("Estratégico") : L.T("Luxo"));
                 Tip(top, "StatsTable/PopCount", L.T("Acessos"), L.T("Quantas fontes desse recurso o seu império usa agora (extratores nas suas jazidas mais as compras por rota comercial)."));
@@ -184,7 +184,7 @@ namespace CurrencyMod.NativeUI
             {
                 int type = lines[i];
                 series.Add(new BankChart.Series { Values = Line(r => r.TryGetValue(type, out int v) ? v : 0), Color = ResourceColors[i % ResourceColors.Length], Thickness = 4.5f, Dot = true });
-                names.Add(GameGlossary.Resource(type)?.Name ?? ("#" + type));
+                names.Add(GameGlossary.Resource(type)?.Name ?? L.T("Recurso desconhecido"));
             }
             double[] total = Line(r => r.Values.Sum());
             series.Add(new BankChart.Series { Values = total, Color = new Color(0.89f, 0.78f, 0.54f), Thickness = 7f, Fill = true, Dot = true });
@@ -193,6 +193,8 @@ namespace CurrencyMod.NativeUI
             var references = new List<BankChart.Reference>();
             BankChart.Range(series, references, out double min, out double max);
             min = 0;
+            // Access counts are whole numbers: an even top keeps the middle label whole too (it read "1, 1, 0" with a top of 1).
+            max = Math.Max(2, Math.Ceiling(max / 2.0) * 2);
             double checksum = series.SelectMany(s => s.Values).Where(v => !double.IsNaN(v)).Sum();
             string signature = "resources|" + count + "|" + first + "|" + max.ToString("0.00") + "|" + series.Count + "|" + checksum.ToString("0.00");
             if (signature != chartSignature)
@@ -205,7 +207,7 @@ namespace CurrencyMod.NativeUI
             chartYLabels[2].Text = min.ToString("0");
             chartXLabels[0].Text = L.F("Turno {0}", first);
             chartXLabels[1].Text = L.F("Turno {0}", last);
-            SetLabel(top, "TitleGroup/Title", L.F("Acessos a recursos nos últimos {0} turnos", history.Count));
+            SetLabel(top, "TitleGroup/Title", L.P(history.Count, "Acessos a recursos no último turno", "Acessos a recursos nos últimos {0} turnos"));
 
             // Money of resources per turn (melhorias-jogando item 23): purchases, sales and route upkeep with other empires,
             // from the bank's trade ledger. Recorded per partner, not per resource, so the value is per turn.

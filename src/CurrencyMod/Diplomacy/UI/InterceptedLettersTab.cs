@@ -420,7 +420,7 @@ namespace CurrencyMod.Diplomacy.UI
                 string nation = MailScreen.NationAndLeader(capture, spy.TerritoryOwner);
                 string state = weight != null ? (weight.Mission == "presença" ? L.T("observando") : MissionUi(weight.Mission))
                     : spy.Hidden ? L.T("sem poder agir (acordo com eles)") : L.T("descoberto");
-                string danger = spy.HostileDetection > 0 && spy.TurnsBeforeRevealed != int.MaxValue ? L.F(", revelado em ~{0} turno(s)", spy.TurnsBeforeRevealed) : string.Empty;
+                string danger = spy.HostileDetection > 0 && spy.TurnsBeforeRevealed != int.MaxValue ? L.P(spy.TurnsBeforeRevealed, ", revelado em ~{0} turno", ", revelado em ~{0} turnos") : string.Empty;
                 lines.Add(L.F("{0} em {1}, terra {2}: {3}{4}.", MailScreen.Escape(spy.Name ?? L.T("Espião")), MailScreen.Escape(capture.TerritoryName(spy.Territory)), MailScreen.Escape(GameText.OfUi(nation)), state, danger));
             }
             var reach = new List<string>();

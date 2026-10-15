@@ -50,12 +50,15 @@ function Json-String([string]$s) {
 
 $regular = [regex]'\bL\.(?:T|F|N)\(\s*"((?:[^"\\\r\n]|\\.)*)"'
 $verbatim = [regex]'\bL\.(?:T|F|N)\(\s*@"((?:[^"]|"")*)"'
+# L.P(n, "{0} turno", "{0} turnos"): both plural forms are keys.
+$plural = [regex]'\bL\.P\([^,"]+,\s*"((?:[^"\\\r\n]|\\.)*)"\s*,\s*"((?:[^"\\\r\n]|\\.)*)"'
 $keys = New-Object 'System.Collections.Generic.SortedSet[string]' ([StringComparer]::Ordinal)
 $where = New-Object 'System.Collections.Generic.Dictionary[string,string]' ([StringComparer]::Ordinal)
 foreach ($file in Get-ChildItem $src -Recurse -Filter *.cs | Where-Object { $_.FullName -notmatch '\\(bin|obj)\\' }) {
     $text = [IO.File]::ReadAllText($file.FullName)
     $rel = $file.FullName.Substring($src.Length + 1)
     foreach ($m in $regular.Matches($text)) { $k = Unescape-CSharp $m.Groups[1].Value; [void]$keys.Add($k); if (-not $where.ContainsKey($k)) { $where[$k] = $rel } }
+    foreach ($m in $plural.Matches($text)) { foreach ($g in 1, 2) { $k = Unescape-CSharp $m.Groups[$g].Value; [void]$keys.Add($k); if (-not $where.ContainsKey($k)) { $where[$k] = $rel } } }
     foreach ($m in $verbatim.Matches($text)) { $k = $m.Groups[1].Value.Replace('""', '"'); [void]$keys.Add($k); if (-not $where.ContainsKey($k)) { $where[$k] = $rel } }
 }
 [void]$keys.Remove('')

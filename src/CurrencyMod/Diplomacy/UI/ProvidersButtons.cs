@@ -128,22 +128,36 @@ namespace CurrencyMod.Diplomacy.UI
         /// In game, the screen always opens on top of the pause menu (which hides the HUD, as in Settings). If the menu
         /// is not open yet (e.g. a test command), it opens it first.
         /// </summary>
-        internal static void OpenInGame(PauseMenuModalWindow menu = null, string section = null)
+        /// <param name="backToGame">Opened from the control bar: closing goes straight back to the map instead of
+        /// leaving the player on a pause menu they never opened.</param>
+        internal static void OpenInGame(PauseMenuModalWindow menu = null, string section = null, bool backToGame = false)
         {
             menu = menu ?? Resources.FindObjectsOfTypeAll<PauseMenuModalWindow>().FirstOrDefault(w => w.gameObject.scene.IsValid());
+            if (backToGame)
+            {
+                // Same cleanup as the mod's other screens (bank, mail, council...): never two on top of each other.
+                NativeUI.ExclusiveWindows.BeforeOpen(null);
+            }
             if (menu != null && !menu.Shown)
             {
                 WindowsUtils.ShowWindow(menu);
             }
+            ProvidersScreen.BackToGame = backToGame;
             if (menu != null)
             {
                 // Same as Settings: the pause menu column goes away and comes back on close.
                 menu.leftContentShowable?.Hide(instant: true);
                 ProvidersScreen.Closed = () =>
                 {
-                    if (menu != null && menu.Shown)
+                    ProvidersScreen.BackToGame = false;
+                    if (menu == null || !menu.Shown)
                     {
-                        menu.leftContentShowable?.Show();
+                        return;
+                    }
+                    menu.leftContentShowable?.Show(instant: backToGame);
+                    if (backToGame)
+                    {
+                        WindowsUtils.HideWindow(menu);
                     }
                 };
             }
@@ -159,7 +173,7 @@ namespace CurrencyMod.Diplomacy.UI
                     continue;
                 }
                 B.SetLabel(button.transform, string.Empty, L.T("Realpolitik"));
-                B.Tip(button.transform, string.Empty, L.T("Realpolitik"),
+                B.Tip(button.transform, string.Empty, L.T("Realpolitik") + (button == pauseButton ? $" ({AiConfig.RealpolitikKey.Value})" : string.Empty),
                     L.T("Conecte a IA que faz as nações do computador pensarem, escreverem cartas e negociarem: login ou chave, modelo e limites."));
             }
             if (mainButton != null)

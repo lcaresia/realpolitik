@@ -47,7 +47,7 @@ namespace CurrencyMod.Diplomacy.UI
         private void Update()
         {
             // Shortcut (F7): opens the council even when the bar is hidden (Neolithic, Xenouzik's feedback 2026-10-14).
-            if (AiConfig.CouncilKey.Value.IsDown() && !NativeUIKit.TypingInField() && CouncilScreen.Instance != null)
+            if (CouncilScreen.Instance != null && NativeUIKit.ShortcutPressed(AiConfig.CouncilKey.Value, CouncilScreen.IsOpen))
             {
                 CouncilScreen.SetOpen(!CouncilScreen.IsOpen);
             }
@@ -170,7 +170,7 @@ namespace CurrencyMod.Diplomacy.UI
                 : L.T("O conselho está se reunindo.");
             if (meeting != null && meeting.UnseenReplies > 0)
             {
-                state += "\n" + L.F("{0} resposta(s) dos ministros esperando você.", meeting.UnseenReplies);
+                state += "\n" + L.P(meeting.UnseenReplies, "{0} resposta dos ministros esperando você.", "{0} respostas dos ministros esperando você.");
             }
             if (urgentTopics != null && urgentTopics.Count > 0)
             {

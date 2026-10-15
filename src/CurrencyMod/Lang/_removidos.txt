@@ -1,12 +1,8 @@
-[en] Algo deu errado? Envie os registros do jogo e do mod para o Lucas analisar. Depois de enviar, você recebe um código: mande esse código no Discord ou no GitHub, junto com o que aconteceu.
-[en] Envia os registros do jogo e do mod para o Lucas analisar um erro, um travamento ou algo estranho.
-[en] O que é enviado: o registro do BepInEx e o do Unity (desta sessão e da anterior, para pegar travamentos e fechamentos), as configurações do mod e um resumo do PC (Windows, processador, memória, placa de vídeo, resolução). Chaves de API, e-mails e o seu nome de usuário do Windows são apagados antes. As cartas e os dossiês das nações não vão. O servidor guarda os relatórios por 90 dias.
-[es] Algo deu errado? Envie os registros do jogo e do mod para o Lucas analisar. Depois de enviar, você recebe um código: mande esse código no Discord ou no GitHub, junto com o que aconteceu.
-[es] Envia os registros do jogo e do mod para o Lucas analisar um erro, um travamento ou algo estranho.
-[es] O que é enviado: o registro do BepInEx e o do Unity (desta sessão e da anterior, para pegar travamentos e fechamentos), as configurações do mod e um resumo do PC (Windows, processador, memória, placa de vídeo, resolução). Chaves de API, e-mails e o seu nome de usuário do Windows são apagados antes. As cartas e os dossiês das nações não vão. O servidor guarda os relatórios por 90 dias.
-[fr] Algo deu errado? Envie os registros do jogo e do mod para o Lucas analisar. Depois de enviar, você recebe um código: mande esse código no Discord ou no GitHub, junto com o que aconteceu.
-[fr] Envia os registros do jogo e do mod para o Lucas analisar um erro, um travamento ou algo estranho.
-[fr] O que é enviado: o registro do BepInEx e o do Unity (desta sessão e da anterior, para pegar travamentos e fechamentos), as configurações do mod e um resumo do PC (Windows, processador, memória, placa de vídeo, resolução). Chaves de API, e-mails e o seu nome de usuário do Windows são apagados antes. As cartas e os dossiês das nações não vão. O servidor guarda os relatórios por 90 dias.
-[de] Algo deu errado? Envie os registros do jogo e do mod para o Lucas analisar. Depois de enviar, você recebe um código: mande esse código no Discord ou no GitHub, junto com o que aconteceu.
-[de] Envia os registros do jogo e do mod para o Lucas analisar um erro, um travamento ou algo estranho.
-[de] O que é enviado: o registro do BepInEx e o do Unity (desta sessão e da anterior, para pegar travamentos e fechamentos), as configurações do mod e um resumo do PC (Windows, processador, memória, placa de vídeo, resolução). Chaves de API, e-mails e o seu nome de usuário do Windows são apagados antes. As cartas e os dossiês das nações não vão. O servidor guarda os relatórios por 90 dias.
+[en] Confirmar acusação
+[en] Confirmar bloqueio
+[es] Confirmar acusação
+[es] Confirmar bloqueio
+[fr] Confirmar acusação
+[fr] Confirmar bloqueio
+[de] Confirmar acusação
+[de] Confirmar bloqueio

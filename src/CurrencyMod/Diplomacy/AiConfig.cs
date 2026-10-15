@@ -44,6 +44,10 @@ namespace CurrencyMod.Diplomacy
         internal static ConfigEntry<int> PlayerCouncilSpeakers;
         internal static ConfigEntry<int> PlayerCouncilInterval;
         internal static ConfigEntry<KeyboardShortcut> CouncilKey;
+        internal static ConfigEntry<KeyboardShortcut> MailKey;
+        internal static ConfigEntry<KeyboardShortcut> AlliancesKey;
+        internal static ConfigEntry<KeyboardShortcut> ReportKey;
+        internal static ConfigEntry<KeyboardShortcut> RealpolitikKey;
         internal static ConfigEntry<bool> Interception;
         internal static ConfigEntry<float> InterceptionMaxChance;
         internal static ConfigEntry<float> InterceptionCurve;
@@ -159,6 +163,16 @@ namespace CurrencyMod.Diplomacy
                 // An early test build used F9, which also quick-loads the last save.
                 CouncilKey.Value = new KeyboardShortcut(KeyCode.F7);
             }
+            // One shortcut per control bar button (Lucas, 2026-10-14). Free keys: the game uses F1, F5, F9, Shift+F10;
+            // Steam takes F12; the mod already has F7 (council), F8 (bank) and F10 (debug viewer).
+            MailKey = config.Bind(S, "MailShortcut", new KeyboardShortcut(KeyCode.F2),
+                "Tecla que abre e fecha o Correio Diplomático. Evite F5 e F9: são o salvar e o carregar rápido do jogo.");
+            AlliancesKey = config.Bind(S, "AlliancesShortcut", new KeyboardShortcut(KeyCode.F3),
+                "Tecla que abre e fecha a tela de Alianças.");
+            ReportKey = config.Bind(S, "ReportShortcut", new KeyboardShortcut(KeyCode.F4),
+                "Tecla que abre e fecha a tela Relatar um problema.");
+            RealpolitikKey = config.Bind(S, "RealpolitikShortcut", new KeyboardShortcut(KeyCode.F6),
+                "Tecla que abre e fecha a tela Realpolitik (provedores de IA, limites e idioma) durante a partida.");
             Interception = config.Bind(S, "Interceptacao", true,
                 "Espiões (agentes furtivos do jogo) no território de quem escreve ou de quem recebe podem interceptar cartas privadas. A carta interceptada nunca chega; quem interceptou lê inteira. Ultimatos e declarações públicas não são interceptados.");
             InterceptionMaxChance = config.Bind(S, "InterceptacaoChanceMax", 0.5f,

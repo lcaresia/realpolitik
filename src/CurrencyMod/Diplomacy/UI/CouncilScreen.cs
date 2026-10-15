@@ -345,7 +345,7 @@ namespace CurrencyMod.Diplomacy.UI
             MailScreen.FitTitle(top, scheduleButton.GetComponent<UITransform>().Width + 20f);
             B.HideOutputs(top);
             B.Tip(top, "StatsTable/PopCount", L.T("Reuniões automáticas"), L.T("De quantos em quantos turnos o conselho se reúne sozinho. No automático, segue a velocidade do jogo (7 turnos no Normal). Cada reunião é uma chamada à API."));
-            B.Tip(scheduleButton.transform, string.Empty, L.T("Mudar"), L.T("Passa para o próximo intervalo: automático, 3, 5, 7, 10, 15, 20 turnos ou só por audiência."));
+            B.Tip(scheduleButton.transform, string.Empty, L.T("Próximo intervalo"), L.T("Passa para o próximo intervalo: automático, 3, 5, 7, 10, 15, 20 turnos ou só por audiência."));
         }
 
         private void Speak()
@@ -393,7 +393,7 @@ namespace CurrencyMod.Diplomacy.UI
             B.SetLabel(top, "TitleGroup/Title", L.T("Você fala ao conselho"));
             B.SetChip(top, "StatsTable/PopCount", L.F("Turno {0}", turn));
             int used = meeting?.Exchanges.Count ?? 0;
-            B.SetChip(top, "StatsTable/Fortification", L.F("{0} fala(s) sua(s)", used));
+            B.SetChip(top, "StatsTable/Fortification", L.P(used, "{0} fala sua", "{0} falas suas"));
             B.HideChild(top, "StatsTable/ExtensionsCount");
             MailScreen.FitTitle(top, 12f);
             B.HideOutputs(top);
@@ -647,7 +647,7 @@ namespace CurrencyMod.Diplomacy.UI
         {
             if (!AiConfig.PlayerCouncil.Value)
             {
-                return L.T("O conselho do jogador está desligado no .cfg ([IA] ConselhoDoJogador).");
+                return L.T("O conselho está desligado nas configurações do mod.");
             }
             if (nation.Council.Count == 0)
             {
@@ -655,9 +655,9 @@ namespace CurrencyMod.Diplomacy.UI
             }
             int loyal = nation.Council.Count(m => m.Affection >= 20);
             int cold = nation.Council.Count(m => m.Affection <= -20);
-            return L.F("Turno {0}. {1} conselheiros", turn, nation.Council.Count)
+            return L.P(nation.Council.Count, "Turno {1}. {0} conselheiro", "Turno {1}. {0} conselheiros", turn)
                 + (loyal > 0 ? " · " + L.F("{0} com apreço por você", loyal) : string.Empty)
-                + (cold > 0 ? " · " + L.F("{0} ressentido(s)", cold) : string.Empty) + ".";
+                + (cold > 0 ? " · " + L.P(cold, "{0} ressentido", "{0} ressentidos") : string.Empty) + ".";
         }
 
         private void FillMeeting(CouncilMeeting meeting, AiNation nation, WorldCapture capture, int era, int turn)
@@ -692,8 +692,9 @@ namespace CurrencyMod.Diplomacy.UI
             List<CouncilSpeech> advised = meeting.Speeches.Where(s => s.Portfolio != "mao" && !string.IsNullOrWhiteSpace(s.Advice ?? s.Text)).ToList();
             int summary = advised.Count > 0 ? 1 : 0;
             int count = summary + meeting.Speeches.Count + meeting.Exchanges.Sum(e => 1 + e.Replies.Count + (e.Status == "pronta" ? 0 : 1)) + (meeting.Notes.Count > 0 ? 1 : 0);
+            int spoke = meeting.Speeches.Count - 1;
             sectionTitleLabel.Text = meeting.Turn == turn
-                ? L.F("Reunião do turno {0} · {1} ministro(s) falaram", meeting.Turn, meeting.Speeches.Count - 1)
+                ? L.P(spoke, "Reunião do turno {1} · {0} ministro falou", "Reunião do turno {1} · {0} ministros falaram", meeting.Turn)
                 : PlayerCouncil.NextAutoTurn(AiModule.World) == int.MaxValue
                     ? L.F("Última reunião: turno {0} · a próxima só quando você convocar", meeting.Turn)
                     : L.F("Última reunião: turno {0} · a próxima é no turno {1}, ou quando você convocar", meeting.Turn, PlayerCouncil.NextAutoTurn(AiModule.World));
@@ -760,10 +761,10 @@ namespace CurrencyMod.Diplomacy.UI
                 B.SetChip(top, "StatsTable/ExtensionsCount", reply && speech.AffectionChange != 0
                     ? (speech.AffectionChange > 0 ? $"<c={Green}>" + L.F("Apreço +{0}", speech.AffectionChange) + "</c>" : $"<c={Red}>" + L.F("Apreço {0}", speech.AffectionChange) + "</c>")
                     : AffectionChip(minister.Affection));
-                B.Tip(top, "StatsTable/Fortification", L.T("Credibilidade"), L.T("Sobe e desce com os números da pasta dele no jogo. Ministro com credibilidade baixa costuma errar."));
+                B.Tip(top, "StatsTable/Fortification", L.T("Credibilidade"), L.T("Sobe e desce com os números da pasta no jogo. Ministro com credibilidade baixa costuma errar."));
                 B.Tip(top, "StatsTable/ExtensionsCount", L.T("Apreço por você"), reply && speech.AffectionChange != 0
-                    ? L.F("O que ele achou da sua fala: {0:+0;-0}. Agora: {1:+0;-0} (de -100 a 100).", speech.AffectionChange, minister.Affection)
-                    : L.F("{0:+0;-0}, de -100 a 100. Sobe quando você segue os conselhos dele ou o trata bem; desce quando faz o contrário.", minister.Affection));
+                    ? L.F("Reação à sua fala: {0:+0;-0}. Agora: {1:+0;-0} (de -100 a 100).", speech.AffectionChange, minister.Affection)
+                    : L.F("{0:+0;-0}, de -100 a 100. Sobe quando você segue os conselhos desta pasta ou trata bem quem a ocupa; desce quando faz o contrário.", minister.Affection));
             }
             else
             {
@@ -814,7 +815,7 @@ namespace CurrencyMod.Diplomacy.UI
                 string advice = !string.IsNullOrWhiteSpace(speech.Advice) ? speech.Advice : FirstSentence(speech.Text);
                 lines.Add($"• <c={Gold}>{MailScreen.Escape(who)}</c>: {MailScreen.Escape(advice)}");
             }
-            FillNotice(row, L.T("Resumo do conselho"), L.F("{0} conselho(s)", advised.Count), string.Join("\n", lines));
+            FillNotice(row, L.T("Resumo do conselho"), L.P(advised.Count, "{0} conselho", "{0} conselhos"), string.Join("\n", lines));
             B.Tip(row.Card.Find("Table/Top"), "StatsTable/PopCount", L.T("Resumo do conselho"), L.T("O conselho de cada ministro em uma linha. As falas completas vêm logo abaixo."));
         }
 
@@ -864,7 +865,7 @@ namespace CurrencyMod.Diplomacy.UI
             List<string> candidates = expandedSeat != null && nation.CouncilCandidates.TryGetValue(expandedSeat, out List<string> ids) ? ids : new List<string>();
             int cost = CouncilEngine.AppointCost(era);
             double influence = module != null ? capture.Empire(module.PlayerIndex)?.Influence ?? 0 : 0;
-            sectionTitleLabel.Text = L.F("Ministros · {0} no cargo · {1} pasta(s) vaga(s)", council.Count, vacant.Count);
+            sectionTitleLabel.Text = L.P(vacant.Count, "Ministros · {1} no cargo · {0} pasta vaga", "Ministros · {1} no cargo · {0} pastas vagas", council.Count);
             SetRowCount(council.Count + vacant.Count + candidates.Count);
             if (confirmFire != null && Time.unscaledTime > confirmUntil)
             {
@@ -915,7 +916,7 @@ namespace CurrencyMod.Diplomacy.UI
                 SetPortrait(row, ministerPortrait);
                 if (ministerPortrait != null) B.HideOutputs(top, PortraitCardHeight); else B.HideOutputs(top);
                 B.Tip(top, "StatsTable/PopCount", PortfolioName(minister.Portfolio), MailScreen.Escape(TraitsUi(minister)));
-                B.Tip(top, "StatsTable/Fortification", L.T("Credibilidade"), L.T("Sobe e desce com os números da pasta dele no jogo."));
+                B.Tip(top, "StatsTable/Fortification", L.T("Credibilidade"), L.T("Sobe e desce com os números da pasta no jogo."));
                 B.Tip(top, "StatsTable/ExtensionsCount", L.T("Apreço por você"), L.F("{0:+0;-0}, de -100 a 100. Lealdade {1}, ambição {2}.", minister.Affection, minister.Loyalty, minister.Ambition));
                 B.Tip(row.Button.transform, string.Empty, confirming ? L.T("Confirmar a demissão") : L.T("Demitir"),
                     confirming ? L.T("Clique de novo para demitir. A pasta fica vaga e o bônus de veterano zera; o resto do conselho sente o golpe.")
@@ -962,9 +963,9 @@ namespace CurrencyMod.Diplomacy.UI
                 // Rows are reused from the Ministers section: without this, a minister's portrait stayed on the card.
                 SetPortrait(row, null);
                 B.SetLabel(top, "TitleGroup/Title", L.F("Reunião do turno {0}", meeting.Turn));
-                B.SetChip(top, "StatsTable/PopCount", L.F("{0} fala(s)", meeting.Speeches.Count - 1));
+                B.SetChip(top, "StatsTable/PopCount", L.P(meeting.Speeches.Count - 1, "{0} fala", "{0} falas"));
                 B.SetVisible(top.Find("StatsTable/Fortification"), true);
-                B.SetChip(top, "StatsTable/Fortification", L.F("{0} resposta(s) sua(s)", meeting.Exchanges.Count));
+                B.SetChip(top, "StatsTable/Fortification", L.P(meeting.Exchanges.Count, "{0} resposta sua", "{0} respostas suas"));
                 // Rows are reused across sections: without swapping the tooltip, the previous speech's one stayed.
                 B.Tip(top, "StatsTable/PopCount", L.T("Falas"), L.T("Quantos ministros falaram nessa reunião, fora a Mão."));
                 B.Tip(top, "StatsTable/Fortification", L.T("Suas respostas"), L.T("Quantas vezes você respondeu ao conselho nessa reunião."));
@@ -1156,7 +1157,7 @@ namespace CurrencyMod.Diplomacy.UI
             string disliked = MailScreen.Escape(string.Join(joiner, dislikes));
             return likes.Count > 0 && dislikes.Count > 0 ? L.F("Simpatiza com {0}; desconfia de {1}.", liked, disliked)
                 : likes.Count > 0 ? L.F("Simpatiza com {0}.", liked)
-                : L.F("desconfia de {0}.", disliked);
+                : L.F("Desconfia de {0}.", disliked);
         }
 
         /// <summary>
@@ -1172,7 +1173,7 @@ namespace CurrencyMod.Diplomacy.UI
             string title = person != null ? CouncilBank.TitleUi(seat, era, person.Gender) + " " + person.Name : "?";
             B.SetLabel(top, "TitleGroup/Title", $"<c={Gold}>›</c> " + MailScreen.Escape(title));
             string traits = person != null ? string.Join(", ", person.Traits.Select(t => L.T(t))) : string.Empty;
-            B.SetChip(top, "StatsTable/PopCount", traits.Length > 0 ? MailScreen.Escape(traits) : L.T("Candidato(a)"));
+            B.SetChip(top, "StatsTable/PopCount", traits.Length > 0 ? MailScreen.Escape(traits) : L.T("Sem traços marcantes"));
             B.SetVisible(top.Find("StatsTable/Fortification"), preview != null);
             B.SetVisible(top.Find("StatsTable/ExtensionsCount"), preview != null);
             string ambitionChip = B.ExtraChip(top, 3);

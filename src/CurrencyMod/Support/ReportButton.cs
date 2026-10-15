@@ -41,6 +41,18 @@ namespace CurrencyMod.Support
 
         private void Update()
         {
+            if (CentralBankWindow.IsInGame)
+            {
+                bool reportOpen = ProvidersScreen.IsOpen && ProvidersScreen.Instance.CurrentSection == ProvidersScreen.ReportSection;
+                if (NativeUIKit.ShortcutPressed(Diplomacy.AiConfig.ReportKey.Value, reportOpen))
+                {
+                    Toggle(ProvidersScreen.ReportSection, !reportOpen);
+                }
+                else if (NativeUIKit.ShortcutPressed(Diplomacy.AiConfig.RealpolitikKey.Value, ProvidersScreen.IsOpen))
+                {
+                    Toggle(null, !ProvidersScreen.IsOpen);
+                }
+            }
             if (button == null)
             {
                 if (Time.unscaledTime >= nextAttempt)
@@ -122,7 +134,7 @@ namespace CurrencyMod.Support
                 return;
             }
             shownState = state;
-            tooltipTarget.Title = L.T("Relatar um problema");
+            tooltipTarget.Title = L.T("Relatar um problema") + $" ({Diplomacy.AiConfig.ReportKey.Value})";
             string last = state == ErrorReport.State.Sent ? "\n" + L.F("Último envio: {0}", ErrorReport.Code)
                 : state == ErrorReport.State.Failed ? "\n" + L.T("O último envio falhou; a cópia ficou salva neste PC.")
                 : state == ErrorReport.State.Sending ? "\n" + L.T("Enviando…") : string.Empty;
@@ -132,11 +144,20 @@ namespace CurrencyMod.Support
         private void Toggle_Switch(IUIToggle source, bool state)
         {
             bool showingReport = ProvidersScreen.IsOpen && ProvidersScreen.Instance.CurrentSection == ProvidersScreen.ReportSection;
-            if (state && !showingReport)
+            if (state != showingReport)
             {
-                ProvidersScreen.SetOpen(true, ProvidersScreen.ReportSection);
+                Toggle(ProvidersScreen.ReportSection, state);
             }
-            else if (!state && showingReport)
+        }
+
+        /// <summary>Opens the Realpolitik screen on a section (null = its default) straight from the map, or closes it.</summary>
+        private static void Toggle(string section, bool open)
+        {
+            if (open)
+            {
+                ProvidersButtons.OpenInGame(section: section, backToGame: true);
+            }
+            else
             {
                 ProvidersScreen.SetOpen(false);
             }

@@ -424,6 +424,7 @@ plano: `PostMessage(MainWindowHandle, WM_KEYDOWN/WM_KEYUP, vk, 1 | scan<<16)` pa
 0x1B/0x01) e `WM_CHAR` (0x102) para digitar. Com `game focus <caminho do campo>` antes, dá para testar campo de texto,
 atalhos e ESC do começo ao fim (testado em 2026-10-05: "ola" entrou no campo; F8 bloqueado no campo; foco solto ao
 fechar o correio; F8 e ESC voltaram). **Segure a tecla uns 300 ms** entre o KEYDOWN e o KEYUP: com 80 ms o atalho do mod (`KeyboardShortcut.IsDown`) às vezes não vê a tecla (2026-10-14). E nunca teste com F5/F9: são o salvar e o carregar rápido do jogo (o F9 carregou um auto-save no meio de um teste); `keys` lista as teclas do jogo.
+  **Atenção (2026-10-14, segunda rodada):** com o jogo sem foco, o PostMessage voltou a ser ignorado (PostMessage retorna true, mas a Unity não vê a tecla) e as teclas ficam na fila: quando o jogo ganha foco, todas chegam de uma vez (vários ESC abriram o menu de pausa). O jeito confiável é pôr o jogo na frente por alguns segundos e usar teclado real: um toque de ALT (`keybd_event(0x12)`) libera o `SetForegroundWindow(hwnd)`, depois `keybd_event(vk, 0, 0/2)` com 300 ms entre descer e subir, e no fim `SetForegroundWindow` de volta na janela que estava na frente. Atalhos do mod: F2 Correio, F3 Alianças, F4 Relatar, F6 Realpolitik, F7 Conselho, F8 Banco (mapa completo em `docs\mapa\README.md`).
 
 ## Revisão geral da interface (2026-10-07): lições
 - **Nunca use `show InternationalScreen`/`show` em telas cheias do jogo para "abrir a diplomacia".** Deixa a câmera em visão estratégica,

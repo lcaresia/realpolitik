@@ -288,14 +288,14 @@ namespace CurrencyMod.NativeUI
             var lines = new List<string>();
             Diplomacy.NationDoctrines.Doctrine doctrine = ai != null && ai.Doctrines.TryGetValue(other, out string key) ? Diplomacy.NationDoctrines.ByKey(key) : null;
             lines.Add(doctrine != null
-                ? L.F("<b>Doutrina dele:</b> {0}", L.T(doctrine.Name)) + " — " + L.T(DoctrineEssence(doctrine.Key))
-                : L.T("<b>Doutrina dele:</b> ainda não definida (a IA decide no primeiro turno dela)."));
+                ? L.F("<b>Doutrina:</b> {0}", L.T(doctrine.Name)) + " — " + L.T(DoctrineEssence(doctrine.Key))
+                : L.T("<b>Doutrina:</b> ainda não definida (a IA decide no primeiro turno da nação)."));
             Diplomacy.NationPerception view = null;
             ai?.Get(other)?.Perceptions.TryGetValue(me, out view);
             Diplomacy.NationDoctrines.Doctrine seen = Diplomacy.NationDoctrines.ByKey(view?.Doctrine);
             lines.Add(seen != null
-                ? L.F("<b>Como ele te vê:</b> {0}", L.T(seen.Name)) + (string.IsNullOrEmpty(view.Note) ? string.Empty : " — <i>" + view.Note + "</i>")
-                : L.T("<b>Como ele te vê:</b> ainda sem opinião formada."));
+                ? L.F("<b>Como vê você:</b> {0}", L.T(seen.Name)) + (string.IsNullOrEmpty(view.Note) ? string.Empty : " — <i>" + view.Note + "</i>")
+                : L.T("<b>Como vê você:</b> ainda sem opinião formada."));
             Diplomacy.Blocs.Bloc mine = Diplomacy.Blocs.BlocEngine.Of(ai, me);
             Diplomacy.Blocs.Bloc theirs = Diplomacy.Blocs.BlocEngine.Of(ai, other);
             string blocs = theirs == null ? L.T("sem bloco")
@@ -303,7 +303,7 @@ namespace CurrencyMod.NativeUI
                 : L.F("em {0}", theirs.Name) + (mine != null ? " · " + L.F("você em {0}", mine.Name) : string.Empty);
             lines.Add(L.F("<b>Blocos:</b> {0}", blocs));
             NativeUIKit.SetText(policyText, string.Join("\n", lines));
-            NativeUIKit.Tip(policyText, L.T("Política externa"), L.T("A doutrina é o papel que esta nação busca no mundo (sorteada no começo da partida, ligada ao temperamento do líder). \"Como ele te vê\" é a leitura que a IA dele faz de você: só a opinião dela, pode estar errada, e cada nação te vê de um jeito."));
+            NativeUIKit.Tip(policyText, L.T("Política externa"), L.T("A doutrina é o papel que esta nação busca no mundo (sorteada no começo da partida, ligada ao temperamento de quem governa). \"Como vê você\" é a leitura que a IA da nação faz de você: só a opinião dela, pode estar errada, e cada nação vê você de um jeito."));
         }
 
         /// <summary>One-line essence of each doctrine, for the profile.</summary>

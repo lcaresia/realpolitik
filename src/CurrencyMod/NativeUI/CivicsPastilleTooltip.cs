@@ -31,7 +31,7 @@ namespace CurrencyMod.NativeUI
                 tooltip.Unbind(preserveTooltipClass: false);
                 tooltip.Bind(TooltipUtils.TitleAndDescription, new Amplitude.Mercury.UI.Tooltips.TitleAndDescription(
                     NativeBankWindow.NationAndLeaderName(empireIndex),
-                    L.T("Este impÃ©rio jÃ¡ tomou esta decisÃ£o. Se vocÃª escolher diferente, ele nÃ£o vai gostar e vai abrir uma queixa contra vocÃª.")));
+                    L.T("Este império já tomou esta decisão. Se você escolher diferente, essa nação não vai gostar e vai abrir uma queixa contra você.")));
             }
             catch (Exception ex)
             {
