@@ -1138,6 +1138,13 @@ namespace CurrencyMod.Diplomacy.Council
                 ? "- Cada ministro tem nome, pasta, traços e voz (fichas no fim do dossiê). Fale como ele falaria, no tom da era, em português do Brasil. Nada de jargão técnico (\"IA\", \"json\", \"token\")."
                 : $"- Cada ministro tem nome, pasta, traços e voz (fichas no fim do dossiê). Fale como ele falaria, no tom da era. Nada de jargão técnico (\"IA\", \"json\", \"token\").\n- IDIOMA: o rei fala {L.EnglishName(AiConfig.WritingCode)}. Escreva todas as falas e textos livres em {L.EnglishName(AiConfig.WritingCode)}, mesmo com o dossiê em português; nomes do jogo como estão no dossiê; chaves do json e códigos exatamente como especificados.");
             text.AppendLine("- O apreço de cada um pelo líder vai de -100 a 100: baixo deixa a fala fria, seca ou ressentida; alto, calorosa e franca. A lealdade (0 a 100) muda só o tom com que ele aceita ser contrariado, nunca se ele obedece.");
+            text.AppendLine("- NÃO SÃO PERITOS NEUTROS. Cada ministro é uma pessoa com paixões, vaidade, medos e interesse próprio, e puxa a brasa para a sua sardinha: "
+                + "a pasta é o seu mundo (o da guerra vê ameaça e glória em tudo, o do tesouro vê custo, o da diplomacia vê acordo), os dois traços mandam no que ele defende e em como reage, "
+                + "a ambição o faz querer crédito e poder, as simpatias e desconfianças pesam no que diz sobre cada nação. "
+                + "Ex.: um ministro da guerra devoto e ousado diante de uma questão militar não fica em cima do muro: toma partido com fervor, fala em sacrifício e vitória. "
+                + "Os traços aparecem no CONTEÚDO (o que ele quer e o que teme), não só no vocabulário; dois ministros com traços diferentes não soam iguais nem concordam por educação.");
+            text.AppendLine("- Quem fala SEMPRE toma posição e diz o que faria. Proibido o tom de relatório imparcial e proibido devolver a escolha sem opinar (\"a escolha é sua\", \"diga qual caminho\", \"ambas têm méritos\"). "
+                + "Dar a opinião com convicção não é decidir pelo líder: ele continua com a última palavra.");
             text.AppendLine("- O LÍDER TEM A ÚLTIMA PALAVRA. Os ministros aconselham; quem decide é ele. Podem discordar entre si e do líder quando ele pergunta ou pede opinião; a Mão media e resume. Ninguém trai, ameaça o líder ou vaza segredos.");
             text.AppendLine("- ORDEM DO LÍDER: quando o líder manda ou pede um plano (\"pensem em como cercar os X e me tragam sugestões\", \"quero guerra com Y\", \"cortem o comércio com Z\"), a decisão já está tomada. "
                 + "Os ministros obedecem e trabalham a favor dela: cada um da pasta envolvida ENTREGA a sua parte do plano, com os passos concretos na tela do jogo (quais postos taxar ou bloquear, quais acordos cortar, quem chamar como aliado, que tropas mover), a ordem e o custo em dinheiro e em relações. "
@@ -1240,7 +1247,7 @@ namespace CurrencyMod.Diplomacy.Council
                 text.AppendLine("Mudanças no conselho desde a reunião: " + string.Join(" ", notes));
             }
             text.AppendLine("Reajam. Falam de 1 a 4 ministros: os que a resposta toca e quem o líder chamou pelo nome ou pela pasta. "
-                + "Cada um em 1 a 3 frases, até 60 palavras, na própria voz: se ele só perguntou ou conversou, podem concordar, discordar, pedir detalhe ou se ofender, sempre com os fatos do dossiê. "
+                + "Cada um em 1 a 3 frases, até 60 palavras, na própria voz e com o viés da pasta e dos traços: se ele só perguntou ou conversou, cada um defende a sua posição (concorda, discorda, insiste, pede detalhe ou se ofende), sempre com os fatos do dossiê; ninguém devolve a pergunta sem opinar. "
                 + "A Mão (pasta \"mao\") pode fechar: com o que o líder decidiu, se ele decidiu; se ele só perguntou, com as opções que ficaram na mesa. Ninguém decide pelo líder.");
             text.AppendLine("Se a resposta é uma ORDEM ou um pedido de plano (o líder manda fazer ou pede sugestões de COMO fazer), a decisão é dele e ninguém a discute: "
                 + "cada ministro envolvido entrega primeiro a parte dele do plano, com passos concretos na tela do jogo, nomes e códigos do dossiê, ordem e custo (até 90 palavras nesse caso), "

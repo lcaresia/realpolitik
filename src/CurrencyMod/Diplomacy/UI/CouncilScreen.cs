@@ -87,6 +87,12 @@ namespace CurrencyMod.Diplomacy.UI
         private UIButton retryButton;
         private string feedback;
         private bool feedbackIsError;
+        /// <summary>Turn the speak/summon feedback belongs to: it never carries over to the next turn.</summary>
+        private int feedbackTurn;
+        /// <summary>Appoint/fire result, shown for a few seconds in the ministers title (not in the speak/summon cards).</summary>
+        private string cabinetFeedback;
+        private bool cabinetFeedbackIsError;
+        private float cabinetFeedbackUntil;
         private string confirmFire;
         private float confirmUntil;
         /// <summary>Your speeches and replies already shown: when this changes, the list scrolls to your last speech.</summary>
@@ -381,12 +387,25 @@ namespace CurrencyMod.Diplomacy.UI
         {
             feedback = message;
             feedbackIsError = isError;
+            feedbackTurn = AiModule.Instance?.CurrentTurn ?? 0;
+            nextRefresh = 0;
+        }
+
+        private void SetCabinetFeedback(string message, bool isError)
+        {
+            cabinetFeedback = message;
+            cabinetFeedbackIsError = isError;
+            cabinetFeedbackUntil = Time.unscaledTime + 8f;
             nextRefresh = 0;
         }
 
         private void FillSide(CouncilMeeting meeting, int turn)
         {
             sideTitleLabel.Text = L.T("Falar ao conselho");
+            if (feedback != null && feedbackTurn != turn)
+            {
+                feedback = null;
+            }
             B.SetVisible(speakCard, true);
             B.SetVisible(sendCard, true);
             Transform top = speakCard.Find("Table/Top");
@@ -865,7 +884,9 @@ namespace CurrencyMod.Diplomacy.UI
             List<string> candidates = expandedSeat != null && nation.CouncilCandidates.TryGetValue(expandedSeat, out List<string> ids) ? ids : new List<string>();
             int cost = CouncilEngine.AppointCost(era);
             double influence = module != null ? capture.Empire(module.PlayerIndex)?.Influence ?? 0 : 0;
-            sectionTitleLabel.Text = L.P(vacant.Count, "Ministros · {1} no cargo · {0} pasta vaga", "Ministros · {1} no cargo · {0} pastas vagas", council.Count);
+            sectionTitleLabel.Text = cabinetFeedback != null && Time.unscaledTime < cabinetFeedbackUntil
+                ? (cabinetFeedbackIsError ? $"<c={Red}>{cabinetFeedback}</c>" : cabinetFeedback)
+                : L.P(vacant.Count, "Ministros · {1} no cargo · {0} pasta vaga", "Ministros · {1} no cargo · {0} pastas vagas", council.Count);
             SetRowCount(council.Count + vacant.Count + candidates.Count);
             if (confirmFire != null && Time.unscaledTime > confirmUntil)
             {
@@ -1236,7 +1257,7 @@ namespace CurrencyMod.Diplomacy.UI
             if (row.Candidate != null)
             {
                 string result = PlayerCouncil.Appoint(row.Portfolio, row.Candidate);
-                SetFeedback(result.Replace("ok: ", string.Empty).Replace("error: ", string.Empty), result.StartsWith("error"));
+                SetCabinetFeedback(result.Replace("ok: ", string.Empty).Replace("error: ", string.Empty), result.StartsWith("error"));
                 expandedSeat = null;
                 nextRefresh = 0;
                 return;
@@ -1274,10 +1295,10 @@ namespace CurrencyMod.Diplomacy.UI
             if (result.StartsWith("ok") && oldName != null)
             {
                 Minister newcomer = nation.Council.FirstOrDefault(m => m.Portfolio == portfolio);
-                SetFeedback(L.F("Demissão de {0}; no lugar entra {1}", oldName, newcomer?.Name ?? L.T("ninguém")), false);
+                SetCabinetFeedback(L.F("Demissão de {0}; no lugar entra {1}", oldName, newcomer?.Name ?? L.T("ninguém")), false);
                 return;
             }
-            SetFeedback(result.Replace("ok: ", string.Empty).Replace("error: ", string.Empty), !result.StartsWith("ok"));
+            SetCabinetFeedback(result.Replace("ok: ", string.Empty).Replace("error: ", string.Empty), !result.StartsWith("ok"));
         }
 
         // ---------------- Development and removal ----------------

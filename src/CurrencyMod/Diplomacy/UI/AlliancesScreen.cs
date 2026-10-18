@@ -771,7 +771,7 @@ namespace CurrencyMod.Diplomacy.UI
                     : L.F("Quem preside decide se põe a sua sugestão em votação; sem decisão em {0} turnos, ela expira.", Bloc.SuggestionTurns));
             Chip(top, 1, used >= Bloc.MotionSlots ? $"<c={Red}>" + L.F("Pautas: {0}/{1}", used, Bloc.MotionSlots) + "</c>" : L.F("Pautas: {0}/{1}", used, Bloc.MotionSlots),
                 L.T("Pautas ativas"), L.F("Cada nação tem até {0} pautas ativas no Congresso: sugeridas, em votação ou resoluções suas em vigor.", Bloc.MotionSlots));
-            Chip(top, 2, L.F("Preside: {0}", Short(view, forum.President)), L.T("Presidente"), L.T("Quem preside a sessão de leis do Congresso põe sugestões em votação e desempata, sem votar."));
+            Chip(top, 2, null, null, null); // the president chip lives in the send row: three chips overflow this narrow panel
             Chip(top, 3, null, null, null);
             SetButtons(info, null, null, null, null);
             Body(info, L.F("Escreva o que o mundo deve fazer (até {0} letras; a primeira frase vira o título). Aprovada, vale {1} turnos e só fica registrada: o mod não aplica nada. Para acusar alguém, comece o texto com o nome da nação (e o número da resolução, se houver): \"Calderra Resolução 2 manteve a rota aberta\".", Bloc.MotionTextMax, Bloc.ResolutionTurns));
@@ -785,7 +785,15 @@ namespace CurrencyMod.Diplomacy.UI
             top = Top(send);
             Title(send, FeedbackTitle(L.T("Pronta")));
             Chip(top, 0, L.F("Votação de {0} turnos", Bloc.VoteTurns), L.T("Prazo"), L.T("Maioria simples; no empate decide quem preside."));
-            Chip(top, 1, null, null, null);
+            // Nation only, shortened: with the leader's name the chip ran out of the card.
+            string presider = forum.President == view.Me ? L.T("você")
+                : Esc(GameText.InlineUi(view.Capture.Empire(forum.President)?.Culture ?? DossierBuilder.Name(view.Capture, forum.President)));
+            if (presider.Length > 16)
+            {
+                presider = presider.Substring(0, 15).TrimEnd() + "…";
+            }
+            Chip(top, 1, L.F("Preside: {0}", presider), L.T("Presidente"),
+                Short(view, forum.President) + ". " + L.T("Quem preside a sessão de leis do Congresso põe sugestões em votação e desempata, sem votar."));
             Chip(top, 2, null, null, null);
             Chip(top, 3, null, null, null);
             SetButtons(send, president ? L.T("Pôr em votação") : L.T("Sugerir"), () => ProposeToCongress(view, field?.Text),

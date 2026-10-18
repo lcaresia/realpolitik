@@ -60,7 +60,7 @@ Os dois primeiros ícones são do jogo (Inteligência e Comercializar). O mod ac
 
 | # | Botão | Ícone | Abre | Selo (badge) | Aparece quando |
 |---|---|---|---|---|---|
-| 1 | **Banco Central (F8)** | prédio | Banco Central | "!" quando o diagnóstico da economia é ruim (alerta) | em partida, fora do multijogador |
+| 1 | **Banco Central (F8)** | prédio | Banco Central | "!" quando o diagnóstico da economia é ruim (alerta); some ao abrir a tela e só volta se o alerta mudar ou a crise acabar e voltar | em partida, fora do multijogador |
 | 2 | **Correio diplomático (F2)** | envelope | Correio | número de cartas não lidas (1–9, "9+"); "X" quando nenhum provedor de IA responde | em partida, fora do multijogador |
 | 3 | **Conselho (F7)** | pessoas | Conselho | "!" quando a reunião do turno está pronta e não vista, ou há assunto urgente | em partida, fora do multijogador e com `[IA] ConselhoDoJogador = true` |
 | 4 | **Alianças (F3)** | três círculos | Alianças | "!" com convite, voto faltando, eleição ou sugestão para o presidente | em partida, fora do multijogador (sempre; ver nota) |
@@ -176,6 +176,7 @@ Embaixo à esquerda: **Voltar ao jogo**.
 **Coluna Falar ao conselho (direita):**
 - Estado ("O conselho está dispensado", turno, "Sozinho no turno N").
 - Campo de texto (pergunte a um ministro pelo nome ou pela pasta, ou dê uma ordem; até 120 palavras).
+- Nomear ou demitir um ministro: o resultado aparece por 8 s no título "Ministros · …" (não nos cartões de falar/convocar).
 - Sem reunião no turno: **Peça uma audiência** com botão **Convocar** (custo "1 chamada à API").
   Com reunião: botão **Falar** (até 8 falas por turno). Reunião que falhou: **Convocar de novo**.
 - **Reuniões automáticas** com botão **Mudar** (passa por automático, 3, 5, 7, 10, 15, 20 turnos e "Só por audiência").
@@ -204,8 +205,8 @@ Cabeçalho: "Turno N. <bloco> • N membros • presidente: …". Embaixo à esq
 - **Bloco formado — Pôr em votação** (presidente) ou **Sugerir ao presidente**: **Pauta livre** ("Vai direto à
   votação" / "Vira sugestão", contador de pautas), campo de texto, **Pronta** com botão **Pôr em votação** / **Sugerir**
   ("Votação de 2 turnos"), **Sair do bloco** com botão **Sair** (pede **Confirmar**; "Espera de 10 turnos").
-- **Seção Congresso mundial — Propor ao Congresso:** Pauta livre no Congresso ("Vira sugestão", pautas, quem preside),
-  campo de texto, **Pronta** com botões **Acusar** e **Sugerir** (**Pôr em votação** se você preside).
+- **Seção Congresso mundial — Propor ao Congresso:** Pauta livre no Congresso ("Vira sugestão", pautas),
+  campo de texto, **Pronta** ("Votação de 2 turnos", "Preside: <nação>") com botões **Acusar** e **Sugerir** (**Pôr em votação** se você preside).
 
 | Seção | Conteúdo | Botões | Print |
 |---|---|---|---|
@@ -292,7 +293,7 @@ Código: `src\CurrencyMod\NativeUI\DiplomacyTradePolicyPanel.cs` (some com `[Blo
 Abaixo de "Seus recursos": **Seus postos comerciais** com o efeito nas rotas dessa nação nos seus territórios, os
 botões **Livre**, **Taxar**, **Bloquear** (o ativo aparece com ✓; bloquear dá a eles uma reclamação "Bloqueio
 comercial"), o pedágio ("Pedágio: Tl 4 por recurso (padrão)") com **−** / **+**, e o resumo ("Livre em todos os 4
-postos").
+postos"). Com muitos recursos a caixa "Seus recursos" cresce e o bloco desce junto, logo abaixo dela.
 
 ![](prints/f_dip_trade.jpg)
 

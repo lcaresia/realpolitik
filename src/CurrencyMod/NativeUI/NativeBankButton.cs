@@ -29,6 +29,8 @@ namespace CurrencyMod.NativeUI
         /// <summary>"!" badge when the economy is in a severe state (debt, high inflation, heavy unemployment).</summary>
         private Transform badge;
         private string alert;
+        /// <summary>Alert the player already saw by opening the screen: the badge stays off until the alert changes.</summary>
+        private string seenAlert;
         private float nextAlert;
 
         public static event Action<bool> Clicked;
@@ -79,6 +81,11 @@ namespace CurrencyMod.NativeUI
             {
                 button.Toggle.State = open;
             }
+            if (open && alert != null && seenAlert != alert)
+            {
+                seenAlert = alert;
+                NativeUIKit.SetBadge(badge, null);
+            }
             if (Time.unscaledTime >= nextAlert)
             {
                 nextAlert = Time.unscaledTime + 1f;
@@ -126,7 +133,11 @@ namespace CurrencyMod.NativeUI
                 return;
             }
             alert = current;
-            NativeUIKit.SetBadge(badge, alert != null ? "!" : null);
+            if (alert == null)
+            {
+                seenAlert = null; // the crisis ended: a new one lights the badge again
+            }
+            NativeUIKit.SetBadge(badge, alert != null && alert != seenAlert ? "!" : null);
         }
 
         private void TryCreate()

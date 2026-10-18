@@ -129,6 +129,17 @@ namespace CurrencyMod.NativeUI
                 }
             }
             root = content;
+            resourcesBox.Clear();
+            foreach (string name in new[] { "Background", "_MyStrategicPanel", "_MyLuxuryPanel" })
+            {
+                UITransform ui = mySide.Find(name)?.GetComponent<UITransform>();
+                if (ui != null)
+                {
+                    resourcesBox.Add(ui);
+                }
+            }
+            baseY.Clear();
+            shownShift = -1f;
 
             title = Part(mySide.Find("MyResourcesLabel"), "Title");
             NativeUIKit.Place(title, Left, TitleTop, Width, 32);
@@ -354,6 +365,7 @@ namespace CurrencyMod.NativeUI
                 return;
             }
             otherEmpire = other;
+            FollowResourcesBox();
 
             if (!TradePolicy.TransitPublished && Amplitude.Mercury.Sandbox.Sandbox.TradeController != null)
             {
@@ -477,6 +489,41 @@ namespace CurrencyMod.NativeUI
         }
 
         private readonly List<Transform> parts = new List<Transform>();
+        /// <summary>Y of each part as built: the whole block moves down by the same amount when the resources box grows.</summary>
+        private readonly Dictionary<Transform, float> baseY = new Dictionary<Transform, float>();
+        /// <summary>The tab's own "Your Resources" box and its two grids: with many resources they grow past TitleTop.</summary>
+        private readonly List<UITransform> resourcesBox = new List<UITransform>();
+        private float shownShift = -1f;
+
+        /// <summary>Keeps the block below the native resources box (it overlapped it with ~30 resource kinds).</summary>
+        private void FollowResourcesBox()
+        {
+            resourcesBox.RemoveAll(ui => ui == null);
+            if (resourcesBox.Count == 0 || root == null)
+            {
+                return;
+            }
+            if (baseY.Count == 0)
+            {
+                foreach (Transform part in parts)
+                {
+                    baseY[part] = part.GetComponent<UITransform>().Y;
+                }
+            }
+            UITransform content = root.GetComponent<UITransform>();
+            // The grids end 16 px above the box's bottom edge when the box fits them.
+            float bottom = resourcesBox.Max(ui => ui.name == "Background" ? ui.GlobalRect.yMax : ui.GlobalRect.yMax + 16f);
+            float shift = Mathf.Max(0f, bottom + 16f - (content.GlobalRect.yMin + TitleTop));
+            if (Mathf.Abs(shift - shownShift) < 0.5f)
+            {
+                return;
+            }
+            shownShift = shift;
+            foreach (Transform part in parts)
+            {
+                part.GetComponent<UITransform>().Y = baseY[part] + shift;
+            }
+        }
 
         /// <summary>Piece cloned directly into the tab (shows and hides together with it).</summary>
         private Transform Part(Transform donor, string name)
@@ -493,6 +540,7 @@ namespace CurrencyMod.NativeUI
                 NativeUIKit.Dispose(part);
             }
             parts.Clear();
+            baseY.Clear();
             root = null;
         }
     }
