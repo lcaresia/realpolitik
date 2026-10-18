@@ -12,7 +12,7 @@ namespace CurrencyMod
         public const string PluginName = "CurrencyMod";
         public const string PluginVersion = "1.1.0";
         /// <summary>Product version (Realpolitik): installer, store and update notice. The DLLs have their own.</summary>
-        public const string ProductVersion = "1.5.2";
+        public const string ProductVersion = "1.5.3";
 
         internal static ManualLogSource Log;
         internal static ConfigEntry<KeyboardShortcut> ToggleWindowKey;
