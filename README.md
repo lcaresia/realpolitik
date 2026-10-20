@@ -5,7 +5,8 @@ your choice. It writes letters, keeps a secret diary, remembers what you did, an
 orders. Realpolitik also adds currencies, inflation and a Central Bank, trade tolls and blockades, and up to 16
 empires on any map.
 
-[![Watch the 60-second trailer](media/trailer-poster.jpg)](media/realpolitik-trailer.mp4)
+<img width="1672" height="941" alt="image" src="https://github.com/user-attachments/assets/4281c311-648e-4536-a601-8b139d4c0193" />
+
 
 **[⬇ Download the latest Setup.exe](https://github.com/lcaresia/realpolitik/releases/latest)** ·
 [Install guide](docs/instalacao.md) · [Report a problem](https://github.com/lcaresia/realpolitik/issues)
