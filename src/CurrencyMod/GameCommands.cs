@@ -317,6 +317,51 @@ namespace CurrencyMod
                     string choice = civic.ActiveChoiceName.ToString();
                     return $"E{holder} {words[1]}: {civic.CivicStatus} · choice {(string.IsNullOrEmpty(choice) ? "none" : choice)} · last change on turn {civic.TurnOnLastChoice}";
                 }
+                case "influence":
+                {
+                    // "game influence ±N": the player gains or loses influence now, through the game's order (cheats screen);
+                    // tests stocks that change mid-turn, after the turn snapshot.
+                    int player = Diplomacy.AiModule.Instance?.PlayerIndex ?? -1;
+                    if (player < 0 || !int.TryParse((rest ?? string.Empty).Trim(), out int gain))
+                    {
+                        return "usage: game influence ±N";
+                    }
+                    Amplitude.Mercury.Sandbox.SandboxManager.PostOrder(new Amplitude.Mercury.Interop.OrderGainInfluence { Gain = gain }, player);
+                    return $"order sent: E{player} influence {(gain >= 0 ? "+" : string.Empty)}{gain} (stock before: {Sandbox.MajorEmpires[player].InfluenceStock.Value:0})";
+                }
+                case "enact":
+                {
+                    // "game enact CV# N": the player chooses option N (1-based) of a civic waiting for a choice, through the
+                    // game's own order (the civics screen); CV# is the index shown in the dossier.
+                    string[] words = rest.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+                    if (words.Length < 2 || !words[0].StartsWith("CV", StringComparison.OrdinalIgnoreCase)
+                        || !int.TryParse(words[0].Substring(2), out int civicIndex) || !int.TryParse(words[1], out int option))
+                    {
+                        return "usage: game enact CV# N";
+                    }
+                    int player = Diplomacy.AiModule.Instance?.PlayerIndex ?? -1;
+                    if (player < 0)
+                    {
+                        return "error: no game";
+                    }
+                    Amplitude.Mercury.Simulation.DepartmentOfDevelopment development = Sandbox.MajorEmpires[player].DepartmentOfDevelopment;
+                    if (civicIndex < 0 || civicIndex >= development.Civics.Length)
+                    {
+                        return $"error: civic CV{civicIndex} not found";
+                    }
+                    Amplitude.Mercury.Simulation.Civic civic = development.Civics.Data[civicIndex];
+                    int choices = civic.CivicDefinition?.Choices?.Length ?? 0;
+                    if (option < 1 || option > choices)
+                    {
+                        return $"error: CV{civicIndex} has {choices} option(s)";
+                    }
+                    Amplitude.Mercury.Sandbox.SandboxManager.PostOrder(new Amplitude.Mercury.Interop.OrderActivateCivic
+                    {
+                        CivicName = civic.CivicDefinition.Name,
+                        ChoiceIndex = option - 1,
+                    }, player);
+                    return $"order sent: {civic.CivicDefinition.Name} → {civic.CivicDefinition.Choices[option - 1].Name} (check with 'game civic E{player} {civic.CivicDefinition.Name}')";
+                }
                 case "buy":
                 {
                     // "game buy E# luxury|strategic": the player buys all of the empire's resources in that category (the
@@ -423,7 +468,7 @@ namespace CurrencyMod
                         + " | battle [auto|retreat] | mood [E#] | new <2-16> [size]|restore | spectator on|off | quit | menu | economy"
                         + " | interest <E#> <pct>|auto | rpn <name> | breakdown industry|stability|money [n] | interaction ... | focus <path>|off"
                         + " | spy E# T# [unit] | outpost E# T# | camera T#|tile | zoom 0..1 | surrender ... | congress ... | routes [detail|labels|colors]"
-                        + " | trade [refresh|routes|cargo T#|epidemic City|labels|hover text|off] | civic E# Civic | buy E# luxury|strategic [E#] | toll ... | expansion [on|off] | alert <text>|off";
+                        + " | trade [refresh|routes|cargo T#|epidemic City|labels|hover text|off] | civic E# Civic | enact CV# N | influence ±N | buy E# luxury|strategic [E#] | toll ... | expansion [on|off] | alert <text>|off";
             }
         }
 

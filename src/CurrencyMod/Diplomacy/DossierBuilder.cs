@@ -970,7 +970,7 @@ namespace CurrencyMod.Diplomacy
         }
 
         /// <summary>Diplomatic action as a noun, for "turno N, X por você/por eles".</summary>
-        private static string ActionName(string action)
+        internal static string ActionName(string action)
         {
             switch (action)
             {
@@ -1321,8 +1321,12 @@ namespace CurrencyMod.Diplomacy
             string reply = letter.From != self && full ? (letter.ExpectsReply ? " · pede resposta" : " · não pede resposta") : string.Empty;
             // Written and arrival turns kept separate: with the messenger delay, "turno 92" alone made the AI spend its
             // reasoning trying to work out whether it had already replied (turn 95 test).
+            // The recipient reads it on the arrival turn and acts during that turn; the sender sees the effect from the next
+            // one (Discord feedback: a nation took "no withdrawal" as defiance before its warning had even arrived).
             string when = letter.From == self
-                ? (letter.DeliverTurn > turn ? $"enviada no turno {letter.SentTurn}, chega no turno {letter.DeliverTurn}" : $"enviada no turno {letter.SentTurn}, entregue no turno {letter.DeliverTurn}")
+                ? (letter.DeliverTurn > turn ? $"enviada no turno {letter.SentTurn}, chega no turno {letter.DeliverTurn}; ainda não foi lida, então nada do que o destinatário fez até agora responde a ela"
+                    : letter.DeliverTurn == turn ? $"enviada no turno {letter.SentTurn}, entregue agora, no turno {letter.DeliverTurn}; o destinatário lê e reage neste turno, e você só vê o efeito a partir do turno {turn + 1}"
+                    : $"enviada no turno {letter.SentTurn}, entregue no turno {letter.DeliverTurn}; a reação a ela vale a partir do turno {letter.DeliverTurn + 1}")
                 : $"escrita no turno {letter.SentTurn}, chegou no turno {letter.DeliverTurn}";
             // Prompt-injection guard (InjectionGuard): free text fenced and neutralized; a letter that talks to a model
             // instead of a leader is flagged, never hidden.

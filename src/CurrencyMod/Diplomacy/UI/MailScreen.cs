@@ -98,6 +98,8 @@ namespace CurrencyMod.Diplomacy.UI
         private int pendingSection = -1;
         /// <summary>Letters shown in "New" during this visit: they stay in the list after being marked as read.</summary>
         private readonly HashSet<int> freshShown = new HashSet<int>();
+        /// <summary>Turn in which freshShown was filled: a new turn starts a new visit, so letters read before stop being "New".</summary>
+        private int freshTurn = -1;
 
         private readonly List<LetterRow> letterRows = new List<LetterRow>();
         private readonly List<NationRow> nationRows = new List<NationRow>();
@@ -986,6 +988,11 @@ namespace CurrencyMod.Diplomacy.UI
             {
                 case Section.New:
                     List<Letter> inbox = module.PlayerInbox();
+                    if (freshTurn != turn)
+                    {
+                        freshShown.Clear();
+                        freshTurn = turn;
+                    }
                     foreach (Letter letter in inbox.Where(l => !l.ReadBy.Contains(me)))
                     {
                         freshShown.Add(letter.Id);

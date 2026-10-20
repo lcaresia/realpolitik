@@ -135,7 +135,8 @@ memory.
   your group messages ask for an answer. Every bloc gets its own group automatically.
 - **Who writes:** nations write to you and to each other.
 - **Delivery delay by era:** letters take turns to arrive in the early eras and arrive the same turn in the
-  Contemporary era.
+  Contemporary era. AI nations count that delay: they only judge your reaction to a letter from the turn after it
+  reaches you.
 - **Linked replies:** an answer is linked to the letter it replies to.
 - **Refusing letters:** you, or an AI, can refuse another nation's private letters. They bounce back, and the sender
   learns it.
@@ -170,8 +171,9 @@ memory.
 - **Your council** (three-busts button or F7):
   - Meetings happen on their own every few turns (automatic by game speed, 3 to 20 turns, or only when you summon an
     audience); the Hand opens the agenda and the most urgent ministers speak about your realm, using your own dossier.
-  - The council reads your treasury live when it meets and each time you answer, so money picked up or spent during
-    the turn counts.
+  - The council reads your treasury, influence, civics, proposals and diplomatic actions live when it meets and each
+    time you answer, so what you did earlier in the turn counts: it does not advise a deal you already proposed or a law
+    you already chose. Appointing checks the influence you have right now.
   - You can answer them. Their regard for you changes, and it also follows the wars, peaces and agreements you actually
     make.
   - Fire ministers on the Ministers tab; previous meetings stay readable.

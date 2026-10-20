@@ -105,6 +105,8 @@ the command words around them are English.
 | — | `game trade labels` | route map network labels and how many were drawn |
 | — | `game trade hover <text>\|off` | forces the hover panel of the label containing the text |
 | `jogo civico E# Civico` | `game civic E# Civic` | an empire's current law |
+| — | `game enact CV# N` | the player picks option N of a civic waiting for a choice (CV# as in the dossier), through the game order |
+| — | `game influence ±N` | the player gains or loses influence now (game order), to test stocks that change mid-turn |
 | `jogo comprar E# luxo\|estrategico [E#]` | `game buy E# luxury\|strategic [E#]` | buys all resources of a category |
 | `jogo pedagio E# E# livre\|pedagio\|bloqueio` | `game toll E# E# free\|toll\|block` | sets the mode on all of the first empire's posts |
 | `jogo pedagio preco E# E# n` | `game toll price E# E# n` | general toll price |

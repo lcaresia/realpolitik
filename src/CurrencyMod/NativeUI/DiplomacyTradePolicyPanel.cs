@@ -362,10 +362,12 @@ namespace CurrencyMod.NativeUI
             }
             if (!valid)
             {
+                RequiredHeight = 0f;
                 return;
             }
             otherEmpire = other;
             FollowResourcesBox();
+            FitTradePanel(screen: WindowsUtils.GetWindow<DiplomaticScreen>());
 
             if (!TradePolicy.TransitPublished && Amplitude.Mercury.Sandbox.Sandbox.TradeController != null)
             {
@@ -522,6 +524,61 @@ namespace CurrencyMod.NativeUI
             foreach (Transform part in parts)
             {
                 part.GetComponent<UITransform>().Y = baseY[part] + shift;
+            }
+        }
+
+        /// <summary>
+        /// Height the Trade tab needs to show the whole block (0 = no block). The tab's Content clips everything below
+        /// the height the game computes from its own two sides, so with a tall resources box and an empty "Their
+        /// Resources" the block moved below it and vanished (Discord feedback on v1.5.3).
+        /// </summary>
+        internal static float RequiredHeight;
+
+        private const float MaxTabHeight = 780f;
+
+        /// <summary>Grows the tab (and the screen's blue background) to fit the block; the game's RefreshHeight is patched too.</summary>
+        private void FitTradePanel(DiplomaticScreen screen)
+        {
+            RequiredHeight = Mathf.Min(MaxTabHeight, BoxTop + BoxHeight + Mathf.Max(0f, shownShift) + 16f);
+            DiplomaticTradePanel tab = root != null ? root.GetComponentInParent<DiplomaticTradePanel>() : null;
+            if (Grow(tab) && screen != null && screen.currentMode == DiplomaticScreenMode.Trade)
+            {
+                screen.AnimateBackgroundHeight(tab.UITransform.Height, instant: true);
+            }
+        }
+
+        /// <summary>Raises the tab height to RequiredHeight; true when it changed.</summary>
+        internal static bool Grow(DiplomaticTradePanel tab)
+        {
+            if (tab == null || RequiredHeight <= 0f || tab.UITransform.Height >= RequiredHeight - 0.5f)
+            {
+                return false;
+            }
+            tab.UITransform.Height = RequiredHeight;
+            return true;
+        }
+
+        /// <summary>The game recomputes the tab height on every refresh: keep room for the block, without flicker.</summary>
+        [HarmonyLib.HarmonyPatch(typeof(DiplomaticTradePanel), "RefreshHeight")]
+        private static class RefreshHeightPatch
+        {
+            private static void Postfix(DiplomaticTradePanel __instance)
+            {
+                try
+                {
+                    if (TradeBlockade.Enabled && Grow(__instance))
+                    {
+                        DiplomaticScreen screen = WindowsUtils.WindowsService != null ? WindowsUtils.GetWindow<DiplomaticScreen>() : null;
+                        if (screen != null && screen.currentMode == DiplomaticScreenMode.Trade)
+                        {
+                            screen.AnimateBackgroundHeight(__instance.UITransform.Height, instant: true);
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Plugin.Log.LogWarning($"Trade posts in diplomacy: tab height not adjusted ({ex.Message}).");
+                }
             }
         }
 
