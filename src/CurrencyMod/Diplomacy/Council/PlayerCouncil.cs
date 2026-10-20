@@ -538,7 +538,7 @@ namespace CurrencyMod.Diplomacy.Council
             portfolio = (portfolio ?? string.Empty).Trim().ToLowerInvariant();
             CapturedEmpire me = capture.Empire(module.PlayerIndex);
             int cost = CouncilEngine.AppointCost(me?.EraIndex ?? 0);
-            if ((me?.Influence ?? 0) < cost)
+            if (LiveInfluence(capture, module.PlayerIndex) < cost)
             {
                 return "error: " + L.F("influência insuficiente: nomear custa {0}", cost);
             }
@@ -654,7 +654,10 @@ namespace CurrencyMod.Diplomacy.Council
                 }
             }
             RefreshStocks(capture, player);
-            messages.Add(new ChatMessage("user", ExchangeRequest(meeting.Exchanges[index].PlayerText, meeting.Notes, TreasuryNow(capture.Empire(player)))));
+            RefreshActs(capture, player);
+            string treasury = TreasuryNow(capture.Empire(player));
+            string done = DoneThisTurn(capture, player, meeting.Turn);
+            messages.Add(new ChatMessage("user", ExchangeRequest(meeting.Exchanges[index].PlayerText, meeting.Notes, done != null ? treasury + "\n" + done : treasury)));
             meeting.Exchanges[index].Status = "pensando";
             meeting.Exchanges[index].Error = null;
             Launch(world, meeting.Turn, player, index, "resposta" + (index + 1), messages);
@@ -1104,6 +1107,7 @@ namespace CurrencyMod.Diplomacy.Council
             // The turn snapshot is from the start of the turn: money picked up or spent since then (curiosities, hires,
             // purchases) must reach the council, so the player's stocks are read live right before the dossier.
             RefreshStocks(capture, player);
+            RefreshActs(capture, player);
             DossierBuild build;
             try
             {
@@ -1119,7 +1123,8 @@ namespace CurrencyMod.Diplomacy.Council
             knownWords = build.Context?.KnownWords ?? new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             system = SystemPrompt(me);
             string orders = OrdersText(world);
-            user = CleanDossier(build.Text) + "\n\n" + Roster(nation, capture, me) + "\n" + (orders != null ? orders + "\n" : string.Empty) + MeetingRequest(Math.Max(1, AiConfig.PlayerCouncilSpeakers.Value));
+            string done = DoneThisTurn(capture, player, turn);
+            user = CleanDossier(build.Text) + "\n\n" + Roster(nation, capture, me) + "\n" + (orders != null ? orders + "\n" : string.Empty) + (done != null ? done + "\n" : string.Empty) + MeetingRequest(Math.Max(1, AiConfig.PlayerCouncilSpeakers.Value));
             promptTurn = turn;
             promptGuid = world.GameGuid;
             return true;
@@ -1181,6 +1186,17 @@ namespace CurrencyMod.Diplomacy.Council
                 + "Pastas: " + string.Join(", ", CouncilBank.Portfolios.Where(p => p != "mao")) + ".";
         }
 
+        /// <summary>
+        /// The player's influence as it is now (main thread): the turn snapshot is from the start of the turn, so influence
+        /// gained or spent since then (or a turn-1 snapshot taken before the first income) would block or allow an
+        /// appointment wrongly.
+        /// </summary>
+        internal static double LiveInfluence(WorldCapture capture, int player)
+        {
+            RefreshStocks(capture, player);
+            return capture?.Empire(player)?.Influence ?? 0;
+        }
+
         /// <summary>Dev ("ai council prompt"): the meeting prompt as it would be sent right now, without calling the AI.</summary>
         internal static string DevPrompt()
         {
@@ -1220,6 +1236,58 @@ namespace CurrencyMod.Diplomacy.Council
             {
                 Plugin.Log?.LogWarning($"[IA] Player council: live treasury read failed, using the turn snapshot: {ex.Message}");
             }
+        }
+
+        /// <summary>Re-reads the player's civics, proposals and diplomatic log in the turn snapshot (main thread).</summary>
+        private static void RefreshActs(WorldCapture capture, int player)
+        {
+            try
+            {
+                TurnCapture.RefreshActs(capture, player);
+            }
+            catch (Exception ex)
+            {
+                Plugin.Log?.LogWarning($"[IA] Player council: live read of this turn's acts failed, using the turn snapshot: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// What the leader already did this turn before calling the council (civics chosen, proposals sent, diplomatic
+        /// actions), so the ministers do not advise it again. Null when nothing was done.
+        /// </summary>
+        private static string DoneThisTurn(WorldCapture capture, int player, int turn)
+        {
+            CapturedEmpire me = capture?.Empire(player);
+            if (me == null)
+            {
+                return null;
+            }
+            var done = new List<string>();
+            foreach (CapturedCivic civic in me.Civics.Where(c => c.Enacted && c.Turn == turn))
+            {
+                done.Add($"escolheu «{GameGlossary.Title(civic.Choice) ?? civic.Choice}» no cívico «{GameGlossary.Title(civic.Name) ?? civic.Name}»");
+            }
+            foreach (CapturedRelation relation in me.Relations.Where(r => r != null))
+            {
+                string nation = DossierBuilder.Name(capture, relation.Other);
+                foreach (PendingProposal proposal in new[] { relation.Treaty, relation.Agreement })
+                {
+                    if (proposal != null && proposal.From == player && proposal.Turn == turn)
+                    {
+                        done.Add($"propôs {proposal.Kind} a {nation} (E{relation.Other}), esperando a resposta deles");
+                    }
+                }
+                foreach (LogItem item in relation.Log.Where(l => l.Turn == turn && l.Initiator == player))
+                {
+                    done.Add($"{DossierBuilder.ActionName(item.Action)} com {nation} (E{relation.Other})");
+                }
+            }
+            if (done.Count == 0)
+            {
+                return null;
+            }
+            return "JÁ FEITO PELO LÍDER NESTE TURNO, antes de chamar o conselho (não aconselhe isso de novo; comente o efeito ou o próximo passo): "
+                + string.Join("; ", done.Distinct()) + ".";
         }
 
         /// <summary>The treasury as it is now, for answers given later in the turn than the meeting's dossier.</summary>

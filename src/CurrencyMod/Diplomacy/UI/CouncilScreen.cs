@@ -883,7 +883,7 @@ namespace CurrencyMod.Diplomacy.UI
             List<string> vacant = CouncilBank.Portfolios.Where(p => p != "mao" && !council.Any(m => m.Portfolio == p)).ToList();
             List<string> candidates = expandedSeat != null && nation.CouncilCandidates.TryGetValue(expandedSeat, out List<string> ids) ? ids : new List<string>();
             int cost = CouncilEngine.AppointCost(era);
-            double influence = module != null ? capture.Empire(module.PlayerIndex)?.Influence ?? 0 : 0;
+            double influence = module != null ? PlayerCouncil.LiveInfluence(capture, module.PlayerIndex) : 0;
             sectionTitleLabel.Text = cabinetFeedback != null && Time.unscaledTime < cabinetFeedbackUntil
                 ? (cabinetFeedbackIsError ? $"<c={Red}>{cabinetFeedback}</c>" : cabinetFeedback)
                 : L.P(vacant.Count, "Ministros · {1} no cargo · {0} pasta vaga", "Ministros · {1} no cargo · {0} pastas vagas", council.Count);

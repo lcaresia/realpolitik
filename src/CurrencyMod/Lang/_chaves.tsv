@@ -329,6 +329,7 @@ Diplomacy\UI\CouncilButton.cs	Conselho
 Diplomacy\UI\CouncilScreen.cs	Conselho fechado
 Diplomacy\UI\CouncilScreen.cs	Conselho:
 NativeUI\NativeBankResources.cs	Construa extratores nas jazidas do seu território ou compre recursos por rota comercial (acordo econômico).
+Diplomacy\NationDoctrines.cs	Construtora de coalizões
 Diplomacy\UI\ProvidersScreen.cs	Conta conectada
 NativeUI\NativeBankWindow.cs	Conta o ritmo, não o tamanho: a referência acompanha o império em ~15 turnos.
 Diplomacy\Council\CouncilBank.cs	Contador de Histórias
@@ -380,6 +381,7 @@ Trade\TradeNetworkLabels.cs	Crime: -{0} de estabilidade (estabilidade {1}; a par
 Trade\TradeNetworkLabels.cs	Crime: nenhum (cidade estável).
 NativeEffects.cs	Crise de abastecimento (rota cortada)
 Trade\TradeNetworkLabels.cs	Crise de abastecimento: cortaram a rota do {0}.
+Diplomacy\NationDoctrines.cs	Cruzada ideológica
 NativeEffects.cs	Crédito barato (juros de {0})
 NativeUI\NativeBankWindow.cs	Crédito barato: a produção das cidades vai subir até ×{0}, aos poucos.
 NativeUI\NativeBankWindow.cs	Crédito barato: as cidades produzem mais no patamar dos juros atuais.
@@ -416,6 +418,7 @@ Diplomacy\UI\AlliancesScreen.cs	De {0}
 Diplomacy\UI\MailScreen.cs	Declaração pública
 Diplomacy\LetterContext.cs	Declaração pública: a última dele foi no turno {0}; pela regra (uma a cada {1} turnos), a próxima só a partir do turno {2}.
 Diplomacy\UI\MailScreen.cs	Declarações públicas: todas as nações que conhecem quem escreveu leem.
+Diplomacy\NationDoctrines.cs	Defensora da fé
 Diplomacy\UI\AlliancesScreen.cs	Defesa mútua
 CentralBankWindow.cs	Deflação
 Diplomacy\Council\PlayerCouncil.cs	Demissão de {0}; a pasta fica vaga
@@ -679,6 +682,7 @@ Diplomacy\UI\AlliancesScreen.cs	Guerra entre membros não expulsa ninguém, mas 
 Diplomacy\UI\AlliancesScreen.cs	Histórico
 Diplomacy\UI\AlliancesScreen.cs	Histórico · {0} acontecimento
 Diplomacy\UI\AlliancesScreen.cs	Histórico · {0} acontecimentos
+Diplomacy\NationDoctrines.cs	Honra guerreira
 Diplomacy\UI\AlliancesButton.cs	Há algo esperando por você: convite, voto ou eleição.
 Diplomacy\Council\CouncilEngine.cs	Há espiões estrangeiros em {0}: o que se escreve em carta privada pode estar sendo lido.
 Diplomacy\Council\CouncilEngine.cs	Há proposta formal de {0} esperando você.
@@ -694,6 +698,7 @@ CentralBankWindow.cs	INFLAÇÃO
 CentralBankWindow.cs	INFLAÇÃO POR TURNO
 Diplomacy\UI\ProvidersScreen.cs	Idioma das cartas
 Diplomacy\UI\ProvidersScreen.cs	Igual à interface
+Diplomacy\NationDoctrines.cs	Imperialista
 CentralBankWindow.cs	Império local não encontrado.
 CentralBankWindow.cs	Império {0}
 NativeUI\NativeBankWindow.cs	Indústria das cidades por turno, já com o efeito do crédito, em média dos últimos turnos.
@@ -725,6 +730,8 @@ Diplomacy\Council\CouncilBank.cs	Intendente do Reino
 Diplomacy\UI\InterceptedLettersTab.cs	Interceptada
 Diplomacy\Council\CouncilBank.cs	Interior
 NativeUI\NativeBankWindow.cs	Inverte a ordem da lista.
+Diplomacy\NationDoctrines.cs	Irmandade de sangue
+Diplomacy\NationDoctrines.cs	Isolacionista
 Diplomacy\UI\ProvidersScreen.cs	Isso não parece uma chave (curta demais).
 Diplomacy\Council\CouncilEngine.cs	Isso é provocação: temos pretexto.
 Diplomacy\Council\CouncilEngine.cs	Isso é tributo disfarçado: exija o fim ou feche nossas rotas.
@@ -823,6 +830,7 @@ Diplomacy\Council\CouncilBank.cs	Mensageiro-Mor
 Diplomacy\UI\MailScreen.cs	Mensagem de grupo
 Diplomacy\UI\MailScreen.cs	Mensagem enviada ao grupo.
 Trade\TradeNetwork.cs	Mercado
+Diplomacy\NationDoctrines.cs	Mercantil
 Diplomacy\Council\CouncilBank.cs	Mestra Construtora
 Diplomacy\Council\CouncilBank.cs	Mestra da Academia
 Diplomacy\Council\CouncilBank.cs	Mestra das Caravanas
@@ -973,10 +981,11 @@ Diplomacy\UI\CouncilScreen.cs	Nenhuma reunião anterior
 NativeUI\DiplomacyTradePolicyPanel.cs	Nenhuma rota deles passa pelos seus territórios
 NativeUI\DiplomacyTradePolicyPanel.cs	Nenhuma rota deles passaria pelos seus territórios
 NativeUI\NativeBankWindow.cs	Nesse nível os juros não aquecem nem esfriam a economia.
+Diplomacy\NationDoctrines.cs	Neutra / ponte
 CentralBankWindow.cs	Neutro {0}
 Diplomacy\UI\AlliancesScreen.cs	Ninguém fiscaliza pelos membros: o mod não interpreta nem aplica as resoluções. Quem acha que outro membro descumpriu registra a acusação aqui, com a evidência que viu; todos leem e cada um decide se acredita.
 Diplomacy\UI\AlliancesScreen.cs	Ninguém fundou um bloco nesta partida. As IAs também podem fundar e convidar.
-Diplomacy\UI\CouncilScreen.cs	Ninguém opina por esta pasta nem rende bônus de veterano. Os candidatos são os mesmos até a próxima era ou até você nomear alguém.
+Diplomacy\UI\CouncilScreen.cs	Ninguém opina por esta pasta nem rende bônus de veterano. Os candidatos mudam na próxima era; até lá, a cada {0} turnos um deles cansa de esperar e outro entra no lugar.
 Diplomacy\UI\CouncilScreen.cs	Ninguém respondeu
 NativeUI\NativeBankWindow.cs	No automático, o banco levaria os juros para {0} (hoje {1}).
 Diplomacy\UI\MailScreen.cs	No grupo
@@ -1107,6 +1116,7 @@ Diplomacy\Council\CouncilBank.cs	Obras
 Diplomacy\Council\CouncilBank.cs	Olhos do Trono
 Diplomacy\UI\ProvidersScreen.cs	Opcional, mas ajuda muito: o que você fazia, o que esperava e o que aconteceu.
 Diplomacy\Council\CouncilBank.cs	OpenAI (pelo Codex, com a sua conta do ChatGPT)
+Diplomacy\NationDoctrines.cs	Oportunista
 NativeUI\NativeBankWindow.cs	Ordena pela cotação: quanto 1 da sua moeda compra da moeda de cada império.
 NativeUI\NativeBankWindow.cs	Ordena pela inflação de cada império.
 NativeUI\NativeBankWindow.cs	Ordena pelos juros do banco central de cada império.
@@ -1200,6 +1210,7 @@ NativeUI\NativeBankResources.cs	Por tipo
 Diplomacy\UI\AlliancesScreen.cs	Por {0}
 Diplomacy\UI\ProvidersScreen.cs	Posição na fila
 NativeUI\TradePostWindow.cs	Posto Comercial
+Diplomacy\NationDoctrines.cs	Potência regional
 Diplomacy\UI\AlliancesScreen.cs	Prazo
 Diplomacy\UI\MailScreen.cs	Prazo do trato
 Diplomacy\UI\CorrespondenceTab.cs	Prazo do ultimato
@@ -1388,6 +1399,7 @@ CentralBankWindow.cs	Saldo: <b>{0} {1}</b>
 NativeUI\NativeBankWindow.cs	Saldo: {0} {1}  ({2}/turno)
 NativeUI\NativeBankWindow.cs	Salvar
 CentralBankWindow.cs	Salvar moeda
+Diplomacy\NationDoctrines.cs	Satélite do forte
 Diplomacy\UI\AlliancesScreen.cs	Saída
 Trade\TradeGrievances.cs	Se a exigência for aceita, os bloqueios e pedágios contra quem exigiu são retirados.
 NativeUI\DiplomacyTradePolicyPanel.cs	Se pagar sair mais caro que desviar, a rota desvia e você não recebe nada.
@@ -1469,6 +1481,7 @@ Diplomacy\Council\CouncilBank.cs	Suma Sacerdotisa
 Diplomacy\Council\CouncilBank.cs	Sumo Sacerdote
 Diplomacy\Council\CouncilBank.cs	Superintendente das Finanças
 Diplomacy\Council\CouncilBank.cs	Superintendente das Obras
+Diplomacy\NationDoctrines.cs	Suserana tributária
 CentralBankWindow.cs	Símbolo
 Diplomacy\UI\InterceptedLettersTab.cs	Só cartas privadas
 Diplomacy\UI\CorrespondenceTab.cs	Só nações do computador
@@ -1543,6 +1556,7 @@ Diplomacy\UI\MailScreen.cs	Turno {0}. Suas cartas chegam em {1} turnos ({2}).
 Diplomacy\UI\MailScreen.cs	Turno {0}. Suas cartas chegam no mesmo turno ({1}).
 Diplomacy\UI\AlliancesScreen.cs	Turno {0}. {1} · {2} membros · presidente: {3}
 Diplomacy\UI\AlliancesScreen.cs	Turno {0}: {1} acusa {2}{3}: {4}
+Diplomacy\UI\CouncilScreen.cs	Turno {0}: {1} cansou de esperar e foi embora; {2} entrou na lista.
 Diplomacy\UI\AlliancesScreen.cs	Turno {1}. Você não está em nenhum bloco · {0} bloco no mundo
 Diplomacy\UI\AlliancesScreen.cs	Turno {1}. Você não está em nenhum bloco · {0} blocos no mundo
 Diplomacy\UI\CouncilScreen.cs	Turno {1}. {0} conselheiro
@@ -1961,6 +1975,7 @@ Diplomacy\UI\AlliancesScreen.cs	{0} acusações, {1} contra você
 Diplomacy\UI\AlliancesScreen.cs	{0} acusou {1} de descumprir o compromisso do bloco.
 Diplomacy\UI\AlliancesScreen.cs	{0} acusou {1} de descumprir: {2}.
 NativeUI\TradePostWindow.cs	{0} barradas
+Diplomacy\Council\PlayerCouncil.cs	{0} cansou de esperar pela vaga ({1}) e foi embora; {2} entrou na lista
 Diplomacy\UI\MailScreen.cs	{0} cartas
 Diplomacy\UI\InterceptedLettersTab.cs	{0} cartas lidas
 L.cs	{0} cartas novas

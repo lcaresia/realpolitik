@@ -89,6 +89,51 @@ namespace CurrencyMod.Diplomacy.Capture
             return before;
         }
 
+        /// <summary>
+        /// Main thread, mid-turn: re-reads what one empire may have done since the start of the turn (civics enacted,
+        /// treaty and agreement proposals, diplomatic log), so the player's council does not advise what was already done.
+        /// Lists and relations are replaced, never edited in place: AI threads may be reading the snapshot.
+        /// </summary>
+        internal static void RefreshActs(WorldCapture capture, int index)
+        {
+            CapturedEmpire captured = capture?.Empire(index);
+            Sandbox sandbox = SandboxManager.Sandbox;
+            if (captured == null || !captured.Alive || sandbox == null || sandbox.GUID.ToString() != capture.Guid
+                || index < 0 || index >= (Sandbox.MajorEmpires?.Length ?? 0))
+            {
+                return;
+            }
+            MajorEmpire empire = Sandbox.MajorEmpires[index];
+            if (empire == null || !empire.IsAlive)
+            {
+                return;
+            }
+            var civics = new CapturedEmpire();
+            CaptureCivics(empire, civics);
+            if (civics.Civics.Count > 0)
+            {
+                captured.Civics = civics.Civics;
+                captured.CivicCost = civics.CivicCost;
+            }
+            for (int other = 0; other < captured.Relations.Length && other < empire.DiplomaticRelationByOtherEmpireIndex.Length; other++)
+            {
+                CapturedRelation old = captured.Relations[other];
+                DiplomaticRelation relation = other == index ? null : empire.DiplomaticRelationByOtherEmpireIndex[other];
+                if (old == null || relation == null)
+                {
+                    continue;
+                }
+                CapturedRelation fresh = CaptureRelation(relation, index, other);
+                old.Treaty = fresh.Treaty;
+                old.Agreement = fresh.Agreement;
+                old.Trade = fresh.Trade;
+                old.OpenBorders = fresh.OpenBorders;
+                old.SharedMaps = fresh.SharedMaps;
+                old.NonAggression = fresh.NonAggression;
+                old.Log = fresh.Log;
+            }
+        }
+
         /// <summary>The surrender preview uses RPN and a static game queue: only on the game thread (start-of-turn snapshot).</summary>
         [ThreadStatic]
         private static bool previewAllowed;

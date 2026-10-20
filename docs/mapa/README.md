@@ -147,7 +147,7 @@ clique passa para a próxima nação) e **Período: tudo** (tudo / últimos 5, 1
 
 | Seção | O que lista | Botões em cada cartão | Print |
 |---|---|---|---|
-| **Novas** | cartas ainda não lidas | **Na diplomacia** (abre a aba Cartas da nação), **Responder** | ![](prints/f_mail_0.jpg) |
+| **Novas** | cartas ainda não lidas (as lidas continuam na lista até o fim do turno; no turno seguinte saem) | **Na diplomacia** (abre a aba Cartas da nação), **Responder** | ![](prints/f_mail_0.jpg) |
 | **A responder (N)** | cartas e ultimatos que pedem resposta | Na diplomacia, Responder | ![](prints/f_mail_1.jpg) |
 | **Lidas** | cartas recebidas já lidas | Na diplomacia, Responder | ![](prints/f_mail_2.jpg) |
 | **Respondidas** | cartas que você já respondeu | Na diplomacia, **Escrever de novo** | ![](prints/f_mail_3.jpg) |
@@ -293,7 +293,9 @@ Código: `src\CurrencyMod\NativeUI\DiplomacyTradePolicyPanel.cs` (some com `[Blo
 Abaixo de "Seus recursos": **Seus postos comerciais** com o efeito nas rotas dessa nação nos seus territórios, os
 botões **Livre**, **Taxar**, **Bloquear** (o ativo aparece com ✓; bloquear dá a eles uma reclamação "Bloqueio
 comercial"), o pedágio ("Pedágio: Tl 4 por recurso (padrão)") com **−** / **+**, e o resumo ("Livre em todos os 4
-postos"). Com muitos recursos a caixa "Seus recursos" cresce e o bloco desce junto, logo abaixo dela.
+postos"). Com muitos recursos a caixa "Seus recursos" cresce e o bloco desce junto, logo abaixo dela; a aba (e o
+fundo azul da tela) cresce até caber o bloco, porque o conteúdo da aba corta o que passa da altura nativa (patch em
+`DiplomaticTradePanel.RefreshHeight`).
 
 ![](prints/f_dip_trade.jpg)
 
