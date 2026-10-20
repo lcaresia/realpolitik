@@ -166,6 +166,9 @@ memory.
 - **Painted portraits:** 72 portraits, one per portfolio, epoch and gender; no two candidates of a seat share a face.
 - **Veterans:** a minister in office gains +1% every 5 turns in the portfolio's area (industry, stability, faith,
   influence, trade income, interception chance…), up to +10%.
+- **Independent peoples:** the Foreign Affairs minister treats them almost like nations, only smaller and much less
+  important: a vassal or annexation within reach, a rival taking over a people, a cheap treaty or a people you already
+  sponsor come up when no nation needs attention, never ahead of a demand, war or proposal.
 - **AI nations:** ministers come from a personality bank, and their titles change by era and culture. Their opinions
   feed the leader's dossier at no extra API cost.
 - **Your council** (three-busts button or F7):

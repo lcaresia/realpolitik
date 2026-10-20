@@ -777,6 +777,14 @@ namespace CurrencyMod.Diplomacy.Council
                 m.OpinionUi = L.F("Há proposta formal de {0} esperando você.", WhoUi(capture, proposer)) + " " + (accept ? L.T("Aceite: vale mais um amigo na fronteira.") : L.T("Desconfio da pressa deles: deixe esperar."));
                 return;
             }
+            // Independent peoples weigh almost like nations, but below them: a vassal or annexation within reach beats a
+            // friendly overture; anything else about them only comes up when no nation needs attention.
+            MinorTopic minorTopic = MinorTopicFor(m, capture, me, hard);
+            if (minorTopic != null && minorTopic.Urgency >= 0.4)
+            {
+                ApplyMinorTopic(m, minorTopic);
+                return;
+            }
             // No urgency: lean toward whoever the minister likes, if there is no agreement yet.
             KeyValuePair<int, int> friend = m.Sympathies.Where(p => p.Value >= 20 && context.KnownEmpires.ContainsValue(p.Key) && !context.AtWar.Contains(p.Key)).OrderByDescending(p => p.Value).FirstOrDefault();
             if (friend.Value > 0)
@@ -791,9 +799,135 @@ namespace CurrencyMod.Diplomacy.Council
                     return;
                 }
             }
+            if (minorTopic != null)
+            {
+                ApplyMinorTopic(m, minorTopic);
+                return;
+            }
             m.Urgency = 0.2;
             m.Opinion = $"Conhecemos {context.KnownEmpires.Count} nação(ões); nenhuma pendência diplomática urgente.";
             m.OpinionUi = L.P(context.KnownEmpires.Count, "Conhecemos {0} nação; nenhuma pendência diplomática urgente.", "Conhecemos {0} nações; nenhuma pendência diplomática urgente.");
+        }
+
+        private sealed class MinorTopic
+        {
+            public double Urgency;
+            public string Advice;
+            public string Opinion;
+            public string OpinionUi;
+        }
+
+        private static void ApplyMinorTopic(Minister m, MinorTopic topic)
+        {
+            m.Urgency = topic.Urgency;
+            m.Advice = topic.Advice;
+            m.Opinion = topic.Opinion;
+            m.OpinionUi = topic.OpinionUi;
+        }
+
+        /// <summary>
+        /// The Foreign Affairs topic about independent peoples (Discord feedback: the minister only looked at the major
+        /// nations): a vassal or annexation treaty within reach (0.45), a rival taking over a people we have courted or
+        /// that is up for grabs (0.3), another treaty we can sign (0.28), or keeping our hold on a people (0.22). Always
+        /// below a nation's demand or proposal, and below a friendly nation unless it is a vassal or annexation.
+        /// </summary>
+        private static MinorTopic MinorTopicFor(Minister m, WorldCapture capture, CapturedEmpire me, bool hard)
+        {
+            List<CapturedMinor> known = capture.Minors
+                .Where(x => x.Index >= 0 && me.Index < x.Relations.Length && x.Relations[me.Index] != null && x.Status != "Dying")
+                .ToList();
+            if (known.Count == 0)
+            {
+                return null;
+            }
+            string Label(CapturedMinor x) => $"{x.Name ?? "povo independente"} (M{x.Index}, cidade {x.CityName ?? "?"})";
+            string LabelUi(CapturedMinor x) => x.CityName != null ? L.F("{0} ({1})", x.Name ?? L.T("povo independente"), x.CityName) : x.Name ?? L.T("povo independente");
+
+            // 1. Vassal or annexation available now.
+            foreach (string id in new[] { "anexar", "vassalo" })
+            {
+                int treaty = Array.IndexOf(DecisionParser.MinorTreatyIds, id);
+                CapturedMinor target = known
+                    .Where(x => x.Relations[me.Index].Treaties.Any(t => t.Treaty == treaty && t.Available))
+                    .OrderByDescending(x => x.Relations[me.Index].Share).FirstOrDefault();
+                if (target == null)
+                {
+                    continue;
+                }
+                double cost = target.Relations[me.Index].Treaties.First(t => t.Treaty == treaty).Cost;
+                bool annex = id == "anexar";
+                return new MinorTopic
+                {
+                    Urgency = 0.45,
+                    Advice = $"tratado_povo:M{target.Index}",
+                    Opinion = (annex ? $"{Label(target)} já aceita ser anexado: a cidade deles vira nossa por {N(cost)} de influência."
+                            : $"{Label(target)} já aceita ser nosso vassalo, por {N(cost)} de influência.")
+                        + (hard ? " Povo pequeno se toma antes que outro tome." : " Gente pequena, mas é terra e gente a mais sem guerra."),
+                    OpinionUi = (annex ? L.F("{0} já aceita ser anexado: a cidade deles vira nossa por {1} de influência.", LabelUi(target), NUi(cost))
+                            : L.F("{0} já aceita ser nosso vassalo, por {1} de influência.", LabelUi(target), NUi(cost)))
+                        + " " + (hard ? L.T("Povo pequeno se toma antes que outro tome.") : L.T("Gente pequena, mas é terra e gente a mais sem guerra.")),
+                };
+            }
+
+            // 2. A rival is taking a people over (most patronage, half of the total) while ours is small.
+            CapturedMinor contested = known
+                .Where(x => x.TopPatron >= 0 && x.TopPatron != me.Index && x.TopPatron < x.Relations.Length
+                    && x.Relations[x.TopPatron] != null && x.Relations[x.TopPatron].Share >= 0.5
+                    && x.Relations[me.Index].Share < 0.25 && x.Relations[me.Index].PatronizeBlocked == null)
+                .OrderByDescending(x => x.Relations[x.TopPatron].Share).FirstOrDefault();
+            if (contested != null)
+            {
+                int rival = contested.TopPatron;
+                double share = contested.Relations[rival].Share * 100;
+                return new MinorTopic
+                {
+                    Urgency = 0.3,
+                    Advice = $"patrocinar:M{contested.Index}",
+                    Opinion = $"{Who(capture, rival)} já tem {N(share)}% do patrocínio de {Label(contested)}; daqui a pouco é vassalo deles. Um patrocínio modesto nosso segura o povo, ou ao menos encarece para eles.",
+                    OpinionUi = L.F("{0} já tem {1}% do patrocínio de {2}; daqui a pouco é vassalo deles. Um patrocínio modesto nosso segura o povo, ou ao menos encarece para eles.", WhoUi(capture, rival), NUi(share), LabelUi(contested)),
+                };
+            }
+
+            // 3. Another treaty we can sign now (trade, science, mercenaries...).
+            CapturedMinor signable = known
+                .Where(x => x.Relations[me.Index].Treaties.Any(t => t.Available))
+                .OrderByDescending(x => x.Relations[me.Index].Share).FirstOrDefault();
+            if (signable != null)
+            {
+                CapturedMinorTreaty treaty = signable.Relations[me.Index].Treaties.Where(t => t.Available).OrderBy(t => t.Cost).First();
+                string name = DossierBuilder.MinorTreatyName(treaty);
+                return new MinorTopic
+                {
+                    Urgency = 0.28,
+                    Advice = $"tratado_povo:M{signable.Index}",
+                    Opinion = $"{Label(signable)} assinaria «{name}» por {N(treaty.Cost)} de influência. Coisa menor, mas barata.",
+                    OpinionUi = L.F("{0} assinaria «{1}» por {2} de influência. Coisa menor, mas barata.", LabelUi(signable), name, NUi(treaty.Cost)),
+                };
+            }
+
+            // 4. Our own clients: keep them, or start courting the one nobody holds.
+            CapturedMinor ours = known.Where(x => x.TopPatron == me.Index).OrderByDescending(x => x.Relations[me.Index].Share).FirstOrDefault();
+            if (ours != null)
+            {
+                return new MinorTopic
+                {
+                    Urgency = 0.22,
+                    Opinion = $"Somos o maior patrono de {Label(ours)} ({N(ours.Relations[me.Index].Share * 100)}% do patrocínio). Pouco peso no mundo, mas é um amigo que não nos custa guerra; mantenha o investimento.",
+                    OpinionUi = L.F("Somos o maior patrono de {0} ({1}% do patrocínio). Pouco peso no mundo, mas é um amigo que não nos custa guerra; mantenha o investimento.", LabelUi(ours), NUi(ours.Relations[me.Index].Share * 100)),
+                };
+            }
+            CapturedMinor free = known.Where(x => x.TopPatron < 0 && x.Peaceful && x.Relations[me.Index].PatronizeBlocked == null).FirstOrDefault();
+            if (free != null && (m.Has("generoso") || m.Has("ambicioso") || m.Has("astuto") || m.Has("pragmático")))
+            {
+                return new MinorTopic
+                {
+                    Urgency = 0.21,
+                    Advice = $"patrocinar:M{free.Index}",
+                    Opinion = $"Ninguém patrocina {Label(free)} ainda. É um povo pequeno, mas quem chega primeiro leva os tratados.",
+                    OpinionUi = L.F("Ninguém patrocina {0} ainda. É um povo pequeno, mas quem chega primeiro leva os tratados.", LabelUi(free)),
+                };
+            }
+            return null;
         }
 
         private static void OpineHand(Minister hand, AiWorld world, WorldCapture capture, CapturedEmpire me, List<Minister> others, int turn)
@@ -853,7 +987,8 @@ namespace CurrencyMod.Diplomacy.Council
                         break;
                     case "definir_foco": done.Add("foco:" + ((string)item["foco"])?.Trim().ToLowerInvariant()); break;
                     case "presentear": done.Add("presentear"); break;
-                    case "patrocinar": done.Add("patrocinar"); done.Add("presentear"); break;
+                    case "patrocinar": done.Add("patrocinar"); done.Add("presentear"); done.Add("patrocinar:" + ((string)item["povo"])?.Trim().ToUpperInvariant()); break;
+                    case "tratado_povo": done.Add("tratado_povo:" + ((string)item["povo"])?.Trim().ToUpperInvariant()); break;
                     case "ordem_exercito": done.Add("defender"); break;
                 }
             }

@@ -1158,6 +1158,10 @@ namespace CurrencyMod.Diplomacy.Council
             text.AppendLine("- ORDENS EM VIGOR (lista no fim do dossiê, quando houver) continuam valendo nos turnos seguintes: nenhum conselho as contradiz. Os conselhos das reuniões seguintes ajudam a cumpri-las ou relatam o andamento; quem achava ruim já disse e não volta ao assunto.");
             text.AppendLine("- A tela já mostra o nome e o cargo de quem fala: não comece a fala se apresentando.");
             text.AppendLine("- As fichas trazem os números de cada pasta e a tendência de cada ministro: use como base, sem repetir a ficha.");
+            text.AppendLine("- POVOS INDEPENDENTES (seção do dossiê, códigos M): o ministro de Relações (chanceler) os trata quase como nações, só que menores e bem menos importantes. "
+                + "Nunca passam na frente de uma exigência, guerra, proposta ou aliança de uma nação; mas, com as nações calmas, ele fala deles pelo nome: quem patrocina quem, "
+                + "rival tomando um povo, tratado que dá para assinar agora (e o custo em influência), vassalo ou anexação ao alcance, povo hostil perto das nossas terras. "
+                + "O tom é de quem lida com gente pequena: útil, barata, às vezes incômoda, nunca um par das grandes nações.");
             text.AppendLine();
             text.AppendLine("Ancoragem (obrigatória):");
             text.AppendLine("- Só fatos do dossiê: números, nações, líderes, cidades, territórios, exércitos, cartas e exigências que aparecem lá. Nada inventado: sem enviados, boatos, recursos ou acontecimentos que não estão no dossiê. Se a pasta não tem nada a dizer, o ministro fica calado.");
@@ -1431,10 +1435,18 @@ namespace CurrencyMod.Diplomacy.Council
                 case "foco": return "dar prioridade a " + (pair.Length > 1 ? pair[1] : "algo");
                 case "economizar": return "economizar";
                 case "presentear": return "dar presentes ou patrocinar um povo independente";
+                case "patrocinar": return "patrocinar " + MinorWho(capture, pair.Length > 1 ? pair[1] : null);
+                case "tratado_povo": return "assinar um tratado com " + MinorWho(capture, pair.Length > 1 ? pair[1] : null);
                 case "defender": return "reforçar a defesa";
                 case "cautela": return "cautela com o que se escreve em cartas";
                 default: return advice;
             }
+        }
+
+        private static string MinorWho(WorldCapture capture, string handle)
+        {
+            CapturedMinor minor = handle != null && handle.StartsWith("M") && int.TryParse(handle.Substring(1), out int index) ? capture?.Minor(index) : null;
+            return minor != null ? $"{minor.Name ?? "o povo independente"} ({handle})" : "um povo independente";
         }
 
         private static string Who(WorldCapture capture, int empire)

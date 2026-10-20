@@ -658,6 +658,7 @@ Trade\TradeNetworkLabels.cs	Ganhos por turno:
 Diplomacy\Council\CouncilEngine.cs	Gastamos mais do que entra: cobre de quem nos deve, por exigência ou pedágio, e nada de presentes agora.
 Diplomacy\Council\CouncilEngine.cs	Gastamos mais do que entra: corte despesas e não mande presentes enquanto isso.
 Diplomacy\UI\ProvidersScreen.cs	Gasto nesta partida: US$ {0:0.00} de US$ {1:0.##} (teto).
+Diplomacy\Council\CouncilEngine.cs	Gente pequena, mas é terra e gente a mais sem guerra.
 Diplomacy\Council\CouncilEngine.cs	Gosta de lembrar que já tinha previsto.
 Diplomacy\Council\CouncilEngine.cs	Gosta de maravilhas e de cultura que levem o nome do reino.
 Diplomacy\Council\CouncilBank.cs	Governador das Províncias
@@ -986,6 +987,7 @@ CentralBankWindow.cs	Neutro {0}
 Diplomacy\UI\AlliancesScreen.cs	Ninguém fiscaliza pelos membros: o mod não interpreta nem aplica as resoluções. Quem acha que outro membro descumpriu registra a acusação aqui, com a evidência que viu; todos leem e cada um decide se acredita.
 Diplomacy\UI\AlliancesScreen.cs	Ninguém fundou um bloco nesta partida. As IAs também podem fundar e convidar.
 Diplomacy\UI\CouncilScreen.cs	Ninguém opina por esta pasta nem rende bônus de veterano. Os candidatos mudam na próxima era; até lá, a cada {0} turnos um deles cansa de esperar e outro entra no lugar.
+Diplomacy\Council\CouncilEngine.cs	Ninguém patrocina {0} ainda. É um povo pequeno, mas quem chega primeiro leva os tratados.
 Diplomacy\UI\CouncilScreen.cs	Ninguém respondeu
 NativeUI\NativeBankWindow.cs	No automático, o banco levaria os juros para {0} (hoje {1}).
 Diplomacy\UI\MailScreen.cs	No grupo
@@ -1211,6 +1213,7 @@ Diplomacy\UI\AlliancesScreen.cs	Por {0}
 Diplomacy\UI\ProvidersScreen.cs	Posição na fila
 NativeUI\TradePostWindow.cs	Posto Comercial
 Diplomacy\NationDoctrines.cs	Potência regional
+Diplomacy\Council\CouncilEngine.cs	Povo pequeno se toma antes que outro tome.
 Diplomacy\UI\AlliancesScreen.cs	Prazo
 Diplomacy\UI\MailScreen.cs	Prazo do trato
 Diplomacy\UI\CorrespondenceTab.cs	Prazo do ultimato
@@ -1453,6 +1456,7 @@ Diplomacy\Council\CouncilEngine.cs	Sobra moeda: um presente bem dado ou o patroc
 Diplomacy\UI\AlliancesScreen.cs	Soma da fama dos membros.
 Diplomacy\UI\AlliancesScreen.cs	Soma da força militar dos membros.
 NativeUI\NativeBankResources.cs	Soma dos acessos a todos os recursos estratégicos e de luxo, turno a turno. O valor é o dinheiro do último turno fechado: compras e vendas de recursos e manutenção das rotas com outros impérios (passe o mouse no gráfico para ver cada turno).
+Diplomacy\Council\CouncilEngine.cs	Somos o maior patrono de {0} ({1}% do patrocínio). Pouco peso no mundo, mas é um amigo que não nos custa guerra; mantenha o investimento.
 Diplomacy\Council\CouncilEngine.cs	Somos o {0}º reino em fama.
 Diplomacy\Council\PlayerCouncil.cs	Sozinho no turno {0}
 Diplomacy\UI\CorrespondenceTab.cs	Sua carta viaja por {0} e chega no turno {1}. A resposta sai no turno seguinte à chegada.
@@ -1874,6 +1878,7 @@ Diplomacy\UI\AlliancesScreen.cs	pedágio comum
 Diplomacy\Council\CouncilBank.cs	pensa nas colheitas
 Diplomacy\Council\CouncilBank.cs	pergunta sempre quanto rende
 Diplomacy\Council\CouncilBank.cs	pondera cada palavra
+Diplomacy\Council\CouncilEngine.cs	povo independente
 Diplomacy\Council\CouncilBank.cs	pragmática
 Diplomacy\Council\CouncilBank.cs	pragmático
 Diplomacy\Council\CouncilBank.cs	prefere a espada à pena
@@ -1964,6 +1969,7 @@ Diplomacy\Council\CouncilBank.cs	vê traição em toda carta
 Diplomacy\UI\CouncilScreen.cs	{0:+0;-0}, de -100 a 100. Lealdade {1}, ambição {2}.
 Diplomacy\UI\CouncilScreen.cs	{0:+0;-0}, de -100 a 100. Sobe quando você segue os conselhos desta pasta ou trata bem quem a ocupa; desce quando faz o contrário.
 Diplomacy\UI\AlliancesScreen.cs	{0} (você)
+Diplomacy\Council\CouncilEngine.cs	{0} ({1})
 Diplomacy\UI\MailScreen.cs	{0} a caminho.
 NativeUI\NativeBankResources.cs	{0} acessos
 Diplomacy\UI\AlliancesScreen.cs	{0} acontecimento
@@ -1974,6 +1980,7 @@ Diplomacy\UI\AlliancesScreen.cs	{0} acusações
 Diplomacy\UI\AlliancesScreen.cs	{0} acusações, {1} contra você
 Diplomacy\UI\AlliancesScreen.cs	{0} acusou {1} de descumprir o compromisso do bloco.
 Diplomacy\UI\AlliancesScreen.cs	{0} acusou {1} de descumprir: {2}.
+Diplomacy\Council\CouncilEngine.cs	{0} assinaria «{1}» por {2} de influência. Coisa menor, mas barata.
 NativeUI\TradePostWindow.cs	{0} barradas
 Diplomacy\Council\PlayerCouncil.cs	{0} cansou de esperar pela vaga ({1}) e foi embora; {2} entrou na lista
 Diplomacy\UI\MailScreen.cs	{0} cartas
@@ -2026,6 +2033,9 @@ Diplomacy\UI\CouncilScreen.cs	{0} falas
 Diplomacy\UI\CouncilScreen.cs	{0} falas suas
 Diplomacy\UI\AlliancesScreen.cs	{0} fundado. Os convites foram enviados.
 Diplomacy\UI\AlliancesScreen.cs	{0} fundou o bloco.
+Diplomacy\Council\CouncilEngine.cs	{0} já aceita ser anexado: a cidade deles vira nossa por {1} de influência.
+Diplomacy\Council\CouncilEngine.cs	{0} já aceita ser nosso vassalo, por {1} de influência.
+Diplomacy\Council\CouncilEngine.cs	{0} já tem {1}% do patrocínio de {2}; daqui a pouco é vassalo deles. Um patrocínio modesto nosso segura o povo, ou ao menos encarece para eles.
 Diplomacy\UI\MailScreen.cs	{0} leem
 Diplomacy\UI\AlliancesScreen.cs	{0} membro
 Diplomacy\UI\AlliancesScreen.cs	{0} membros

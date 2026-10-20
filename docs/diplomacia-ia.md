@@ -1004,6 +1004,12 @@ cada um na própria voz e com os números do seu reino. Você responde, eles rea
   números da pasta.
 - Cada um tem uma tendência de conselho por regras, como "paz:E3" ou "foco:economia".
 - No seu conselho, a afeição do ministro é o apreço dele por você, de −100 a 100.
+- **Povos independentes (2026-10-20):** o chanceler os trata quase como nações, só que menores e bem menos
+  importantes (`CouncilEngine.MinorTopicFor`). Depois de exigências (0,85) e propostas (0,75) das nações: vassalo ou
+  anexação disponível (0,45, passa na frente da simpatia por uma nação, 0,35); rival com metade do patrocínio de um povo
+  em que temos menos de 25% (0,3, conselho "patrocinar:M#"); outro tratado para assinar (0,28); povo que já patrocinamos
+  (0,22) ou povo sem patrono para ministros generosos, ambiciosos, astutos ou pragmáticos (0,21). O prompt do conselho
+  do jogador tem a mesma regra de peso, e a reação ao líder conta `patrocinar:M#` e `tratado_povo:M#`.
 
 **A reunião (1 chamada por turno):**
 - `PlayerCouncil.Tick` roda no `IaModule.Tick`, depois do despacho das nações (com a IA ligada, a chave em ordem e
