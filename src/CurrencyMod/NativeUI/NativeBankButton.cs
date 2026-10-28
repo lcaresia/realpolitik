@@ -142,7 +142,7 @@ namespace CurrencyMod.NativeUI
 
         private void TryCreate()
         {
-            if (!CentralBankWindow.IsInGame || SavePatches.IsGameOnline())
+            if (!CentralBankWindow.IsInGame || Multiplayer.MpSession.EconomyBlocked)
             {
                 return;
             }

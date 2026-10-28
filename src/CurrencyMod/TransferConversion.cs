@@ -62,7 +62,7 @@ namespace CurrencyMod
             }
         }
 
-        private static bool Active => EconomyConfig.EnableConversion.Value && !SavePatches.IsGameOnline();
+        private static bool Active => EconomyConfig.EnableConversion.Value && !Multiplayer.MpSession.EconomyBlocked;
 
         // ---------- Transfer context ----------
 

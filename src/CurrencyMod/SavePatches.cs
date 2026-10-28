@@ -37,7 +37,8 @@ namespace CurrencyMod
 
             private static void Postfix(Sandbox __instance, string title, IStorageContainerWriteHandle writeHandle)
             {
-                if (__instance.IsSessionOnline)
+                // Online, each peer writes its own copy once the host's state arrived (before that, the state is not the game's).
+                if (__instance.IsSessionOnline && !Multiplayer.MpSession.Active)
                 {
                     return;
                 }
@@ -78,6 +79,8 @@ namespace CurrencyMod
             private static void Postfix(Sandbox __instance, IStorageContainerReadHandle readHandle)
             {
                 string guid = __instance.GUID.ToString();
+                // Online, the state comes from the host again after any load (start, resynchronization).
+                Multiplayer.MpSession.OnGameLoaded();
                 try
                 {
                     string json;

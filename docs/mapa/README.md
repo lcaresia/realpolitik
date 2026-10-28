@@ -60,11 +60,11 @@ Os dois primeiros ícones são do jogo (Inteligência e Comercializar). O mod ac
 
 | # | Botão | Ícone | Abre | Selo (badge) | Aparece quando |
 |---|---|---|---|---|---|
-| 1 | **Banco Central (F8)** | prédio | Banco Central | "!" quando o diagnóstico da economia é ruim (alerta); some ao abrir a tela e só volta se o alerta mudar ou a crise acabar e voltar | em partida, fora do multijogador |
+| 1 | **Banco Central (F8)** | prédio | Banco Central | "!" quando o diagnóstico da economia é ruim (alerta); some ao abrir a tela e só volta se o alerta mudar ou a crise acabar e voltar | em partida; no multijogador, só depois que o estado do anfitrião chega (todos com o mod na mesma versão) |
 | 2 | **Correio diplomático (F2)** | envelope | Correio | número de cartas não lidas (1–9, "9+"); "X" quando nenhum provedor de IA responde | em partida, fora do multijogador |
 | 3 | **Conselho (F7)** | pessoas | Conselho | "!" quando a reunião do turno está pronta e não vista, ou há assunto urgente | em partida, fora do multijogador e com `[IA] ConselhoDoJogador = true` |
 | 4 | **Alianças (F3)** | três círculos | Alianças | "!" com convite, voto faltando, eleição ou sugestão para o presidente | em partida, fora do multijogador (sempre; ver nota) |
-| 5 | **Relatar um problema (F4)** | "!" em balão | seção Relatar um problema da tela Realpolitik | — | em partida, fora do multijogador |
+| 5 | **Relatar um problema (F4)** | "!" em balão | seção Relatar um problema da tela Realpolitik | — | em partida (também no multijogador) |
 
 Nota: o botão Alianças **sumia** quando a IA estava desligada no momento de carregar a partida. Corrigido em
 2026-10-14: agora aparece sempre.

@@ -1041,6 +1041,8 @@
   "O Codex não está instalado neste PC.": "Codex ist auf diesem PC nicht installiert.",
   "O CurrencyMod fica desativado em partidas multiplayer.": "Der CurrencyMod ist in Mehrspielerpartien deaktiviert.",
   "O OpenRouter não devolveu a chave.": "OpenRouter hat den Schlüssel nicht zurückgegeben.",
+  "O Realpolitik está desligado nesta partida: {0} não tem o mod. Todos os jogadores precisam do Realpolitik {1}.": "Realpolitik ist in dieser Partie deaktiviert: {0} hat den Mod nicht. Alle Spieler brauchen Realpolitik {1}.",
+  "O Realpolitik está desligado nesta partida: {0} tem outra versão do mod. Todos os jogadores precisam da versão {1}.": "Realpolitik ist in dieser Partie deaktiviert: {0} hat eine andere Version des Mods. Alle Spieler brauchen Version {1}.",
   "O Realpolitik já está conectado. Esta aba pode ser fechada.": "Realpolitik ist jetzt verbunden. Dieser Tab kann geschlossen werden.",
   "O banco anda {0:0}% da diferença por turno: os juros vão cair até {1}.": "Die Bank schließt pro Runde {0:0}% der Lücke: Die Zinsen sinken bis {1}.",
   "O banco anda {0:0}% da diferença por turno: os juros vão subir até {1}.": "Die Bank schließt pro Runde {0:0}% der Lücke: Die Zinsen steigen bis {1}.",

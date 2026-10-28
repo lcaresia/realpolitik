@@ -31,7 +31,7 @@ namespace CurrencyMod
         internal const string StabilityProperty = "PublicOrderTarget";
         internal const string MoneyProperty = "MoneyNet";
 
-        internal static bool Enabled => EconomyConfig.EnableEconomy.Value && !SavePatches.IsGameOnline();
+        internal static bool Enabled => EconomyConfig.EnableEconomy.Value && !Multiplayer.MpSession.EconomyBlocked;
 
         /// <summary>Effects of the owner of a major-empire city; null if there is no effect to apply.</summary>
         internal static EconomySimulation.EmpireEffects EffectsOf(Settlement settlement)

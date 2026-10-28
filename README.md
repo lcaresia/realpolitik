@@ -70,7 +70,11 @@ previous session, to the team and gives you a code to share on Discord or GitHub
 name are removed first.
 
 **Tested with:** HUMANKIND 1.31.4836 (Windows), BepInEx 5.4.23.5 x64, with and without the Together We Rule DLC.
-**Not supported:** multiplayer (the mod turns itself off), Mac, Xbox / Microsoft Store.
+**Multiplayer (new in 1.6, early):** the economy (currency, inflation, interest, Central Bank) and trade (blockades,
+tolls, trade hubs) work online when every player has the same Realpolitik version; if someone does not, the mod stays
+off for everyone and says so. The language-AI features (AI nations, letters, Congress, council, blocs) are still
+single-player only. Tested with one machine hosting online; please report any desync.
+**Not supported:** Mac, Xbox / Microsoft Store.
 
 ---
 

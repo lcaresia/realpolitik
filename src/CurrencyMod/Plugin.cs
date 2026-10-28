@@ -12,7 +12,7 @@ namespace CurrencyMod
         public const string PluginName = "CurrencyMod";
         public const string PluginVersion = "1.1.0";
         /// <summary>Product version (Realpolitik): installer, store and update notice. The DLLs have their own.</summary>
-        public const string ProductVersion = "1.5.5";
+        public const string ProductVersion = "1.6.0";
 
         internal static ManualLogSource Log;
         internal static ConfigEntry<KeyboardShortcut> ToggleWindowKey;
@@ -88,6 +88,10 @@ namespace CurrencyMod
             ApplyPatches(log);
             host.AddComponent<CentralBankWindow>();
             host.AddComponent<DevTools>();
+            Multiplayer.MpSession.Register();
+            Multiplayer.MpSession.RegisterTestOrders();
+            Multiplayer.MpInputs.Register();
+            host.AddComponent<Multiplayer.MpSession>();
             host.AddComponent<NativeUI.EscapeFallback>();
             host.AddComponent<NativeUI.NativeBankButton>();
             host.AddComponent<NativeUI.DiplomacyEconomyPanel>();
@@ -159,6 +163,7 @@ namespace CurrencyMod
             TryStep("language AI", Diplomacy.AiModule.Shutdown);
             TryStep("session log", Support.SessionLog.Stop);
             TryStep("native AI locks", Diplomacy.NativeAiLocks.Carry);
+            TryStep("multiplayer settings", Multiplayer.MpSession.RestoreConfig);
             TryStep("patches", () => harmony?.UnpatchSelf());
             harmony = null;
             TryStep("components", () =>

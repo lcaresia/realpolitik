@@ -130,11 +130,15 @@ namespace CurrencyMod
             return empire >= 0 && empire < bits.Length ? bits[empire] : 0;
         }
 
-        private static int[] lastPartners = new int[0];
-
         /// <summary>End of turn: recomputes the technology costs of the empires whose trade partners changed.</summary>
         internal static void RefreshTechnologyCosts(TradeNetwork.Snapshot snapshot)
         {
+            CurrencyWorld world = CurrencyManager.Current;
+            if (world == null)
+            {
+                return;
+            }
+            int[] lastPartners = world.TradePartners;
             int[] now = snapshot.PartnerBits;
             for (int i = 0; i < now.Length && i < Sandbox.NumberOfMajorEmpires; i++)
             {
@@ -144,7 +148,10 @@ namespace CurrencyMod
                     empire.DepartmentOfScience.UpdateTechnologiesCost();
                 }
             }
-            lastPartners = (int[])now.Clone();
+            lock (CurrencyManager.Lock)
+            {
+                world.TradePartners = (int[])now.Clone();
+            }
         }
     }
 }

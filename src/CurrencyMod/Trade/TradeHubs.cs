@@ -143,16 +143,15 @@ namespace CurrencyMod
 
         // ---------------- Supply crisis ----------------
 
-        private static volatile Dictionary<int, (int until, string what)> crises = new Dictionary<int, (int, string)>();
-        private static Dictionary<long, double> lastShares = new Dictionary<long, double>();
-
         internal static bool SupplyCrisis(int empire, out string what)
         {
             what = null;
             int turn = SandboxManager.Sandbox?.Turn ?? -1;
-            if (crises.TryGetValue(empire, out var crisis) && crisis.until >= turn)
+            // The dictionary is replaced, never changed in place: reading the reference is enough.
+            Dictionary<int, SupplyCrisisRecord> crises = CurrencyManager.Current?.SupplyCrises;
+            if (crises != null && crises.TryGetValue(empire, out SupplyCrisisRecord crisis) && crisis.Until >= turn)
             {
-                what = crisis.what;
+                what = Diplomacy.GameGlossary.Resource(crisis.Resource)?.Name ?? crisis.Resource.ToString();
                 return true;
             }
             return false;
@@ -174,8 +173,13 @@ namespace CurrencyMod
                 double bought = item.Value.Values.Sum();
                 shares[item.Key] = access > 0 ? Math.Min(1, bought / access) : 1;
             }
-            var updated = new Dictionary<int, (int, string)>(crises);
-            foreach (KeyValuePair<long, double> before in lastShares)
+            CurrencyWorld world = CurrencyManager.Current;
+            if (world == null)
+            {
+                return;
+            }
+            var updated = new Dictionary<int, SupplyCrisisRecord>(world.SupplyCrises);
+            foreach (KeyValuePair<long, double> before in world.SupplyShares)
             {
                 if (before.Value < 0.6 || (shares.TryGetValue(before.Key, out double now) && now >= 0.2))
                 {
@@ -183,18 +187,19 @@ namespace CurrencyMod
                 }
                 int buyer = (int)(before.Key >> 8);
                 int type = (int)(before.Key & 0xFF);
-                string what = Diplomacy.GameGlossary.Resource(type)?.Name ?? type.ToString();
-                updated[buyer] = (turn + SupplyCrisisTurns, what);
-                Plugin.Log.LogInfo($"Trade network: supply crisis for E{buyer} ({what}: a route it depended on was cut).");
+                updated[buyer] = new SupplyCrisisRecord { Until = turn + SupplyCrisisTurns, Resource = type };
+                Plugin.Log.LogInfo($"Trade network: supply crisis for E{buyer} (resource {type}: a route it depended on was cut).");
             }
-            lastShares = shares;
-            crises = updated;
+            lock (CurrencyManager.Lock)
+            {
+                world.SupplyShares = shares;
+                world.SupplyCrises = updated;
+            }
         }
 
         // ---------------- End of turn ----------------
 
         private static int lastTurn = -1;
-        private static readonly Dictionary<ulong, int> lastEpidemic = new Dictionary<ulong, int>();
 
         /// <summary>Test ("game trade epidemic <city>"): the next end of turn strikes that hub (by name).</summary>
         internal static volatile string ForcedEpidemic;
@@ -305,7 +310,20 @@ namespace CurrencyMod
         {
             string forced = ForcedEpidemic;
             bool force = forced != null && hub.Name.Equals(forced, StringComparison.OrdinalIgnoreCase);
-            if (!force && (hub.Effects.EpidemicChance <= 0 || (lastEpidemic.TryGetValue(hub.Guid, out int last) && turn - last < EpidemicCooldown)))
+            CurrencyWorld world = CurrencyManager.Current;
+            if (world == null)
+            {
+                return;
+            }
+            int last;
+            lock (CurrencyManager.Lock)
+            {
+                if (!world.LastEpidemics.TryGetValue(hub.Guid, out last))
+                {
+                    last = int.MinValue / 2;
+                }
+            }
+            if (!force && (hub.Effects.EpidemicChance <= 0 || turn - last < EpidemicCooldown))
             {
                 return;
             }
@@ -329,7 +347,10 @@ namespace CurrencyMod
             int lost = population >= 14 ? 2 : 1;
             int removed = empire.DepartmentOfTheInterior.AddOrRemovePopulationToSettlement((FixedPoint)(-lost), settlement, raiseSimulationEvents: true);
             empire.DepartmentOfTheInterior.NotifyPopulationVariation(settlement, -lost);
-            lastEpidemic[hub.Guid] = turn;
+            lock (CurrencyManager.Lock)
+            {
+                world.LastEpidemics[hub.Guid] = turn;
+            }
             var list = new List<(int, int, string, int)>(Epidemics.Where(e => turn - e.turn < 10)) { (turn, hub.Empire, hub.Name, lost) };
             Epidemics = list;
             Plugin.Log.LogInfo($"Trade network: epidemic in {hub.Name} (E{hub.Empire}, hub level {hub.Level}, stability {hub.Stability:0}, growth {hub.Growth:0.0}): -{lost} population (game returned {removed}).");

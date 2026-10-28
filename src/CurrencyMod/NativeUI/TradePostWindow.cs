@@ -257,21 +257,22 @@ namespace CurrencyMod.NativeUI
             {
                 return;
             }
+            TradeMode next;
             lock (CurrencyManager.Lock)
             {
-                TradeMode next = Next(TradePolicy.StoredMode(world, me, territoryIndex, target));
-                // Blocking can destroy routes: it waits for a second click within 5 s.
-                if (next == TradeMode.Block && !(confirmBlock == target && Time.unscaledTime < confirmBlockUntil))
-                {
-                    confirmBlock = target;
-                    confirmBlockUntil = Time.unscaledTime + 5f;
-                    nextRefresh = 0;
-                    return;
-                }
-                confirmBlock = -1;
-                TradePolicy.SetRule(world, me, territoryIndex, target, next);
-                Plugin.Log.LogInfo($"Post {territoryIndex}: empire {target} → {TradePolicy.ModeName(next)}.");
+                next = Next(TradePolicy.StoredMode(world, me, territoryIndex, target));
             }
+            // Blocking can destroy routes: it waits for a second click within 5 s.
+            if (next == TradeMode.Block && !(confirmBlock == target && Time.unscaledTime < confirmBlockUntil))
+            {
+                confirmBlock = target;
+                confirmBlockUntil = Time.unscaledTime + 5f;
+                nextRefresh = 0;
+                return;
+            }
+            confirmBlock = -1;
+            Multiplayer.MpInputs.EditTrade(me, new List<Multiplayer.MpInputs.TradeOp> { Multiplayer.MpInputs.Rule(territoryIndex, target, next) });
+            Plugin.Log.LogInfo($"Post {territoryIndex}: empire {target} → {TradePolicy.ModeName(next)}.");
             nextRefresh = 0;
         }
 
@@ -285,15 +286,13 @@ namespace CurrencyMod.NativeUI
                 return;
             }
             int era = Math.Max(1, (int)game.EmpireInfo[me].EraIndex);
+            double next;
             lock (CurrencyManager.Lock)
             {
-                double current = TradePolicy.GetPrice(territoryIndex, target, me, era);
-                double next = TradePolicy.StepPrice(current, direction);
-                if (TradePolicy.SetPostPrice(world, me, territoryIndex, target, next))
-                {
-                    Plugin.Log.LogInfo($"Post {territoryIndex}: toll for empire {target} → {next} per resource.");
-                }
+                next = TradePolicy.StepPrice(TradePolicy.GetPrice(territoryIndex, target, me, era), direction);
             }
+            Multiplayer.MpInputs.EditTrade(me, new List<Multiplayer.MpInputs.TradeOp> { Multiplayer.MpInputs.PostPrice(territoryIndex, target, next) });
+            Plugin.Log.LogInfo($"Post {territoryIndex}: toll for empire {target} → {next} per resource.");
             nextRefresh = 0;
         }
 
@@ -314,7 +313,7 @@ namespace CurrencyMod.NativeUI
             }
             confirmApplyAllUntil = 0;
             List<int> mine = MyTerritories(me);
-            int changed = 0;
+            var ops = new List<Multiplayer.MpInputs.TradeOp>();
             lock (CurrencyManager.Lock)
             {
                 for (int target = 0; target < game.NumberOfMajorEmpires; target++)
@@ -327,19 +326,17 @@ namespace CurrencyMod.NativeUI
                     double price = TradePolicy.StoredPostPrice(world, me, territoryIndex, target);
                     foreach (int territory in mine)
                     {
-                        if (TradePolicy.SetRule(world, me, territory, target, mode))
-                        {
-                            changed++;
-                        }
+                        ops.Add(Multiplayer.MpInputs.Rule(territory, target, mode));
                         // The post's price goes along (0 = the empire's general price).
-                        if (mode == TradeMode.Toll && TradePolicy.CopyPostPrice(world, me, territory, target, price))
+                        if (mode == TradeMode.Toll)
                         {
-                            changed++;
+                            ops.Add(Multiplayer.MpInputs.CopyPrice(territory, target, price));
                         }
                     }
                 }
             }
-            Plugin.Log.LogInfo($"Post {territoryIndex}: rules copied to {mine.Count} territory(ies) ({changed} change(s)).");
+            Multiplayer.MpInputs.EditTrade(me, ops);
+            Plugin.Log.LogInfo($"Post {territoryIndex}: rules copied to {mine.Count} territory(ies).");
             nextRefresh = 0;
         }
 

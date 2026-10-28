@@ -17,7 +17,7 @@ namespace CurrencyMod
     /// </summary>
     internal static class TradeBlockade
     {
-        internal static bool Enabled => EconomyConfig.EnableTradeBlockade.Value && !SavePatches.IsGameOnline();
+        internal static bool Enabled => EconomyConfig.EnableTradeBlockade.Value && !Multiplayer.MpSession.EconomyBlocked;
 
         internal static MajorEmpire OwnerOf(int territoryIndex)
         {
@@ -402,7 +402,7 @@ namespace CurrencyMod
                     return;
                 }
                 TradePolicy.PathsDirty = false;
-                if (SavePatches.IsGameOnline())
+                if (Multiplayer.MpSession.EconomyBlocked)
                 {
                     return;
                 }

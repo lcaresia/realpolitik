@@ -207,6 +207,9 @@ namespace CurrencyMod
                     case "game":
                         Write(line, GameCommands.Execute(args));
                         return;
+                    case "mp":
+                        Write(line, Multiplayer.MpSession.Command(args));
+                        return;
                     case "language":
                         Write(line, LanguageCommand(args));
                         return;

@@ -14,8 +14,11 @@ namespace CurrencyMod.Diplomacy
         private static readonly Regex RichTextTags = new Regex("<[^>]+>", RegexOptions.Compiled);
         private static readonly Regex Symbols = new Regex(@"\[[^\]]*\]", RegexOptions.Compiled);
 
-        /// <summary>Loaded game: GUID, turn (the same number the player sees) and local player index.</summary>
-        internal static bool TryGetSession(out string guid, out int turn, out int playerIndex)
+        /// <summary>
+        /// Loaded game: GUID, turn (the same number the player sees) and local player index. Online games count only with
+        /// <paramref name="allowOnline"/> (the economy, trade and dev commands); the language AI stays single-player.
+        /// </summary>
+        internal static bool TryGetSession(out string guid, out int turn, out int playerIndex, bool allowOnline = false)
         {
             guid = null;
             turn = -1;
@@ -23,7 +26,7 @@ namespace CurrencyMod.Diplomacy
             try
             {
                 Sandbox sandbox = SandboxManager.Sandbox;
-                if (sandbox == null || Snapshots.GameSnapshot == null || sandbox.IsSessionOnline)
+                if (sandbox == null || Snapshots.GameSnapshot == null || (sandbox.IsSessionOnline && !allowOnline))
                 {
                     return false;
                 }

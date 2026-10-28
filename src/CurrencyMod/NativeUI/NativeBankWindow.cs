@@ -932,10 +932,13 @@ namespace CurrencyMod.NativeUI
         }
         private void AutoButton_LeftClick(IUIButton button)
         {
-            WithMine(mine => mine.AutoInterest = !mine.AutoInterest);
-            EconomySimulation.ResetEffects(); // the interest preview (top bar, tooltips) uses the table's rate
+            WithMine((mine, empire) => Multiplayer.MpInputs.SetInterest(empire, !mine.AutoInterest, null));
             nextRefresh = 0;
         }
+
+        /// <summary>Multiplayer: the slider's rate waits until the player stops moving it, then goes as one order.</summary>
+        private double? pendingRate;
+        private float pendingRateAt;
 
         private void InterestSlider_ValueChange(IUISlider slider, float value)
         {
@@ -943,13 +946,28 @@ namespace CurrencyMod.NativeUI
             {
                 return;
             }
-            WithMine(mine =>
+            // Touching the control switches to manual mode.
+            double rate = Math.Round(value * 10) / 1000.0;
+            if (Multiplayer.MpSession.IsOnline)
             {
-                mine.AutoInterest = false; // touching the control switches to manual mode
-                mine.InterestRate = Math.Round(value * 10) / 1000.0;
-            });
-            EconomySimulation.ResetEffects(); // the interest preview (top bar, tooltips) uses the table's rate
+                pendingRate = rate;
+                pendingRateAt = Time.unscaledTime + 0.4f;
+                return;
+            }
+            WithMine((mine, empire) => Multiplayer.MpInputs.SetInterest(empire, false, rate));
             nextRefresh = 0;
+        }
+
+        private void SendPendingRate()
+        {
+            if (pendingRate == null || Time.unscaledTime < pendingRateAt || (interestSlider != null && interestSlider.IsDragging))
+            {
+                return;
+            }
+            double rate = pendingRate.Value;
+            pendingRate = null;
+            WithMine((mine, empire) => Multiplayer.MpInputs.SetInterest(empire, false, rate));
+            nextRefresh = Time.unscaledTime + 0.3f; // the order comes back in a moment
         }
 
         private void SaveCurrency()
@@ -969,37 +987,27 @@ namespace CurrencyMod.NativeUI
             {
                 plural = CurrencyManager.GuessPlural(name);
             }
-            EmpireCurrency saved = null;
-            WithMine(mine =>
-            {
-                mine.Name = name;
-                mine.Plural = plural;
-                mine.Symbol = symbol;
-                mine.NamedByPlayer = true;
-                saved = mine;
-            });
-            if (saved != null)
-            {
-                TextPatches.RefreshLocalCache(saved);
-                Plugin.Log.LogInfo($"Player named the currency: {name} / {plural} ({symbol}).");
-            }
+            WithMine((mine, empire) => Multiplayer.MpInputs.SetCurrencyName(empire, name, plural, symbol));
             nextRefresh = 0;
         }
 
-        private static void WithMine(Action<EmpireCurrency> action)
+        /// <summary>Runs the action with the local empire's currency and index (outside the lock: it may post an order).</summary>
+        private static void WithMine(Action<EmpireCurrency, int> action)
         {
             if (!CentralBankWindow.TryGetGameData(out GameSnapshot.Data game))
             {
                 return;
             }
             CurrencyWorld world = CurrencyManager.Ensure(game.GameID, game.NumberOfMajorEmpires);
+            int empire = game.LocalEmpireInfo.EmpireIndex;
+            EmpireCurrency mine;
             lock (CurrencyManager.Lock)
             {
-                EmpireCurrency mine = world.Get(game.LocalEmpireInfo.EmpireIndex);
-                if (mine != null)
-                {
-                    action(mine);
-                }
+                mine = world.Get(empire);
+            }
+            if (mine != null)
+            {
+                action(mine, empire);
             }
         }
 
@@ -1036,7 +1044,7 @@ namespace CurrencyMod.NativeUI
                     ? L.F("Agora, no automático, o banco leva os juros para {0} (hoje {1}).", Pct(wanted), Pct(mine.InterestRate))
                     : L.F("No automático, o banco levaria os juros para {0} (hoje {1}).", Pct(wanted), Pct(mine.InterestRate))));
 
-            if (interestSlider != null && !interestSlider.IsDragging)
+            if (interestSlider != null && !interestSlider.IsDragging && pendingRate == null)
             {
                 updatingSlider = true;
                 interestSlider.SetCurrentValue((float)(mine.InterestRate * 100), force: true, silent: true);
@@ -1142,7 +1150,7 @@ namespace CurrencyMod.NativeUI
         private void LoadCurrencyFields()
         {
             EnsureCurrencyFieldsInteractive();
-            WithMine(mine =>
+            WithMine((mine, empire) =>
             {
                 string[] values = { mine.Name, mine.PluralOrName, mine.Symbol };
                 for (int i = 0; i < fields.Length; i++)
@@ -1345,6 +1353,7 @@ namespace CurrencyMod.NativeUI
             {
                 UpdateChartHover();
             }
+            SendPendingRate();
             if (!Shown || Time.unscaledTime < nextRefresh)
             {
                 return;

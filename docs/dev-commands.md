@@ -47,6 +47,12 @@ the command words around them are English.
 | `jogo ...` | `game ...` | game control (`GameCommands.cs`) |
 | `idioma [code]` | `language [code]` | language in use; with a code (`Auto\|pt\|en\|es\|fr\|de`) switches it |
 | `idioma faltando` | `language missing` | texts without translation, to `dev\out\language_missing_<code>.txt` |
+| — | `mp` | multiplayer session (`Multiplayer\MpSession.cs`): online/host/active, turn hash, hellos of the turn, status |
+| — | `mp ping [text\|N]` | posts a test mod order (`rp.ping`, N = payload of N characters) through the game's order pipeline; works in single-player too; the log shows `Multiplayer: ping processed` |
+| — | `mp roundtrip` | packs the economy state like the host does (JSON → gzip → base64 chunks) and checks the unpacked copy is identical |
+| — | `mp interest <percent\|auto>` / `mp name <name> <symbol>` / `mp toll E# free\|toll\|block` | the same inputs the Central Bank and trade screens send (`MpInputs`): applied at once in single-player, posted as `rp.*` orders online |
+| — | `mp hello <version>` | posts a fake hello of the local empire with another version (tests the "other version" notice; the next turn's real hello clears it) |
+| — | `mp mine` | local currency, interest, inflation, exchange, trade rules and state hash |
 
 ### `trade` (`NativeUI\TradePostWindow.cs`)
 
@@ -76,6 +82,7 @@ the command words around them are English.
 | `jogo exigir <E#> todas\|G#...` | `game demand <E#> all\|G#...` | turns grievances into demands |
 | `jogo exigencias <E#> aceitar\|recusar\|enrolar\|retirar` | `game demands <E#> accept\|refuse\|stall\|withdraw` | answers demands (or withdraws own) |
 | `jogo travado [n]` | `game stuck [n]` | why the end of turn does not finish, last n orders |
+| — | `game host [public]` / `game lobby [ready]` | creates an online multiplayer lobby (private by default) / lobby state, or marks the local player ready (starts the game; empty slots are AI). With `game new restore <players> <size>` first, sets the lobby size. Loading an online save with `game load` also opens a lobby |
 | `jogo batalha [auto\|recuar]` | `game battle [auto\|retreat]` | ongoing battles; answers those waiting for the player |
 | `jogo humor [E#]` | `game mood [E#]` | native AI behaviour and rapport per nation |
 | `jogo novo <2-16> [tamanho]` / `jogo novo restaurar` | `game new <2-16> [size]` / `game new restore` | starts a new test game / restores settings |

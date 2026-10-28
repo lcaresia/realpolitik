@@ -203,7 +203,7 @@ namespace CurrencyMod
         /// <summary>Updates the cached texts of the local currency. Called on the main thread.</summary>
         internal static void RefreshLocalCache(EmpireCurrency mine)
         {
-            if (mine == null || SavePatches.IsGameOnline())
+            if (mine == null || Multiplayer.MpSession.EconomyBlocked)
             {
                 LocalCurrencyPlural = null;
                 LocalTooltipLine = null;

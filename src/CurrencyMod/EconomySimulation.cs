@@ -119,7 +119,7 @@ namespace CurrencyMod
             private static void Prefix(SimulationPasses __instance, SimulationPasses.PassContext context)
             {
                 if (context != SimulationPasses.PassContext.TurnEnd || !ReferenceEquals(__instance, Ancillary.Passes)
-                    || !EconomyConfig.EnableEconomy.Value || SavePatches.IsGameOnline())
+                    || !EconomyConfig.EnableEconomy.Value || Multiplayer.MpSession.EconomyBlocked)
                 {
                     return;
                 }
@@ -149,7 +149,7 @@ namespace CurrencyMod
 
         private static void Prefix(DepartmentOfTheTreasury __instance)
         {
-            if (!EconomyConfig.EnableEconomy.Value || SavePatches.IsGameOnline())
+            if (!EconomyConfig.EnableEconomy.Value || Multiplayer.MpSession.EconomyBlocked)
             {
                 return;
             }
@@ -206,7 +206,7 @@ namespace CurrencyMod
         internal static double DebtInRule(double debtInflation)
         {
             double cap = EconomyConfig.DebtRuleCap.Value;
-            return debtInflation <= 0 || cap <= 0 ? debtInflation : cap * Math.Tanh(debtInflation / cap);
+            return debtInflation <= 0 || cap <= 0 ? debtInflation : cap * Multiplayer.DetMath.Tanh(debtInflation / cap);
         }
 
         /// <summary>Target of the production multiplier from the real rate (investment): expensive cuts, cheap heats up.</summary>
@@ -275,7 +275,7 @@ namespace CurrencyMod
                     {
                         currency.DemandBaseline = ratio;
                     }
-                    logPressure[i] = Math.Log(ratio / currency.DemandBaseline);
+                    logPressure[i] = Multiplayer.DetMath.Log(ratio / currency.DemandBaseline);
                     hasPressure[i] = true;
                     currency.DemandBaseline += EconomyConfig.DemandAdaptation.Value * (ratio - currency.DemandBaseline);
                 }
@@ -307,12 +307,12 @@ namespace CurrencyMod
                     currency.Coverage = 1.0;
                     continue;
                 }
-                currency.Pressure = Clamp(Math.Exp(logPressure[i] - worldTrend) - 1.0, -MaxPressure, MaxPressure);
+                currency.Pressure = Clamp(Multiplayer.DetMath.Exp(logPressure[i] - worldTrend) - 1.0, -MaxPressure, MaxPressure);
                 // Soft cap: near zero it is the usual linear value; far away, it approaches the limit gradually. The hard clamp
                 // left the term stuck at ±limit in 58% of the long-game snapshots, jumping from one side to the other.
                 double limit = EconomyConfig.PressureInflationLimit.Value;
                 double raw = EconomyConfig.PressureInflation.Value * currency.Pressure;
-                currency.CoverageInflation = limit > 0 ? limit * Math.Tanh(raw / limit) : 0;
+                currency.CoverageInflation = limit > 0 ? limit * Multiplayer.DetMath.Tanh(raw / limit) : 0;
                 currency.Coverage = 1.0 / (1.0 + currency.Pressure);
             }
 
@@ -344,11 +344,11 @@ namespace CurrencyMod
                 currency.CreditFactor += EconomyConfig.InvestmentSpeed.Value * (creditTarget - currency.CreditFactor);
 
                 currency.PriceIndex = Math.Max(0.01, currency.PriceIndex * (1 + currency.InflationRate));
-                logPriceSum += Math.Log(currency.PriceIndex);
+                logPriceSum += Multiplayer.DetMath.Log(currency.PriceIndex);
             }
             // New credit, stability target and interest apply from now on for the whole game.
             effects = world.Empires.Select(BuildEffects).ToArray();
-            double priceGeoMean = Math.Exp(logPriceSum / aliveCount);
+            double priceGeoMean = Multiplayer.DetMath.Exp(logPriceSum / aliveCount);
 
             // 4. Exchange rate: relative strength divided by the relative price level.
             double logExchangeSum = 0;
@@ -361,14 +361,14 @@ namespace CurrencyMod
                 EmpireCurrency currency = world.Empires[i];
                 double relativeStrength = currency.Strength / Math.Max(1e-6, strengthAverage);
                 double relativePrice = currency.PriceIndex / priceGeoMean;
-                double target = Math.Pow(relativeStrength, EconomyConfig.ExchangeElasticity.Value) / relativePrice;
+                double target = Multiplayer.DetMath.Pow(relativeStrength, EconomyConfig.ExchangeElasticity.Value) / relativePrice;
                 target = Clamp(target, EconomyConfig.ExchangeMin.Value, EconomyConfig.ExchangeMax.Value);
                 currency.ExchangeValue += EconomyConfig.ExchangeSmoothing.Value * (target - currency.ExchangeValue);
-                logExchangeSum += Math.Log(Math.Max(1e-6, currency.ExchangeValue));
+                logExchangeSum += Multiplayer.DetMath.Log(Math.Max(1e-6, currency.ExchangeValue));
             }
 
             // Normalize so the geometric mean is 1.0 (only changes the scale, not the rates between currencies).
-            double exchangeGeoMean = Math.Exp(logExchangeSum / aliveCount);
+            double exchangeGeoMean = Multiplayer.DetMath.Exp(logExchangeSum / aliveCount);
             for (int i = 0; i < count; i++)
             {
                 if (!alive[i])
@@ -647,7 +647,7 @@ namespace CurrencyMod
         {
             try
             {
-                if (!EconomyConfig.EnableEconomy.Value || settlement == null || !(__result > 0) || SavePatches.IsGameOnline())
+                if (!EconomyConfig.EnableEconomy.Value || settlement == null || !(__result > 0) || Multiplayer.MpSession.EconomyBlocked)
                 {
                     return;
                 }

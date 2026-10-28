@@ -90,7 +90,7 @@ namespace CurrencyMod
 
         internal static Snapshot Current => current;
 
-        internal static bool Enabled => EconomyConfig.EnableTradeNetwork.Value && !SavePatches.IsGameOnline();
+        internal static bool Enabled => EconomyConfig.EnableTradeNetwork.Value && !Multiplayer.MpSession.EconomyBlocked;
 
         private static int[] levelRoutes;
         private static string levelRoutesText;
@@ -147,8 +147,12 @@ namespace CurrencyMod
             return known.Turn == sandbox.Turn ? known : Refresh();
         }
 
-        /// <summary>Reads the network from the game's routes (sandbox thread) and publishes it.</summary>
-        internal static Snapshot Refresh()
+        /// <summary>
+        /// Reads the network from the game's routes (sandbox thread) and, with <paramref name="publish"/>, makes it the one the
+        /// simulation reads. Only the simulation's own passes publish: the map drawing refreshes whenever it redraws, which
+        /// differs on each machine, and in multiplayer the simulation must read the same snapshot on every peer.
+        /// </summary>
+        internal static Snapshot Refresh(bool publish = true)
         {
             var snapshot = new Snapshot { Turn = SandboxManager.Sandbox?.Turn ?? -1 };
             int majors = Amplitude.Mercury.Sandbox.Sandbox.NumberOfMajorEmpires;
@@ -156,7 +160,10 @@ namespace CurrencyMod
             ExternalTradeRelation[] relations = Amplitude.Mercury.Sandbox.Sandbox.TradeController?.ExternalTradeRelations;
             if (relations == null || !Enabled)
             {
-                current = snapshot;
+                if (publish)
+                {
+                    current = snapshot;
+                }
                 return snapshot;
             }
             HashSet<ExternalTradeRelation> grandSet = PickGrandRoutes(relations);
@@ -265,7 +272,10 @@ namespace CurrencyMod
                     .OrderByDescending(h => h.Level).Select(h => h.Name).Take(4).ToList();
             }
             TradeHubs.Compute(snapshot);
-            current = snapshot;
+            if (publish)
+            {
+                current = snapshot;
+            }
             return snapshot;
         }
 

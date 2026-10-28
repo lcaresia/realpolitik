@@ -76,7 +76,7 @@ namespace CurrencyMod.Support
 
         private void TryCreate()
         {
-            if (!CentralBankWindow.IsInGame || SavePatches.IsGameOnline())
+            if (!CentralBankWindow.IsInGame)
             {
                 return;
             }

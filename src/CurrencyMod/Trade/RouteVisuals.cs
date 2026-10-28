@@ -102,7 +102,7 @@ namespace CurrencyMod
         /// <summary>Labels from the last presentation (read by RouteLabels on the main thread).</summary>
         internal static volatile List<Label> Labels = new List<Label>();
 
-        internal static bool Enabled => EconomyConfig.RouteColors.Value && !SavePatches.IsGameOnline();
+        internal static bool Enabled => EconomyConfig.RouteColors.Value && !Multiplayer.MpSession.EconomyBlocked;
 
         /// <summary>Test ("game routes colors E5"): paints as if the player were another empire (-1 = the local player).</summary>
         internal static volatile int ViewAs = -1;
@@ -142,7 +142,7 @@ namespace CurrencyMod
             }
             Array.Clear(lines.Items, 0, count);
             int local = ViewAs >= 0 ? ViewAs : SandboxManager.Sandbox?.LocalEmpireIndex ?? -1;
-            TradeNetwork.Snapshot network = TradeNetwork.Enabled ? TradeNetwork.Refresh() : new TradeNetwork.Snapshot();
+            TradeNetwork.Snapshot network = TradeNetwork.Enabled ? TradeNetwork.Refresh(publish: false) : new TradeNetwork.Snapshot();
             lines.Extra = TradeNetworkLabels.Build(network, local);
             ExternalTradeRelation[] relations = Sandbox.TradeController.ExternalTradeRelations;
             int line = 0;

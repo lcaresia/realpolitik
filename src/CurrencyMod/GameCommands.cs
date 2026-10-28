@@ -240,6 +240,10 @@ namespace CurrencyMod
                     return Battles(rest);
                 case "mood":
                     return Moods(rest);
+                case "host":
+                    return HostOnline(rest);
+                case "lobby":
+                    return Lobby(rest);
                 case "new":
                     return NewGame(rest);
                 case "spectator":
@@ -482,7 +486,7 @@ namespace CurrencyMod
             string[] parts = (args ?? string.Empty).Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
             string kind = parts.Length > 0 ? parts[0].ToLowerInvariant() : "industry";
             int cityIndex = parts.Length > 1 && int.TryParse(parts[1], out int parsed) ? parsed : 0;
-            if (!Diplomacy.GameAccess.TryGetSession(out _, out _, out int player))
+            if (!Diplomacy.GameAccess.TryGetSession(out _, out _, out int player, allowOnline: true))
             {
                 return "error: no game";
             }
@@ -1045,7 +1049,7 @@ namespace CurrencyMod
             var runtime = Services.GetService<Amplitude.Framework.Runtime.IRuntimeService>();
             text.AppendLine("runtime: " + (runtime?.Runtime?.FiniteStateMachine?.CurrentState?.GetType().Name ?? "?"));
             text.AppendLine("sandbox: " + (Diplomacy.GameAccess.SandboxStateName() ?? "(no game)"));
-            if (Diplomacy.GameAccess.TryGetSession(out string guid, out int turn, out int player))
+            if (Diplomacy.GameAccess.TryGetSession(out string guid, out int turn, out int player, allowOnline: true))
             {
                 LocalEmpireInfo local = Snapshots.GameSnapshot.PresentationData.LocalEmpireInfo;
                 text.AppendLine($"game: {guid} · turn {turn} · player E{player} · can end turn: {(local.CanEndTurn ? "yes" : "no")}");
@@ -1130,7 +1134,7 @@ namespace CurrencyMod
             {
                 return "usage: game save <title>";
             }
-            if (!Diplomacy.GameAccess.TryGetSession(out _, out _, out _))
+            if (!Diplomacy.GameAccess.TryGetSession(out _, out _, out _, allowOnline: true))
             {
                 return "error: no game loaded";
             }
@@ -1390,7 +1394,7 @@ namespace CurrencyMod
             {
                 return "usage: game spectator on|off";
             }
-            if (!Diplomacy.GameAccess.TryGetSession(out _, out int turn, out int player))
+            if (!Diplomacy.GameAccess.TryGetSession(out _, out int turn, out int player, allowOnline: true))
             {
                 return "error: no game loaded";
             }
@@ -1586,6 +1590,46 @@ namespace CurrencyMod
         /// game's registry) and uses the main menu's quick start, which starts directly with those options
         /// (SessionState_LobbyOwner reads GameOption_SlotCount). "game new restore" restores the previous options.
         /// </summary>
+        /// <summary>
+        /// "game host [public]": creates an online multiplayer lobby, private by default (same path as the Multiplayer
+        /// screen's "New game"). Lets the multiplayer code run online with a single machine.
+        /// </summary>
+        private static string HostOnline(string args)
+        {
+            if (Diplomacy.GameAccess.TryGetSession(out _, out _, out _, allowOnline: true))
+            {
+                return "error: go back to the main menu first";
+            }
+            var runtime = Services.GetService<Amplitude.Framework.Runtime.IRuntimeService>();
+            if (runtime?.Runtime?.FiniteStateMachine == null)
+            {
+                return "error: the game has not finished starting yet";
+            }
+            var type = (args ?? string.Empty).Trim().Equals("public", StringComparison.OrdinalIgnoreCase)
+                ? Amplitude.Framework.Matchmaking.LobbyType.Public
+                : Amplitude.Framework.Matchmaking.LobbyType.Private;
+            runtime.Runtime.FiniteStateMachine.PostStateChange(typeof(Amplitude.Mercury.Runtime.RuntimeState_Staging),
+                new Amplitude.Mercury.Runtime.RuntimeStateLobbyTypeParameter(type));
+            return $"creating a {type} online lobby; then 'game lobby ready'";
+        }
+
+        /// <summary>"game lobby ready": marks the local player ready in the lobby (the Start button); "game lobby": lobby state.</summary>
+        private static string Lobby(string args)
+        {
+            Amplitude.Mercury.UI.LobbyScreen screen = Amplitude.Mercury.UI.Helpers.WindowsUtils.GetWindow<Amplitude.Mercury.UI.LobbyScreen>();
+            if (screen == null)
+            {
+                return "error: no lobby screen";
+            }
+            if ((args ?? string.Empty).Trim().Equals("ready", StringComparison.OrdinalIgnoreCase))
+            {
+                screen.SetLocalPlayerReady(ready: true);
+                return "local player ready";
+            }
+            var session = Services.GetService<Amplitude.Framework.Session.ISessionService>()?.Session;
+            return $"lobby shown {screen.Shown}; session {(session == null ? "none" : session.SessionMode + ", hosting " + session.IsHosting)}";
+        }
+
         private static string NewGame(string args)
         {
             string[] parts = (args ?? string.Empty).Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
@@ -1621,7 +1665,7 @@ namespace CurrencyMod
             {
                 return "error: unknown size (use Tiny, Small, Normal, Large or Huge)";
             }
-            if (Diplomacy.GameAccess.TryGetSession(out _, out _, out _))
+            if (Diplomacy.GameAccess.TryGetSession(out _, out _, out _, allowOnline: true))
             {
                 return "error: go back to the main menu first";
             }
@@ -1769,7 +1813,7 @@ namespace CurrencyMod
 
         private static string EndTurn()
         {
-            if (!Diplomacy.GameAccess.TryGetSession(out _, out int turn, out _))
+            if (!Diplomacy.GameAccess.TryGetSession(out _, out int turn, out _, allowOnline: true))
             {
                 return "error: no game loaded";
             }

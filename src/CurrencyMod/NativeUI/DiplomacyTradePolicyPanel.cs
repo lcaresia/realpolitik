@@ -57,12 +57,12 @@ namespace CurrencyMod.NativeUI
             try
             {
                 // At game start the window service does not exist yet (see DiplomacyEconomyPanel).
-                if (WindowsUtils.WindowsService == null || !Diplomacy.GameAccess.TryGetSession(out _, out _, out _))
+                if (WindowsUtils.WindowsService == null || !Diplomacy.GameAccess.TryGetSession(out _, out _, out _, allowOnline: true))
                 {
                     return;
                 }
                 DiplomaticScreen screen = WindowsUtils.GetWindow<DiplomaticScreen>();
-                if (screen == null || !screen.Shown || SavePatches.IsGameOnline() || !TradeBlockade.Enabled)
+                if (screen == null || !screen.Shown || Multiplayer.MpSession.EconomyBlocked || !TradeBlockade.Enabled)
                 {
                     return;
                 }
@@ -276,14 +276,14 @@ namespace CurrencyMod.NativeUI
             }
             int me = game.LocalEmpireInfo.EmpireIndex;
             int era = Math.Max(1, (int)game.EmpireInfo[me].EraIndex);
-            CurrencyWorld world = CurrencyManager.Ensure(game.GameID, game.NumberOfMajorEmpires);
+            CurrencyManager.Ensure(game.GameID, game.NumberOfMajorEmpires);
+            double next;
             lock (CurrencyManager.Lock)
             {
-                double current = TradePolicy.GeneralPriceOrDefault(me, otherEmpire, era);
-                double next = TradePolicy.StepPrice(current, direction);
-                TradePolicy.SetGeneralPrice(world, me, otherEmpire, next);
-                Plugin.Log.LogInfo($"Diplomacy: general toll for empire {otherEmpire} → {next} per resource.");
+                next = TradePolicy.StepPrice(TradePolicy.GeneralPriceOrDefault(me, otherEmpire, era), direction);
             }
+            Multiplayer.MpInputs.EditTrade(me, new List<Multiplayer.MpInputs.TradeOp> { Multiplayer.MpInputs.GeneralPrice(otherEmpire, next) });
+            Plugin.Log.LogInfo($"Diplomacy: general toll for empire {otherEmpire} → {next} per resource.");
             nextUpdate = 0;
         }
 
@@ -330,20 +330,10 @@ namespace CurrencyMod.NativeUI
                 return;
             }
             int me = game.LocalEmpireInfo.EmpireIndex;
-            CurrencyWorld world = CurrencyManager.Ensure(game.GameID, game.NumberOfMajorEmpires);
+            CurrencyManager.Ensure(game.GameID, game.NumberOfMajorEmpires);
             List<int> territories = TradePostWindow.MyTerritories(me);
-            int changed = 0;
-            lock (CurrencyManager.Lock)
-            {
-                foreach (int territory in territories)
-                {
-                    if (TradePolicy.SetRule(world, me, territory, otherEmpire, Modes[index]))
-                    {
-                        changed++;
-                    }
-                }
-            }
-            Plugin.Log.LogInfo($"Diplomacy: empire {otherEmpire} → {TradePolicy.ModeName(Modes[index])} in {territories.Count} territory(ies) ({changed} change(s)).");
+            Multiplayer.MpInputs.EditTrade(me, territories.Select(t => Multiplayer.MpInputs.Rule(t, otherEmpire, Modes[index])).ToList());
+            Plugin.Log.LogInfo($"Diplomacy: empire {otherEmpire} → {TradePolicy.ModeName(Modes[index])} in {territories.Count} territory(ies).");
             nextUpdate = 0;
         }
 

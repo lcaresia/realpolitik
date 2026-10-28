@@ -146,6 +146,13 @@ namespace CurrencyMod
     }
 
     /// <summary>State of a whole game, persisted inside the save.</summary>
+    /// <summary>A supply crisis: until which turn, and which resource's route was cut (the name is localized on display).</summary>
+    public class SupplyCrisisRecord
+    {
+        public int Until;
+        public int Resource;
+    }
+
     public class CurrencyWorld
     {
         public const int CurrentVersion = 2;
@@ -168,6 +175,17 @@ namespace CurrencyMod
         /// <summary>History of trade between empires (last MaxTradeHistory turns), recorded at the end of each turn.</summary>
         public List<TradePoint> TradeHistory = new List<TradePoint>();
         public const int MaxTradeHistory = 60;
+
+        // Trade network memory between turns (TradeHubs, TradeCargo). Kept in the state, not in statics, so a reloaded
+        // game, a resynchronization or a player joining in multiplayer continues exactly the same way.
+        /// <summary>Empire → supply crisis in progress.</summary>
+        public Dictionary<int, SupplyCrisisRecord> SupplyCrises = new Dictionary<int, SupplyCrisisRecord>();
+        /// <summary>(buyer &lt;&lt; 8 | resource type) → share of the resource bought by route last turn.</summary>
+        public Dictionary<long, double> SupplyShares = new Dictionary<long, double>();
+        /// <summary>Hub settlement GUID → turn of its last epidemic.</summary>
+        public Dictionary<ulong, int> LastEpidemics = new Dictionary<ulong, int>();
+        /// <summary>Trade partner bits of each empire last turn (technology cost refresh).</summary>
+        public int[] TradePartners = new int[0];
 
         /// <summary>The turn's point (created if missing). The caller already holds CurrencyManager.Lock.</summary>
         public TradePoint PointFor(int turn)
@@ -243,6 +261,10 @@ namespace CurrencyMod
                 world.TollPrices = world.TollPrices ?? new List<TollPrice>();
                 world.TollChoices = world.TollChoices ?? new List<TollChoice>();
                 world.TradeHistory = world.TradeHistory ?? new List<TradePoint>();
+                world.SupplyCrises = world.SupplyCrises ?? new Dictionary<int, SupplyCrisisRecord>();
+                world.SupplyShares = world.SupplyShares ?? new Dictionary<long, double>();
+                world.LastEpidemics = world.LastEpidemics ?? new Dictionary<ulong, int>();
+                world.TradePartners = world.TradePartners ?? new int[0];
                 // Saves written before the money ledger only had Flows: their upkeep becomes money movement.
                 foreach (TradePoint point in world.TradeHistory)
                 {
