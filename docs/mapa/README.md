@@ -48,7 +48,7 @@ Mapa sem nenhuma tela aberta (referência da barra e do HUD): ![](prints/f_map.j
   (Configurações, Realpolitik) aberta. Ex.: F8 com a Realpolitik aberta não faz nada (`key_F8_blocked.jpg`).
 - Apertar a tecla de uma tela que já está aberta fecha essa tela (`key_F*_closed.jpg`).
 - Exceções: F10 só respeita o campo de texto (abre o visualizador até com o menu de pausa) e não fecha nada.
-  F2, F3 e F7 não fazem nada no multijogador; F7 não faz nada com `[IA] ConselhoDoJogador = false`.
+  F3 e F7 não fazem nada no multijogador (F2 funciona desde a 1.7.0); F7 não faz nada com `[IA] ConselhoDoJogador = false`.
 - Código: `src\CurrencyMod\NativeUI\NativeUIKit.cs` (`ShortcutPressed`, `ShortcutAllowed`).
 
 Prints dos testes: `key_F2_mail.jpg`, `key_F3_alliances.jpg`, `key_F4_report.jpg`, `key_F6_realpolitik.jpg`,
@@ -61,7 +61,7 @@ Os dois primeiros ícones são do jogo (Inteligência e Comercializar). O mod ac
 | # | Botão | Ícone | Abre | Selo (badge) | Aparece quando |
 |---|---|---|---|---|---|
 | 1 | **Banco Central (F8)** | prédio | Banco Central | "!" quando o diagnóstico da economia é ruim (alerta); some ao abrir a tela e só volta se o alerta mudar ou a crise acabar e voltar | em partida; no multijogador, só depois que o estado do anfitrião chega (todos com o mod na mesma versão) |
-| 2 | **Correio diplomático (F2)** | envelope | Correio | número de cartas não lidas (1–9, "9+"); "X" quando nenhum provedor de IA responde | em partida, fora do multijogador |
+| 2 | **Correio diplomático (F2)** | envelope | Correio | número de cartas não lidas (1–9, "9+"); "X" quando nenhum provedor de IA responde | em partida; no multijogador, depois que o estado do anfitrião chega (a IA roda no anfitrião; as cartas chegam a todos) |
 | 3 | **Conselho (F7)** | pessoas | Conselho | "!" quando a reunião do turno está pronta e não vista, ou há assunto urgente | em partida, fora do multijogador e com `[IA] ConselhoDoJogador = true` |
 | 4 | **Alianças (F3)** | três círculos | Alianças | "!" com convite, voto faltando, eleição ou sugestão para o presidente | em partida, fora do multijogador (sempre; ver nota) |
 | 5 | **Relatar um problema (F4)** | "!" em balão | seção Relatar um problema da tela Realpolitik | — | em partida (também no multijogador) |

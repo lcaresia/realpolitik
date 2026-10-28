@@ -53,6 +53,8 @@ the command words around them are English.
 | — | `mp interest <percent\|auto>` / `mp name <name> <symbol>` / `mp toll E# free\|toll\|block` | the same inputs the Central Bank and trade screens send (`MpInputs`): applied at once in single-player, posted as `rp.*` orders online |
 | — | `mp hello <version>` | posts a fake hello of the local empire with another version (tests the "other version" notice; the next turn's real hello clears it) |
 | — | `mp mine` | local currency, interest, inflation, exchange, trade rules and state hash |
+| — | `mp mirror` | builds the letter mirror another player would receive from the host and checks it shows the same inbox and outbox as the host's AI world |
+| — | `mp mail E# <text>` | sends a letter through the other players' path (`rp.mail.send` order → host applies it) |
 
 ### `trade` (`NativeUI\TradePostWindow.cs`)
 

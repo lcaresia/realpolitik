@@ -198,6 +198,16 @@ namespace CurrencyMod.Diplomacy
                         ShowNotice(notice.Substring(1));
                     }
                 }
+                // Multiplayer: letters from the host (other players) and Mail actions of the other players (host).
+                if (Multiplayer.MpAi.PumpMirror(World) | Multiplayer.MpAi.PumpHost(this))
+                {
+                    dirty = true;
+                }
+                if (Multiplayer.MpAi.IsHostAi && World != null)
+                {
+                    WorldCapture latest = TurnCapture.Latest;
+                    Multiplayer.MpAi.SyncMail(World, latest != null && latest.Guid == World.GameGuid ? latest : null, Time.unscaledTime);
+                }
                 Council.PlayerCouncil.Pump();
                 while (ActionExecutor.Outcomes.TryDequeue(out ActionOutcome outcome))
                 {
@@ -276,7 +286,9 @@ namespace CurrencyMod.Diplomacy
 
         private void Tick()
         {
-            if (!GameAccess.TryGetSession(out string guid, out int turn, out int player))
+            bool online = SavePatches.IsGameOnline();
+            if (!GameAccess.TryGetSession(out string guid, out int turn, out int player, allowOnline: true)
+                || (online && !Multiplayer.MpSession.Active && !Multiplayer.MpAi.IsClient))
             {
                 if (World != null && currentTurn >= 0)
                 {
@@ -284,15 +296,25 @@ namespace CurrencyMod.Diplomacy
                     currentTurn = -1;
                     session++;
                 }
-                NativeAiLocks.SetActive(null);
+                // Online, these tables only change through the host's order (the same point of the game on every peer).
+                if (!online)
+                {
+                    NativeAiLocks.SetActive(null);
+                }
                 NativeAiBias.Publish(null, _ => false);
-                SetStatus("fora de partida", "warn", "Abra ou carregue uma partida.");
+                SetStatus(online ? "multijogador: esperando o anfitrião" : "fora de partida", "warn", "Abra ou carregue uma partida.");
                 return;
             }
 
             AdoptWorld(guid);
             playerIndex = player;
             currentTurn = turn;
+            if (Multiplayer.MpAi.IsClient)
+            {
+                // Another player online: the host runs the AI; this world is a mirror of the letters for the Mail.
+                SetStatus("multijogador", "ok", "A IA das nações roda no anfitrião; aqui só chegam as cartas.");
+                return;
+            }
             if (turn != lastTurnSeen)
             {
                 lastTurnSeen = turn;
@@ -326,24 +348,28 @@ namespace CurrencyMod.Diplomacy
             ProcessPlayerInbox();
             // Ministers' veteran bonus: applies even with the language AI off (the council belongs to the mod).
             Council.VeteranEffects.Publish(World, turn);
-            try
+            // Online (phase 2): no blocs or player council yet; their effects would reach the simulation of one peer only.
+            if (!online)
             {
-                // Blocs (item 16): the turn step and the snapshot that the toll and mutual defense read on the simulation thread.
-                if (Blocs.CongressForum.Sync(World, capture, turn))
+                try
                 {
-                    dirty = true;
+                    // Blocs (item 16): the turn step and the snapshot that the toll and mutual defense read on the simulation thread.
+                    if (Blocs.CongressForum.Sync(World, capture, turn))
+                    {
+                        dirty = true;
+                    }
+                    if (Blocs.BlocEngine.Step(World, turn))
+                    {
+                        dirty = true;
+                    }
+                    Blocs.BlocIndex.Publish(World);
+                    SpendingFloors.Publish(World);
+                    Blocs.BlocCongress.Apply(World, capture, turn, e => capture?.Empires.FirstOrDefault(x => x != null && x.Index == e)?.Human ?? e == playerIndex);
                 }
-                if (Blocs.BlocEngine.Step(World, turn))
+                catch (Exception ex)
                 {
-                    dirty = true;
+                    Plugin.Log.LogWarning($"Blocs: {ex.Message}");
                 }
-                Blocs.BlocIndex.Publish(World);
-                SpendingFloors.Publish(World);
-                Blocs.BlocCongress.Apply(World, capture, turn, e => capture?.Empires.FirstOrDefault(x => x != null && x.Index == e)?.Human ?? e == playerIndex);
-            }
-            catch (Exception ex)
-            {
-                Plugin.Log.LogWarning($"Blocs: {ex.Message}");
             }
             UpdateLocks(turn);
             ResumeMissions(turn);
@@ -371,7 +397,10 @@ namespace CurrencyMod.Diplomacy
             Schedule(capture, force: false, only: -1);
             try
             {
-                Council.PlayerCouncil.Tick(World, capture, turn, playerIndex);
+                if (!online)
+                {
+                    Council.PlayerCouncil.Tick(World, capture, turn, playerIndex);
+                }
             }
             catch (Exception ex)
             {
@@ -409,7 +438,11 @@ namespace CurrencyMod.Diplomacy
                     }
                 }
             }
-            NativeAiLocks.SetActive(active);
+            bool online = SavePatches.IsGameOnline();
+            if (!online)
+            {
+                NativeAiLocks.SetActive(active);
+            }
             NativeAiBias.Publish(World, empire => empire >= 0 && empire < active.Length && active[empire]);
             try
             {
@@ -472,7 +505,15 @@ namespace CurrencyMod.Diplomacy
                         : pair.Value.Value == "pedagio" ? TradeMode.Toll : TradeMode.Free;
                 }
             }
-            TradeAi.SetLlmStances(trade);
+            if (online)
+            {
+                // The simulation of every peer reads these tables: they go out as the host's order.
+                Multiplayer.MpAi.PublishControl(active, trade, Llm.Providers.ProviderRouter.AllDown);
+            }
+            else
+            {
+                TradeAi.SetLlmStances(trade);
+            }
         }
 
         /// <summary>
@@ -1060,6 +1101,10 @@ namespace CurrencyMod.Diplomacy
             {
                 return "não está nesse grupo";
             }
+            if (Multiplayer.MpAi.IsClient)
+            {
+                Multiplayer.MpAi.LeaveGroup(empire, groupId); // the mirror changes now; the host makes it real
+            }
             if (group.Members.Count < 2)
             {
                 World.Groups.Remove(group);
@@ -1082,7 +1127,7 @@ namespace CurrencyMod.Diplomacy
                 Subject = subject,
                 Text = text,
                 // The player's group messages ask for an answer; AI ones do not (seven AIs replying to each other loop).
-                ExpectsReply = from == playerIndex,
+                ExpectsReply = from == playerIndex || (TurnCapture.Latest?.Empire(from)?.Human ?? false),
                 SentTurn = turn,
                 DeliverTurn = turn + delay,
                 InterceptionChecked = true,
@@ -1095,6 +1140,17 @@ namespace CurrencyMod.Diplomacy
         /// <summary>The player creates a group with the chosen nations and sends the first message. "ok: …" or "error: …".</summary>
         internal string CreatePlayerGroup(string name, List<int> others, string firstMessage)
         {
+            if (Multiplayer.MpAi.IsClient)
+            {
+                return Multiplayer.MpAi.CreateGroup(playerIndex, name, others, firstMessage);
+            }
+            return CreateGroupFrom(playerIndex, name, others, firstMessage);
+        }
+
+        /// <summary>A human creates a group (the local player, or another player online, applied by the host).</summary>
+        internal string CreateGroupFrom(int creator, string name, List<int> others, string firstMessage)
+        {
+            int playerIndex = creator;
             WorldCapture capture = TurnCapture.Latest;
             if (World == null || playerIndex < 0 || capture == null)
             {
@@ -1110,12 +1166,22 @@ namespace CurrencyMod.Diplomacy
             {
                 return "error: " + problem;
             }
-            return SendPlayerGroupLetter(group.Id, name, firstMessage);
+            return SendGroupLetterFrom(playerIndex, group.Id, name, firstMessage);
         }
 
         /// <summary>Player message to one of their groups, by the era's delivery rule. "ok: … turno N" or "error: …".</summary>
         internal string SendPlayerGroupLetter(int groupId, string subject, string text, int inReplyTo = -1)
         {
+            if (Multiplayer.MpAi.IsClient)
+            {
+                return Multiplayer.MpAi.SendGroupLetter(playerIndex, groupId, subject, text, inReplyTo);
+            }
+            return SendGroupLetterFrom(playerIndex, groupId, subject, text, inReplyTo);
+        }
+
+        internal string SendGroupLetterFrom(int from, int groupId, string subject, string text, int inReplyTo = -1)
+        {
+            int playerIndex = from;
             ChatGroup group = World?.Groups.FirstOrDefault(g => g.Id == groupId);
             if (group == null || !group.Members.Contains(playerIndex))
             {
@@ -1212,12 +1278,18 @@ namespace CurrencyMod.Diplomacy
             {
                 return "não aplicada: economia ainda não carregada";
             }
+            string what = choice == TollChoiceKind.Pay ? "pagar" : choice == TollChoiceKind.Detour ? "desviar" : "automático";
+            if (SavePatches.IsGameOnline())
+            {
+                // Every peer's simulation reads it: it goes out as an order.
+                Multiplayer.MpInputs.EditTrade(nation.EmpireIndex, new List<Multiplayer.MpInputs.TradeOp> { Multiplayer.MpInputs.TollChoice(owner, choice) });
+                return $"aplicada: suas rotas nos postos de E{owner} = {what}";
+            }
             bool changed;
             lock (CurrencyManager.Lock)
             {
                 changed = TradePolicy.SetTollChoice(currency, nation.EmpireIndex, owner, choice, turn);
             }
-            string what = choice == TollChoiceKind.Pay ? "pagar" : choice == TollChoiceKind.Detour ? "desviar" : "automático";
             return changed ? $"aplicada: suas rotas nos postos de E{owner} = {what}" : $"sem mudança: já estava {what}";
         }
 
@@ -1246,6 +1318,26 @@ namespace CurrencyMod.Diplomacy
             int changed = 0;
             double price = item["preco"] != null && double.TryParse(item["preco"].ToString(), System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out double asked) ? asked : 0;
             double charged = 0;
+            if (SavePatches.IsGameOnline())
+            {
+                // Every peer's simulation reads the rules: they go out as an order.
+                var ops = new List<Multiplayer.MpInputs.TradeOp>();
+                for (int t = 0; t < capture.TerritoryOwner.Length; t++)
+                {
+                    if (capture.TerritoryOwner[t] == nation.EmpireIndex)
+                    {
+                        posts++;
+                        ops.Add(Multiplayer.MpInputs.Rule(t, other, wanted));
+                    }
+                }
+                if (wanted == TradeMode.Toll && price > 0)
+                {
+                    ops.Add(Multiplayer.MpInputs.GeneralPrice(other, price));
+                }
+                Multiplayer.MpInputs.EditTrade(nation.EmpireIndex, ops);
+                string sent = wanted == TradeMode.Block ? "bloqueio" : wanted == TradeMode.Toll ? "pedágio" : "passagem livre";
+                return $"aplicada: {sent} para as rotas de E{other} nos seus {posts} território(s); as rotas são recalculadas";
+            }
             lock (CurrencyManager.Lock)
             {
                 for (int t = 0; t < capture.TerritoryOwner.Length; t++)
@@ -2135,6 +2227,27 @@ namespace CurrencyMod.Diplomacy
 
         internal string SendPlayerLetter(int to, string type, string subject, string text, string demand, int deadline, bool immediate = false, int inReplyTo = -1)
         {
+            if (Multiplayer.MpAi.IsClient)
+            {
+                // Another player online: the host writes it into the real world; the sync brings it back.
+                if (World == null || playerIndex < 0 || currentTurn < 0)
+                {
+                    return "error: " + L.T("sem partida");
+                }
+                if (CleanPlayerText(text).Length == 0)
+                {
+                    return "error: " + L.T("carta vazia");
+                }
+                int arrives = currentTurn + Delivery.TurnsFor(TurnCapture.Latest, playerIndex);
+                return Multiplayer.MpAi.SendLetter(playerIndex, to, type, subject, text, demand, deadline, inReplyTo, arrives);
+            }
+            return SendLetterFrom(playerIndex, to, type, subject, text, demand, deadline, immediate, inReplyTo);
+        }
+
+        /// <summary>A human's letter to an AI nation (the local player, or another player online, applied by the host).</summary>
+        internal string SendLetterFrom(int from, int to, string type, string subject, string text, string demand, int deadline, bool immediate = false, int inReplyTo = -1)
+        {
+            int playerIndex = from;
             // The texts after "error: " are shown to the player (notice in the Letters tab and the Mail).
             if (World == null || playerIndex < 0 || currentTurn < 0)
             {
@@ -2233,12 +2346,23 @@ namespace CurrencyMod.Diplomacy
 
         internal void MarkReadByPlayer(IEnumerable<Letter> letters)
         {
+            List<Letter> list = letters.ToList();
+            if (Multiplayer.MpAi.IsClient)
+            {
+                // The mirror shows it read at once; the host records it for the AI nations.
+                Multiplayer.MpAi.MarkRead(playerIndex, list.Where(l => !l.ReadBy.Contains(playerIndex)).Select(l => l.Id));
+            }
+            MarkReadBy(playerIndex, list);
+        }
+
+        internal void MarkReadBy(int reader, IEnumerable<Letter> letters)
+        {
             bool changed = false;
             foreach (Letter letter in letters)
             {
-                if (!letter.ReadBy.Contains(playerIndex))
+                if (!letter.ReadBy.Contains(reader))
                 {
-                    letter.ReadBy.Add(playerIndex);
+                    letter.ReadBy.Add(reader);
                     changed = true;
                 }
             }
@@ -2257,39 +2381,69 @@ namespace CurrencyMod.Diplomacy
             {
                 return false;
             }
-            AiNation me = World.Ensure(playerIndex);
-            bool blocked = !me.BlockedEmpires.Contains(other);
+            bool blocked = !World.Ensure(playerIndex).BlockedEmpires.Contains(other);
+            if (Multiplayer.MpAi.IsClient)
+            {
+                Multiplayer.MpAi.Block(playerIndex, other, blocked);
+            }
+            SetBlock(playerIndex, other, blocked);
+            return blocked;
+        }
+
+        internal void SetBlock(int empire, int other, bool blocked)
+        {
+            AiNation me = World.Ensure(empire);
+            me.BlockedEmpires.Remove(other);
             if (blocked)
             {
                 me.BlockedEmpires.Add(other);
             }
-            else
-            {
-                me.BlockedEmpires.Remove(other);
-            }
-            Runtime.Event(blocked ? $"You now refuse private letters from E{other}." : $"You accept letters from E{other} again.");
+            Runtime.Event(blocked ? $"E{empire} now refuses private letters from E{other}." : $"E{empire} accepts letters from E{other} again.");
             ProcessPlayerInbox();
             dirty = true;
-            return blocked;
         }
 
-        /// <summary>Private letters from those you blocked go back to the sender (who finds out next turn).</summary>
+        /// <summary>Private letters from those a human blocked go back to the sender (who finds out next turn).</summary>
         private void ProcessPlayerInbox()
         {
-            AiNation me = World?.Get(playerIndex);
-            if (me == null || me.BlockedEmpires.Count == 0)
+            if (World == null || Multiplayer.MpAi.IsClient)
             {
-                return;
+                return; // the host decides; the mirror only shows
             }
-            foreach (Letter letter in World.Letters)
+            WorldCapture capture = TurnCapture.Latest;
+            var humans = new HashSet<int> { playerIndex };
+            if (capture != null && capture.Guid == World.GameGuid)
             {
-                if (letter.To == playerIndex && letter.Type == "privada" && letter.Arrived(currentTurn)
-                    && me.BlockedEmpires.Contains(letter.From) && !letter.ReadBy.Contains(playerIndex) && !letter.RejectedBy.Contains(playerIndex))
+                humans.UnionWith(capture.Empires.Where(e => e != null && e.Human).Select(e => e.Index));
+            }
+            foreach (int human in humans)
+            {
+                AiNation me = World.Get(human);
+                if (me == null || me.BlockedEmpires.Count == 0)
                 {
-                    letter.RejectedBy.Add(playerIndex);
-                    dirty = true;
+                    continue;
+                }
+                foreach (Letter letter in World.Letters)
+                {
+                    if (letter.To == human && letter.Type == "privada" && letter.Arrived(currentTurn)
+                        && me.BlockedEmpires.Contains(letter.From) && !letter.ReadBy.Contains(human) && !letter.RejectedBy.Contains(human))
+                    {
+                        letter.RejectedBy.Add(human);
+                        dirty = true;
+                    }
                 }
             }
+        }
+
+        /// <summary>The player records a deal (Mail "Trato"); another player's goes through the host.</summary>
+        internal string RecordPlayerDeal(string json)
+        {
+            if (Multiplayer.MpAi.IsClient)
+            {
+                return Multiplayer.MpAi.RecordDeal(playerIndex, json);
+            }
+            dirty = true;
+            return DealLedger.Record(World, playerIndex, json, TurnCapture.Latest?.Turn ?? currentTurn);
         }
 
         private void HandleViewerRequest(ViewerRequest request)

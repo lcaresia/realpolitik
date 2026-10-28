@@ -124,7 +124,7 @@ namespace CurrencyMod.Diplomacy
         internal static void Tick()
         {
             Sandbox sandbox = SandboxManager.Sandbox;
-            if (sandbox == null || sandbox.IsSessionOnline)
+            if (sandbox == null || (sandbox.IsSessionOnline && !Multiplayer.MpAi.IsHostAi))
             {
                 return;
             }

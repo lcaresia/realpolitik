@@ -123,7 +123,7 @@ namespace CurrencyMod.Diplomacy.UI
             nextCheck = Time.unscaledTime + 0.2f;
             try
             {
-                if (SavePatches.IsGameOnline() || WindowsUtils.WindowsService == null || !GameAccess.TryGetSession(out _, out _, out _))
+                if (Multiplayer.MpSession.EconomyBlocked || WindowsUtils.WindowsService == null || !GameAccess.TryGetSession(out _, out _, out _, allowOnline: true))
                 {
                     return;
                 }

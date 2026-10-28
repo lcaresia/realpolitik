@@ -78,7 +78,7 @@ namespace CurrencyMod.Diplomacy.UI
 
         private void TryCreate()
         {
-            if (!CentralBankWindow.IsInGame || SavePatches.IsGameOnline())
+            if (!CentralBankWindow.IsInGame || Multiplayer.MpSession.EconomyBlocked)
             {
                 return;
             }
@@ -134,7 +134,7 @@ namespace CurrencyMod.Diplomacy.UI
         {
             int count = AiModule.Instance?.PlayerUnreadCount() ?? 0;
             // AI disconnected (the whole queue failing): the badge becomes a red X until it comes back.
-            bool down = Llm.Providers.ProviderRouter.AllDown;
+            bool down = Multiplayer.MpAi.AiDown;
             if (count == shownCount && down == shownDown && !down)
             {
                 return;
@@ -160,7 +160,7 @@ namespace CurrencyMod.Diplomacy.UI
             {
                 news += " " + (cites == 1 ? L.T("Um comunicado público cita você.") : L.F("{0} comunicados públicos citam você.", cites));
             }
-            if (Llm.Providers.ProviderRouter.AllDown)
+            if (Multiplayer.MpAi.AiDown)
             {
                 int minutes = Llm.Providers.ProviderRouter.MinutesToProbe;
                 news = "<c=E8685E>" + L.T("IA desconectada") + "</c> — " + L.F("nenhum provedor respondeu ({0}).", Llm.Providers.ProviderRouter.AllDownReason ?? "?") + " "

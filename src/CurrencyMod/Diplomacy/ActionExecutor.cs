@@ -137,7 +137,7 @@ namespace CurrencyMod.Diplomacy
                 return;
             }
             Sandbox sandbox = SandboxManager.Sandbox;
-            if (sandbox == null || sandbox.IsSessionOnline || sandbox.CurrentStateName != "SandboxState_TurnMain")
+            if (sandbox == null || (sandbox.IsSessionOnline && !Multiplayer.MpAi.IsHostAi) || sandbox.CurrentStateName != "SandboxState_TurnMain")
             {
                 return; // outside the main turn, orders wait in the queue
             }

@@ -16,12 +16,13 @@ namespace CurrencyMod.Multiplayer
         /// <summary>One change to the trade policy of an owner.</summary>
         internal sealed class TradeOp
         {
-            /// <summary>"rule" (mode at a post), "post" (price at a post), "copy" (price copied to a post) or "general".</summary>
+            /// <summary>"rule" (mode at a post), "post" (price at a post), "copy" (price copied to a post), "general" or "choice" (pay or detour at Target's tolls).</summary>
             public string Kind;
             public int Territory = -1;
             public int Target;
             public TradeMode Mode;
             public double Price;
+            public TollChoiceKind Choice;
         }
 
         internal static void Register()
@@ -121,6 +122,9 @@ namespace CurrencyMod.Multiplayer
 
         internal static TradeOp GeneralPrice(int target, double price) => new TradeOp { Kind = "general", Target = target, Price = price };
 
+        /// <summary>The routes of the editing empire at <paramref name="owner"/>'s tolled posts: pay, detour or automatic.</summary>
+        internal static TradeOp TollChoice(int owner, TollChoiceKind choice) => new TradeOp { Kind = "choice", Target = owner, Choice = choice };
+
         private static void ApplyTrade(int owner, List<TradeOp> ops)
         {
             Sandbox sandbox = SandboxManager.Sandbox;
@@ -152,6 +156,9 @@ namespace CurrencyMod.Multiplayer
                         case "general":
                             TradePolicy.SetGeneralPrice(world, owner, op.Target, op.Price);
                             changed++;
+                            break;
+                        case "choice":
+                            changed += TradePolicy.SetTollChoice(world, owner, op.Target, op.Choice, sandbox.Turn) ? 1 : 0;
                             break;
                     }
                 }

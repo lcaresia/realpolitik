@@ -633,7 +633,7 @@ namespace CurrencyMod.Diplomacy.UI
                         ["deadline"] = deadline,
                         ["secret"] = true,
                     };
-                    string recorded = DealLedger.Record(AiModule.World, module.PlayerIndex, json.ToString(), TurnCapture.Latest?.Turn ?? 0);
+                    string recorded = module.RecordPlayerDeal(json.ToString());
                     bool ok = recorded.StartsWith("registrado");
                     if (!ok)
                     {
@@ -921,7 +921,7 @@ namespace CurrencyMod.Diplomacy.UI
             string arrival = delay == 0 ? L.F("Turno {0}. Suas cartas chegam no mesmo turno ({1}).", turn, courier)
                 : delay == 1 ? L.F("Turno {0}. Suas cartas chegam em 1 turno ({1}).", turn, courier)
                 : L.F("Turno {0}. Suas cartas chegam em {1} turnos ({2}).", turn, delay, courier);
-            descriptionLabel.Text = (Llm.Providers.ProviderRouter.AllDown ? $"<c={Red}>X {L.T("IA desconectada")}</c> · " : string.Empty)
+            descriptionLabel.Text = (Multiplayer.MpAi.AiDown ? $"<c={Red}>X {L.T("IA desconectada")}</c> · " : string.Empty)
                 + arrival + (inTransit > 0 ? " " + L.F("{0} a caminho.", inTransit) : string.Empty);
             int groupUnread = inbox.Count(l => l.IsGroup && !l.ReadBy.Contains(me));
             int[] counts = { unread, toAnswer, -1, -1, -1, publicUnread, -1, groupUnread };

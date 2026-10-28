@@ -31,7 +31,7 @@ namespace CurrencyMod.Diplomacy
 
             private static void Postfix(Sandbox __instance, IStorageContainerWriteHandle writeHandle)
             {
-                if (__instance.IsSessionOnline)
+                if (__instance.IsSessionOnline && !Multiplayer.MpAi.IsHostAi)
                 {
                     return;
                 }

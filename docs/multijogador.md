@@ -189,3 +189,32 @@ mexer em juros e pedágio de um lado e ver do outro; passar 5+ turnos sem luz ve
 salvar e recarregar.
 
 Observação: carregar um save com o jogo em segundo plano pode travar na tela de carregamento; em primeiro plano carrega.
+
+## 8. Fase 2 — nações da IA e cartas (2026-10-28, versão 1.7.0)
+
+Pedido do Lucas: "O IA Nations tem que entrar já e letter também". Código em `src\CurrencyMod\Multiplayer\MpAi.cs` +
+ajustes no `AiModule`.
+
+Como funciona:
+- **A IA de linguagem roda só no anfitrião** (provedor e custo dele, D1). Ela decide pelas nações do computador e age
+  com as ordens normais do jogo (guerra, tratados, exércitos, Congresso), que já chegam a todos.
+- **O que a simulação lê em todas as máquinas vai como ordem `rp.ai.control`**: quais nações a IA de linguagem comanda
+  (travas da IA nativa), as posturas comerciais (bloqueio/pedágio das nações) e as regras de propostas pendentes
+  (quantos turnos a nação tem para responder). Pedágio e bloqueio decididos pela IA vão como `rp.trade.edit`.
+- **Cartas**: o anfitrião guarda o único mundo da IA. A cada 2 s ele manda (`rp.mail.sync`) as cartas que envolvem um
+  humano (enviadas ou recebidas por ele, públicas, de grupo com humano), os grupos, os tratos, as recusas de cada humano
+  e os nomes. Os outros jogadores guardam isso num espelho, que o Correio (F2) e a aba Cartas da diplomacia leem.
+- **O que um jogador que não é o anfitrião faz no Correio** (escrever, responder, ler, recusar cartas de uma nação,
+  criar grupo, mensagem ao grupo, sair do grupo, trato) vai ao anfitrião como ordem `rp.mail.*`; o anfitrião aplica e a
+  próxima sincronização devolve para todos.
+- O "IA desconectada" do Correio dos outros jogadores mostra o estado dos provedores do anfitrião.
+- Recarregar, ressincronizar ou alguém entrando: o anfitrião manda de novo o controle e todas as cartas.
+
+Ainda fora do multijogador (fase 3): conselho (F7), blocos e Alianças (F3), cartas interceptadas (espionagem), nomes
+que a IA dá às nações, rendição pendente segurada para a IA responder, cartas entre humanos.
+
+Testado (anfitrião sozinho, partida online "RP MP teste", 4 impérios):
+- a IA das nações decide online no anfitrião; a ordem de controle chega (3 nações comandadas); ações viram ordens do jogo;
+- carta pelo caminho dos outros jogadores (`mp mail E1 …`): vira ordem, o anfitrião grava, a sincronização sai;
+- `mp mirror`: o espelho de um jogador fica igual ao mundo do anfitrião (caixa de entrada e de saída);
+- hot-reload no meio: estado, controle e cartas reenviados sozinhos.

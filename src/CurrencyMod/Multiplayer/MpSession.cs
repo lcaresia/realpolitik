@@ -114,12 +114,14 @@ namespace CurrencyMod.Multiplayer
         {
             MpChannel.Register("hello", OnHello);
             MpChannel.Register("state", OnStateChunk);
+            MpAi.Register();
         }
 
         /// <summary>A game was loaded (host or resynchronization): the state must come from the host again.</summary>
         internal static void OnGameLoaded()
         {
             activeSandbox = null;
+            MpAi.OnGameLoaded();
             turnHashTurn = -1;
             turnHash = null;
             lock (Gate)
@@ -243,6 +245,7 @@ namespace CurrencyMod.Multiplayer
             CurrencyManager.Replace(world);
             // Derived caches and inputs that only exist in single-player start empty on every peer.
             TradeAi.SetLlmStances(null);
+            Diplomacy.NativeAiLocks.SetActive(null);
             Diplomacy.Blocs.BlocIndex.Clear();
             TradePolicy.Invalidate();
             TradePolicy.PathsDirty = true;
@@ -459,6 +462,8 @@ namespace CurrencyMod.Multiplayer
                     + $"; host {myHash}). Sending the host's state again.");
             }
             stateSentTurn = sandbox.Turn;
+            // Whoever was out of step also lacks the AI control tables and the letters: they go out again after the state.
+            MpAi.ResetSync();
             SendState(sandbox);
         }
 
@@ -583,6 +588,22 @@ namespace CurrencyMod.Multiplayer
                 case "hello":
                 case "mine":
                     return InputCommand(verb, args.Length > verb.Length ? args.Substring(verb.Length).Trim() : string.Empty);
+                case "mirror":
+                {
+                    Diplomacy.AiModule module = Diplomacy.AiModule.Instance;
+                    return module == null ? "error: no AI module"
+                        : MpAi.MirrorTest(Diplomacy.AiModule.World, Diplomacy.Capture.TurnCapture.Latest, module.PlayerIndex, module.CurrentTurn);
+                }
+                case "mail":
+                {
+                    // "mp mail E# text": a letter through the other players' path (order → host), from the local empire.
+                    string[] mailParts = args.Split(new[] { ' ' }, 3, StringSplitOptions.RemoveEmptyEntries);
+                    if (mailParts.Length < 3 || !int.TryParse(mailParts[1].TrimStart('E', 'e'), out int to) || sandbox == null)
+                    {
+                        return "usage: mp mail E# <text>";
+                    }
+                    return MpAi.SendLetter(sandbox.LocalEmpireIndex, to, "privada", "Test (multiplayer path)", mailParts[2], null, 3, -1, sandbox.Turn);
+                }
                 case "roundtrip":
                 {
                     if (sandbox == null)

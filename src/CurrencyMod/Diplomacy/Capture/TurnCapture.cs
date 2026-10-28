@@ -37,7 +37,7 @@ namespace CurrencyMod.Diplomacy.Capture
                 try
                 {
                     Sandbox sandbox = SandboxManager.Sandbox;
-                    if (sandbox == null || sandbox.IsSessionOnline)
+                    if (sandbox == null)
                     {
                         return;
                     }

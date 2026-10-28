@@ -250,7 +250,7 @@ namespace CurrencyMod.Diplomacy
             nextCleanUp = Time.realtimeSinceStartup + 3f;
             Sandbox sandbox = SandboxManager.Sandbox;
             DiplomaticAncillary ancillary = Sandbox.DiplomaticAncillary;
-            if (sandbox == null || sandbox.IsSessionOnline || ancillary?.DiplomaticRelations == null || sandbox.CurrentStateName != "SandboxState_TurnMain")
+            if (sandbox == null || (sandbox.IsSessionOnline && !Multiplayer.MpAi.IsHostAi) || ancillary?.DiplomaticRelations == null || sandbox.CurrentStateName != "SandboxState_TurnMain")
             {
                 return;
             }

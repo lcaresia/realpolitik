@@ -92,6 +92,9 @@ namespace CurrencyMod.Diplomacy
             return turn - first < Math.Max(1, AiConfig.ProposalTurns.Value);
         }
 
+        /// <summary>How many turns a language-AI nation has to answer: online, the host's value (the same on every peer).</summary>
+        private static int HoldTurns => Math.Max(1, SandboxManager.Sandbox?.IsSessionOnline == true ? Multiplayer.MpAi.ProposalTurns : AiConfig.ProposalTurns.Value);
+
         private static bool ShouldHold(ref DiplomaticPropositionInfo info, int turn)
         {
             if (info.Status != TreatyStatus.Proposed && info.Status != TreatyStatus.Countered)
@@ -102,7 +105,7 @@ namespace CurrencyMod.Diplomacy
             {
                 return false;
             }
-            int maxTurns = Math.Max(1, AiConfig.ProposalTurns.Value);
+            int maxTurns = HoldTurns;
             return info.TurnWhenProposed < 0 || turn - info.TurnWhenProposed < maxTurns;
         }
 
@@ -113,7 +116,7 @@ namespace CurrencyMod.Diplomacy
         private static List<Held> Hide(DiplomaticAncillary ancillary, List<Held> held)
         {
             Sandbox sandbox = SandboxManager.Sandbox;
-            if (ancillary?.DiplomaticRelations == null || sandbox == null || sandbox.IsSessionOnline || !AiConfig.ExecuteActions.Value)
+            if (ancillary?.DiplomaticRelations == null || sandbox == null || (sandbox.IsSessionOnline ? !Multiplayer.MpAi.HoldProposals : !AiConfig.ExecuteActions.Value))
             {
                 return held;
             }
@@ -135,7 +138,7 @@ namespace CurrencyMod.Diplomacy
                     held.Add(new Held { Relation = relation, Treaty = false, Status = state.CurrentAgreementsInfo.PropositionInfo.Status, Surrender = -1 });
                     state.CurrentAgreementsInfo.PropositionInfo.Status = TreatyStatus.None;
                 }
-                if (hideSurrenders && state is DiplomaticState_War war && ShouldHoldSurrender(ancillary, war, turn))
+                if (hideSurrenders && !sandbox.IsSessionOnline && state is DiplomaticState_War war && ShouldHoldSurrender(ancillary, war, turn))
                 {
                     held.Add(new Held { Relation = relation, Surrender = war.ProposedSurrenderIndex });
                     war.ProposedSurrenderIndex = -1;
